@@ -47,8 +47,24 @@ func (e *StaticHTMLEnv) RenderTo(out io.Writer, c *ComponentInst) error {
 	// The basic strategy is to build an equivalent html.Node tree from our vdom, expanding InnerHTML along
 	// the way, and then tell the html package to write it out
 
-	// TODO: output css
-	_ = css
+	// output css
+	if css != nil && css.FirstChild != nil {
+
+		cssn := &html.Node{
+			Type:     html.ElementNode,
+			Data:     "style",
+			DataAtom: atom.Style,
+		}
+		cssn.AppendChild(&html.Node{
+			Type: html.TextNode,
+			Data: css.FirstChild.Data,
+		})
+
+		err = html.Render(out, cssn)
+		if err != nil {
+			return err
+		}
+	}
 
 	ptrMap := make(map[*VGNode]*html.Node)
 

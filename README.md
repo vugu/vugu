@@ -6,8 +6,8 @@ This project is a prototype for a Vue-like framework for web interfaces written 
 
 * Template compliation - to Go source DONE
 * Static HTML output DONE
-* Data binding - simple observer pattern, prefer clarity and simplicity over magicness
-* CSS for templates (scoped? see what Vue does)
+* Data hashing DONE
+* CSS for templates DONE
 * Component functionality
 * DOM syncing - can be naive at first and then get fancier with optimizations later
 
@@ -25,3 +25,7 @@ This project is a prototype for a Vue-like framework for web interfaces written 
 * See what it would take to make a basic VSCode plugin for .vugu files
 * A vuetify-like framework with material design components.  As a alternative, something like bootstrap-vue.js.org could be a possibility as well.
 * Look into async templates (async code might be outside the scope of current wasm capability, but certainly we can pull templates from the server)
+
+## NOTES
+
+* Data binding - simple observer pattern, prefer clarity and simplicity over magicness - Bailed on this, too complicated, opted for data hashing instead.

@@ -145,7 +145,13 @@ nodeLoop1:
 	fmt.Fprintf(&buf, "    _ = data\n")
 	fmt.Fprintf(&buf, "    _ = fmt.Sprint\n")
 
-	// FIXME: implmeent nstyle, if present, make it assign to css var
+	// implement nstyle, if present, make it assign to css var
+	if nstyle != nil && nstyle.FirstChild != nil {
+		fmt.Fprintf(&buf, "css = &vugu.VGNode{Type:vugu.VGNodeType(%d),Data:%q,DataAtom:vugu.VGAtom(%d),Namespace:%q,Attr:%#v}\n",
+			nstyle.Type, nstyle.Data, nstyle.DataAtom, nstyle.Namespace, staticVGAttr(nstyle.Attr))
+		fmt.Fprintf(&buf, "css.AppendChild(&vugu.VGNode{Type:vugu.VGNodeType(%d),Data:%q,DataAtom:vugu.VGAtom(%d),Namespace:%q,Attr:%#v})\n",
+			nstyle.FirstChild.Type, nstyle.FirstChild.Data, nstyle.FirstChild.DataAtom, nstyle.FirstChild.Namespace, staticVGAttr(nstyle.FirstChild.Attr))
+	}
 
 	fmt.Fprintf(&buf, "    var n *vugu.VGNode\n")
 

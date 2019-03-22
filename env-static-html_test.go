@@ -12,6 +12,10 @@ func TestStaticHTMLEnv(t *testing.T) {
 
 	s, err := parserGoBuildAndRun(`
 
+<style>
+.outer { background: green; }
+</style>
+
 <div class="outer">
 	<p vg-html="data.Example"></p>
 </div>
@@ -40,7 +44,9 @@ func main() {
 `, false)
 	assert.NoError(err)
 	// log.Printf("OUT: %s", s)
-	assert.Equal(`<div class="outer">
+	assert.Equal(`<style>
+.outer { background: green; }
+</style><div class="outer">
 	<p>Some Data!</p>
 </div>`, s)
 
