@@ -4,7 +4,7 @@ type ComponentType interface {
 	TagName() string                                                      // HTML-compatible tag name, e.g. "demo-button"
 	BuildVDOM(data interface{}) (vdom *VGNode, css *VGNode, reterr error) // based on the given data, build the VGNode tree
 	InitData() (interface{}, error)                                       // initial data when component is instanciated
-	Invoke(name string, args ...interface{}) error
+	// Invoke(name string, args ...interface{}) error
 
 	// NOTES:
 	// props???
@@ -15,10 +15,21 @@ type ComponentType interface {
 	// lifecycle hooks (created, mounted, etc.)
 }
 
-type ComponentInst struct {
-	Type            ComponentType
-	Data            interface{}
-	ChildComponents ComponentInstPtrList
+func New(ct ComponentType) (*ComponentInst, error) {
+	data, err := ct.InitData()
+	if err != nil {
+		return nil, err
+	}
+	return &ComponentInst{
+		Type: ct,
+		Data: data,
+	}, nil
 }
 
-type ComponentInstPtrList []*ComponentInst
+type ComponentInst struct {
+	Type ComponentType
+	Data interface{}
+	// ChildComponents ComponentInstPtrList
+}
+
+// type ComponentInstPtrList []*ComponentInst

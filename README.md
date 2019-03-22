@@ -5,7 +5,7 @@ This project is a prototype for a Vue-like framework for web interfaces written 
 ## TODO:
 
 * Template compliation - to Go source DONE
-* Static HTML output
+* Static HTML output DONE
 * Data binding - simple observer pattern, prefer clarity and simplicity over magicness
 * CSS for templates (scoped? see what Vue does)
 * Component functionality

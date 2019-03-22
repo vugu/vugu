@@ -86,6 +86,8 @@ nodeLoop1:
 							return fmt.Errorf("more than one <script type=%q> tag not allowed", a.Val)
 						}
 
+						nscript = n
+
 						continue nodeLoop1
 
 					}
@@ -116,12 +118,25 @@ nodeLoop1:
 	fmt.Fprintf(&buf, "import %q\n", "github.com/vugu/vugu")
 	fmt.Fprintf(&buf, "\n")
 
+	// implement nscript -  dump the code here
+	// TODO: do we need some basic smarts? like moving imports to the top, etc.
+	if nscript != nil {
+		txtNode := nscript.FirstChild
+		if txtNode.Type != html.TextNode {
+			return fmt.Errorf("found script tag with bad contents (wrong type): %#v", txtNode)
+		}
+		// dump the source right in there
+		fmt.Fprintf(&buf, "%s\n", txtNode.Data)
+	}
+
+	// statically check that we implement vugu.ComponentType
+	fmt.Fprintf(&buf, "var _ vugu.ComponentType = (*%s)(nil)\n", p.ComponentType)
+	fmt.Fprintf(&buf, "\n")
+
 	// FIXME: we should only output the struct here if it's not in a <script type="application/x-go"> tag
 	fmt.Fprintf(&buf, "type %s struct {\n", p.ComponentType)
 	fmt.Fprintf(&buf, "}\n")
 	fmt.Fprintf(&buf, "\n")
-
-	// FIXME: implement nscript -  dump the code here with some basic smarts, like moving imports to the top, etc.
 
 	fmt.Fprintf(&buf, "func (c %s) TagName() string { return %q }\n", p.ComponentType, p.TagName)
 	fmt.Fprintf(&buf, "\n")
