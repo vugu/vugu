@@ -77,6 +77,8 @@ func (e *StaticHTMLEnv) RenderTo(out io.Writer, c *ComponentInst) error {
 			return nil
 		}
 
+		// vgn.Attr
+
 		// just make a new instance each time - this is static html output
 		compInst, err := New(ct, vgn.Props)
 		if err != nil {

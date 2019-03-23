@@ -14,7 +14,7 @@ func TestComponents(t *testing.T) {
 	outs, err := parserGoBuildAndRunMulti(map[string]string{
 		"RootComp": `
 <div id="root">
-	<top-comp :headline="data.TheTitle"></top-comp>
+	<comp-one :headline="data.TheTitle"></comp-one>
 </div>
 
 <script type="application/x-go">

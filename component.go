@@ -21,6 +21,23 @@ type ComponentTypeMap map[string]ComponentType
 
 type Props map[string]interface{}
 
+// Clone makes a copy of the Props map, distinct from the original.
+func (p Props) Clone() Props {
+	ret := make(Props, len(p))
+	for k, v := range p {
+		ret[k] = v
+	}
+	return ret
+}
+
+// Merge will copy everything from p2 into p and return p for ease of use.
+func (p Props) Merge(p2 Props) Props {
+	for k, v := range p2 {
+		p[k] = v
+	}
+	return p
+}
+
 type ComponentType interface {
 	// TagName() string                                                      // HTML-compatible tag name, e.g. "demo-button"
 	BuildVDOM(data interface{}) (vdom *VGNode, css *VGNode, reterr error) // based on the given data, build the VGNode tree

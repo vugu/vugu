@@ -20,7 +20,8 @@ func main() {
 	vugucbName = "vugucb" // tmp
 	log.Printf("vugucbName = %q", vugucbName)
 
-	js.Global().Set(vugucbName, js.NewCallback(vugucbFunc))
+	// js.Global().Set(vugucbName, js.NewCallback(vugucbFunc))
+	js.Global().Set(vugucbName, js.FuncOf(vugucbFunc))
 
 	tmplSrc := `
 <div id="testcomp">
@@ -70,8 +71,9 @@ func main() {
 	<-make(chan struct{}, 0) // sleep indefinitely
 }
 
-func vugucbFunc(args []js.Value) {
+func vugucbFunc(this js.Value, args []js.Value) interface{} {
 	log.Printf("args[0].String() = %#v", args[0].String())
 	args[0].Call("preventDefault")
 	// log.Printf("args = %#v", args)
+	return nil
 }
