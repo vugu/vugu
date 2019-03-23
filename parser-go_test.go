@@ -180,7 +180,7 @@ func TestParserGo(t *testing.T) {
 	out, err := parserGoBuildAndRun(`
 <div id="whatever">
 	<ul id="ul1" vg-if="data.ShowFirstUL">
-		<li vg-range=".Test2" @click="something" :testbind="bound">Blah1</li>
+		<li vg-range=".Test2" @click="something" :testbind="data.TestBound">Blah1</li>
 		<li>Blah2</li>
 	</ul>
 	<ul id="ul2">
@@ -203,6 +203,7 @@ func main() {
 type DemoCompData struct {
 	ShowFirstUL bool
 	SecondULItems []string
+	TestBound bool
 }
 
 func (ct *DemoComp) NewData(props vugu.Props) (interface{}, error) {

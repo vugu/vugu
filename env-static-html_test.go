@@ -34,10 +34,10 @@ type DemoCompData struct {
 }
 
 func main() {
-	env := vugu.NewStaticHTMLEnv(os.Stdout, nil)
 	inst, err := vugu.New(&DemoComp{}, nil)
 	if err != nil { panic(err) }
-	err = env.Render(inst)
+	env := vugu.NewStaticHTMLEnv(os.Stdout, inst, nil)
+	err = env.Render()
 	if err != nil { panic(err) }
 }
 </script>

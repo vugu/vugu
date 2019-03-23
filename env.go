@@ -12,7 +12,7 @@ import (
 // See JSEnv and StaticHtmlEnv for implementations.
 type Env interface {
 	RegisterComponentType(tagName string, ct ComponentType)
-	Render(c *ComponentInst) error
+	Render() error
 }
 
 // refid returns a unique ID string for an interface value.  The same input will

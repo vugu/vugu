@@ -172,7 +172,7 @@ func BenchmarkComputeHashBigTime(b *testing.B) {
 	b.StartTimer()
 
 	for n := 0; n < b.N; n++ {
-		ComputeHash(a) // 12ms on my laptop - pretty good...
+		ComputeHash(a) // 12ms on my laptop - pretty good... (hm, need to check wasm performance, this is probably the raw x86-64 asm impl...)
 	}
 
 }

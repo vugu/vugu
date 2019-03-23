@@ -22,11 +22,11 @@ func TestComponents(t *testing.T) {
 import "os"
 
 func main() {
-	env := vugu.NewStaticHTMLEnv(os.Stdout, nil)
-	env.RegisterComponentType("comp-one", &CompOne{})
 	r, err := vugu.New(&RootComp{}, nil)
 	if err != nil { panic(err) }
-	err = env.Render(r)
+	env := vugu.NewStaticHTMLEnv(os.Stdout, r, nil)
+	env.RegisterComponentType("comp-one", &CompOne{})
+	err = env.Render()
 	if err != nil { panic(err) }
 }
 

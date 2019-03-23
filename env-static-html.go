@@ -16,23 +16,25 @@ var _ Env = (*StaticHTMLEnv)(nil) // assert type
 type StaticHTMLEnv struct {
 	reg ComponentTypeMap
 	// ComponentTypeMap map[string]ComponentType // TODO: probably make this it's own type and have a global instance where things can register
-	// rootInst         *ComponentInst
-	Out io.Writer
+	rootInst *ComponentInst
+	out      io.Writer
 }
 
-// NewStaticHTMLEnv returns a new instance of StaticHTMLEnv with Out set.
-func NewStaticHTMLEnv(out io.Writer, components ComponentTypeMap) *StaticHTMLEnv {
+// NewStaticHTMLEnv returns a new instance of StaticHTMLEnv initialized properly.
+// The out and rootInst are required, components may be nil.
+func NewStaticHTMLEnv(out io.Writer, rootInst *ComponentInst, components ComponentTypeMap) *StaticHTMLEnv {
 	if components == nil {
 		components = make(ComponentTypeMap)
 	}
 	return &StaticHTMLEnv{
-		reg: components,
-		Out: out,
+		reg:      components,
+		rootInst: rootInst,
+		out:      out,
 	}
 }
 
 // func (e *StaticHTMLEnv) SetOut(w io.Writer) {
-// 	e.Out = w
+// 	e.out = w
 // }
 
 func (e *StaticHTMLEnv) RegisterComponentType(tagName string, ct ComponentType) {
@@ -43,12 +45,11 @@ func (e *StaticHTMLEnv) RegisterComponentType(tagName string, ct ComponentType) 
 // 	e.ComponentTypeMap[ct.TagName()] = ct
 // }
 
-// Render is equivalent to calling e.RenderTo(e.Out, c)
-func (e *StaticHTMLEnv) Render(c *ComponentInst) error {
-	return e.RenderTo(e.Out, c)
-}
+// Render is equivalent to calling e.RenderTo(e.out)
+func (e *StaticHTMLEnv) Render() error {
 
-func (e *StaticHTMLEnv) RenderTo(out io.Writer, c *ComponentInst) error {
+	c := e.rootInst
+	out := e.out
 
 	vdom, css, err := c.Type.BuildVDOM(c.Data)
 	if err != nil {
