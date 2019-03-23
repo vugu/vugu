@@ -3,6 +3,9 @@ package vugu
 import (
 	"bytes"
 
+	// FIXME: see if we can clean it up programs which only use VGNode at run time (i.e in wasm)
+	// will not end up bundling this library for no reason - means the init() below needs to be cleaned up
+	// and probably have cruftBody be a function using once.Do - only needed if something calls it.
 	"golang.org/x/net/html"
 )
 
@@ -51,6 +54,8 @@ type VGNode struct {
 	Data      string
 	Namespace string
 	Attr      []VGAttribute
+
+	Props Props // dynamic attributes, used as input for components or converted to attributes for regular HTML elements
 
 	InnerHTML string // indicates that children should be ignored and this raw HTML is the children of this tag
 
@@ -140,7 +145,9 @@ func (n *VGNode) RemoveChild(c *VGNode) {
 // and this error will be returned.  Only FirstChild and NextSibling are used
 // while walking and so with well-formed documents should not loop. (But loops
 // created manually by modifying FirstChild or NextSibling pointers could cause
-// this function to recurse indefinitely.)
+// this function to recurse indefinitely.)  Note that f may modify nodes as it
+// visits them with predictable results as long as it does not modify elements
+// higher on the tree (up, toward the parent); it is safe to modify self and children.
 func (vgn *VGNode) Walk(f func(*VGNode) error) error {
 	if vgn == nil {
 		return nil

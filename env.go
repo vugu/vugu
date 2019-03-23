@@ -11,7 +11,7 @@ import (
 // Env specifies the common methods for environment implementations.
 // See JSEnv and StaticHtmlEnv for implementations.
 type Env interface {
-	SetComponentType(ct ComponentType)
+	RegisterComponentType(tagName string, ct ComponentType)
 	Render(c *ComponentInst) error
 }
 

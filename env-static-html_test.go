@@ -25,7 +25,7 @@ import "os"
 
 // type DemoComp struct {}
 
-func (c *DemoComp) InitData() (interface{}, error) {
+func (c *DemoComp) NewData(props vugu.Props) (interface{}, error) {
 	return &DemoCompData{Example:"Some Data!"}, nil
 }
 
@@ -34,8 +34,8 @@ type DemoCompData struct {
 }
 
 func main() {
-	env := vugu.NewStaticHTMLEnv(os.Stdout)
-	inst, err := vugu.New(&DemoComp{})
+	env := vugu.NewStaticHTMLEnv(os.Stdout, nil)
+	inst, err := vugu.New(&DemoComp{}, nil)
 	if err != nil { panic(err) }
 	err = env.Render(inst)
 	if err != nil { panic(err) }

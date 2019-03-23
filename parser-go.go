@@ -20,10 +20,10 @@ import (
 type ParserGo struct {
 	PackageName   string
 	ComponentType string
-	TagName       string
-	DataType      string
-	OutDir        string
-	OutFile       string
+	// TagName       string
+	DataType string
+	OutDir   string
+	OutFile  string
 }
 
 func (p *ParserGo) gofmt(pgm string) (string, error) {
@@ -138,8 +138,9 @@ nodeLoop1:
 	fmt.Fprintf(&buf, "}\n")
 	fmt.Fprintf(&buf, "\n")
 
-	fmt.Fprintf(&buf, "func (c %s) TagName() string { return %q }\n", p.ComponentType, p.TagName)
-	fmt.Fprintf(&buf, "\n")
+	// fmt.Fprintf(&buf, "func (c %s) TagName() string { return %q }\n", p.ComponentType, p.TagName)
+	// fmt.Fprintf(&buf, "\n")
+
 	fmt.Fprintf(&buf, "func (c %s) BuildVDOM(dataI interface{}) (vdom *vugu.VGNode, css *vugu.VGNode, reterr error) {\n", p.ComponentType)
 	fmt.Fprintf(&buf, "    data := dataI.(%s)\n", p.DataType)
 	fmt.Fprintf(&buf, "    _ = data\n")

@@ -9,17 +9,24 @@ import (
 	"golang.org/x/net/html"
 )
 
+var _ Env = (*StaticHTMLEnv)(nil) // assert type
+
 // StaticHTMLEnv is an environment that renders to static HTML.  Can be used to implement "server side rendering"
 // as well as during testing.
 type StaticHTMLEnv struct {
+	reg ComponentTypeMap
 	// ComponentTypeMap map[string]ComponentType // TODO: probably make this it's own type and have a global instance where things can register
 	// rootInst         *ComponentInst
 	Out io.Writer
 }
 
 // NewStaticHTMLEnv returns a new instance of StaticHTMLEnv with Out set.
-func NewStaticHTMLEnv(out io.Writer) *StaticHTMLEnv {
+func NewStaticHTMLEnv(out io.Writer, components ComponentTypeMap) *StaticHTMLEnv {
+	if components == nil {
+		components = make(ComponentTypeMap)
+	}
 	return &StaticHTMLEnv{
+		reg: components,
 		Out: out,
 	}
 }
@@ -27,6 +34,10 @@ func NewStaticHTMLEnv(out io.Writer) *StaticHTMLEnv {
 // func (e *StaticHTMLEnv) SetOut(w io.Writer) {
 // 	e.Out = w
 // }
+
+func (e *StaticHTMLEnv) RegisterComponentType(tagName string, ct ComponentType) {
+	e.reg[tagName] = ct
+}
 
 // func (e *StaticHTMLEnv) SetComponentType(ct ComponentType) {
 // 	e.ComponentTypeMap[ct.TagName()] = ct
@@ -43,6 +54,55 @@ func (e *StaticHTMLEnv) RenderTo(out io.Writer, c *ComponentInst) error {
 	if err != nil {
 		return err
 	}
+
+	// addCss := func(vcss *VGNode) {
+	// 	css.AppendChild(vcss.FirstChild)
+	// }
+
+	// walk the vdom and handle components along the way;
+	// since this is a static render, we can be pretty naive
+	// about how and when we instanciate the components
+
+	// compInstMap := make(map[*VGNode]*ComponentInst)
+	err = vdom.Walk(func(vgn *VGNode) error {
+
+		// must be element
+		if vgn.Type != ElementNode {
+			return nil
+		}
+
+		// element name must match a component
+		ct, ok := e.reg[vgn.Data]
+		if !ok {
+			return nil
+		}
+
+		// just make a new instance each time - this is static html output
+		compInst, err := New(ct, vgn.Props)
+		if err != nil {
+			return err
+		}
+
+		cdom, ccss, err := ct.BuildVDOM(compInst.Data)
+		if err != nil {
+			return err
+		}
+
+		if ccss != nil && ccss.FirstChild != nil {
+			css.AppendChild(ccss.FirstChild)
+		}
+
+		// make cdom replace vgn
+
+		// point Parent on each child of cdom to vgn
+		for cn := cdom.FirstChild; cn != nil; cn = cn.NextSibling {
+			cn.Parent = vgn
+		}
+		// replace vgn with cdom but preserve vgn.Parent
+		*vgn, vgn.Parent = *cdom, vgn.Parent
+
+		return nil
+	})
 
 	// The basic strategy is to build an equivalent html.Node tree from our vdom, expanding InnerHTML along
 	// the way, and then tell the html package to write it out
