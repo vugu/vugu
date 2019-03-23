@@ -7,10 +7,14 @@ import (
 	"go/parser"
 	"go/token"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
+	"time"
+
+	"github.com/cespare/xxhash"
 )
 
 // ParserGoPkg knows how to perform source file generation in relation to a package folder.
@@ -63,11 +67,18 @@ func (p *ParserGoPkg) Run() error {
 
 	// --
 
+	// record the times of existing files, so we can restore after if the same
+	hashTimes, err := fileHashTimes(p.pkgPath)
+	if err != nil {
+		return err
+	}
+
 	pkgF, err := os.Open(p.pkgPath)
 	if err != nil {
 		return err
 	}
 	defer pkgF.Close()
+
 	allFileNames, err := pkgF.Readdirnames(-1)
 	if err != nil {
 		return err
@@ -133,7 +144,16 @@ func (p *ParserGoPkg) Run() error {
 	if (!p.opts.SkipMainGo) && pkgName == "main" {
 
 		mainGoPath := filepath.Join(p.pkgPath, "main.go")
-		if _, ok := namesFound["main"]; (!ok) && !fileExists(mainGoPath) {
+		// log.Printf("namesFound: %#v", namesFound)
+		// log.Printf("maingo found: %v", fileExists(mainGoPath))
+		// if _, ok := namesFound["main"]; (!ok) && !fileExists(mainGoPath) {
+
+		// NOTE: For now we're disabling the "main" symbol name check, because in single-dir cases
+		// it's picking up the main.go in server.go (even though it's excluded via build tag).  This
+		// needs some more thought but for now this will work for the common cases.
+		if !fileExists(mainGoPath) {
+
+			// log.Printf("WRITING TO MAIN.GO STUFF")
 
 			err := ioutil.WriteFile(mainGoPath, []byte(`package `+pkgName+`
 	
@@ -209,53 +229,13 @@ func main() {
 
 	}
 
+	err = restoreFileHashTimes(p.pkgPath, hashTimes)
+	if err != nil {
+		return err
+	}
+
 	return nil
 
-	// // code to generate if a name check fails
-	// type genItem struct {
-	// 	CheckName string
-	// 	OutSource string
-	// }
-
-	// log.Printf("namesFound: %#v", namesFound)
-
-	// fset := token.NewFileSet()
-	// pkgs, err := parser.ParseDir(fset, p.pkgPath, nil, 0)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// if len(pkgs) != 1 {
-	// 	return fmt.Errorf("unexpected package count after parsing, expected 1 and got this: %#v", pkgs)
-	// }
-
-	// var pkg *ast.Package
-	// for _, pkg1 := range pkgs {
-	// 	pkg = pkg1
-	// }
-
-	// for _, file := range pkg.Files {
-	// 	log.Printf("file: %#v", file)
-	// 	log.Printf("file.Scope.Objects: %#v", file.Scope.Objects)
-	// 	log.Printf("next: %#v", file.Scope.Objects["Example1"])
-	// 	// e1 := file.Scope.Objects["Example1"]
-	// 	// if e1.Kind == ast.Typ {
-	// 	// e1.Decl
-	// 	// }
-	// 	for _, d := range file.Decls {
-	// 		if fd, ok := d.(*ast.FuncDecl); ok {
-	// 			if fd.Recv != nil {
-	// 				for _, f := range fd.Recv.List {
-	// 					log.Printf("f.Type: %#v", f.Type)
-	// 				}
-	// 			}
-	// 			log.Printf("fd.Name: %#v", fd.Name)
-	// 		}
-	// 	}
-	// }
-	// // log.Printf("Objects: %#v", pkg.Scope.Objects)
-
-	// return nil
 }
 
 func fileHasInitFunc(p string) bool {
@@ -285,7 +265,9 @@ func fnameToGoTypeName(s string) string {
 	return strings.Join(parts, "")
 }
 
-func goGuessPkgName(pkgPath string) string {
+func goGuessPkgName(pkgPath string) (ret string) {
+
+	// defer func() { log.Printf("goGuessPkgName returning %q", ret) }()
 
 	// see if the package already has a name and use it if so
 	fset := token.NewFileSet()
@@ -420,4 +402,71 @@ func nameParts(n string) (recv, method string) {
 	recv = ret[0]
 	method = ret[1]
 	return
+}
+
+// fileHashTimes will scan a directory and return a map of hashes and corresponding mod times
+func fileHashTimes(dir string) (map[uint64]time.Time, error) {
+
+	ret := make(map[uint64]time.Time)
+
+	f, err := os.Open(dir)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	fis, err := f.Readdir(-1)
+	if err != nil {
+		return nil, err
+	}
+	for _, fi := range fis {
+		h := xxhash.New()
+		fmt.Fprint(h, fi.Name()) // hash the name too so we don't confuse different files with the same contents
+		b, err := ioutil.ReadFile(filepath.Join(dir, fi.Name()))
+		if err != nil {
+			return nil, err
+		}
+		h.Write(b)
+		ret[h.Sum64()] = fi.ModTime()
+	}
+
+	return ret, nil
+}
+
+// restoreFileHashTimes takes the map returned by fileHashTimes and for any files where the hash
+// matches we restore the mod time - this way we can clobber files during code generation but
+// then if the resulting output is byte for byte the same we can just change the mod time back and
+// things that look at timestamps will see the file as unchanged; somewhat hacky, but simple and
+// workable for now - it's important for the developer experince we don't do unnecessary builds
+// in cases where things don't change
+func restoreFileHashTimes(dir string, hashTimes map[uint64]time.Time) error {
+
+	f, err := os.Open(dir)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	fis, err := f.Readdir(-1)
+	if err != nil {
+		return err
+	}
+	for _, fi := range fis {
+		fiPath := filepath.Join(dir, fi.Name())
+		h := xxhash.New()
+		fmt.Fprint(h, fi.Name()) // hash the name too so we don't confuse different files with the same contents
+		b, err := ioutil.ReadFile(fiPath)
+		if err != nil {
+			return err
+		}
+		h.Write(b)
+		if t, ok := hashTimes[h.Sum64()]; ok {
+			err := os.Chtimes(fiPath, time.Now(), t)
+			if err != nil {
+				log.Printf("Error in os.Chtimes(%q, now, %q): %v", fiPath, t, err)
+			}
+		}
+	}
+
+	return nil
 }

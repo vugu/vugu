@@ -3,6 +3,7 @@
 package vugu
 
 import (
+	"fmt"
 	js "syscall/js"
 )
 
@@ -32,9 +33,13 @@ func NewJSEnv(mountPoint string, rootInst *ComponentInst, components ComponentTy
 	}
 }
 
+func (e *JSEnv) RegisterComponentType(tagName string, ct ComponentType) {
+	e.reg[tagName] = ct
+}
+
 // Render does the DOM syncing.
 func (e *JSEnv) Render() error {
-	return nil
+	return fmt.Errorf("not yet implemented")
 }
 
 // 	vdom, css, err := c.Type.BuildVDOM(c.Data)
