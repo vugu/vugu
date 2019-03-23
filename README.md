@@ -8,7 +8,7 @@ This project is a prototype for a Vue-like framework for web interfaces written 
 * Static HTML output DONE
 * Data hashing DONE
 * CSS for templates DONE
-* Component functionality
+* Component functionality DONE
 * DOM syncing - can be naive at first and then get fancier with optimizations later
 * Events in JS - @click and custom events from components
 
