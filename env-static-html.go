@@ -77,10 +77,16 @@ func (e *StaticHTMLEnv) RenderTo(out io.Writer, c *ComponentInst) error {
 			return nil
 		}
 
-		// vgn.Attr
+		// copy props and merge in static attributes where they don't conflict
+		props := vgn.Props.Clone()
+		for _, a := range vgn.Attr {
+			if _, ok := props[a.Key]; !ok {
+				props[a.Key] = a.Val
+			}
+		}
 
 		// just make a new instance each time - this is static html output
-		compInst, err := New(ct, vgn.Props)
+		compInst, err := New(ct, props)
 		if err != nil {
 			return err
 		}

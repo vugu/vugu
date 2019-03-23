@@ -2,6 +2,7 @@ package vugu
 
 import (
 	"log"
+	"regexp"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -58,11 +59,11 @@ func (c *CompOne) NewData(props vugu.Props) (interface{}, error) {
 	}, false)
 	assert.NoError(err)
 	log.Printf("outs: %s", outs)
-	assert.Equal(`<div id="root">
+	assert.True(noWSEqual(`<div id="root">
 <div class="comp-one">
 	<h1>title goes here</h1>
 </div>
-</div>`, outs)
+</div>`, outs))
 
 	// var buf bytes.Buffer
 	// env := NewStaticHTMLEnv(&buf, nil)
@@ -74,4 +75,11 @@ func (c *CompOne) NewData(props vugu.Props) (interface{}, error) {
 
 	// assert.NoError(env.Render())
 
+}
+
+var wsre = regexp.MustCompile(`\s`)
+
+func noWSEqual(s1, s2 string) bool {
+	return wsre.ReplaceAllLiteralString(s1, "") ==
+		wsre.ReplaceAllLiteralString(s2, "")
 }

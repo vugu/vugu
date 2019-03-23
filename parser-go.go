@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"golang.org/x/net/html/atom"
@@ -217,6 +218,21 @@ writeNode:
 
 		if htmlExpr := vgHTMLExpr(n); htmlExpr != "" {
 			fmt.Fprintf(&buf, "n.InnerHTML = fmt.Sprint(%s)\n", htmlExpr)
+		}
+
+		// dynamic attributes with ":" prefix
+		propm := vgPropExprs(n)
+		if len(propm) > 0 {
+			fmt.Fprintf(&buf, "n.Props = vugu.Props {\n")
+			keys := make([]string, 0, len(propm))
+			for k := range propm {
+				keys = append(keys, k)
+			}
+			sort.Strings(keys) // stable output sequence
+			for _, k := range keys {
+				fmt.Fprintf(&buf, "%q: %s,\n", k, propm[k])
+			}
+			fmt.Fprintf(&buf, "}\n")
 		}
 
 		// log.Printf("n = %#v", n)
