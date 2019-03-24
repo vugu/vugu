@@ -155,16 +155,42 @@ func (p *ParserGoPkg) Run() error {
 
 			// log.Printf("WRITING TO MAIN.GO STUFF")
 
-			err := ioutil.WriteFile(mainGoPath, []byte(`package `+pkgName+`
-	
+			err := ioutil.WriteFile(mainGoPath, []byte(`// +build wasm
+
+package main
+
 import (
-	"fmt"
+	"log"
+	"os"
+
+	"github.com/vugu/vugu"
 )
 
+
 func main() {
-	// TODO: some cool main stuff
-	fmt.Printf("HERE1111\n")
+
+	println("Entering main()")
+	defer println("Exiting main()")
+
+	rootInst, err := vugu.New(&Root{}, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	env := vugu.NewJSEnv("#root_mount_parent", rootInst, vugu.RegisteredComponentTypes())
+	env.DebugWriter = os.Stdout
+
+	for ok := true; ok; ok = env.EventWait() {
+		err = env.Render()
+		if err != nil {
+			panic(err)
+		}
+	}
+
 }
+
+
+
 
 `), 0644)
 			if err != nil {
