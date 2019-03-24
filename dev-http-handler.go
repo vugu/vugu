@@ -218,6 +218,7 @@ notStatic:
 			}
 			fpath := f.Name()
 			f.Close()
+			os.Remove(f.Name())
 			defer os.Remove(f.Name())
 
 			startTime := time.Now()
@@ -242,7 +243,7 @@ notStatic:
 			b, err = cmd.CombinedOutput()
 			w.Header().Set("X-Go-Build-Duration", time.Since(startTime).String())
 			if err != nil {
-				msg := fmt.Sprintf("Error from compile: %v; Output:\n%s", err, b)
+				msg := fmt.Sprintf("Error from compile: %v (out path=%q); Output:\n%s", err, fpath, b)
 				log.Print(msg)
 				http.Error(w, msg, 500)
 				return
