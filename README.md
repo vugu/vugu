@@ -8,9 +8,11 @@ This project is a prototype for a Vue-inspired framework for web UIs written in 
 * Static HTML output DONE
 * Data hashing DONE
 * CSS for templates DONE
-* Component functionality DONE
-* DOM syncing - can be naive at first and then get fancier with optimizations later
+* Component functionality DONE IN STATIC HTML
+* DOM syncing - can be naive at first and then get fancier with optimizations later NEED TESTING
 * Events in JS - @click and custom events from components
+* Components in JSEnv
+* Component events (separate from DOMEvents above)
 * Figure out production build (probably since dev is just `go run devserver.go` prod can be something like `go run build-prod.go`, each file being just a few lines where config tweaks can go - also figure out a good prefix for these two files so it's obvious they are build process and not part of wasm output)
 
 * Component slots

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"sort"
 
 	"github.com/cespare/xxhash"
 
@@ -63,10 +64,18 @@ type VGNode struct {
 
 	InnerHTML string // indicates that children should be ignored and this raw HTML is the children of this tag
 
-	// TODO: events?
+	DOMEventHandlers map[string]DOMEventHandler // describes invocations when DOM events happen
 
 	// default of 0 means it will be calculated when positionHash() is called
 	positionHashVal uint64
+}
+
+func (n *VGNode) SetDOMEventHandler(name string, h DOMEventHandler) {
+	if n.DOMEventHandlers == nil {
+		n.DOMEventHandlers = map[string]DOMEventHandler{name: h}
+		return
+	}
+	n.DOMEventHandlers[name] = h
 }
 
 // InsertBefore inserts newChild as a child of n, immediately before oldChild
@@ -250,6 +259,20 @@ func (vgn *VGNode) elementHash(start uint64) uint64 {
 		vh := ComputeHash(vgn.Props[pk])
 		binary.BigEndian.PutUint64(b8, vh)
 		h.Write(b8)
+	}
+
+	// hash events
+	if len(vgn.DOMEventHandlers) > 0 {
+		keys := make([]string, len(vgn.DOMEventHandlers))
+		for k := range vgn.DOMEventHandlers {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+		for _, k := range keys {
+			vh := vgn.DOMEventHandlers[k].hash()
+			binary.BigEndian.PutUint64(b8, vh)
+			h.Write(b8)
+		}
 	}
 
 	// innerHTML if any

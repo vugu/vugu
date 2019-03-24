@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"reflect"
 	"strings"
 	"time"
 
@@ -17,10 +18,17 @@ var _ js.Value
 var _ Env = (*JSEnv)(nil) // assert type
 
 var document js.Value
+var domEventCB js.Func
 
 func init() {
 	document = js.Global().Get("document")
+	// we use a single callback function for all of our event handling and dispatch the events from it
+	domEventCB = js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+		return jsEnv.handleRawDOMEvent(this, args)
+	})
 }
+
+var jsEnv *JSEnv
 
 // JSEnv is an environment that renders to DOM in webassembly applications.
 type JSEnv struct {
@@ -31,9 +39,10 @@ type JSEnv struct {
 	reg      ComponentTypeMap
 	rootInst *ComponentInst
 
-	posJSNodeMap map[uint64]js.Value // keep track of element position hash value to js element, so we re-use existing nodes
-	posElHashMap map[uint64]uint64   // keep track of which element positions have which exact element hashes, so we don't touch nodes that are the same
-	lastCSS      string              // most recent css block value
+	posJSNodeMap           map[uint64]js.Value        // keep track of element position hash value to js element, so we re-use existing nodes
+	posElHashMap           map[uint64]uint64          // keep track of which element positions have which exact element hashes, so we don't touch nodes that are the same
+	domEventHandlerHashMap map[uint64]DOMEventHandler // DOMEventHandler.hash() -> DOMEventHandler
+	lastCSS                string                     // most recent css block value
 }
 
 // NewJSEnv returns a new instance of JSEnv.  The mountParent is a query selector of
@@ -44,12 +53,17 @@ func NewJSEnv(mountParent string, rootInst *ComponentInst, components ComponentT
 		components = make(ComponentTypeMap)
 	}
 	ret := &JSEnv{
-		MountParent:  mountParent,
-		reg:          components,
-		rootInst:     rootInst,
-		posJSNodeMap: make(map[uint64]js.Value, 1024),
-		posElHashMap: make(map[uint64]uint64, 1024),
+		MountParent:            mountParent,
+		reg:                    components,
+		rootInst:               rootInst,
+		posJSNodeMap:           make(map[uint64]js.Value, 1024),
+		posElHashMap:           make(map[uint64]uint64, 1024),
+		domEventHandlerHashMap: make(map[uint64]DOMEventHandler, 32),
 	}
+	if jsEnv != nil {
+		panic(fmt.Errorf("only one jsEnv allowed per application, for now"))
+	}
+	jsEnv = ret
 	return ret
 }
 
@@ -128,7 +142,7 @@ func (e *JSEnv) Render() (reterr error) {
 		// wipe out these too
 		e.posJSNodeMap = make(map[uint64]js.Value, 1024)
 		e.posElHashMap = make(map[uint64]uint64, 1024)
-
+		e.domEventHandlerHashMap = make(map[uint64]DOMEventHandler, 32)
 	}
 
 	styleEl := mountChild1
@@ -168,6 +182,7 @@ func (e *JSEnv) Render() (reterr error) {
 	// build a new map of all of the positions we use during rendering
 	newPosJSNodeMap := make(map[uint64]js.Value, len(e.posJSNodeMap))
 	newPosElHashMap := make(map[uint64]uint64, len(e.posElHashMap))
+	newDOMEventHandlerHashMap := make(map[uint64]DOMEventHandler, 32)
 
 	// position hash 0 is always root element
 	e.posJSNodeMap[0] = rootEl
@@ -234,7 +249,7 @@ func (e *JSEnv) Render() (reterr error) {
 		// check if element is different than last recorded state
 		if elHash != e.posElHashMap[posh] {
 			// do a sync
-			newEl, err := jsSyncNode(vgn, n)
+			newEl, err := e.jsSyncNode(vgn, n, newDOMEventHandlerHashMap)
 			if err != nil {
 				return err
 			}
@@ -306,10 +321,18 @@ func (e *JSEnv) Render() (reterr error) {
 		}
 	}
 
+	// call Release on funcs that are no longer being used
+	// for k, f := range e.domEventHandlerHashMap {
+	// 	if _, ok := newDOMEventHandlerHashMap[k]; !ok {
+	// 		f.Release()
+	// 	}
+	// }
+
 	// replace our maps with the new ones we've just created, which effectively trims any values that are no longer used
 	// TODO: is there a better way to do this that doesn't result in so much garbage collection?
 	e.posJSNodeMap = newPosJSNodeMap
 	e.posElHashMap = newPosElHashMap
+	e.domEventHandlerHashMap = newDOMEventHandlerHashMap
 
 	return nil
 
@@ -421,18 +444,73 @@ func (e *JSEnv) Render() (reterr error) {
 	// return nil
 }
 
-func canJsSyncNode(vgn *VGNode) bool {
-	switch vgn.Type {
-	case ElementNode, TextNode, CommentNode:
-		return true
+// func canJsSyncNode(vgn *VGNode) bool {
+// 	switch vgn.Type {
+// 	case ElementNode, TextNode, CommentNode:
+// 		return true
+// 	}
+// 	return false
+// }
+
+func (e *JSEnv) handleRawDOMEvent(this js.Value, args []js.Value) interface{} {
+
+	if len(args) < 1 {
+		panic(fmt.Errorf("args should be at least 1 element, instead was: %#v", args))
 	}
-	return false
+
+	jsEvent := args[0]
+
+	typeName := jsEvent.Get("type").String()
+
+	key := "vugu_event_" + typeName + "_id"
+	funcIDString := this.Get(key).String()
+	var funcID uint64
+	fmt.Sscanf(funcIDString, "%d", &funcID)
+
+	if funcID == 0 {
+		panic(fmt.Errorf("looking for %q on 'this' found %q which parsed into value 0 - cannot find the appropriate function to route to", key, funcIDString))
+	}
+
+	handler, ok := e.domEventHandlerHashMap[funcID]
+	if !ok {
+		panic(fmt.Errorf("nothing found in domEventHandlerHashMap for %d", funcID))
+	}
+
+	domE := &DOMEvent{
+		jsEvent:     jsEvent,
+		jsEventThis: this,
+	}
+
+	rvargs := make([]reflect.Value, 0, len(handler.Args))
+	for _, a := range handler.Args {
+		// anything of type *DOMEvent gets replaced with our DOMEvent instance
+		if _, ok := a.(*DOMEvent); ok {
+			rvargs = append(rvargs, reflect.ValueOf(domE))
+		} else {
+			// and everything else just goes as-is
+			v := reflect.ValueOf(a)
+			rvargs = append(rvargs, v)
+		}
+	}
+
+	ret := handler.Method.Call(rvargs)
+
+	// if it came back with a single bool value then return that, otherwise return null
+	if len(ret) == 1 {
+		rv := reflect.ValueOf(ret[0])
+		if rv.Kind() == reflect.Bool {
+			return rv.Bool()
+		}
+	}
+
+	return nil
 }
 
 // jsSyncNode will take a virtual dom element and update a browser DOM element to match it,
 // or if this is not possible the element will be replaced entirely; either way
-// as long as no error the correct new element will be returned
-func jsSyncNode(vgn *VGNode, el js.Value) (newEl js.Value, reterr error) {
+// as long as no error the correct new element will be returned; emap gets set with
+// all of the event handlers we set (or would set if not already)
+func (e *JSEnv) jsSyncNode(vgn *VGNode, el js.Value, emap map[uint64]DOMEventHandler) (newEl js.Value, reterr error) {
 
 	// FIXME: Is there a way to merge all this so we only ship one set of data over to the JS side
 	// and do the rest from there?  Might be much faster...
@@ -508,6 +586,21 @@ func jsSyncNode(vgn *VGNode, el js.Value) (newEl js.Value, reterr error) {
 		if vgn.InnerHTML != "" {
 			newEl.Set("innerHTML", vgn.InnerHTML)
 		}
+
+		// now handle event wiring
+		for eventName, handler := range vgn.DOMEventHandlers {
+			keyName := "vugu_event_" + eventName + "_id"
+			hash := handler.hash()
+			keyVal := fmt.Sprint(hash)
+			emap[hash] = handler
+			oldKeyJSVal := newEl.Get(keyName)
+			if !oldKeyJSVal.Truthy() {
+				// never been added
+				newEl.Call("addEventListener", eventName, domEventCB) // global listener handles it all
+			}
+			newEl.Set(keyName, keyVal) // set key to point it at the right handler when the call comes in
+		}
+
 		return
 
 	case TextNode:

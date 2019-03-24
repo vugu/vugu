@@ -1,7 +1,7 @@
 <div id="root" :class="data.Class">
     <h2>Hey party people!</h2>
     <ul>
-        <li vg-for="data.Items" vg-html="value"></li>
+        <li vg-for="data.Items" vg-html="value" @click="comp.HandleClick(event, value)"></li>
     </ul>
 </div>
 
@@ -12,6 +12,7 @@
 </style>
 
 <script type="application/x-go">
+import "log"
 
 type RootData struct {
     Class string
@@ -23,6 +24,10 @@ func (ct *Root) NewData(props vugu.Props) (interface{}, error) {
         Class: "some class here",
         Items: []string{"item1", "item2", "item3"},
     }, nil
+}
+
+func (comp *Root) HandleClick(event interface{}, itemText string) {
+    log.Printf("HandleClick got %q", itemText)
 }
 
 </script>
