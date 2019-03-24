@@ -3,7 +3,10 @@
     <ul>
         <li vg-for="data.Items" vg-html="value" @click="comp.HandleClick(event, value)"></li>
     </ul>
-    <button @click="comp.HandleLoadClick(event, data)">Load JSON</button>
+    <button @click="comp.HandleLoadClick(event, data, 1)">Load JSON 1</button>
+    <button @click="comp.HandleLoadClick(event, data, 2)">Load JSON 2</button>
+    <button @click="comp.HandleLoadClick(event, data, 3)">Load JSON 3</button>
+    <button @click="comp.HandleLoadClick(event, data, 5)">Load JSON 5</button>
 </div>
 
 <style>
@@ -29,14 +32,14 @@ func (ct *Root) NewData(props vugu.Props) (interface{}, error) {
     }, nil
 }
 
-func (comp *Root) HandleLoadClick(event *vugu.DOMEvent, data *RootData) {
+func (comp *Root) HandleLoadClick(event *vugu.DOMEvent, data *RootData, n int) {
 
     println("In HandleLoadClick()")
 
     go func() {
 
         // fetch somehting
-        resp, err := http.Get("/sample.json")
+        resp, err := http.Get(fmt.Sprintf("/api/sample?n=%d", n))
         if err != nil { log.Print(err); return }
         defer resp.Body.Close()
 

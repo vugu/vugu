@@ -287,6 +287,15 @@ func (e *JSEnv) Render() (reterr error) {
 				return err
 			}
 			n = newEl
+		} else {
+
+			// if it's the same recorded state, the same event handlers should be there, so we need to
+			// bring those over into newDOMEventHandlerHashMap
+			for _, handler := range vgn.DOMEventHandlers {
+				hash := handler.hash()
+				newDOMEventHandlerHashMap[hash] = handler
+			}
+
 		}
 
 		// assign node to both new and old, old is used in cases where we grab the parent

@@ -3,9 +3,12 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/vugu/vugu"
 )
@@ -18,7 +21,19 @@ func main() {
 	h := vugu.NewDevHTTPHandler(wd, http.Dir(wd))
 	h.ParserGoPkgOpts.SkipGoMod = true
 	h.DisableCache = true // so we pick up changes in other packages
-	log.Fatal(http.ListenAndServe(l, h))
+	log.Fatal(http.ListenAndServe(l, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/api/sample" {
+			n, _ := strconv.Atoi(r.URL.Query().Get("n"))
+			items := make([]string, 0, n)
+			for i := 0; i < n; i++ {
+				items = append(items, fmt.Sprintf("api sample item %d", i))
+			}
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(items)
+			return
+		}
+		h.ServeHTTP(w, r)
+	})))
 
 	// 	listen := flag.String("listen", ":8855", "Host:port to listen on for HTTP requests")
 	// 	buildPath := flag.String("build-path", ".", "Path to pass to go build indicating the package folder")

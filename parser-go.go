@@ -17,7 +17,6 @@ import (
 )
 
 // ParserGo is a template parser that emits Go source code that will construct the appropriately wired VGNodes.
-// It supports both Go-style and Go-template-style dynamic elements.
 type ParserGo struct {
 	PackageName   string
 	ComponentType string // just the struct name, no "*"
