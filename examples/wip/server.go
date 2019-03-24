@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/vugu/vugu"
 )
@@ -26,7 +27,7 @@ func main() {
 			n, _ := strconv.Atoi(r.URL.Query().Get("n"))
 			items := make([]string, 0, n)
 			for i := 0; i < n; i++ {
-				items = append(items, fmt.Sprintf("api sample item %d", i))
+				items = append(items, fmt.Sprintf("api sample item %d (ts=%v)", i, time.Now()))
 			}
 			w.Header().Set("Content-Type", "application/json")
 			json.NewEncoder(w).Encode(items)
