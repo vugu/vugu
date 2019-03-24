@@ -3,7 +3,12 @@
 package vugu
 
 import (
+	"bytes"
 	"fmt"
+	"io"
+	"strings"
+	"time"
+
 	js "syscall/js"
 )
 
@@ -11,203 +16,544 @@ var _ js.Value
 
 var _ Env = (*JSEnv)(nil) // assert type
 
+var document js.Value
+
+func init() {
+	document = js.Global().Get("document")
+}
+
 // JSEnv is an environment that renders to DOM in webassembly applications.
 type JSEnv struct {
-	MountPoint string // query selector
+	MountParent string // query selector
+
+	DebugWriter io.Writer // write debug information about render details to this Writer if not nil
 
 	reg      ComponentTypeMap
 	rootInst *ComponentInst
+
+	posJSNodeMap map[uint64]js.Value // keep track of element position hash value to js element, so we re-use existing nodes
+	posElHashMap map[uint64]uint64   // keep track of which element positions have which exact element hashes, so we don't touch nodes that are the same
+	lastCSS      string              // most recent css block value
 }
 
-// NewJSEnv returns a new instance of JSEnv.  The mountPoint is a query selector of
-// where in the DOM the rootInst component will be rendered and components is
+// NewJSEnv returns a new instance of JSEnv.  The mountParent is a query selector of
+// where in the DOM the rootInst component will be rendered inside, and components is
 // a map of components to be made available.
-func NewJSEnv(mountPoint string, rootInst *ComponentInst, components ComponentTypeMap) *JSEnv {
+func NewJSEnv(mountParent string, rootInst *ComponentInst, components ComponentTypeMap) *JSEnv {
 	if components == nil {
 		components = make(ComponentTypeMap)
 	}
-	return &JSEnv{
-		MountPoint: mountPoint,
-		reg:        components,
-		rootInst:   rootInst,
+	ret := &JSEnv{
+		MountParent:  mountParent,
+		reg:          components,
+		rootInst:     rootInst,
+		posJSNodeMap: make(map[uint64]js.Value, 1024),
+		posElHashMap: make(map[uint64]uint64, 1024),
 	}
+	return ret
 }
 
 func (e *JSEnv) RegisterComponentType(tagName string, ct ComponentType) {
 	e.reg[tagName] = ct
 }
 
-// Render does the DOM syncing.
-func (e *JSEnv) Render() error {
-	return fmt.Errorf("not yet implemented")
+var pgmStart = time.Now()
+
+func (e *JSEnv) debugf(s string, args ...interface{}) {
+	if e.DebugWriter != nil {
+		tel := time.Since(pgmStart)
+		telms := tel.Truncate(time.Microsecond)
+		// I don't really get what's happening here - it appears that log statements are extremely slow (like 200ms slow),
+		// and they don't work at all from other goroutines.  So I'm just dropping in this in here and hoping the debug
+		// logging isn't so bad it's unusable.  TODO: maybe just printing one summary at the end after everything is the way to go...
+		// println("blah")
+		fmt.Fprintf(e.DebugWriter, fmt.Sprintf("JSEnv.debug@%v: ", telms)+s+"\n", args...)
+		// println(fmt.Sprintf("JSEnv.debug@%v: ", telms)+s+"\n", args...)
+		// println(fmt.Sprintf("JSEnv.debug@"+telms.String()+": "+s, args...))
+	}
 }
 
-// 	vdom, css, err := c.Type.BuildVDOM(c.Data)
-// 	if err != nil {
-// 		return err
-// 	}
+// Render does the DOM syncing.
+func (e *JSEnv) Render() (reterr error) {
 
-// 	// addCss := func(vcss *VGNode) {
-// 	// 	css.AppendChild(vcss.FirstChild)
-// 	// }
+	// TODO: watch out for concurrency issues with this being called from multiple goroutines, that's not going to work;
+	// we probably should just error in this case; needs more consideration.
 
-// 	// walk the vdom and handle components along the way;
-// 	// since this is a static render, we can be pretty naive
-// 	// about how and when we instanciate the components
+	// FIXME: We should defer+recover here to catch JS errors, which are translated to panics
 
-// 	// compInstMap := make(map[*VGNode]*ComponentInst)
-// 	err = vdom.Walk(func(vgn *VGNode) error {
+	// log.Printf("HERE!!!")
+	// ts := time.Now()
+	// log.Print("testing1")
+	// log.Printf("time: %v", time.Since(ts))
+	// log.Print("testing2")
 
-// 		// must be element
-// 		if vgn.Type != ElementNode {
-// 			return nil
-// 		}
+	renderStart := time.Now()
+	// log.Print(time.Now())
 
-// 		// element name must match a component
-// 		ct, ok := e.reg[vgn.Data]
-// 		if !ok {
-// 			return nil
-// 		}
+	e.debugf("Render() starting")
 
-// 		// copy props and merge in static attributes where they don't conflict
-// 		props := vgn.Props.Clone()
-// 		for _, a := range vgn.Attr {
-// 			if _, ok := props[a.Key]; !ok {
-// 				props[a.Key] = a.Val
-// 			}
-// 		}
+	defer func() {
+		// log.Print(time.Now())
 
-// 		// just make a new instance each time - this is static html output
-// 		compInst, err := New(ct, props)
-// 		if err != nil {
-// 			return err
-// 		}
+		e.debugf("Render() exiting, total time %v (err=%v)", time.Since(renderStart), reterr)
+	}()
 
-// 		cdom, ccss, err := ct.BuildVDOM(compInst.Data)
-// 		if err != nil {
-// 			return err
-// 		}
+	c := e.rootInst
+	mountParentEl := document.Call("querySelector", e.MountParent)
+	if !mountParentEl.Truthy() {
+		return fmt.Errorf("failed to find mount parent using query selector %q", e.MountParent)
+	}
 
-// 		if ccss != nil && ccss.FirstChild != nil {
-// 			css.AppendChild(ccss.FirstChild)
-// 		}
+	vdom, css, err := c.Type.BuildVDOM(c.Data)
+	if err != nil {
+		return err
+	}
+	_, _ = vdom, css
 
-// 		// make cdom replace vgn
+	// do basic setup and ensure we have a css style element and a root element, in that order
+	mountChild1 := mountParentEl.Get("firstElementChild")
+	var mountChild2 js.Value
+	if mountChild1.Truthy() {
+		mountChild2 = mountChild1.Get("nextElementSibling")
+	}
+	if !(strings.EqualFold("STYLE", mountChild1.Get("tagName").String()) &&
+		strings.EqualFold(vdom.Data, mountChild2.Get("tagName").String())) {
 
-// 		// point Parent on each child of cdom to vgn
-// 		for cn := cdom.FirstChild; cn != nil; cn = cn.NextSibling {
-// 			cn.Parent = vgn
-// 		}
-// 		// replace vgn with cdom but preserve vgn.Parent
-// 		*vgn, vgn.Parent = *cdom, vgn.Parent
+		// something is wrong, just blow everything away and start over
+		mountParentEl.Set("innerHTML", fmt.Sprintf(`<style>/* placeholder */</style><%s></%s>`, vdom.Data, vdom.Data))
+		mountChild1 = mountParentEl.Get("firstElementChild")
+		mountChild2 = mountChild1.Get("nextElementSibling")
+		// log.Printf("mountChild1: %#v, mountChild2: %#v", mountChild1, mountChild2)
 
-// 		return nil
-// 	})
+		// wipe out these too
+		e.posJSNodeMap = make(map[uint64]js.Value, 1024)
+		e.posElHashMap = make(map[uint64]uint64, 1024)
 
-// 	// The basic strategy is to build an equivalent html.Node tree from our vdom, expanding InnerHTML along
-// 	// the way, and then tell the html package to write it out
+	}
 
-// 	// output css
-// 	if css != nil && css.FirstChild != nil {
+	styleEl := mountChild1
+	rootEl := mountChild2
 
-// 		cssn := &html.Node{
-// 			Type:     html.ElementNode,
-// 			Data:     "style",
-// 			DataAtom: atom.Style,
-// 		}
-// 		cssn.AppendChild(&html.Node{
-// 			Type: html.TextNode,
-// 			Data: css.FirstChild.Data,
-// 		})
+	// drop in CSS if it's different
+	var cssBuf bytes.Buffer
+	if css != nil {
+		for cssTxt := css.FirstChild; cssTxt != nil && cssTxt.Type == TextNode; cssTxt = cssTxt.NextSibling {
+			fmt.Fprint(&cssBuf, cssTxt.Data)
+			fmt.Fprint(&cssBuf, "\n")
+		}
+	}
+	newCSS := cssBuf.String()
+	if e.lastCSS != newCSS {
+		styleEl.Set("textContent", newCSS)
+		e.lastCSS = newCSS
+	}
 
-// 		err = html.Render(out, cssn)
-// 		if err != nil {
-// 			return err
-// 		}
-// 	}
+	// basic strategy is, starting with root component and doing the same with each
+	// nested component:
+	// * compute data's hash and use as starting point
+	// * render vdom if hash doesn't match
+	// * traverse vdom and compute a hash for each element based on (tbd - parent, tag name, and sibling position)
+	// * where hash doesn't match, do the dom sync
+	// * recurse into other components (create instance where needed, reuse if possible) as we encounter them
+	// * prune extra html DOM as we go? (although possibly entire sub-tree contents gets nixed for now, we'll see)
+	// * prune discarded component instances when done
 
-// 	ptrMap := make(map[*VGNode]*html.Node)
+	// rootEl := document.Call("createElement", "div")
+	// rootEl, err = jsSyncNode(vdom, rootEl)
+	// if err != nil {
+	// log.Printf("got err 2: %v", err)
+	// return err
+	// }
 
-// 	var conv func(*VGNode) (*html.Node, error)
-// 	conv = func(vgn *VGNode) (*html.Node, error) {
+	// build a new map of all of the positions we use during rendering
+	newPosJSNodeMap := make(map[uint64]js.Value, len(e.posJSNodeMap))
+	newPosElHashMap := make(map[uint64]uint64, len(e.posElHashMap))
 
-// 		if vgn == nil {
-// 			return nil, nil
-// 		}
+	// position hash 0 is always root element
+	e.posJSNodeMap[0] = rootEl
 
-// 		// see if it's already in map, if so just return it
-// 		if n := ptrMap[vgn]; n != nil {
-// 			return n, nil
-// 		}
+	// walk the vdom, handle components along the way,
+	// and sync to browser dom
 
-// 		var err error
-// 		n := &html.Node{}
-// 		// assign this first thing, so that everything below when it recurses will just point to the same instance
-// 		ptrMap[vgn] = n
+	err = vdom.Walk(func(vgn *VGNode) error {
 
-// 		// for all node pointers we recursively call conv, which will convert them or just return the pointer if already done
-// 		// Parent
-// 		n.Parent, err = conv(vgn.Parent)
-// 		if err != nil {
-// 			return n, err
-// 		}
-// 		// FirstChild
-// 		n.FirstChild, err = conv(vgn.FirstChild)
-// 		if err != nil {
-// 			return n, err
-// 		}
-// 		// LastChild
-// 		n.LastChild, err = conv(vgn.LastChild)
-// 		if err != nil {
-// 			return n, err
-// 		}
-// 		// PrevSibling
-// 		n.PrevSibling, err = conv(vgn.PrevSibling)
-// 		if err != nil {
-// 			return n, err
-// 		}
-// 		// NextSibling
-// 		n.NextSibling, err = conv(vgn.NextSibling)
-// 		if err != nil {
-// 			return n, err
-// 		}
+		// calculate vdom hash - has nothing to do with data, just the position
+		// in the tree
+		posh := vgn.positionHash()
 
-// 		// copy the other type and attr info
-// 		n.Type = html.NodeType(vgn.Type)
-// 		n.DataAtom = atom.Atom(vgn.DataAtom)
-// 		n.Data = vgn.Data
-// 		n.Namespace = vgn.Namespace
+		// e.debugf("vgn = %#v", vgn)
 
-// 		for _, vgnAttr := range vgn.Attr {
-// 			n.Attr = append(n.Attr, html.Attribute{Namespace: vgnAttr.Namespace, Key: vgnAttr.Key, Val: vgnAttr.Val})
-// 		}
+		{
+			// TODO: components
 
-// 		// parse and expand InnerHTML if present
-// 		if vgn.InnerHTML != "" {
+			// check for component, using vdom hash to reuse if present
 
-// 			innerNs, err := html.ParseFragment(bytes.NewReader([]byte(vgn.InnerHTML)), cruftBody)
-// 			if err != nil {
-// 				return nil, err
-// 			}
-// 			// FIXME: do we just append all of this, what about case where there is already something inside?
-// 			for _, innerN := range innerNs {
-// 				n.AppendChild(innerN)
-// 			}
+			// hash component data
 
-// 		}
+			// if component data hash is different (or first time), regenerate its vdom
 
-// 		return n, nil
-// 	}
-// 	outn, err := conv(vdom)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	// log.Printf("outn: %#v", outn)
+			// merge vdom into position here
+		}
 
-// 	err = html.Render(out, outn)
-// 	if err != nil {
-// 		return err
-// 	}
+		// check for node with this position hash
+		n := e.posJSNodeMap[posh]
 
-// 	return nil
-// }
+		// if not exist, we're creating a new node
+		if !n.Truthy() {
+
+			switch vgn.Type {
+			case ElementNode:
+				n = document.Call("createElement", vgn.Data)
+			case TextNode:
+				n = document.Call("createTextNode", vgn.Data)
+			case CommentNode:
+				n = document.Call("createComment", vgn.Data)
+			default:
+				return fmt.Errorf("unable to handle unknown node type %v", vgn.Type)
+			}
+
+			// this should always work - there is always a parent that we can appendChild on for any node that needs to be created
+			parentN := e.posJSNodeMap[vgn.Parent.positionHash()]
+			parentN.Call("appendChild", n)
+
+			// // check for previous sibling and attach that way
+			// if !n.Truthy() && vgn.PrevSibling != nil {
+			// 	prevPosH := vgn.PrevSibling.positionHash()
+			// 	if prevn, ok := e.posJSNodeMap[prevPosH]; ok {
+			// 		// create N from
+			// 		document.Call("createElement", vgn.Data)
+			// 		prevn.Call("insertAdjacentElement", "afterend")
+			// 	}
+			// }
+
+		}
+
+		// use position hash to look up element hash and compare to new vdom element hash
+		elHash := vgn.elementHash(posh) // hash of position+contents of this vdom element
+
+		// check if element is different than last recorded state
+		if elHash != e.posElHashMap[posh] {
+			// do a sync
+			newEl, err := jsSyncNode(vgn, n)
+			if err != nil {
+				return err
+			}
+			n = newEl
+		}
+
+		// assign node to both new and old, old is used in cases where we grab the parent
+		e.posJSNodeMap[posh] = n
+		newPosJSNodeMap[posh] = n
+
+		// update in new posEl hash map
+		newPosElHashMap[posh] = elHash
+
+		// --
+
+		// see if a node exists for this vdom element hash, if so we're done,
+		// otherwise hit the dom and sync
+
+		// 	// element name must match a component
+		// 	ct, ok := e.reg[vgn.Data]
+		// 	if !ok {
+		// 		return nil
+		// 	}
+
+		// 	// copy props and merge in static attributes where they don't conflict
+		// 	props := vgn.Props.Clone()
+		// 	for _, a := range vgn.Attr {
+		// 		if _, ok := props[a.Key]; !ok {
+		// 			props[a.Key] = a.Val
+		// 		}
+		// 	}
+
+		// 	// just make a new instance each time - this is static html output
+		// 	compInst, err := New(ct, props)
+		// 	if err != nil {
+		// 		return err
+		// 	}
+
+		// 	cdom, ccss, err := ct.BuildVDOM(compInst.Data)
+		// 	if err != nil {
+		// 		return err
+		// 	}
+
+		// 	if ccss != nil && ccss.FirstChild != nil {
+		// 		css.AppendChild(ccss.FirstChild)
+		// 	}
+
+		// 	// make cdom replace vgn
+
+		// 	// point Parent on each child of cdom to vgn
+		// 	for cn := cdom.FirstChild; cn != nil; cn = cn.NextSibling {
+		// 		cn.Parent = vgn
+		// 	}
+		// 	// replace vgn with cdom but preserve vgn.Parent
+		// 	*vgn, vgn.Parent = *cdom, vgn.Parent
+
+		return nil
+	})
+
+	if err != nil {
+		return err
+	}
+
+	// to remove elements that are no longer part of the new virtual dom, we look for the elements that are in
+	// e.posJSNodeMap but not in newPosJSNodeMap and call remove() on them to remove them from the browser DOM
+	for k, v := range e.posJSNodeMap {
+		if _, ok := newPosJSNodeMap[k]; !ok {
+			v.Call("remove") // remove from DOM
+		}
+	}
+
+	// replace our maps with the new ones we've just created, which effectively trims any values that are no longer used
+	// TODO: is there a better way to do this that doesn't result in so much garbage collection?
+	e.posJSNodeMap = newPosJSNodeMap
+	e.posElHashMap = newPosElHashMap
+
+	return nil
+
+	// // The basic strategy is to build an equivalent html.Node tree from our vdom, expanding InnerHTML along
+	// // the way, and then tell the html package to write it out
+
+	// // output css
+	// if css != nil && css.FirstChild != nil {
+
+	// 	cssn := &html.Node{
+	// 		Type:     html.ElementNode,
+	// 		Data:     "style",
+	// 		DataAtom: atom.Style,
+	// 	}
+	// 	cssn.AppendChild(&html.Node{
+	// 		Type: html.TextNode,
+	// 		Data: css.FirstChild.Data,
+	// 	})
+
+	// 	err = html.Render(out, cssn)
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// }
+
+	// ptrMap := make(map[*VGNode]*html.Node)
+
+	// var conv func(*VGNode) (*html.Node, error)
+	// conv = func(vgn *VGNode) (*html.Node, error) {
+
+	// 	if vgn == nil {
+	// 		return nil, nil
+	// 	}
+
+	// 	// see if it's already in map, if so just return it
+	// 	if n := ptrMap[vgn]; n != nil {
+	// 		return n, nil
+	// 	}
+
+	// 	var err error
+	// 	n := &html.Node{}
+	// 	// assign this first thing, so that everything below when it recurses will just point to the same instance
+	// 	ptrMap[vgn] = n
+
+	// 	// for all node pointers we recursively call conv, which will convert them or just return the pointer if already done
+	// 	// Parent
+	// 	n.Parent, err = conv(vgn.Parent)
+	// 	if err != nil {
+	// 		return n, err
+	// 	}
+	// 	// FirstChild
+	// 	n.FirstChild, err = conv(vgn.FirstChild)
+	// 	if err != nil {
+	// 		return n, err
+	// 	}
+	// 	// LastChild
+	// 	n.LastChild, err = conv(vgn.LastChild)
+	// 	if err != nil {
+	// 		return n, err
+	// 	}
+	// 	// PrevSibling
+	// 	n.PrevSibling, err = conv(vgn.PrevSibling)
+	// 	if err != nil {
+	// 		return n, err
+	// 	}
+	// 	// NextSibling
+	// 	n.NextSibling, err = conv(vgn.NextSibling)
+	// 	if err != nil {
+	// 		return n, err
+	// 	}
+
+	// 	// copy the other type and attr info
+	// 	n.Type = html.NodeType(vgn.Type)
+	// 	n.DataAtom = atom.Atom(vgn.DataAtom)
+	// 	n.Data = vgn.Data
+	// 	n.Namespace = vgn.Namespace
+
+	// 	for _, vgnAttr := range vgn.Attr {
+	// 		n.Attr = append(n.Attr, html.Attribute{Namespace: vgnAttr.Namespace, Key: vgnAttr.Key, Val: vgnAttr.Val})
+	// 	}
+
+	// 	// parse and expand InnerHTML if present
+	// 	if vgn.InnerHTML != "" {
+
+	// 		innerNs, err := html.ParseFragment(bytes.NewReader([]byte(vgn.InnerHTML)), cruftBody)
+	// 		if err != nil {
+	// 			return nil, err
+	// 		}
+	// 		// FIXME: do we just append all of this, what about case where there is already something inside?
+	// 		for _, innerN := range innerNs {
+	// 			n.AppendChild(innerN)
+	// 		}
+
+	// 	}
+
+	// 	return n, nil
+	// }
+	// outn, err := conv(vdom)
+	// if err != nil {
+	// 	return err
+	// }
+	// // log.Printf("outn: %#v", outn)
+
+	// err = html.Render(out, outn)
+	// if err != nil {
+	// 	return err
+	// }
+
+	// return nil
+}
+
+func canJsSyncNode(vgn *VGNode) bool {
+	switch vgn.Type {
+	case ElementNode, TextNode, CommentNode:
+		return true
+	}
+	return false
+}
+
+// jsSyncNode will take a virtual dom element and update a browser DOM element to match it,
+// or if this is not possible the element will be replaced entirely; either way
+// as long as no error the correct new element will be returned
+func jsSyncNode(vgn *VGNode, el js.Value) (newEl js.Value, reterr error) {
+
+	// FIXME: Is there a way to merge all this so we only ship one set of data over to the JS side
+	// and do the rest from there?  Might be much faster...
+
+	if !el.Truthy() {
+		reterr = fmt.Errorf("el is not truthy, cannot sync node")
+		return
+	}
+
+	newEl = el
+
+	switch vgn.Type {
+
+	case ElementNode:
+
+		// see if it's the same tag name, if not we need to replace the tag and return the new one
+		tagName := newEl.Get("tagName").String()
+		if !strings.EqualFold(vgn.Data, tagName) {
+			newEl = document.Call("createElement", vgn.Data)
+
+			// insert new and remove old - note that the old may not be an element, could be text or comment
+
+			parentNode := el.Get("parentNode")
+			parentNode.Call("insertBefore", newEl, el) // insert new one before old
+
+			// move children over from el to newEl
+			elChildNodes := el.Get("childNodes")
+			elChildNodesLength := elChildNodes.Get("length").Int()
+			for i := 0; i < elChildNodesLength; i++ {
+				childN := elChildNodes.Call("item", 0) // get first element of el childs
+				newEl.Call("appendChild", childN)      // move to end of newEl childs
+			}
+
+			el.Call("remove") // remove old el
+
+		}
+
+		// TODO: optimize case where both vgn and newEl have no attributes or events as this is very common
+
+		// TODO: is it faster to just set the attributes and clobber what is there or to check the values first and only
+		// set the ones that need changing? needs research
+
+		// TODO: also it might be faster to build the node as a string and replace rather than various attribute calls
+
+		// now that we have the right type of tag, sync the attributes, including rendering dynamic ones to text
+		attrNames := make(map[string]bool, len(vgn.Attr)+len(vgn.Props))
+		// static attributes
+		for _, a := range vgn.Attr {
+			attrNames[a.Key] = true
+			newEl.Call("setAttribute", a.Key, a.Val)
+		}
+		// props get converted to attributes
+		for k, v := range vgn.Props {
+			attrNames[k] = true
+			newEl.Call("setAttribute", k, fmt.Sprint(v))
+		}
+
+		// look through and prune any left that were not set above
+		var rmNames []string
+		attributes := newEl.Get("attributes")
+		l := attributes.Get("length").Int()
+		for i := 0; i < l; i++ {
+			name := attributes.Call("item", i).Get("name").String()
+			if !attrNames[name] {
+				rmNames = append(rmNames, name)
+			}
+		}
+		for _, name := range rmNames {
+			newEl.Call("removeAttribute", name)
+		}
+
+		// if InnerHTML then set it
+		if vgn.InnerHTML != "" {
+			newEl.Set("innerHTML", vgn.InnerHTML)
+		}
+		return
+
+	case TextNode:
+
+		elNodeType := newEl.Get("nodeType").Int()
+		if elNodeType == 3 { // 3 means text node
+			// already a text node, just set it's contents
+			newEl.Set("data", vgn.Data)
+			return
+		}
+
+		// what's there is not a text node, need to replace
+		newEl = document.Call("createTextNode", vgn.Data)
+		parentNode := el.Get("parentNode")
+		parentNode.Call("insertBefore", newEl, el) // insert new one before old
+		el.Call("remove")                          // remove old
+
+		return
+
+	case CommentNode:
+
+		elNodeType := newEl.Get("nodeType").Int()
+		if elNodeType == 8 { // 8 means comment node
+			// already a comment node, just set it's contents
+			newEl.Set("data", vgn.Data)
+			return
+		}
+
+		// what's there is not a comment node, need to replace
+		newEl = document.Call("createComment", vgn.Data)
+		parentNode := el.Get("parentNode")
+		parentNode.Call("insertBefore", newEl, el) // insert new one before old
+		el.Call("remove")                          // remove old
+
+		return
+	}
+
+	reterr = fmt.Errorf("cannot sync node of type %v", vgn.Type)
+	return
+}
+
+func jsRemoveChildren(v js.Value) {
+	if !v.Truthy() {
+		return
+	}
+	for firstChild := v.Get("firstChild"); firstChild.Truthy(); firstChild = v.Get("firstChild") {
+		v.Call("removeChild", firstChild)
+	}
+}

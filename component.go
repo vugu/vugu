@@ -1,5 +1,7 @@
 package vugu
 
+import "sort"
+
 // RegisteredComponentTypes returns a copy of the map of registered component types.
 func RegisteredComponentTypes() ComponentTypeMap {
 	// make a copy
@@ -20,6 +22,19 @@ var globalComponentTypeMap = make(ComponentTypeMap)
 type ComponentTypeMap map[string]ComponentType
 
 type Props map[string]interface{}
+
+// OrderedKeys returns the keys sorted alphabetically.
+func (p Props) OrderedKeys() []string {
+	if p == nil {
+		return nil
+	}
+	ret := make([]string, len(p))
+	for k := range p {
+		ret = append(ret, k)
+	}
+	sort.Strings(ret)
+	return ret
+}
 
 // Clone makes a copy of the Props map, distinct from the original.
 func (p Props) Clone() Props {

@@ -20,11 +20,10 @@ import (
 // It supports both Go-style and Go-template-style dynamic elements.
 type ParserGo struct {
 	PackageName   string
-	ComponentType string
-	// TagName       string
-	DataType string
-	OutDir   string
-	OutFile  string
+	ComponentType string // just the struct name, no "*"
+	DataType      string // just the struct name, no "*"
+	OutDir        string
+	OutFile       string
 }
 
 func (p *ParserGo) gofmt(pgm string) (string, error) {
@@ -136,15 +135,15 @@ nodeLoop1:
 	fmt.Fprintf(&buf, "\n")
 
 	// FIXME: we should only output the struct here if it's not in a <script type="application/x-go"> tag
-	fmt.Fprintf(&buf, "type %s struct {\n", p.ComponentType)
-	fmt.Fprintf(&buf, "}\n")
-	fmt.Fprintf(&buf, "\n")
+	// fmt.Fprintf(&buf, "type %s struct {\n", p.ComponentType)
+	// fmt.Fprintf(&buf, "}\n")
+	// fmt.Fprintf(&buf, "\n")
 
 	// fmt.Fprintf(&buf, "func (c %s) TagName() string { return %q }\n", p.ComponentType, p.TagName)
 	// fmt.Fprintf(&buf, "\n")
 
-	fmt.Fprintf(&buf, "func (c %s) BuildVDOM(dataI interface{}) (vdom *vugu.VGNode, css *vugu.VGNode, reterr error) {\n", p.ComponentType)
-	fmt.Fprintf(&buf, "    data := dataI.(%s)\n", p.DataType)
+	fmt.Fprintf(&buf, "func (c *%s) BuildVDOM(dataI interface{}) (vdom *vugu.VGNode, css *vugu.VGNode, reterr error) {\n", p.ComponentType)
+	fmt.Fprintf(&buf, "    data := dataI.(*%s)\n", p.DataType)
 	fmt.Fprintf(&buf, "    _ = data\n")
 	fmt.Fprintf(&buf, "    _ = fmt.Sprint\n")
 

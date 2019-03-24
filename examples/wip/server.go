@@ -17,6 +17,7 @@ func main() {
 	log.Printf("Starting HTTP Server at %q", l)
 	h := vugu.NewDevHTTPHandler(wd, http.Dir(wd))
 	h.ParserGoPkgOpts.SkipGoMod = true
+	h.DisableCache = true // so we pick up changes in other packages
 	log.Fatal(http.ListenAndServe(l, h))
 
 	// 	listen := flag.String("listen", ":8855", "Host:port to listen on for HTTP requests")

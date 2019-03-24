@@ -23,7 +23,7 @@ func TestStaticHTMLEnv(t *testing.T) {
 <script type="application/x-go">
 import "os"
 
-// type DemoComp struct {}
+type DemoComp struct {}
 
 func (c *DemoComp) NewData(props vugu.Props) (interface{}, error) {
 	return &DemoCompData{Example:"Some Data!"}, nil

@@ -39,6 +39,12 @@ type DevHTTPHandler struct {
 	lastBuildContentGZ []byte       // last successful build gzipped
 }
 
+/*
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/css-spinning-spinners/1.1.1/load8.css" />
+<div class="loader">Loading...</div>
+<!-- span style="font-family:sans-serif">Loading...</style -->
+*/
+
 // NewDevHTTPHandler returns a DevHTTPHandler as configured and otherwise with sensible defaults.
 func NewDevHTTPHandler(buildDir string, staticFileSystem http.FileSystem) *DevHTTPHandler {
 	return &DevHTTPHandler{
@@ -52,13 +58,8 @@ func NewDevHTTPHandler(buildDir string, staticFileSystem http.FileSystem) *DevHT
 <script src="/wasm_exec.js"></script>
 </head>
 <body>
-<script>
-var blah = function(e) {
-	console.log(e);
-}
-</script>
-<div id="root">
-Loading...
+<div id="root_mount_parent">
+<img style="position: absolute; top: 50%; left: 50%;" src="https://cdnjs.cloudflare.com/ajax/libs/galleriffic/2.0.1/css/loader.gif">
 </div>
 <script>
 // FIXME: need to handle unloading properly and making sure the app exits and doesn't keep eating memory
@@ -98,6 +99,10 @@ func (h *DevHTTPHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		// log.Printf("h.wasmExecJSPath = %q", h.wasmExecJSPath)
 
 	}()
+
+	// tell the browser to check with us every time, although it should be able to do 304s where appropriate,
+	// should be be both fast and will keep things up to date upon page refresh
+	w.Header().Set("Cache-control", "max-age=0, no-cache")
 
 	// if errMsg is set then something failed at startup and we just show this error
 	if h.errMsg != "" {
@@ -172,6 +177,10 @@ notStatic:
 
 		if len(lastBuildContentGZ) == 0 {
 			// log.Printf("2")
+			goto doBuild
+		}
+
+		if h.DisableCache {
 			goto doBuild
 		}
 
@@ -299,7 +308,7 @@ notStatic:
 	// if no file extension or if index only and is home, serve html
 	if (h.IndexOnly && (p == "/" || p == "/index" || p == "/index.html")) || ext == "" {
 		w.Header().Set("Content-Type", "text/html") // FIXME: cache headers?
-		fmt.Fprintf(w, h.IndexTemplate)             // FIXME: just printing for now but making this a html/template is probably better
+		fmt.Fprint(w, h.IndexTemplate)              // FIXME: just printing for now but making this a html/template is probably better
 		return
 	}
 

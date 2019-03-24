@@ -30,6 +30,8 @@ func main() {
 	if err != nil { panic(err) }
 }
 
+type RootComp struct {}
+
 type RootCompData struct {
 	TheTitle string
 }
@@ -46,6 +48,9 @@ func (c *RootComp) NewData(props vugu.Props) (interface{}, error) {
 </div>
 
 <script type="application/x-go">
+
+type CompOne struct {}
+
 type CompOneData struct {
 	Headline string
 }

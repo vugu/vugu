@@ -16,6 +16,10 @@ type DataHasher interface {
 
 func ComputeHash(i interface{}) uint64 {
 
+	// FIXME: do we need to handle circular references here? (via pointer, via interface{}),
+	// right now this will recurse forever and eventually stack overflow, not sure if this is
+	// real world case or not.  Not sure if we should panic or gracefully handle it or what.
+
 	if _, ok := i.(*reflect.Value); ok {
 		panic("cannot compute hash on a *reflect.Value")
 	}
