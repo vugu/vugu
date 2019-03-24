@@ -7,7 +7,9 @@ import (
 	"fmt"
 	"io"
 	"reflect"
+	"runtime/debug"
 	"strings"
+	"sync"
 	"time"
 
 	js "syscall/js"
@@ -39,6 +41,10 @@ type JSEnv struct {
 	reg      ComponentTypeMap
 	rootInst *ComponentInst
 
+	eventWaitCh chan bool    // events send to this and EventWait receives from it
+	eventRWMU   sync.RWMutex // make sure Render and event handling are not attempted at the same time (not totally sure if this is necessary in terms of the wasm threading model but enforce it with a rwmutex all the same)
+	eventEnv    *eventEnv    // our EventEnv implementation that exposes eventRWMU and eventWaitCh to events in a clean way
+
 	posJSNodeMap           map[uint64]js.Value        // keep track of element position hash value to js element, so we re-use existing nodes
 	posElHashMap           map[uint64]uint64          // keep track of which element positions have which exact element hashes, so we don't touch nodes that are the same
 	domEventHandlerHashMap map[uint64]DOMEventHandler // DOMEventHandler.hash() -> DOMEventHandler
@@ -59,6 +65,11 @@ func NewJSEnv(mountParent string, rootInst *ComponentInst, components ComponentT
 		posJSNodeMap:           make(map[uint64]js.Value, 1024),
 		posElHashMap:           make(map[uint64]uint64, 1024),
 		domEventHandlerHashMap: make(map[uint64]DOMEventHandler, 32),
+		eventWaitCh:            make(chan bool, 64),
+	}
+	ret.eventEnv = &eventEnv{
+		rwmu:            &ret.eventRWMU,
+		requestRenderCH: ret.eventWaitCh,
 	}
 	if jsEnv != nil {
 		panic(fmt.Errorf("only one jsEnv allowed per application, for now"))
@@ -87,11 +98,33 @@ func (e *JSEnv) debugf(s string, args ...interface{}) {
 	}
 }
 
+// EventWait will block until an event occurs and will return after the event is completed.
+// This is our first attempt at making a "render loop".  Will return false if the JSEnv
+// becomes invalid and should exit.
+func (e *JSEnv) EventWait() (ok bool) {
+	ok = js.Global().Get("document").Truthy()
+	if !ok {
+		return
+	}
+
+	// FIXME: this should probablly have some sort of "debouncing" on it to handle the case of
+	// several events in rapid succession causing multiple renders - maybe we read from eventWaitCH
+	// continuously until it's empty, with a max of like 20ms pause between each or something, and then
+	// only return after we don't see anything for that time frame.
+
+	ok = <-e.eventWaitCh
+	return
+}
+
 // Render does the DOM syncing.
 func (e *JSEnv) Render() (reterr error) {
 
 	// TODO: watch out for concurrency issues with this being called from multiple goroutines, that's not going to work;
 	// we probably should just error in this case; needs more consideration.
+
+	// acquire read lock so events are not changing data while Render is in progress
+	e.eventRWMU.RLock()
+	defer e.eventRWMU.RUnlock()
 
 	// FIXME: We should defer+recover here to catch JS errors, which are translated to panics
 
@@ -458,6 +491,31 @@ func (e *JSEnv) handleRawDOMEvent(this js.Value, args []js.Value) interface{} {
 		panic(fmt.Errorf("args should be at least 1 element, instead was: %#v", args))
 	}
 
+	// TODO: give this more thought - but for now we just do a non-blocking push to the
+	// eventWaitCh, telling the render loop that a render is required, but if a bunch
+	// of them stack up we don't wait
+	defer func() {
+
+		if r := recover(); r != nil {
+			fmt.Println("handleRawDOMEvent caught panic", r)
+			debug.PrintStack()
+
+			// in error case send false to tell event loop to exit
+			select {
+			case e.eventWaitCh <- false:
+			default:
+			}
+			return
+
+		}
+
+		// in normal case send true to the channel to tell the event loop it should render
+		select {
+		case e.eventWaitCh <- true:
+		default:
+		}
+	}()
+
 	jsEvent := args[0]
 
 	typeName := jsEvent.Get("type").String()
@@ -479,6 +537,7 @@ func (e *JSEnv) handleRawDOMEvent(this js.Value, args []js.Value) interface{} {
 	domE := &DOMEvent{
 		jsEvent:     jsEvent,
 		jsEventThis: this,
+		eventEnv:    e.eventEnv,
 	}
 
 	rvargs := make([]reflect.Value, 0, len(handler.Args))
@@ -493,6 +552,9 @@ func (e *JSEnv) handleRawDOMEvent(this js.Value, args []js.Value) interface{} {
 		}
 	}
 
+	// acquire exclusive lock before we actually process event
+	e.eventRWMU.Lock()
+	defer e.eventRWMU.Unlock()
 	ret := handler.Method.Call(rvargs)
 
 	// if it came back with a single bool value then return that, otherwise return null
@@ -512,7 +574,15 @@ func (e *JSEnv) handleRawDOMEvent(this js.Value, args []js.Value) interface{} {
 // all of the event handlers we set (or would set if not already)
 func (e *JSEnv) jsSyncNode(vgn *VGNode, el js.Value, emap map[uint64]DOMEventHandler) (newEl js.Value, reterr error) {
 
-	// FIXME: Is there a way to merge all this so we only ship one set of data over to the JS side
+	// NOTE: This never removes nodes recursively, ever (with the exception of when innerHTML is set - and we need
+	// to look at that case a bit more closely to see the implications).
+	// If we have to replace a node because it is the wrong tag type, we carefully move over any children
+	// from old to new.  This behavior makes it so our cache of nodes at various positions stays correct -
+	// it allows us to basically keep a cache of the browser's DOM and walk it without having to call into
+	// the browser at all - instead we just look up based on position hash and we have our own reference.
+	// This is an important part of performance and consistency of this syncing process.
+
+	// TODO: Is there a way to merge all this so we only ship one set of data over to the JS side
 	// and do the rest from there?  Might be much faster...
 
 	if !el.Truthy() {
@@ -600,6 +670,8 @@ func (e *JSEnv) jsSyncNode(vgn *VGNode, el js.Value, emap map[uint64]DOMEventHan
 			}
 			newEl.Set(keyName, keyVal) // set key to point it at the right handler when the call comes in
 		}
+		// FIXME: we should also check for left over vugu_event_..._id properties and for any that remain that
+		// we don't know about, call removeEventListener(..., domEventCB)
 
 		return
 

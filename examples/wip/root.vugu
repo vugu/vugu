@@ -3,6 +3,7 @@
     <ul>
         <li vg-for="data.Items" vg-html="value" @click="comp.HandleClick(event, value)"></li>
     </ul>
+    <button @click="comp.HandleLoadClick(event, data)">Load JSON</button>
 </div>
 
 <style>
@@ -13,6 +14,8 @@
 
 <script type="application/x-go">
 import "log"
+import "net/http"
+import "encoding/json"
 
 type RootData struct {
     Class string
@@ -26,7 +29,28 @@ func (ct *Root) NewData(props vugu.Props) (interface{}, error) {
     }, nil
 }
 
-func (comp *Root) HandleClick(event interface{}, itemText string) {
+func (comp *Root) HandleLoadClick(event *vugu.DOMEvent, data *RootData) {
+
+    println("In HandleLoadClick()")
+
+    go func() {
+
+        // fetch somehting
+        resp, err := http.Get("/sample.json")
+        if err != nil { log.Print(err); return }
+        defer resp.Body.Close()
+
+        // parse and upate data, with a lock
+        event.EventEnv().Lock()
+        defer event.EventEnv().UnlockRender()
+
+        json.NewDecoder(resp.Body).Decode(&data.Items)
+
+    }()
+
+}
+
+func (comp *Root) HandleClick(event *vugu.DOMEvent, itemText string) {
     log.Printf("HandleClick got %q", itemText)
 }
 

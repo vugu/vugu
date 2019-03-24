@@ -10,6 +10,13 @@ var DOMEventStub = &DOMEvent{} // used as a value to mean "replace this with the
 type DOMEvent struct {
 }
 
+func (e *DOMEvent) RequestRender() {
+}
+
 func (e *DOMEvent) PreventDefault() {
 
+}
+
+func (e *DOMEvent) EventEnv() EventEnv {
+	return nil // do we need to do anything with this? in static html rendering the events are never called... right?
 }
