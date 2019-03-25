@@ -13,4 +13,5 @@
 
 todo-notes.txt
 .vscode
+*.code-workspace
 
