@@ -446,6 +446,9 @@ func fileHashTimes(dir string) (map[uint64]time.Time, error) {
 		return nil, err
 	}
 	for _, fi := range fis {
+		if fi.IsDir() {
+			continue
+		}
 		h := xxhash.New()
 		fmt.Fprint(h, fi.Name()) // hash the name too so we don't confuse different files with the same contents
 		b, err := ioutil.ReadFile(filepath.Join(dir, fi.Name()))
@@ -478,6 +481,9 @@ func restoreFileHashTimes(dir string, hashTimes map[uint64]time.Time) error {
 		return err
 	}
 	for _, fi := range fis {
+		if fi.IsDir() {
+			continue
+		}
 		fiPath := filepath.Join(dir, fi.Name())
 		h := xxhash.New()
 		fmt.Fprint(h, fi.Name()) // hash the name too so we don't confuse different files with the same contents
