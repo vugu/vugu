@@ -1,0 +1,35 @@
+<div class="sample-line">
+    This is my line: <span vg-html="data.LineText"></span>
+    <button @click="data.HandleAction1Click(event)">Action 1</button>
+    <button @click="data.HandleAction2Click(event)">Action 2</button>
+</div>
+
+<style>
+.sample-line {
+    background: #eee;
+}
+</style>
+
+<script type="application/x-go">
+
+import "log"
+
+type SampleLineData struct {
+    LineText string
+}
+
+func (comp *SampleLine) NewData(props vugu.Props) (interface{}, error) {
+    ret := &SampleLineData{}
+    ret.LineText, _ = props["line-text"].(string)
+    return ret, nil
+}
+
+func (data *SampleLineData) HandleAction1Click(event *vugu.DOMEvent) {
+    log.Printf("HandleAction1Click: %s", data.LineText)
+}
+
+func (data *SampleLineData) HandleAction2Click(event *vugu.DOMEvent) {
+    log.Printf("HandleAction2Click: %s", data.LineText)
+}
+
+</script>

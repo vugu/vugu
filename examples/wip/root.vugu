@@ -1,7 +1,9 @@
 <div id="root" :class="data.Class">
     <h2>Hey party people!</h2>
     <ul>
-        <li vg-for="data.Items" vg-html="value" @click="comp.HandleClick(event, value)"></li>
+        <!-- li vg-for="data.Items" vg-html="value" @click="comp.HandleClick(event, value)"></li -->
+        <!-- @action1click="" -->
+        <sample-line vg-for="data.Items" :line-text="value"></sample-line>
     </ul>
     <button @click="comp.HandleLoadClick(event, data, 1)">Load JSON 1</button>
     <button @click="comp.HandleLoadClick(event, data, 2)">Load JSON 2</button>
