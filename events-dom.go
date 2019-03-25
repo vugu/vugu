@@ -2,7 +2,6 @@ package vugu
 
 import (
 	"encoding/binary"
-	"fmt"
 	"reflect"
 	"sync"
 
@@ -12,15 +11,21 @@ import (
 // NOTE: common event code which is the same for wasm and not can go here
 
 type DOMEventHandler struct {
-	Method reflect.Value // method to be called, with receiver baked into it if needed (see reflect/Value.MethodByName)
-	Args   []interface{} // arguments to be passed in when calling (special case for eventStub)
+	ReceiverAndMethodHash uint64        // hash value corresponding to the method and receiver, so we get a unique value for each combination of method and receiver
+	Method                reflect.Value // method to be called, with receiver baked into it if needed (see reflect/Value.MethodByName)
+	Args                  []interface{} // arguments to be passed in when calling (special case for eventStub)
 }
 
 // func (d DOMEventHandler) hashString() string {
 // 	return fmt.Sprintf("%x", d.hash())
 // }
 
-func (d DOMEventHandler) hash() uint64 {
+func (d DOMEventHandler) hash() (ret uint64) {
+
+	// defer func() {
+	// 	log.Printf("DOMEventHandler.hash for (receiver_and_method_hash=%v, method=%#v, args=%#v) is returning %v", d.ReceiverAndMethodHash, d.Method, d.Args, ret)
+	// }()
+
 	if !d.Method.IsValid() && len(d.Args) == 0 {
 		return 0
 	}
@@ -28,10 +33,14 @@ func (d DOMEventHandler) hash() uint64 {
 	b8 := make([]byte, 8)
 	h := xxhash.New()
 
-	// TODO: this may end up being an issue but I need to move through this for now -
+	// this may end up being an issue but I need to move through this for now -
 	// this is only unique for the method itself, not the instance it's tied to, although
 	// it's probably rare to have to distinguish between multiple component types in use in an application
-	fmt.Fprintf(h, "%#v", d.Method)
+	// fmt.Fprintf(h, "%#v", d.Method)
+
+	// NOTE: added ReceiverAndMethodHash to deal with the note above, let's see if it solves the problem
+	binary.BigEndian.PutUint64(b8, d.ReceiverAndMethodHash)
+	h.Write(b8)
 
 	// add the args
 	for _, a := range d.Args {

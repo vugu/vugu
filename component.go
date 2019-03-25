@@ -45,7 +45,7 @@ func (p Props) Clone() Props {
 	return ret
 }
 
-// Merge will copy everything from p2 into p and return p for ease of use.
+// Merge will copy everything from p2 into p and return p for ease of use.  Does not copy p.
 func (p Props) Merge(p2 Props) Props {
 	for k, v := range p2 {
 		p[k] = v

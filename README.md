@@ -1,6 +1,6 @@
 # Vugu
 
-This project is a prototype for a Vue-inspired framework for web UIs written in Go and targeting webassembly.
+This project is an experimental Vue-inspired framework for web UIs written in Go and targeting webassembly.
 
 ## TODO:
 

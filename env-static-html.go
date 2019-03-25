@@ -107,8 +107,8 @@ func (e *StaticHTMLEnv) Render() error {
 		for cn := cdom.FirstChild; cn != nil; cn = cn.NextSibling {
 			cn.Parent = vgn
 		}
-		// replace vgn with cdom but preserve vgn.Parent
-		*vgn, vgn.Parent = *cdom, vgn.Parent
+		// replace vgn with cdom but preserve vgn.Parent, vgn.PrevSibling, vgn.NextSibling
+		*vgn, vgn.Parent, vgn.PrevSibling, vgn.NextSibling = *cdom, vgn.Parent, vgn.PrevSibling, vgn.NextSibling
 
 		return nil
 	})

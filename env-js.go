@@ -45,9 +45,10 @@ type JSEnv struct {
 	eventRWMU   sync.RWMutex // make sure Render and event handling are not attempted at the same time (not totally sure if this is necessary in terms of the wasm threading model but enforce it with a rwmutex all the same)
 	eventEnv    *eventEnv    // our EventEnv implementation that exposes eventRWMU and eventWaitCh to events in a clean way
 
-	posJSNodeMap           map[uint64]js.Value        // keep track of element position hash value to js element, so we re-use existing nodes
+	posJSNodeMap           map[uint64]js.Value        // keep track of position hash value to js element, so we re-use existing nodes
 	posElHashMap           map[uint64]uint64          // keep track of which element positions have which exact element hashes, so we don't touch nodes that are the same
 	domEventHandlerHashMap map[uint64]DOMEventHandler // DOMEventHandler.hash() -> DOMEventHandler
+	compInstMap            map[uint64]*ComponentInst  // position hash + element hash -> component instance, so we re-use components in the same position with same props; changing either causes component to be re-created
 	lastCSS                string                     // most recent css block value
 }
 
@@ -65,6 +66,7 @@ func NewJSEnv(mountParent string, rootInst *ComponentInst, components ComponentT
 		posJSNodeMap:           make(map[uint64]js.Value, 1024),
 		posElHashMap:           make(map[uint64]uint64, 1024),
 		domEventHandlerHashMap: make(map[uint64]DOMEventHandler, 32),
+		compInstMap:            make(map[uint64]*ComponentInst, 32),
 		eventWaitCh:            make(chan bool, 64),
 	}
 	ret.eventEnv = &eventEnv{
@@ -175,24 +177,24 @@ func (e *JSEnv) Render() (reterr error) {
 		// wipe out these too
 		e.posJSNodeMap = make(map[uint64]js.Value, 1024)
 		e.posElHashMap = make(map[uint64]uint64, 1024)
+		e.compInstMap = make(map[uint64]*ComponentInst, 32)
 		e.domEventHandlerHashMap = make(map[uint64]DOMEventHandler, 32)
 	}
 
 	styleEl := mountChild1
 	rootEl := mountChild2
 
-	// drop in CSS if it's different
-	var cssBuf bytes.Buffer
+	// so we don't add duplicate chunks of CSS
+	cssDupCheck := make(map[string]bool, 32)
+	var cssTextBlocks []string // the actual CSS blocks to output, in sequence
 	if css != nil {
-		for cssTxt := css.FirstChild; cssTxt != nil && cssTxt.Type == TextNode; cssTxt = cssTxt.NextSibling {
-			fmt.Fprint(&cssBuf, cssTxt.Data)
-			fmt.Fprint(&cssBuf, "\n")
+		for cssNode := css.FirstChild; cssNode != nil && cssNode.Type == TextNode; cssNode = cssNode.NextSibling {
+			if cssDupCheck[cssNode.Data] {
+				continue
+			}
+			cssTextBlocks = append(cssTextBlocks, cssNode.Data)
+			cssDupCheck[cssNode.Data] = true
 		}
-	}
-	newCSS := cssBuf.String()
-	if e.lastCSS != newCSS {
-		styleEl.Set("textContent", newCSS)
-		e.lastCSS = newCSS
 	}
 
 	// basic strategy is, starting with root component and doing the same with each
@@ -215,7 +217,8 @@ func (e *JSEnv) Render() (reterr error) {
 	// build a new map of all of the positions we use during rendering
 	newPosJSNodeMap := make(map[uint64]js.Value, len(e.posJSNodeMap))
 	newPosElHashMap := make(map[uint64]uint64, len(e.posElHashMap))
-	newDOMEventHandlerHashMap := make(map[uint64]DOMEventHandler, 32)
+	newCompInstMap := make(map[uint64]*ComponentInst, len(e.compInstMap))
+	newDOMEventHandlerHashMap := make(map[uint64]DOMEventHandler, len(e.domEventHandlerHashMap))
 
 	// position hash 0 is always root element
 	e.posJSNodeMap[0] = rootEl
@@ -232,16 +235,70 @@ func (e *JSEnv) Render() (reterr error) {
 		// e.debugf("vgn = %#v", vgn)
 
 		{
-			// TODO: components
 
-			// check for component, using vdom hash to reuse if present
+			// if element name matches a registered component type, pull the CompnentType
+			var compType ComponentType
+			if vgn.Type == ElementNode {
+				compType = e.reg[vgn.Data]
+			}
+			// not a component, just keep going below
+			if compType == nil {
+				goto componentStuffDone
+			}
 
-			// hash component data
+			// check for component instance, using vdom hash to reuse if present
+			compHash := vgn.elementHash(posh)
+			compInst, ok := e.compInstMap[compHash] // see if we have a component here already
+			if !ok {
+				// doesn't exist, need to create it
+				// build combined set of props with attributes and then vgn.Props merged in (so dynamic properties take precedence)
+				props := make(Props, len(vgn.Attr)+len(vgn.Props))
+				for _, a := range vgn.Attr {
+					props[a.Key] = a.Val
+				}
+				props.Merge(vgn.Props)
+				var err error
+				compInst, err = New(compType, props) // create the component instance
+				if err != nil {
+					return err
+				}
+			}
+			newCompInstMap[compHash] = compInst // store instance (either reused or created above)
 
-			// if component data hash is different (or first time), regenerate its vdom
+			// render the component's virtual dom
+			compVDOM, compCSS, err := compInst.Type.BuildVDOM(compInst.Data)
+			if err != nil {
+				return err
+			}
+
+			// merge component CSS if present, deduplicating CSS blocks that are byte for byte the same
+			if compCSS != nil {
+				for cssNode := compCSS.FirstChild; cssNode != nil && cssNode.Type == TextNode; cssNode = cssNode.NextSibling {
+					if cssDupCheck[cssNode.Data] {
+						continue
+					}
+					cssTextBlocks = append(cssTextBlocks, cssNode.Data)
+					cssDupCheck[cssNode.Data] = true
+				}
+			}
 
 			// merge vdom into position here
+
+			// point Parent on each child of compVDOM to vgn
+			for cn := compVDOM.FirstChild; cn != nil; cn = cn.NextSibling {
+				cn.Parent = vgn
+			}
+			// replace vgn with compVDOM but preserve vgn.Parent, vgn.PrevSibling and vgn.NextSibling
+			*vgn, vgn.Parent, vgn.PrevSibling, vgn.NextSibling = *compVDOM, vgn.Parent, vgn.PrevSibling, vgn.NextSibling
+
+			// recompute position hash, it should be the same!!!
+			posh2 := vgn.positionHash()
+			if posh2 != posh {
+				panic(fmt.Errorf("something is wrong with the position hash logic, posh2=%v, posh=%v, vgn=%#v", posh2, posh, vgn))
+			}
+
 		}
+	componentStuffDone:
 
 		// check for node with this position hash
 		n := e.posJSNodeMap[posh]
@@ -363,6 +420,10 @@ func (e *JSEnv) Render() (reterr error) {
 		}
 	}
 
+	// TODO: as part of component life cycle we probably want to implement an event like "unmounted" here,
+	// where look for components that are about to be discarded due to being in e.compInstMap but not in newCompInstMap
+	// and call the appropriate method if present.
+
 	// call Release on funcs that are no longer being used
 	// for k, f := range e.domEventHandlerHashMap {
 	// 	if _, ok := newDOMEventHandlerHashMap[k]; !ok {
@@ -375,6 +436,26 @@ func (e *JSEnv) Render() (reterr error) {
 	e.posJSNodeMap = newPosJSNodeMap
 	e.posElHashMap = newPosElHashMap
 	e.domEventHandlerHashMap = newDOMEventHandlerHashMap
+	e.compInstMap = newCompInstMap
+
+	// drop in CSS if it's different
+	// FIXME: we have to do this after because we need to collect up all of the CSS and deduplicate it etc as we go through - not
+	// sure if this will create some display problem with DOM being updated first - trying this out to see
+	var cssBuf bytes.Buffer
+	if css != nil {
+		// for cssTxt := css.FirstChild; cssTxt != nil && cssTxt.Type == TextNode; cssTxt = cssTxt.NextSibling {
+		// 	fmt.Fprint(&cssBuf, cssTxt.Data)
+		// 	fmt.Fprint(&cssBuf, "\n")
+		// }
+		for _, c := range cssTextBlocks {
+			fmt.Fprintln(&cssBuf, c)
+		}
+	}
+	newCSS := cssBuf.String()
+	if e.lastCSS != newCSS {
+		styleEl.Set("textContent", newCSS)
+		e.lastCSS = newCSS
+	}
 
 	return nil
 

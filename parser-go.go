@@ -11,6 +11,8 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/cespare/xxhash"
+
 	"golang.org/x/net/html/atom"
 
 	"golang.org/x/net/html"
@@ -257,17 +259,29 @@ writeNode:
 				}
 
 				fmt.Fprintf(&buf, "// @%s = { %s }\n", k, expr)
-				fmt.Fprintf(&buf, "n.SetDOMEventHandler(%q, vugu.DOMEventHandler{\n", k)
 				if receiver != "" {
+					fmt.Fprintf(&buf, "{\n")
+					fmt.Fprintf(&buf, "var i_ interface{} = %s\n", receiver)
+					fmt.Fprintf(&buf, "idat_ := reflect.ValueOf(&i_).Elem().InterfaceData()\n")
+					fmt.Fprintf(&buf, "var i2_ interface{} = %s.%s\n", receiver, methodName)
+					fmt.Fprintf(&buf, "i2dat_ := reflect.ValueOf(&i2_).Elem().InterfaceData()\n")
+					fmt.Fprintf(&buf, "n.SetDOMEventHandler(%q, vugu.DOMEventHandler{\n", k)
+					fmt.Fprintf(&buf, "    ReceiverAndMethodHash: uint64(idat_[0]) ^ uint64(idat_[1]) ^ uint64(i2dat_[0]) ^ uint64(i2dat_[1]),\n")
 					fmt.Fprintf(&buf, "    Method: reflect.ValueOf(%s).MethodByName(%q),\n", receiver, methodName)
+					fmt.Fprintf(&buf, "    Args: []interface{}{%s},\n", argList)
+					fmt.Fprintf(&buf, "})\n")
+					fmt.Fprintf(&buf, "}\n")
 				} else {
+					fmt.Fprintf(&buf, "n.SetDOMEventHandler(%q, vugu.DOMEventHandler{\n", k)
+					fmt.Fprintf(&buf, "    ReceiverAndMethodHash: %d,\n", xxhash.Sum64String(methodName)) // it's just the method name, so a simple static hash will do
 					fmt.Fprintf(&buf, "    Method: reflect.ValueOf(%s),\n", methodName)
+					fmt.Fprintf(&buf, "    Args: []interface{}{%s},\n", argList)
+					fmt.Fprintf(&buf, "})\n")
 				}
-				fmt.Fprintf(&buf, "    Args: []interface{}{%s},\n", argList)
-				fmt.Fprintf(&buf, "})\n")
-				if receiver != "" {
-					fmt.Fprintf(&buf, "_ = %s.%s\n", receiver, methodName)
-				}
+				fmt.Fprintf(&buf, "if false {\n")
+				fmt.Fprintf(&buf, "// force compiler to check arguments for type safety\n")
+				fmt.Fprintf(&buf, "%s.%s(%s)\n", receiver, methodName, argList)
+				fmt.Fprintf(&buf, "}\n")
 
 				// // output type check
 				// fmt.Fprintf(&buf, "if false {\n")
