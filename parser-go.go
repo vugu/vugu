@@ -270,7 +270,6 @@ writeNode:
 					fmt.Fprintf(&buf, "    Method: reflect.ValueOf(%s).MethodByName(%q),\n", receiver, methodName)
 					fmt.Fprintf(&buf, "    Args: []interface{}{%s},\n", argList)
 					fmt.Fprintf(&buf, "})\n")
-					fmt.Fprintf(&buf, "_ = %s.%s\n", receiver, methodName)
 					fmt.Fprintf(&buf, "}\n")
 				} else {
 					fmt.Fprintf(&buf, "n.SetDOMEventHandler(%q, vugu.DOMEventHandler{\n", k)
@@ -279,6 +278,10 @@ writeNode:
 					fmt.Fprintf(&buf, "    Args: []interface{}{%s},\n", argList)
 					fmt.Fprintf(&buf, "})\n")
 				}
+				fmt.Fprintf(&buf, "if false {\n")
+				fmt.Fprintf(&buf, "// force compiler to check arguments for type safety\n")
+				fmt.Fprintf(&buf, "%s.%s(%s)\n", receiver, methodName, argList)
+				fmt.Fprintf(&buf, "}\n")
 
 				// // output type check
 				// fmt.Fprintf(&buf, "if false {\n")
