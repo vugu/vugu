@@ -29,7 +29,7 @@ type ParserGoPkg struct {
 type ParserGoPkgOpts struct {
 	SkipRegisterComponentTypes bool // indicates func init() { vugu.RegisterComponentType(...) } code should not be emitted in each file
 	SkipGoMod                  bool // do not try and create go.mod if it doesn't exist
-	SkipMainGo                 bool // do not try and create main.go if it doesn't exist in a main package
+	SkipMainGo                 bool // do not try and create main_wasm.go if it doesn't exist in a main package
 }
 
 // NewParserGoPkg returns a new ParserGoPkg with the specified options or default if nil.  The pkgPath is required and must be an absolute path.
@@ -58,7 +58,7 @@ func (p *ParserGoPkg) Run() error {
 	// create CompNameData if it doesn't exist in the package
 	// create CompName.NewData with defaults if it doesn't exist in the package
 
-	// how about a default main.go if one doesn't exist in the package? would be really useful!
+	// how about a default main_wasm.go if one doesn't exist in the package? would be really useful!
 	// also go.mod
 
 	// flags:
@@ -140,20 +140,20 @@ func (p *ParserGoPkg) Run() error {
 		return err
 	}
 
-	// if main package, generate main.go with default stuff if no main func in the package and no main.go
+	// if main package, generate main_wasm.go with default stuff if no main func in the package and no main_wasm.go
 	if (!p.opts.SkipMainGo) && pkgName == "main" {
 
-		mainGoPath := filepath.Join(p.pkgPath, "main.go")
+		mainGoPath := filepath.Join(p.pkgPath, "main_wasm.go")
 		// log.Printf("namesFound: %#v", namesFound)
 		// log.Printf("maingo found: %v", fileExists(mainGoPath))
 		// if _, ok := namesFound["main"]; (!ok) && !fileExists(mainGoPath) {
 
 		// NOTE: For now we're disabling the "main" symbol name check, because in single-dir cases
-		// it's picking up the main.go in server.go (even though it's excluded via build tag).  This
+		// it's picking up the main_wasm.go in server.go (even though it's excluded via build tag).  This
 		// needs some more thought but for now this will work for the common cases.
 		if !fileExists(mainGoPath) {
 
-			// log.Printf("WRITING TO MAIN.GO STUFF")
+			// log.Printf("WRITING TO main_wasm.go STUFF")
 
 			err := ioutil.WriteFile(mainGoPath, []byte(`// +build wasm
 
