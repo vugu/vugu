@@ -55,6 +55,7 @@ func NewDevHTTPHandler(buildDir string, staticFileSystem http.FileSystem) *DevHT
 <head>
 <title>Vugu Dev</title>
 <meta charset="utf-8">
+<script src="https://cdn.jsdelivr.net/npm/text-encoding@0.7.0/lib/encoding.min.js"></script> <!-- MS Edge polyfill -->
 <script src="/wasm_exec.js"></script>
 </head>
 <body>
