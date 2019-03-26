@@ -18,6 +18,7 @@ This project is an experimental Vue-inspired framework for web UIs written in Go
 * Component events (separate from DOMEvents above)
 * Component slots
 * goimports to help with missing imports in .vugu files
+* Pretty compile errors, so when things fail during dev you get the output right in the browser.
 * Template compilation - direcly to VDOM - can be called from within wasm without the use of compiler, expressions are all template syntax {{.Blah}}
 * Type-safety wherever possible - one of the big strengths of the Go language is it's type system and compiler.  Where there is an idiomatic solution that uses it, prefer that over generic (type-unsafe) solutions.
 * Use Go for what it's good at: concurrency should use Go routines, multiple web requests can go in sequence in a simple function, or in parallel using a WaitGroup, etc.
