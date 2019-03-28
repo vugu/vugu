@@ -15,3 +15,6 @@ todo-notes.txt
 .vscode
 *.code-workspace
 
+#examples/wip
+examples/wip2
+
