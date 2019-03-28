@@ -19,7 +19,13 @@ func main() {
 	flag.BoolVar(&opts.SkipRegisterComponentTypes, "skip-register", false, "Do not attempt to register component in init() method")
 	flag.BoolVar(&opts.SkipGoMod, "skip-go-mod", false, "Do not try to create go.mod as needed")
 	flag.BoolVar(&opts.SkipMainGo, "skip-main", false, "Do not try to create main.go as needed")
+	// version := flag.Bool("version", false, "Print version and exit with code 0")
 	flag.Parse()
+
+	// if *version { // NOTE: this is really just here so you can do `vugugen -version` and see if it works, makes things simple
+	// 	fmt.Println("0.0.0")
+	// 	os.Exit(0)
+	// }
 
 	args := flag.Args()
 	if len(args) != 1 {

@@ -15,6 +15,7 @@ This project is an experimental Vue-inspired framework for web UIs written in Go
 * Components in JSEnv
 * Figure out production build (probably since dev is just `go run devserver.go` prod can be something like `go run build-prod.go`, each file being just a few lines where config tweaks can go - also figure out a good prefix for these two files so it's obvious they are build process and not part of wasm output)
 
+* simplehttp server needs to gzip compress static files returned (especially .wasm files)
 * Component events (separate from DOMEvents above)
 * Component slots
 * goimports to help with missing imports in .vugu files
