@@ -165,8 +165,10 @@ func (e *JSEnv) Render() (reterr error) {
 	if mountChild1.Truthy() {
 		mountChild2 = mountChild1.Get("nextElementSibling")
 	}
-	if !(strings.EqualFold("STYLE", mountChild1.Get("tagName").String()) &&
-		strings.EqualFold(vdom.Data, mountChild2.Get("tagName").String())) {
+	if (!(strings.EqualFold("STYLE", mountChild1.Get("tagName").String()) &&
+		strings.EqualFold(vdom.Data, mountChild2.Get("tagName").String()))) ||
+		len(e.posJSNodeMap) == 0 { // needs more thought - right now SSR will blow away everything and that's wrong,
+		//                          but the current logic breaks because we don't have any of the existing element positions
 
 		// something is wrong, just blow everything away and start over
 		mountParentEl.Set("innerHTML", fmt.Sprintf(`<style>/* placeholder */</style><%s></%s>`, vdom.Data, vdom.Data))

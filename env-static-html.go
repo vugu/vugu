@@ -2,6 +2,7 @@ package vugu
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 
 	"golang.org/x/net/html/atom"
@@ -189,6 +190,20 @@ func (e *StaticHTMLEnv) Render() error {
 
 		for _, vgnAttr := range vgn.Attr {
 			n.Attr = append(n.Attr, html.Attribute{Namespace: vgnAttr.Namespace, Key: vgnAttr.Key, Val: vgnAttr.Val})
+		}
+
+		// for bound properties we fmt.Sprint and assign as attrs
+		propKeys := vgn.Props.OrderedKeys()
+	propAttrLoop:
+		for _, k := range propKeys {
+			for i := range n.Attr {
+				if n.Attr[i].Key == k { // if attr is there, overwrite
+					n.Attr[i].Val = fmt.Sprint(vgn.Props[k])
+					continue propAttrLoop
+				}
+			}
+			// attr not there, add
+			n.Attr = append(n.Attr, html.Attribute{Key: k, Val: fmt.Sprint(vgn.Props[k])})
 		}
 
 		// parse and expand InnerHTML if present
