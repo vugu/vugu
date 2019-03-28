@@ -99,7 +99,7 @@ func (h *SimpleHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if h.WasmExecJsPath != "" && h.WasmExecJsPath == p {
+	if h.WasmExecJsPath == p {
 		h.serveGoEnvWasmExecJs(w, r)
 		return
 	}
@@ -361,6 +361,9 @@ var DefaultPageTemplateSource = `<!doctype html>
 {{if .MetaTags}}{{range $k, $v := .MetaTags}}
 <meta name="{{$k}}" content="{{$v}}"/>
 {{end}}{{end}}
+{{if .CSSFiles}}{{range $f := .CSSFiles}}
+<link rel="stylesheet" href="{{$f}}" />
+{{end}}{{end}}
 <script src="https://cdn.jsdelivr.net/npm/text-encoding@0.7.0/lib/encoding.min.js"></script> <!-- MS Edge polyfill -->
 <script src="/wasm_exec.js"></script>
 </head>
@@ -390,10 +393,20 @@ type PageHandler struct {
 	TemplateDataFunc func(r *http.Request) interface{}
 }
 
+// DefaultStaticData is a map of static things added to the return value of DefaultTemplateDataFunc.
+// Provides a quick and dirty way to do things like add CSS files to every page.
+var DefaultStaticData = make(map[string]interface{}, 4)
+
+// DefaultTemplateDataFunc is the default behavior for making template data.  It
+// returns a map with "Request" set to r and all elements of DefaultStaticData added to it.
 var DefaultTemplateDataFunc = func(r *http.Request) interface{} {
-	return map[string]interface{}{
+	ret := map[string]interface{}{
 		"Request": r,
 	}
+	for k, v := range DefaultStaticData {
+		ret[k] = v
+	}
+	return ret
 }
 
 func (h *PageHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
