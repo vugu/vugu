@@ -1,3 +1,29 @@
+/*
+Package simplehttp provides an http.Handler that makes it easy to serve Vugu applications.
+Useful for development and production.
+
+The idea is that the common behaviors needed to serve a Vugu site are readily available
+in one place.   If you require more functionality than simplehttp provides, nearly everything
+it does is available in the github.com/vugu/vugu package and you can construct what you
+need from its parts.  That said, simplehttp should make it easy to start:
+
+
+	// dev flag enables most common development features
+	// including rebuild your .wasm upon page reload
+	dev := true
+	h := simplehttp.New(dir, dev)
+
+After creation, some fags are available for tuning, e.g.:
+
+	h.EnableGenerate = true // upon page reload run "go generate ."
+	h.DisableBuildCache = true //
+	h.ParserGoPkgOpts.SkipRegisterComponentTypes = true // do not generate component registration init() stuff
+
+Since it's just a regular http.Handler, starting a webserver is as simple as:
+
+	log.Fatal(http.ListenAndServe("127.0.0.1:5678", h))
+
+*/
 package simplehttp
 
 import (
@@ -82,6 +108,7 @@ func New(dir string, dev bool) *SimpleHandler {
 	return ret
 }
 
+// ServeHTTP implements http.Handler.
 func (h *SimpleHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// by default we tell browsers to always check back with us for content, even in production;
@@ -349,6 +376,7 @@ var DefaultIsPageFunc = func(r *http.Request) bool {
 	return path.Ext(path.Clean("/"+r.URL.Path)) == ""
 }
 
+// DefaultPageTemplateSource a useful default HTML template for serving pages.
 var DefaultPageTemplateSource = `<!doctype html>
 <html>
 <head>
@@ -388,6 +416,7 @@ if (wasmSupported) {
 </html>
 `
 
+// PageHandler executes a Go template and responsds with the page.
 type PageHandler struct {
 	Template         *template.Template
 	TemplateDataFunc func(r *http.Request) interface{}
@@ -409,6 +438,7 @@ var DefaultTemplateDataFunc = func(r *http.Request) interface{} {
 	return ret
 }
 
+// ServeHTTP implements http.Handler
 func (h *PageHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	tmplData := h.TemplateDataFunc(r)
