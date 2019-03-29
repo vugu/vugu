@@ -16,7 +16,7 @@ need from its parts.  That said, simplehttp should make it easy to start:
 After creation, some fags are available for tuning, e.g.:
 
 	h.EnableGenerate = true // upon page reload run "go generate ."
-	h.DisableBuildCache = true //
+	h.DisableBuildCache = true // do not try to cache build results during development, just rebuild every time
 	h.ParserGoPkgOpts.SkipRegisterComponentTypes = true // do not generate component registration init() stuff
 
 Since it's just a regular http.Handler, starting a webserver is as simple as:
