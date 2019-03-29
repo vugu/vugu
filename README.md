@@ -3,11 +3,13 @@
 Vugu is an experimental library for web UIs written in Go and targeting webassembly.  Guide and docs at http://www.vugu.org.
 Godoc at https://godoc.org/github.com/vugu/vugu.
 
-If you've ever wanted to a UI not in JS but pure Go... and run it in your browser right now... That (experimental;) future is here!
+If you've ever wanted to write a UI not in JS but pure Go... and run it in your browser, right now... That (experimental;) future is here!
 
 Introducing Vugu, a VueJS-inspired library in Go targeting wasm.
 
 No node. No JS. No npm. No node_modules folder competing with your music library for disk space.
+
+## Highlights
 
 * Runs in-browser using WebAssembly
 * Single-file components
@@ -17,11 +19,14 @@ No node. No JS. No npm. No node_modules folder competing with your music library
 * ~3 minute setup
 * Standard Go build tools
 
+## Start
+
 Get started: http://www.vugu.org/doc/start
 
 Still a work in progress, but a lot of things are already functional. Some work really well.
 
-Abbreviated Roadmap:
+## Abbreviated Roadmap
+
 - [x] Single-file components (looks similar to .vue); .vugu -> .go code generation.
 - [x] Includes CSS in components.
 - [x] Basic flow control with vg-if, vg-for and output with vg-html.
