@@ -26,6 +26,7 @@ type ParserGoPkg struct {
 	opts    ParserGoPkgOpts
 }
 
+// ParserGoPkgOpts is the options for ParserGoPkg.
 type ParserGoPkgOpts struct {
 	SkipRegisterComponentTypes bool // indicates func init() { vugu.RegisterComponentType(...) } code should not be emitted in each file
 	SkipGoMod                  bool // do not try and create go.mod if it doesn't exist
@@ -43,7 +44,10 @@ func NewParserGoPkg(pkgPath string, opts *ParserGoPkgOpts) *ParserGoPkg {
 	return ret
 }
 
-// Run does the work.
+// Run does the work and generates the appropriate .go files from .vugu files.
+// It will also create a go.mod file if not present and not SkipGoMod.  Same for main.go and SkipMainGo (will also skip
+// if package already has file with package name something other than main).
+// Per-file code generation is performed by ParserGo.
 func (p *ParserGoPkg) Run() error {
 
 	// vugugen path/to/package

@@ -20,11 +20,11 @@ import (
 
 // ParserGo is a template parser that emits Go source code that will construct the appropriately wired VGNodes.
 type ParserGo struct {
-	PackageName   string
+	PackageName   string // name of package to use at top of files
 	ComponentType string // just the struct name, no "*"
 	DataType      string // just the struct name, no "*"
-	OutDir        string
-	OutFile       string
+	OutDir        string // output dir
+	OutFile       string // output file name with ".go" suffix
 }
 
 func (p *ParserGo) gofmt(pgm string) (string, error) {
@@ -54,6 +54,7 @@ func (p *ParserGo) gofmt(pgm string) (string, error) {
 	return string(b), nil
 }
 
+// Parse will parse a .vugu file and write out a Go source code file to OutFile.
 func (p *ParserGo) Parse(r io.Reader) error {
 
 	nodeList, err := html.ParseFragment(r, cruftBody)

@@ -25,8 +25,11 @@ import (
 
 // VDom states: Just one, after being converted from html.Node
 
+// VGNodeType is one of the valid node types (error, text, docuemnt, element, comment, doctype).
+// Note that only text, element and comment are currently used.
 type VGNodeType uint32
 
+// Available VGNodeTypes.
 const (
 	ErrorNode    = VGNodeType(html.ErrorNode)
 	TextNode     = VGNodeType(html.TextNode)
@@ -36,8 +39,12 @@ const (
 	DoctypeNode  = VGNodeType(html.DoctypeNode)
 )
 
+// VGAtom is an integer corresponding to golang.org/x/net/html/atom.Atom.
+// Note that this may be removed for simplicity and to remove the dependency
+// on the package above.  Suggest you don't use it.
 type VGAtom uint32
 
+// VGAttribute is the attribute on an HTML tag.
 type VGAttribute struct {
 	Namespace, Key, Val string
 }
@@ -70,6 +77,8 @@ type VGNode struct {
 	positionHashVal uint64
 }
 
+// SetDOMEventHandler will assign a named event to DOMEventHandlers (will allocate the map if nil).
+// Used during VDOM construction and during render to determine browser events to hook up.
 func (n *VGNode) SetDOMEventHandler(name string, h DOMEventHandler) {
 	if n.DOMEventHandlers == nil {
 		n.DOMEventHandlers = map[string]DOMEventHandler{name: h}
