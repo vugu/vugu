@@ -10,6 +10,9 @@ import (
 )
 
 // DefaultFileInclPattern is a sensible default set of "static" files.
+// This might be updated from time to time to include new types of assets used on the web.
+// Extensions which are used for server executables, server configuration files, or files with
+// an empty extension will not be added here.
 var DefaultFileInclPattern = regexp.MustCompile(`[.](css|js|html|map|jpg|jpeg|png|gif|svg|eot|ttf|otf|woff|woff2|wasm)$`)
 
 func must(err error) {
