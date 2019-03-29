@@ -12,6 +12,9 @@ func RegisteredComponentTypes() ComponentTypeMap {
 	return ret
 }
 
+// RegisterComponentType can be called during init to register a component and make it available by default to the rest of the application.
+// A program may retrieved these by calling RegisteredComponentTypes() or it may choose to form its own set.  RegisterComponentType() just
+// makes it available in case that's useful.  It is good practice for components to register themselves in an init function.
 func RegisterComponentType(tagName string, ct ComponentType) {
 	globalComponentTypeMap[tagName] = ct
 }
@@ -21,6 +24,9 @@ var globalComponentTypeMap = make(ComponentTypeMap)
 // ComponentTypeMap is a map of the component tag name to a ComponentType.
 type ComponentTypeMap map[string]ComponentType
 
+// Props is a map that corresponds to property names and values.  The name
+// can correspond to an HTML attribute, or a property being passed in
+// during component instantiation, depending on the context.
 type Props map[string]interface{}
 
 // OrderedKeys returns the keys sorted alphabetically.
@@ -53,21 +59,17 @@ func (p Props) Merge(p2 Props) Props {
 	return p
 }
 
+// ComponentType is implemented by any type that wants to be a component.
+// The BuildVDOM method is called to generate the virtual DOM for a component; and this method
+// is usually code generated (by ParserGo) from a .vugu file.
+// NewData provides for specific behavior when a component is initialized.
 type ComponentType interface {
-	// TagName() string                                                      // HTML-compatible tag name, e.g. "demo-button"
 	BuildVDOM(data interface{}) (vdom *VGNode, css *VGNode, reterr error) // based on the given data, build the VGNode tree
 	NewData(props Props) (interface{}, error)                             // initial data when component is instanciated
-	// Invoke(name string, args ...interface{}) error
-
-	// NOTES:
-	// props???
-	// template
-	// data
-	// methods
-	// computed!? - probably best implemented purely in the data binding code, rather than as part of components
-	// lifecycle hooks (created, mounted, etc.)
 }
 
+// New instantiates a component based on its ComponentType and a set of Props.
+// It essentially just calls NewData and returns a ComponentInst.
 func New(ct ComponentType, props Props) (*ComponentInst, error) {
 	data, err := ct.NewData(props)
 	if err != nil {
@@ -79,10 +81,8 @@ func New(ct ComponentType, props Props) (*ComponentInst, error) {
 	}, nil
 }
 
+// ComponentInst corresponds to a ComponentType that has been instantiated.
 type ComponentInst struct {
-	Type ComponentType
-	Data interface{}
-	// ChildComponents ComponentInstPtrList
+	Type ComponentType // type of component
+	Data interface{}   // data as returned by NewData
 }
-
-// type ComponentInstPtrList []*ComponentInst

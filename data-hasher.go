@@ -19,9 +19,14 @@ type DataHasher interface {
 }
 
 // ComputeHash performs data hashing.
-// It walks your data structure< and hashes the information as it goes.
+// It walks your data structure and hashes the information as it goes.
 // It uses xxhash internally and returns a uint64.  It is intended to be both fast and have good hash distribution to avoid
-// collision-related bugs.
+// collision-related bugs.  Maps are sorted by key and then both keys and values are hashed.  Nil values are skipped.
+// Behavior is undefined for circular references via interface or pointer.  Will call DataHash() method if present
+// (see DataHasher) on a type.  Otherwise will walk the data and find primitive values and hash them byte for byte.
+// No guarantee is made about the exact hash algorithm used or how type information is or is not hashed - only that
+// the same data structure should consistently hash to the same value and changing any value in the data tree should
+// change the hash.
 func ComputeHash(i interface{}) uint64 {
 
 	// FIXME: do we need to handle circular references here? (via pointer, via interface{}),
