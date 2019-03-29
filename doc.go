@@ -11,7 +11,7 @@
 
 	VGNode and friends for virtual DOM:
 
-	Data hashing is perfomed with the ComputeHash() function.  It walks your data structure hashes the information as it goes.
+	<b>Data hashing is perfomed with the ComputeHash() function.<b>  <em>It walks your data structure</en> and hashes the information as it goes.
 	It uses xxhash internally and returns a uint64.  It is intended to be both fast and have good hash distribution to avoid
 	collision-related bugs.
 
