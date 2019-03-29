@@ -9,9 +9,22 @@
 
 	Components and Registration...
 
-	VGNode and friends for virtual DOM
+	VGNode and friends for virtual DOM:
 
-	Data hashing stuff...
+	Data hashing is perfomed with the ComputeHash() function.  It walks your data structure hashes the information as it goes.
+	It uses xxhash internally and returns a uint64.  It is intended to be both fast and have good hash distribution to avoid
+	collision-related bugs.
+
+		someData := &struct{A string}{A:"test"}
+		hv := ComputeHash(someData)
+
+	If the DataHasher interface is implemented by a particular type then ComputeHash will just called it and hash it's return
+	into the calculation.  Otherwise ComputeHash walks the data and finds primitive values and hashes them byte by bytes.
+	Nil interfaces and nil pointers are skipped.
+
+	Effective hashing is an important part of achieving good performance in Vugu applications, since the question "is this different
+	than it was before" needs to be asked frequently.  The current experiment is to rely entirely on data hashing for change detection
+	rather than implementing a data-binding system.
 
 	Clients
 
