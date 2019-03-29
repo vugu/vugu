@@ -10,6 +10,7 @@ import (
 
 // NOTE: common event code which is the same for wasm and not can go here
 
+// DOMEventHandler is created in BuildVDOM to represent a method call that is performed to handle an event.
 type DOMEventHandler struct {
 	ReceiverAndMethodHash uint64        // hash value corresponding to the method and receiver, so we get a unique value for each combination of method and receiver
 	Method                reflect.Value // method to be called, with receiver baked into it if needed (see reflect/Value.MethodByName)
@@ -67,7 +68,7 @@ type eventEnv struct {
 	requestRenderCH chan bool
 }
 
-// acquire write lock
+// Lock will acquire write lock
 func (ee *eventEnv) Lock() {
 	// if ee.rwmu == nil {
 	// 	return
@@ -75,7 +76,7 @@ func (ee *eventEnv) Lock() {
 	ee.rwmu.Lock()
 }
 
-// release write lock
+// UnlockOnly will release the write lock
 func (ee *eventEnv) UnlockOnly() {
 	// if ee.rwmu == nil {
 	// 	return
@@ -83,7 +84,7 @@ func (ee *eventEnv) UnlockOnly() {
 	ee.rwmu.Unlock()
 }
 
-// release write lock and request re-render
+// UnlockRender will release write lock and request re-render
 func (ee *eventEnv) UnlockRender() {
 	// if ee.rwmu != nil {
 	ee.rwmu.Unlock()
@@ -97,7 +98,7 @@ func (ee *eventEnv) UnlockRender() {
 	}
 }
 
-// acquire read lock
+// RLock will acquire a read lock
 func (ee *eventEnv) RLock() {
 	// if ee.rwmu == nil {
 	// 	return
@@ -105,7 +106,7 @@ func (ee *eventEnv) RLock() {
 	ee.rwmu.RLock()
 }
 
-// release read lock
+// RUnlock will release the read lock
 func (ee *eventEnv) RUnlock() {
 	// if ee.rwmu == nil {
 	// 	return
