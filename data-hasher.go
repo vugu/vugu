@@ -10,10 +10,18 @@ import (
 	"github.com/cespare/xxhash"
 )
 
+// DataHasher can be implemented by types to override the hashing behavior. ComputeHash() will call DataHash()
+// on an instance of a type if the method is present.  Useful for providing fast and stable hashing for structures
+// that are large but only require a small amount data to be examined to determine if changed, or are already
+// hashed internally, etc.
 type DataHasher interface {
 	DataHash() uint64
 }
 
+// ComputeHash performs data hashing.
+// It walks your data structure< and hashes the information as it goes.
+// It uses xxhash internally and returns a uint64.  It is intended to be both fast and have good hash distribution to avoid
+// collision-related bugs.
 func ComputeHash(i interface{}) uint64 {
 
 	// FIXME: do we need to handle circular references here? (via pointer, via interface{}),

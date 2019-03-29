@@ -2,6 +2,7 @@ package vugu
 
 import (
 	"bytes"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -175,4 +176,19 @@ func BenchmarkComputeHashBigTime(b *testing.B) {
 		ComputeHash(a) // 12ms on my laptop - pretty good... (hm, need to check wasm performance, this is probably the raw x86-64 asm impl...)
 	}
 
+}
+
+func ExampleComputeHash() {
+
+	type D struct {
+		A string
+	}
+	data1 := &D{A: "test1"}
+	data2 := &D{A: "test2"}
+
+	fmt.Println(ComputeHash(data1) == ComputeHash(data1))
+	fmt.Println(ComputeHash(data1) == ComputeHash(data2))
+	// Output:
+	// true
+	// false
 }
