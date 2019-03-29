@@ -34,19 +34,14 @@ func NewStaticHTMLEnv(out io.Writer, rootInst *ComponentInst, components Compone
 	}
 }
 
-// func (e *StaticHTMLEnv) SetOut(w io.Writer) {
-// 	e.out = w
-// }
-
+// RegisterComponentType sets a component type with its tag name.
 func (e *StaticHTMLEnv) RegisterComponentType(tagName string, ct ComponentType) {
 	e.reg[tagName] = ct
 }
 
-// func (e *StaticHTMLEnv) SetComponentType(ct ComponentType) {
-// 	e.ComponentTypeMap[ct.TagName()] = ct
-// }
-
-// Render is equivalent to calling e.RenderTo(e.out)
+// Render performs redering to static HTML.  The logic used is similar to JSEnv.Render
+// however it will discard DOM events and is less careful about managing component lifecycle:
+// components are simply created when needed and discarded after.
 func (e *StaticHTMLEnv) Render() error {
 
 	c := e.rootInst
