@@ -5,6 +5,27 @@
 	items in this package are available in both environments.  Some however are either only available or only generally useful
 	in one environment.
 
+	Common functionality includes the ComponentType interface, and ComponentInst struct corresponding to an instantiated componnet.
+	VGNode and related structs are used to represent a virtual Document Object Model.  It is based on golang.org/x/net/html but
+	with additional fields needed for Vugu.  Data hashing is performed by ComputeHash() and can be customized by implementing
+	the DataHasher interface.
+
+	Client-side code uses JSEnv to maintain a render loop and regenerate virtual DOM and efficiently synchronize it with
+	the browser as needed.  DOMEvent is a wrapper around events from the browser and EventEnv is used to synchronize data
+	access when writing event handler code that spawns goroutines.  Where appropriate, server-side stubs are available
+	so components can be compiled for both client (WebAssembly) and server (server-side rendering and testing).
+
+	Server-side code can use ParserGo and ParserGoPkg to parse .vugu files and code generate a corresponding .go file.
+	StaticHTMLEnv can be used to generate static HTML, similar to the output of JSEnv but can be run on the server.
+	Supported features are approximately the same minus event handling, unapplicable to static output.
+
+*/
+package vugu
+
+/*
+
+old notes:
+
 	Common
 
 	Components and Registration...
@@ -26,19 +47,4 @@
 	than it was before" needs to be asked frequently.  The current experiment is to rely entirely on data hashing for change detection
 	rather than implementing a data-binding system.
 
-	Clients
-
-	JSEnv for in-browser DOM synchronization.
-
-	DOM Events:
-
-	Event Environment:
-
-	Servers
-
-	ParserGo and ParserGoPkg
-
-	StaticHTMLEnv for server-side HTML generation and testing.
-
 */
-package vugu
