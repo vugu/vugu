@@ -2,7 +2,6 @@ package vugu
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -40,6 +39,7 @@ func (p *ParserGo) gofmt(pgm string) (string, error) {
 
 	// also set up input pipe
 	read, write := io.Pipe()
+	defer write.Close() // make sure this always gets closed, it is safe to call more than once
 	cmd.Stdin = read
 
 	// copy down environment variables
@@ -50,12 +50,12 @@ func (p *ParserGo) gofmt(pgm string) (string, error) {
 
 	// start gofmt
 	if err := cmd.Start(); err != nil {
-		return pgm, errors.New("can't run gofmt")
+		return pgm, fmt.Errorf("can't run gofmt: %v", err)
 	}
 
 	// stream in the raw source
 	if _, err := write.Write([]byte(pgm)); err != nil && err != io.ErrClosedPipe {
-		return pgm, errors.New("gofmt failed")
+		return pgm, fmt.Errorf("gofmt failed: %v", err)
 	}
 
 	write.Close()
