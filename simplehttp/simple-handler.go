@@ -13,7 +13,7 @@ need from its parts.  That said, simplehttp should make it easy to start:
 	dev := true
 	h := simplehttp.New(dir, dev)
 
-After creation, some fags are available for tuning, e.g.:
+After creation, some flags are available for tuning, e.g.:
 
 	h.EnableGenerate = true // upon page reload run "go generate ."
 	h.DisableBuildCache = true // do not try to cache build results during development, just rebuild every time
