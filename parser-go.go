@@ -29,29 +29,43 @@ type ParserGo struct {
 
 func (p *ParserGo) gofmt(pgm string) (string, error) {
 
-	tmpf, err := ioutil.TempFile(p.OutDir, "ParserGo")
-	if err != nil {
-		return "", err
-	}
-	tmpf.Close()
-	tmpfName := tmpf.Name() + ".go"
-	err = os.Rename(tmpf.Name(), tmpfName)
-	if err != nil {
-		return "", err
-	}
-	defer os.Remove(tmpfName)
+	// build up command to run
+	cmd := exec.Command("gofmt")
 
-	err = ioutil.WriteFile(tmpfName, []byte(pgm), 0600)
-	if err != nil {
-		return "", err
+	// I need to capture output
+	var fmtOutput bytes.Buffer
+	cmd.Stderr = &fmtOutput
+	cmd.Stdout = &fmtOutput
+
+	// also set up input pipe
+	read, write := io.Pipe()
+	defer write.Close() // make sure this always gets closed, it is safe to call more than once
+	cmd.Stdin = read
+
+	// copy down environment variables
+	cmd.Env = os.Environ()
+	// force wasm,js target
+	cmd.Env = append(cmd.Env, "GOOS=js")
+	cmd.Env = append(cmd.Env, "GOARCH=wasm")
+
+	// start gofmt
+	if err := cmd.Start(); err != nil {
+		return pgm, fmt.Errorf("can't run gofmt: %v", err)
 	}
 
-	b, err := exec.Command("gofmt", tmpfName).CombinedOutput()
-	if err != nil {
-		return pgm, fmt.Errorf("go fmt error %v; full output: %s", err, b)
+	// stream in the raw source
+	if _, err := write.Write([]byte(pgm)); err != nil && err != io.ErrClosedPipe {
+		return pgm, fmt.Errorf("gofmt failed: %v", err)
 	}
 
-	return string(b), nil
+	write.Close()
+
+	// wait until gofmt is done
+	if err := cmd.Wait(); err != nil {
+		return pgm, fmt.Errorf("go fmt error %v; full output: %s", err, string(fmtOutput.Bytes()))
+	}
+
+	return string(fmtOutput.Bytes()), nil
 }
 
 // Parse will parse a .vugu file and write out a Go source code file to OutFile.
