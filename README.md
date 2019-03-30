@@ -32,7 +32,7 @@ Still a work in progress, but a lot of things are already functional. Some work 
 - [x] Basic flow control with vg-if, vg-for and output with vg-html.
 - [x] Dynamic attributes with `<tag :prop='expr'>`.
 - [x] Nested components with dynamic properties `<my-custom-component :prop='expr'>`.
-- [x] Efficently syncs to browser DOM.
+- [x] Efficiently syncs to browser DOM.
 - [x] Static HTML output (great for tests).
 - [x] DOM Events, click, etc.
 - [x] Basic data hashing to avoid unnecessary computation where possible.
