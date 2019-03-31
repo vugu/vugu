@@ -42,3 +42,15 @@ Still a work in progress, but a lot of things are already functional. Some work 
 - [ ] Performance optimizations
 - [ ] Go-only component events
 - And much more...
+
+## Notes
+
+It's built **more like a library than a framework**.  While Vugu does do code generation for your .vugu component
+files, (and will even output a default main_wasm.go for a new project and build your program automatically upon page refresh), 
+fundamentally you are still in control.  Overall program flow, application wiring and initialization, the render loop
+that keeps the page in sync with your components - you have control over all of that.
+Frameworks call your code.  Vugu is a library, your code calls it (even if Vugu generates a bit of that for you in
+the beginning to make things easier). One of the primary goals for Vugu, when it comes to developers first encountering it, 
+was to make it very fast and easy to get started, but without imposing unnecessary limitations on how a project is structured.
+Go build tooling (and now the module system) is awesome.  The idea is to leverage that to the furthest extent possible,
+rather than reprogramming the wheel.
