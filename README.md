@@ -54,3 +54,11 @@ the beginning to make things easier). One of the primary goals for Vugu, when it
 was to make it very fast and easy to get started, but without imposing unnecessary limitations on how a project is structured.
 Go build tooling (and now the module system) is awesome.  The idea is to leverage that to the furthest extent possible,
 rather than reprogramming the wheel.
+
+So you won't find a vugu command line tool that runs a development server, instead
+you'll find in the docs an appropriate snippet of code you can paste in a file and `go run` yourself.  For the code
+generation while there is an http.Handler that can do this upon page refresh, you also can (and should!) run `vugugen`
+via `go generate`. There are many small decisions in Vugu which follow this philosophy: wherever reasonably possible,
+just use the existing mechanism that already exists.  And keep doing that until there's proof that something
+else is really needed.  So far it's been working well.  And it allows Vugu to focus on the specific things it 
+brings to the table.
