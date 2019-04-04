@@ -5,7 +5,7 @@ Godoc at https://godoc.org/github.com/vugu/vugu.
 
 If you've ever wanted to write a UI not in JS but pure Go... and run it in your browser, right now... That (experimental;) future is here!
 
-Introducing Vugu, a VueJS-inspired library in Go targeting wasm.
+Introducing Vugu (pronounced /ˈvuː.ɡuː/), a VueJS-inspired library in Go targeting wasm.
 
 No node. No JS. No npm. No node_modules folder competing with your music library for disk space.
 
