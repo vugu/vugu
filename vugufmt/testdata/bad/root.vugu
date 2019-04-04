@@ -1,0 +1,61 @@
+<div class="demo-comp">
+    <div vg-if='data.isLoading'>Loading...</div>
+    <div vg-if='len(data.bpi.BPI) > 0'>
+        <div>Updated: <span vg-html='data.bpi.Time.Updated'></span></div>
+        <ul>
+            <li vg-for='data.bpi.BPI'>
+                <span vg-html='key'></span> <span vg-html='fmt.Sprint(value.Symbol, value.RateFloat)'></span>
+            </li>
+        </ul>
+    </div>
+    <button @click="data.HandleClick(event)">Fetch Bitcoin Price Index</button>
+</div>
+
+<script type="application/x-go">
+import "encoding/json"
+import "net/http"
+import "log"
+
+type RootData struct {
+    bpi bpi
+    isLoading bool
+}
+
+type bpi struct {
+    Time struct { Updated string `json:"updated"` } `json:"time"`
+    BPI map[string]struct { Code string `json:"code"`; Symbol string  `json:"symbol"`; RateFloat float64 `json:"rate_float"` } `json:"bpi"`
+}
+
+func (data *RootData) HandleClick(event *vugu.DOMEvent) {
+
+    data.bpi = bpi{}
+
+    go func(ee vugu.EventEnv) {
+
+        ee.Lock()
+        data.isLoading = true
+        ee.UnlockRender()
+
+        res, err := http.Get("https://api.coindesk.com/v1/bpi/currentprice.json")
+        if err != nil {
+            log.Printf("Error fetch()ing: %v", err)
+            return
+        }
+        defer res.Body.Close()
+
+        var newb bpi
+        err = json.NewDecoder(res.Body).Decode(&newb)
+        if err != nil {
+            log.Printf("Error JSON decoding: %v", err)
+            return
+        }
+
+        ee.Lock()
+        defer ee.UnlockRender()
+        data.bpi = newb
+        data.isLoading = false
+
+    }(event.EventEnv())
+}
+
+</script>
