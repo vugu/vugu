@@ -27,10 +27,10 @@ func runGoFmt(input []byte, simplify bool) ([]byte, *FmtError) {
 		cmd.Args = []string{"-s"}
 	}
 
-	var resBuff, errBuff bytes.Buffer
+	var resBuff bytes.Buffer
 
 	// I need to capture output
-	cmd.Stderr = &errBuff
+	cmd.Stderr = &resBuff
 	cmd.Stdout = &resBuff
 
 	// also set up input pipe
@@ -52,7 +52,7 @@ func runGoFmt(input []byte, simplify bool) ([]byte, *FmtError) {
 
 	// Wrap the output in an error.
 	if err != nil {
-		return input, fromGoFmt(string(errBuff.String()))
+		return input, fromGoFmt(string(resBuff.String()))
 	}
 
 	return res, nil

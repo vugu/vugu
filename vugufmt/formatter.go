@@ -8,8 +8,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/vugu/vugu/vugufmt/internal/htmlx"
-	"github.com/vugu/vugu/vugufmt/internal/htmlx/atom"
+	"github.com/vugu/vugu/internal/htmlx"
+	"github.com/vugu/vugu/internal/htmlx/atom"
 )
 
 // Formatter allows you to format vugu files.
@@ -87,8 +87,12 @@ func (f *Formatter) FormatHTML(filename string, in io.Reader, out io.Writer) *Fm
 				if len(ts) == 0 {
 					return nil
 				}
+				tagNames := make([]string, len(ts), len(ts))
+				for i, t := range ts {
+					tagNames[i] = t.Data
+				}
 				return &FmtError{
-					Msg:    "missing end tags",
+					Msg:    fmt.Sprintf("missing end tags (%s)", strings.Join(tagNames, ", ")),
 					Line:   curTok.Line,
 					Column: curTok.Column,
 				}

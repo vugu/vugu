@@ -6,7 +6,7 @@
 //
 // The mapping from encoding labels to encodings is defined at
 // https://encoding.spec.whatwg.org/.
-package charset // import "github.com/vugu/vugu/vugufmt/internal/htmlx/charset"
+package charset // import "github.com/vugu/vugu/internal/htmlx/charset"
 
 import (
 	"bytes"
@@ -16,7 +16,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/vugu/vugu/vugufmt/internal/htmlx"
+	"github.com/vugu/vugu/internal/htmlx"
 	"golang.org/x/text/encoding"
 	"golang.org/x/text/encoding/charmap"
 	"golang.org/x/text/encoding/htmlindex"

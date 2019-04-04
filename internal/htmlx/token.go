@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/vugu/vugu/vugufmt/internal/htmlx/atom"
+	"github.com/vugu/vugu/internal/htmlx/atom"
 )
 
 // A TokenType is the type of a Token.
