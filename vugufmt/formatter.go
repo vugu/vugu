@@ -106,7 +106,7 @@ func (f *Formatter) FormatHTML(filename string, in io.Reader, out io.Writer) *Fm
 
 		curTok := izer.Token()
 
-		raw := izer.RawData()
+		raw := izer.Raw()
 		// add or remove tokens from the stack
 		switch curTokType {
 		case htmlx.StartTagToken:
