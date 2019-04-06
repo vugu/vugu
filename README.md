@@ -9,6 +9,11 @@ Introducing Vugu (pronounced /ˈvuː.ɡuː/), a VueJS-inspired library in Go tar
 
 No node. No JS. No npm. No node_modules folder competing with your music library for disk space.
 
+## Updates ♨
+
+* 2019-04-05 Thanks to @erinpentecost, **vugufmt is now available** and provides gofmt-like functionality on your .vugu files. ("go get github.com/vugu/vugu/cmd/vugufmt && go install github.com/vugu/vugu/cmd/vugufmt")
+* 2019-04-05 The component playground should be available soon; followed by some internal work to properly handle nested components in a type-safe way; then probably a router...
+
 ## Highlights
 
 * Runs in-browser using WebAssembly
