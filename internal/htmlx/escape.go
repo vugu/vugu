@@ -230,35 +230,6 @@ func escape(w writer, s string) error {
 	return err
 }
 
-const attrEscapedChars = "'\""
-
-func attrEscape(w writer, s string) error {
-	i := strings.IndexAny(s, attrEscapedChars)
-	for i != -1 {
-		if _, err := w.WriteString(s[:i]); err != nil {
-			return err
-		}
-		var esc string
-		switch s[i] {
-		case '\'':
-			// "&#39;" is shorter than "&apos;" and apos was not in HTML until HTML5.
-			esc = "&#39;"
-		case '"':
-			// "&#34;" is shorter than "&quot;".
-			esc = "&#34;"
-		default:
-			panic("unrecognized escape character")
-		}
-		s = s[i+1:]
-		if _, err := w.WriteString(esc); err != nil {
-			return err
-		}
-		i = strings.IndexAny(s, attrEscapedChars)
-	}
-	_, err := w.WriteString(s)
-	return err
-}
-
 // EscapeString escapes special characters like "<" to become "&lt;". It
 // escapes only five such characters: <, >, &, ' and ".
 // UnescapeString(EscapeString(s)) == s always holds, but the converse isn't
