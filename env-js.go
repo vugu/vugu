@@ -109,7 +109,7 @@ func (e *JSEnv) EventWait() (ok bool) {
 		return
 	}
 
-	// FIXME: this should probablly have some sort of "debouncing" on it to handle the case of
+	// FIXME: this should probably have some sort of "debouncing" on it to handle the case of
 	// several events in rapid succession causing multiple renders - maybe we read from eventWaitCH
 	// continuously until it's empty, with a max of like 20ms pause between each or something, and then
 	// only return after we don't see anything for that time frame.
