@@ -1,0 +1,21 @@
+language: go
+go:
+  - 1.12.x
+
+os:
+  - linux
+  - osx
+
+dist: trusty
+sudo: false
+
+install: true
+
+env:
+  - GO111MODULE=on
+
+script:
+  - make test ./...
+
+notifications:
+  email: false
