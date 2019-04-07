@@ -19,3 +19,7 @@ script:
 
 notifications:
   email: false
+
+before_install:
+  - go get golang.org/x/tools/cmd/goimports && go install golang.org/x/tools/cmd/goimports
+
