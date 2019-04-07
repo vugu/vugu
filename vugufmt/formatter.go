@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"path/filepath"
 	"strings"
+	"unicode"
 
 	"github.com/vugu/vugu/internal/htmlx"
 	"github.com/vugu/vugu/internal/htmlx/atom"
@@ -24,7 +25,8 @@ type Formatter struct {
 	// example. If you want to use gofmt or goimports,
 	// see how to apply options in NewFormatter.
 	ScriptFormatters map[string]func([]byte) ([]byte, *FmtError)
-	StyleFormatter   func([]byte) ([]byte, *FmtError)
+	// StyleFormatter handles CSS blocks.
+	StyleFormatter func([]byte) ([]byte, *FmtError)
 }
 
 // NewFormatter creates a new formatter.
@@ -63,12 +65,31 @@ func (f *Formatter) FormatStyle(styleContent []byte) ([]byte, *FmtError) {
 	return f.StyleFormatter(styleContent)
 }
 
+// breaks returns the number of newlines if all input
+// text is whitespace. Otherwise returns 0.
+func breaks(input string) int {
+	numBreaks := 0
+	for _, s := range input {
+		if !unicode.IsSpace(s) {
+			return 0
+		}
+		if s == '\n' {
+			numBreaks++
+		}
+	}
+	return numBreaks
+}
+
 // FormatHTML formats script and css nodes.
 func (f *Formatter) FormatHTML(filename string, in io.Reader, out io.Writer) *FmtError {
 	izer := htmlx.NewTokenizer(in)
 	ts := tokenStack{}
 
 	curTok := htmlx.Token{}
+
+	previousLineBreak := false
+
+loop:
 	for {
 		curTokType := izer.Next()
 
@@ -106,7 +127,20 @@ func (f *Formatter) FormatHTML(filename string, in io.Reader, out io.Writer) *Fm
 
 		curTok := izer.Token()
 
+		// do indentation if we broke the line before this token.
+		if previousLineBreak {
+			indentLevel := len(ts)
+			if curTokType == htmlx.EndTagToken && indentLevel > 0 {
+				indentLevel--
+			}
+			for i := 0; i < indentLevel; i++ {
+				out.Write([]byte{'\t'})
+			}
+		}
+		previousLineBreak = false
+
 		raw := izer.Raw()
+		raws := string(raw)
 		// add or remove tokens from the stack
 		switch curTokType {
 		case htmlx.StartTagToken:
@@ -124,6 +158,16 @@ func (f *Formatter) FormatHTML(filename string, in io.Reader, out io.Writer) *Fm
 			out.Write(raw)
 		case htmlx.TextToken:
 			parent := ts.top()
+
+			if breakCount := breaks(raws); breakCount > 0 {
+				// This is a break between tags.
+				for i := 0; i < breakCount; i++ {
+					out.Write([]byte{'\n'})
+				}
+				previousLineBreak = true
+				continue loop
+			}
+
 			if parent == nil {
 				out.Write(raw)
 				//return fmt.Errorf("%s:%v:%v: orphaned text node",
@@ -166,62 +210,6 @@ func (f *Formatter) FormatHTML(filename string, in io.Reader, out io.Writer) *Fm
 			out.Write(raw)
 		}
 	}
-}
-
-// tokenStack is a stack of nodes.
-type tokenStack []*htmlx.Token
-
-// pop pops the stack. It will panic if s is empty.
-func (s *tokenStack) pop() *htmlx.Token {
-	i := len(*s)
-	n := (*s)[i-1]
-	*s = (*s)[:i-1]
-	return n
-}
-
-// push inserts a node
-func (s *tokenStack) push(n *htmlx.Token) {
-	i := len(*s)
-	(*s) = append(*s, nil)
-	(*s)[i] = n
-}
-
-// top returns the most recently pushed node, or nil if s is empty.
-func (s *tokenStack) top() *htmlx.Token {
-	if i := len(*s); i > 0 {
-		return (*s)[i-1]
-	}
-	return nil
-}
-
-// index returns the index of the top-most occurrence of n in the stack, or -1
-// if n is not present.
-func (s *tokenStack) index(n *htmlx.Token) int {
-	for i := len(*s) - 1; i >= 0; i-- {
-		if (*s)[i] == n {
-			return i
-		}
-	}
-	return -1
-}
-
-// insert inserts a node at the given index.
-func (s *tokenStack) insert(i int, n *htmlx.Token) {
-	(*s) = append(*s, nil)
-	copy((*s)[i+1:], (*s)[i:])
-	(*s)[i] = n
-}
-
-// remove removes a node from the stack. It is a no-op if n is not present.
-func (s *tokenStack) remove(n *htmlx.Token) {
-	i := s.index(n)
-	if i == -1 {
-		return
-	}
-	copy((*s)[i:], (*s)[i+1:])
-	j := len(*s) - 1
-	(*s)[j] = nil
-	*s = (*s)[:j]
 }
 
 // Diff will show differences between input and what

@@ -115,7 +115,6 @@ func TestEscaping(t *testing.T) {
 }
 
 func TestBadHTML(t *testing.T) {
-	// I'd like the > to not be escaped into &gt;
 	testCode := "<html><head></head><body><oh no></body></html>"
 	formatter := NewFormatter(UseGoFmt(false))
 	// run gofmt on it
