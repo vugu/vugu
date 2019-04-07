@@ -125,7 +125,7 @@ func MustCopyFile(src, dst string) {
 	must(CopyFile(src, dst))
 }
 
-// CopyFile copies src to dest. Will not copy directories.  Symlinks will have thier contents copied.
+// CopyFile copies src to dest. Will not copy directories.  Symlinks will have their contents copied.
 // Files with the same name, modification time and size are assumed to be up to date and
 // the function returns immediately.  Conversely when the copy succeeds the modification
 // time is set to that of the source.

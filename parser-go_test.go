@@ -15,7 +15,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// parserGoBuildAndRunMulti will build and run mulitple single-file components in the same package (requiring a main that prints to stdout) and return the captured output.
+// parserGoBuildAndRunMulti will build and run multiple single-file components in the same package (requiring a main that prints to stdout) and return the captured output.
 // pgmMap is the component struct name as the key and the program source as the value.
 func parserGoBuildAndRunMulti(pgmMap map[string]string, debug bool) (string, error) {
 
