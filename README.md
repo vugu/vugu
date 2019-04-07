@@ -1,6 +1,6 @@
 # Vugu
 
-Vugu is an experimental library for web UIs written in Go and targeting webassembly.  Guide and docs at http://www.vugu.org.
+Vugu is an experimental library for web UIs written in Go and targeting webassembly.  Guide and docs at https://www.vugu.org.
 Godoc at https://godoc.org/github.com/vugu/vugu.
 
 If you've ever wanted to write a UI not in JS but pure Go... and run it in your browser, right now... That (experimental;) future is here!
