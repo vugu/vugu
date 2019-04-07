@@ -1,14 +1,17 @@
 <div class='demo-comp'>
-    <div vg-if='data.isLoading'>Loading...</div>
-    <div vg-if='len(data.bpi.BPI) > 0'>
-        <div>Updated: <span vg-html='data.bpi.Time.Updated'></span></div>
-        <ul>
-            <li vg-for='data.bpi.BPI'>
-                <span vg-html='key'></span> <span vg-html='fmt.Sprint(value.Symbol, value.RateFloat)'></span>
-            </li>
-        </ul>
-    </div>
-    <button @click='data.HandleClick(event)'>Fetch Bitcoin Price Index</button>
+	<div vg-if='data.isLoading'>Loading...</div>
+
+
+	<div
+		vg-if='len(data.bpi.BPI) > 0'>
+		<div>Updated: <span vg-html='data.bpi.Time.Updated'></span></div>
+		<ul>
+			<li vg-for='data.bpi.BPI'>
+				<span vg-html='key'></span> <span vg-html='fmt.Sprint(value.Symbol, value.RateFloat)'></span>
+			</li>
+		</ul>
+	</div>
+	<button @click='data.HandleClick(event)'>Fetch Bitcoin Price Index</button>
 </div>
 
 <script type='application/x-go'>

@@ -19,6 +19,7 @@ var (
 	list        = flag.Bool("l", false, "list files whose formatting differs from vugufmt's")
 	write       = flag.Bool("w", false, "write result to (source) file instead of stdout")
 	simplifyAST = flag.Bool("s", false, "simplify code")
+	imports     = flag.Bool("i", false, "run goimports instead of gofmt")
 	doDiff      = flag.Bool("d", false, "display diffs instead of rewriting files")
 )
 
@@ -77,7 +78,7 @@ func visitFile(path string, f os.FileInfo, err error) error {
 }
 
 func isVuguFile(f os.FileInfo) bool {
-	// ignore non-Vugu files
+	// ignore non-Vugu files (except html)
 	name := f.Name()
 	return !f.IsDir() &&
 		!strings.HasPrefix(name, ".") &&
@@ -114,7 +115,12 @@ func processFile(filename string, in io.Reader, out io.Writer) error {
 
 	var resBuff bytes.Buffer
 
-	formatter := vugufmt.NewFormatter(vugufmt.UseGoFmt(*simplifyAST))
+	var formatter *vugufmt.Formatter
+	if *imports {
+		formatter = vugufmt.NewFormatter(vugufmt.UseGoImports)
+	} else {
+		formatter = vugufmt.NewFormatter(vugufmt.UseGoFmt(*simplifyAST))
+	}
 
 	if !*list && !*doDiff {
 		if err := formatter.FormatHTML(filename, bytes.NewReader(src), &resBuff); err != nil {
