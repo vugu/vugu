@@ -134,6 +134,7 @@ nodeLoop1:
 	fmt.Fprintf(&buf, "import %q\n", "fmt")
 	fmt.Fprintf(&buf, "import %q\n", "reflect")
 	fmt.Fprintf(&buf, "import %q\n", "github.com/vugu/vugu")
+	fmt.Fprintf(&buf, "import js %q\n", "github.com/vugu/vugu/js")
 	fmt.Fprintf(&buf, "\n")
 
 	// implement nscript -  dump the code here
@@ -149,6 +150,9 @@ nodeLoop1:
 
 	// statically check that we implement vugu.ComponentType
 	fmt.Fprintf(&buf, "var _ vugu.ComponentType = (*%s)(nil)\n", p.ComponentType)
+	fmt.Fprintf(&buf, "\n")
+
+	fmt.Fprintf(&buf, "var _ js.Value\n")
 	fmt.Fprintf(&buf, "\n")
 
 	// FIXME: we should only output the struct here if it's not in a <script type="application/x-go"> tag
