@@ -1,7 +1,8 @@
 package vugu
 
 import (
-	js "syscall/js"
+	// js "syscall/js"
+	js "github.com/vugu/vugu/js"
 )
 
 // NOTE: wasm implementation of events implements conveniences so components can do

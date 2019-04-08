@@ -1,5 +1,3 @@
-// +build wasm
-
 package vugu
 
 import (
@@ -12,7 +10,8 @@ import (
 	"sync"
 	"time"
 
-	js "syscall/js"
+	// js "syscall/js"
+	js "github.com/vugu/vugu/js"
 )
 
 var _ js.Value
@@ -24,10 +23,12 @@ var domEventCB js.Func
 
 func init() {
 	document = js.Global().Get("document")
-	// we use a single callback function for all of our event handling and dispatch the events from it
-	domEventCB = js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-		return jsEnv.handleRawDOMEvent(this, args)
-	})
+	if document.Truthy() { // only run in actual JS environment
+		// we use a single callback function for all of our event handling and dispatch the events from it
+		domEventCB = js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+			return jsEnv.handleRawDOMEvent(this, args)
+		})
+	}
 }
 
 var jsEnv *JSEnv

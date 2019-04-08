@@ -1,4 +1,4 @@
-// +build !wasm
+// +build ignore
 
 package vugu
 
