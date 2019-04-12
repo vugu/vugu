@@ -1,0 +1,23 @@
+{
+	"name": "vugu-keywords",
+	"scopeName": "keywords.vugu",
+	"injectionSelector": "L:meta.tag.structure",
+	"patterns": [
+		{
+			"include": "#events"
+		},
+		{
+			"include": "#controls"
+		}
+	],
+	"repository": {
+		"controls": {
+			"match": "(vg-if|vg-for|vg-html)=\".*\"",
+			"name": "keyword.control.vugu"
+		},
+		"events": {
+			"match": "@.*=\".*\"",
+			"name": "keyword.eventhandler.vugu"
+		}
+	}
+}

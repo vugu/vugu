@@ -1,0 +1,44 @@
+{
+    "name": "vugu",
+    "displayName": "vugu",
+    "description": "vugu",
+    "version": "0.0.1",
+    "engines": {
+        "vscode": "^1.33.0"
+    },
+    "categories": [
+        "Programming Languages"
+    ],
+    "contributes": {
+        "languages": [
+            {
+                "id": "vugu",
+                "aliases": [
+                    "vugu",
+                    "vugu"
+                ],
+                "extensions": [
+                    ".vugu"
+                ],
+                "configuration": "./language-configuration.json"
+            }
+        ],
+        "grammars": [
+            {
+                "language": "vugu",
+                "scopeName": "source.vugu",
+                "path": "./syntaxes/vugu.tmLanguage.json"
+            },
+            {
+                "path":"./syntaxes/vugu.keywords.json",
+                "scopeName":"keywords.vugu",
+                "injectTo": ["source.vugu"]
+            },
+            {
+                "path":"./syntaxes/vugu.go.json",
+                "scopeName":"go.vugu",
+                "injectTo": ["source.vugu"]
+            }
+        ]
+    }
+}

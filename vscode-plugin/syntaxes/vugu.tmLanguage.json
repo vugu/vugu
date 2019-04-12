@@ -1,0 +1,22 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "vugu",
+	"patterns": [
+		{
+			"include": "#html"
+		}
+	],
+	"repository": {
+		"html": {
+			"name": "meta.embedded.html",
+			"begin": "",
+			"end": "",
+			"patterns": [
+				{
+					"include": "text.html.basic"
+				}
+			]
+		}
+	},
+	"scopeName": "source.vugu"
+}

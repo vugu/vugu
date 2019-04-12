@@ -1,0 +1,23 @@
+{
+    "name": "vugu",
+	"scopeName": "go.vugu",
+	"injectionSelector": "R:source.unknown",
+	"patterns": [
+
+		{
+			"include": "#golang"
+		}
+	],
+	"repository": {
+		"golang": {
+			"name": "meta.embedded.go.vugu",
+			"begin": "",
+			"end": "",
+			"patterns": [
+				{
+					"include": "source.go"
+				}
+			]
+		}
+	}
+}
