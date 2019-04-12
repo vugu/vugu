@@ -27,7 +27,10 @@
             {
                 "language": "vugu",
                 "scopeName": "source.vugu",
-                "path": "./syntaxes/vugu.tmLanguage.json"
+                "path": "./syntaxes/vugu.tmLanguage.json",
+                "embeddedLanguages": {
+                    "source.vugu": "text.html.derivative"
+                  }
             },
             {
                 "path":"./syntaxes/vugu.keywords.json",
