@@ -1,4 +1,4 @@
-package vugu
+package fff
 
 import (
 	"bytes"
@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/cespare/xxhash"
+	"github.com/vugu/vugu"
 )
 
 // ParserGoPkg knows how to perform source file generation in relation to a package folder.
@@ -28,9 +29,11 @@ type ParserGoPkg struct {
 
 // ParserGoPkgOpts is the options for ParserGoPkg.
 type ParserGoPkgOpts struct {
-	SkipRegisterComponentTypes bool // indicates func init() { vugu.RegisterComponentType(...) } code should not be emitted in each file
-	SkipGoMod                  bool // do not try and create go.mod if it doesn't exist
-	SkipMainGo                 bool // do not try and create main_wasm.go if it doesn't exist in a main package
+	SkipRegisterComponentTypes bool   // indicates func init() { vugu.RegisterComponentType(...) } code should not be emitted in each file
+	SkipGoMod                  bool   // do not try and create go.mod if it doesn't exist
+	SkipMainGo                 bool   // do not try and create main_wasm.go if it doesn't exist in a main package
+	RootComponentName          string // what is the root component name to hook into the wasm blob
+	PackageName                string // set this if you want to override it's package guessing and just be sure
 }
 
 // NewParserGoPkg returns a new ParserGoPkg with the specified options or default if nil.  The pkgPath is required and must be an absolute path.
@@ -39,6 +42,7 @@ func NewParserGoPkg(pkgPath string, opts *ParserGoPkgOpts) *ParserGoPkg {
 		pkgPath: pkgPath,
 	}
 	if opts != nil {
+		ret.opts.RootComponentName = "Root"
 		ret.opts = *opts
 	}
 	return ret
@@ -99,8 +103,12 @@ func (p *ParserGoPkg) Run() error {
 		return fmt.Errorf("no .vugu files found, please create one and try again")
 	}
 
-	pkgName := goGuessPkgName(p.pkgPath)
-
+	var pkgName string
+	if p.opts.PackageName == "" {
+		pkgName = goGuessPkgName(p.pkgPath)
+	} else {
+		pkgName = p.opts.PackageName
+	}
 	namesToCheck := []string{"main"}
 
 	// run ParserGo on each file to generate the .go files
@@ -110,7 +118,7 @@ func (p *ParserGoPkg) Run() error {
 		goFileName := baseFileName + ".go"
 		compTypeName := fnameToGoTypeName(goFileName)
 
-		pg := &ParserGo{}
+		pg := &vugu.ParserGo{}
 
 		pg.PackageName = pkgName
 		pg.ComponentType = compTypeName
@@ -158,44 +166,29 @@ func (p *ParserGoPkg) Run() error {
 		if !fileExists(mainGoPath) {
 
 			// log.Printf("WRITING TO main_wasm.go STUFF")
-
 			err := ioutil.WriteFile(mainGoPath, []byte(`// +build wasm
-
 package main
-
 import (
 	"log"
 	"os"
-
 	"github.com/vugu/vugu"
 )
-
-
 func main() {
-
 	println("Entering main()")
 	defer println("Exiting main()")
-
 	rootInst, err := vugu.New(&Root{}, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	env := vugu.NewJSEnv("#root_mount_parent", rootInst, vugu.RegisteredComponentTypes())
 	env.DebugWriter = os.Stdout
-
 	for ok := true; ok; ok = env.EventWait() {
 		err = env.Render()
 		if err != nil {
 			panic(err)
 		}
 	}
-
 }
-
-
-
-
 `), 0644)
 			if err != nil {
 				return err
@@ -350,7 +343,7 @@ func goPkgCheckNames(pkgPath string, names []string) (map[string]interface{}, er
 	}
 
 	if len(pkgs) != 1 {
-		return ret, fmt.Errorf("unexpected package count after parsing, expected 1 and got this: %#v", pkgs)
+		return ret, fmt.Errorf("unexpected package count after parsing, expected 1 and got this: %#v", len(pkgs))
 	}
 
 	var pkg *ast.Package
