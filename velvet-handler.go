@@ -1,4 +1,4 @@
-package fff
+package vugu
 
 //
 // This handler makes a bunch of assumptions about your project layout.
