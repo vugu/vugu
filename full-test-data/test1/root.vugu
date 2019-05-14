@@ -1,0 +1,16 @@
+<div>
+    This is a test.
+    <button id="run" @click="data.Run(event)">run</button>
+    <div id="success" vg-if="data.Success">success</div>
+</div>
+
+<script type="application/x-go">
+type RootData struct {
+    Success bool
+}
+
+func (data *RootData) Run(event *vugu.DOMEvent) {
+    //panic("HERE")
+    data.Success = true
+}
+</script>
