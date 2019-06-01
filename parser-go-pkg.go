@@ -259,8 +259,11 @@ func main() {
 	}
 }
 `
-
-			mainstr = strings.Replace(mainstr, "$$ROOTNAME$$", p.opts.RootTypeName, 1)
+			rootType := p.opts.RootTypeName
+			if p.opts.RootTypeName == "" {
+				rootType = "Root" //this is to allow people to call this with a zero-valued p.opts
+			}
+			mainstr = strings.Replace(mainstr, "$$ROOTNAME$$", rootType, 1)
 
 			err := ioutil.WriteFile(mainGoPath, []byte(mainstr), 0644)
 			if err != nil {

@@ -2,6 +2,7 @@ package simplehttp
 
 import (
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -17,8 +18,8 @@ func TestSimpleHandlerDev(t *testing.T) {
 
 	tmpDir, err := ioutil.TempDir("", "TestSimpleHandler")
 	assert.NoError(err)
-	// log.Printf("tmpDir = %q", tmpDir)
-	defer os.RemoveAll(tmpDir)
+	log.Printf("tmpDir = %q", tmpDir)
+	//defer os.RemoveAll(tmpDir)
 
 	wd, _ := os.Getwd()
 	vugudir, _ := filepath.Abs(filepath.Join(wd, ".."))
