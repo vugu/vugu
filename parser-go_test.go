@@ -18,8 +18,8 @@ import (
 // parserGoBuildAndRunMulti will build and run multiple single-file components in the same package (requiring a main that prints to stdout) and return the captured output.
 // pgmMap is the component struct name as the key and the program source as the value.
 func parserGoBuildAndRunMulti(pgmMap map[string]string, debug bool) (string, error) {
-
 	tmpDir, err := ioutil.TempDir("", "parserGoBuildAndRun")
+	fmt.Printf("XXX tmpDir = %s", tmpDir)
 	if err != nil {
 		return "", err
 	}
@@ -49,7 +49,7 @@ func parserGoBuildAndRunMulti(pgmMap map[string]string, debug bool) (string, err
 			return "", fmt.Errorf("error parsing for %q: %v", k, err)
 		}
 
-		if debug {
+		if true {
 			b, err := ioutil.ReadFile(filepath.Join(tmpDir, k+".go"))
 			if err != nil {
 				return "", err

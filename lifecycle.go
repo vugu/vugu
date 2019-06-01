@@ -10,6 +10,9 @@ package vugu
 // channel) will passed to the Update method.  Render will be called
 // when Update returns.
 type BackgroundUpdater interface {
+	// This use of the interface{} as the signal means that you can't pass
+	// null as the value because the infrastructure thinks you want to (or did)
+	// close the channel.
 	BackgroundInit(chan interface{})
 	Update(interface{})
 }

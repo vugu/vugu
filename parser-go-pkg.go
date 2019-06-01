@@ -207,7 +207,12 @@ func main() {
 		html5Result := html5.Invoke().Bool()
 		webglResult := webgl.Invoke().Bool()
 		workerResult := worker.Invoke().Bool()
-		checker.CapabilityCheck(html5Result, webglResult, workerResult)
+		page:=checker.CapabilityCheck(html5Result, webglResult, workerResult)
+		log.Printf("page from cc %s",page)
+		if page!="" {
+			g.Get("location").Set("href",page)
+		}
+
 	}
 	//
 	// BackgroundUpdater
@@ -254,6 +259,7 @@ func main() {
 	}
 }
 `
+
 			mainstr = strings.Replace(mainstr, "$$ROOTNAME$$", p.opts.RootTypeName, 1)
 
 			err := ioutil.WriteFile(mainGoPath, []byte(mainstr), 0644)
@@ -276,7 +282,7 @@ func main() {
 	}
 
 	for _, fn := range vuguFileNames {
-
+		fmt.Printf("ZZZ %s", fn)
 		goFileName := strings.TrimSuffix(fn, ".vugu") + ".go"
 		goFilePath := filepath.Join(p.pkgPath, goFileName)
 

@@ -149,7 +149,10 @@ nodeLoop1:
 
 	// statically check that we implement vugu.ComponentType
 	fmt.Fprintf(&buf, "var _ vugu.ComponentType = (*%s)(nil)\n", p.ComponentType)
-	fmt.Fprintf(&buf, "\n")
+	fmt.Fprintf(&buf, "func (c *%s) GetEnder() vugu.Ender {return nil}\n", p.ComponentType)
+	fmt.Fprintf(&buf, "func (c *%s) GetStarter() vugu.Starter {return nil}\n", p.ComponentType)
+	fmt.Fprintf(&buf, "func (c *%s) GetBackgroundUpdater() vugu.BackgroundUpdater {return nil}\n", p.ComponentType)
+	fmt.Fprintf(&buf, "func (c *%s) GetCapabilityChecker() vugu.CapabilityChecker {return nil}\n", p.ComponentType)
 
 	// FIXME: we should only output the struct here if it's not in a <script type="application/x-go"> tag
 	// fmt.Fprintf(&buf, "type %s struct {\n", p.ComponentType)
