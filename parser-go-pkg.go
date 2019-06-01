@@ -135,7 +135,7 @@ func (p *ParserGoPkg) Run() error {
 		}
 
 		// parse it
-		err = pg.Parse(bytes.NewReader(b))
+		err = pg.Parse(bytes.NewReader(b), false)
 		if err != nil {
 			return fmt.Errorf("error parsing %q: %v", fn, err)
 		}
@@ -282,7 +282,6 @@ func main() {
 	}
 
 	for _, fn := range vuguFileNames {
-		fmt.Printf("ZZZ %s", fn)
 		goFileName := strings.TrimSuffix(fn, ".vugu") + ".go"
 		goFilePath := filepath.Join(p.pkgPath, goFileName)
 
@@ -318,6 +317,7 @@ func main() {
 			if _, ok := namesFound[compTypeName+".GetStarter"]; !ok {
 				fmt.Fprintf(f, "\nfunc (c *%s) GetStarter() vugu.Starter {return nil}\n", compTypeName)
 			}
+			fmt.Printf("found it? %v\n", namesFound[compTypeName+".GetCapabilityChecker"])
 			if _, ok := namesFound[compTypeName+".GetCapabilityChecker"]; !ok {
 				fmt.Fprintf(f, "\nfunc (c *%s) GetCapabilityChecker() vugu.CapabilityChecker {return nil}\n", compTypeName)
 			}

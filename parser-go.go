@@ -69,8 +69,7 @@ func (p *ParserGo) gofmt(pgm string) (string, error) {
 }
 
 // Parse will parse a .vugu file and write out a Go source code file to OutFile.
-func (p *ParserGo) Parse(r io.Reader) error {
-
+func (p *ParserGo) Parse(r io.Reader, needInterfaces bool) error {
 	nodeList, err := html.ParseFragment(r, cruftBody)
 	if err != nil {
 		return err
@@ -149,10 +148,21 @@ nodeLoop1:
 
 	// statically check that we implement vugu.ComponentType
 	fmt.Fprintf(&buf, "var _ vugu.ComponentType = (*%s)(nil)\n", p.ComponentType)
-	fmt.Fprintf(&buf, "func (c *%s) GetEnder() vugu.Ender {return nil}\n", p.ComponentType)
-	fmt.Fprintf(&buf, "func (c *%s) GetStarter() vugu.Starter {return nil}\n", p.ComponentType)
-	fmt.Fprintf(&buf, "func (c *%s) GetBackgroundUpdater() vugu.BackgroundUpdater {return nil}\n", p.ComponentType)
-	fmt.Fprintf(&buf, "func (c *%s) GetCapabilityChecker() vugu.CapabilityChecker {return nil}\n", p.ComponentType)
+
+	// FIXME: This boolean is really just a way to get the tests to pass. It appears
+	// FIXME: that 'vugugen' codepath actually comes into this code via the higher
+	// FIXME: level interface in parser-go-pkg.  In that path, we have machinery
+	// FIXME: to test if these need to be defined or not.  However, the tests hit
+	// FIXME: this code path (Parse(reader)) directly, so we need to generate
+	// FIXME: this code in the case where we don't have the detection machinery,
+	// FIXME: because we are probably in a simple test that doesn't know anything
+	// FIXME: about these interfaces.
+	if needInterfaces {
+		fmt.Fprintf(&buf, "func (c *%s) GetEnder() vugu.Ender {return nil}\n", p.ComponentType)
+		fmt.Fprintf(&buf, "func (c *%s) GetStarter() vugu.Starter {return nil}\n", p.ComponentType)
+		fmt.Fprintf(&buf, "func (c *%s) GetBackgroundUpdater() vugu.BackgroundUpdater {return nil}\n", p.ComponentType)
+		fmt.Fprintf(&buf, "func (c *%s) GetCapabilityChecker() vugu.CapabilityChecker {return nil}\n", p.ComponentType)
+	}
 
 	// FIXME: we should only output the struct here if it's not in a <script type="application/x-go"> tag
 	// fmt.Fprintf(&buf, "type %s struct {\n", p.ComponentType)

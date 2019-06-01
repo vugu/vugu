@@ -44,7 +44,8 @@ func parserGoBuildAndRunMulti(pgmMap map[string]string, debug bool) (string, err
 			OutFile:       k + ".go",
 		}
 
-		err = p.Parse(bytes.NewReader([]byte(pgmMap[k])))
+		reader := bytes.NewReader([]byte(pgmMap[k]))
+		err = p.Parse(reader, true)
 		if err != nil {
 			return "", fmt.Errorf("error parsing for %q: %v", k, err)
 		}
@@ -118,7 +119,8 @@ func parserGoBuildAndRun(pgm string, debug bool) (string, error) {
 		OutFile:  "demo-component.go",
 	}
 
-	err = p.Parse(bytes.NewReader([]byte(pgm)))
+	reader := bytes.NewReader([]byte(pgm))
+	err = p.Parse(reader, true)
 	if err != nil {
 		return "", err
 	}
