@@ -28,9 +28,10 @@ type ParserGoPkg struct {
 
 // ParserGoPkgOpts is the options for ParserGoPkg.
 type ParserGoPkgOpts struct {
-	SkipRegisterComponentTypes bool // indicates func init() { vugu.RegisterComponentType(...) } code should not be emitted in each file
-	SkipGoMod                  bool // do not try and create go.mod if it doesn't exist
-	SkipMainGo                 bool // do not try and create main_wasm.go if it doesn't exist in a main package
+	SkipRegisterComponentTypes bool   // indicates func init() { vugu.RegisterComponentType(...) } code should not be emitted in each file
+	SkipGoMod                  bool   // do not try and create go.mod if it doesn't exist
+	SkipMainGo                 bool   // do not try and create main_wasm.go if it doesn't exist in a main package
+	RootTypeName               string // in case you don't want to use root everytime
 }
 
 // NewParserGoPkg returns a new ParserGoPkg with the specified options or default if nil.  The pkgPath is required and must be an absolute path.
@@ -122,6 +123,10 @@ func (p *ParserGoPkg) Run() error {
 		namesToCheck = append(namesToCheck, pg.ComponentType)
 		namesToCheck = append(namesToCheck, pg.ComponentType+".NewData")
 		namesToCheck = append(namesToCheck, pg.DataType)
+		namesToCheck = append(namesToCheck, pg.ComponentType+".GetBackgroundUpdater")
+		namesToCheck = append(namesToCheck, pg.ComponentType+".GetStarter")
+		namesToCheck = append(namesToCheck, pg.ComponentType+".GetEnder")
+		namesToCheck = append(namesToCheck, pg.ComponentType+".GetCapabilityChecker")
 
 		// read in source
 		b, err := ioutil.ReadFile(filepath.Join(p.pkgPath, fn))
@@ -159,44 +164,99 @@ func (p *ParserGoPkg) Run() error {
 
 			// log.Printf("WRITING TO main_wasm.go STUFF")
 
-			err := ioutil.WriteFile(mainGoPath, []byte(`// +build wasm
-
+			//get all of main_wasm.go into a string
+			mainstr := `// +build wasm
 package main
 
 import (
 	"log"
 	"os"
+	"syscall/js"
 
 	"github.com/vugu/vugu"
 )
 
-
 func main() {
 
 	println("Entering main()")
-	defer println("Exiting main()")
 
-	rootInst, err := vugu.New(&Root{}, nil)
+	instance, err := vugu.New(&$$ROOTNAME$${}, nil) //my main component
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	env := vugu.NewJSEnv("#root_mount_parent", rootInst, vugu.RegisteredComponentTypes())
+	defer func() {
+		ender := instance.Type.GetEnder()
+		if ender != nil {
+			ender.End()
+		}
+		println("Exiting main()")
+	}()
+
+	//
+	// CapabilityCheck
+	//
+	checker := instance.Type.GetCapabilityChecker()
+	if checker != nil {
+		g := js.Global()
+		//N.B. we definitely need some clean interface in go
+		//to using web workers... something goroutines and channels...
+		worker := g.Get("vugu_detectWebWorker")
+		html5 := g.Get("vugu_detectHtml5")
+		webgl := g.Get("vugu_detectWebGL")
+		html5Result := html5.Invoke().Bool()
+		webglResult := webgl.Invoke().Bool()
+		workerResult := worker.Invoke().Bool()
+		checker.CapabilityCheck(html5Result, webglResult, workerResult)
+	}
+	//
+	// BackgroundUpdater
+	//
+	backgrounder := instance.Type.GetBackgroundUpdater()
+	var readyChannel chan interface{}
+	if backgrounder != nil {
+		readyChannel = make(chan interface{})
+		backgrounder.BackgroundInit(readyChannel)
+	}
+	//
+	// Starter
+	//
+	starter := instance.Type.GetStarter()
+	if starter!=nil {
+		starter.Start()
+	}
+
+	env := vugu.NewJSEnv("#root_mount_parent", instance, vugu.RegisteredComponentTypes())
 	env.DebugWriter = os.Stdout
 
-	for ok := true; ok; ok = env.EventWait() {
+	for {
+		f, payload:=env.EventWait(readyChannel)
+		if f==vugu.Failed {
+			log.Printf("received notification from EventWait that we should bail out")
+			return
+		}
+		log.Printf("at main.wasm, received %d",f)
+		switch f {
+		case vugu.BackgroundClosed:
+			continue //this is a noop from a rendering standpoint
+		case vugu.DOMFired:
+			//nothing to do just drop into render
+		case vugu.BackgroundUpdate:
+			if backgrounder == nil {
+				panic("background event but nobody to send it to")
+			}
+			backgrounder.Update(payload)
+		}
 		err = env.Render()
 		if err != nil {
 			panic(err)
 		}
 	}
-
 }
+`
+			mainstr = strings.Replace(mainstr, "$$ROOTNAME$$", p.opts.RootTypeName, 1)
 
-
-
-
-`), 0644)
+			err := ioutil.WriteFile(mainGoPath, []byte(mainstr), 0644)
 			if err != nil {
 				return err
 			}
@@ -235,7 +295,7 @@ func main() {
 				fmt.Fprintf(f, "\ntype %s struct {}\n", compTypeName)
 			}
 
-			// create CompNameData struct if it doesn't exist in the package
+			// check for fooData type
 			if _, ok := namesFound[compTypeName+"Data"]; !ok {
 				fmt.Fprintf(f, "\ntype %s struct {}\n", compTypeName+"Data")
 			}
@@ -244,6 +304,19 @@ func main() {
 			if _, ok := namesFound[compTypeName+".NewData"]; !ok {
 				fmt.Fprintf(f, "\nfunc (ct *%s) NewData(props vugu.Props) (interface{}, error) { return &%s{}, nil }\n",
 					compTypeName, compTypeName+"Data")
+			}
+
+			if _, ok := namesFound[compTypeName+".GetEnder"]; !ok {
+				fmt.Fprintf(f, "\nfunc (c *%s) GetEnder() vugu.Ender {return nil}\n", compTypeName)
+			}
+			if _, ok := namesFound[compTypeName+".GetStarter"]; !ok {
+				fmt.Fprintf(f, "\nfunc (c *%s) GetStarter() vugu.Starter {return nil}\n", compTypeName)
+			}
+			if _, ok := namesFound[compTypeName+".GetCapabilityChecker"]; !ok {
+				fmt.Fprintf(f, "\nfunc (c *%s) GetCapabilityChecker() vugu.CapabilityChecker {return nil}\n", compTypeName)
+			}
+			if _, ok := namesFound[compTypeName+".GetBackgroundUpdater"]; !ok {
+				fmt.Fprintf(f, "\nfunc (c *%s) GetBackgroundUpdater() vugu.BackgroundUpdater {return nil}\n", compTypeName)
 			}
 
 			// register component unless disabled
@@ -403,7 +476,7 @@ func goPkgCheckNames(pkgPath string, names []string) (map[string]interface{}, er
 					continue // don't care methods with no receiver - found them already above as single (no period) names
 				}
 
-				// log.Printf("fd.Name: %#v", fd.Name)
+				//log.Printf("fd.Name: %#v", fd.Name)
 				if fd.Name != nil {
 					dmethod = fd.Name.Name
 				}

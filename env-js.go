@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"log"
 	"reflect"
 	"runtime/debug"
 	"strings"
@@ -100,22 +101,43 @@ func (e *JSEnv) debugf(s string, args ...interface{}) {
 	}
 }
 
+//This type is so we can nicely communicate with the caller of EventWait.
+type EventWaitResult int
+
+const (
+	Failed EventWaitResult = iota
+	DOMFired
+	BackgroundUpdate
+	BackgroundClosed
+)
+
 // EventWait will block until an event occurs and will return after the event is completed.
 // This is our first attempt at making a "render loop".  Will return false if the JSEnv
 // becomes invalid and should exit.
-func (e *JSEnv) EventWait() (ok bool) {
-	ok = js.Global().Get("document").Truthy()
+func (e *JSEnv) EventWait(bgChan chan interface{}) (EventWaitResult, interface{}) {
+	ok := js.Global().Get("document").Truthy()
 	if !ok {
-		return
+		return Failed, nil
 	}
 
 	// FIXME: this should probably have some sort of "debouncing" on it to handle the case of
 	// several events in rapid succession causing multiple renders - maybe we read from eventWaitCH
 	// continuously until it's empty, with a max of like 20ms pause between each or something, and then
 	// only return after we don't see anything for that time frame.
-
-	ok = <-e.eventWaitCh
-	return
+	log.Printf("about to hit the select")
+	select {
+	case ok = <-e.eventWaitCh:
+		if ok {
+			return DOMFired, nil
+		}
+		return Failed, nil
+	case update := <-bgChan:
+		if update == nil {
+			bgChan = nil // don't bother with it anymore if the send false *or* close the channel
+			return BackgroundClosed, nil
+		}
+		return BackgroundUpdate, update
+	}
 }
 
 // Render does the DOM syncing.

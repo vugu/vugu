@@ -65,7 +65,13 @@ func (p Props) Merge(p2 Props) Props {
 // NewData provides for specific behavior when a component is initialized.
 type ComponentType interface {
 	BuildVDOM(data interface{}) (vdom *VGNode, css *VGNode, reterr error) // based on the given data, build the VGNode tree
-	NewData(props Props) (interface{}, error)                             // initial data when component is instanciated
+	NewData(props Props) (interface{}, error)                             // initial data when component is instantiated
+
+	//lifecyle support
+	GetBackgroundUpdater() BackgroundUpdater
+	GetStarter() Starter
+	GetEnder() Ender
+	GetCapabilityChecker() CapabilityChecker
 }
 
 // New instantiates a component based on its ComponentType and a set of Props.

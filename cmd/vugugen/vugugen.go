@@ -19,6 +19,7 @@ func main() {
 	flag.BoolVar(&opts.SkipRegisterComponentTypes, "skip-register", false, "Do not attempt to register component in init() method")
 	flag.BoolVar(&opts.SkipGoMod, "skip-go-mod", false, "Do not try to create go.mod as needed")
 	flag.BoolVar(&opts.SkipMainGo, "skip-main", false, "Do not try to create main.go as needed")
+	flag.StringVar(&opts.RootTypeName, "root-type", "root", "supply your own type for the generation of main_wasm.go to use")
 	// version := flag.Bool("version", false, "Print version and exit with code 0")
 	flag.Parse()
 
