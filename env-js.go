@@ -6,7 +6,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"log"
 	"reflect"
 	"runtime/debug"
 	"strings"
@@ -124,19 +123,24 @@ func (e *JSEnv) EventWait(bgChan chan interface{}) (EventWaitResult, interface{}
 	// several events in rapid succession causing multiple renders - maybe we read from eventWaitCH
 	// continuously until it's empty, with a max of like 20ms pause between each or something, and then
 	// only return after we don't see anything for that time frame.
-	log.Printf("about to hit the select")
-	select {
-	case ok = <-e.eventWaitCh:
-		if ok {
-			return DOMFired, nil
+again:
+	if bgChan == nil {
+		ok = <-e.eventWaitCh
+		return DOMFired, nil
+	} else {
+		select {
+		case ok = <-e.eventWaitCh:
+			if ok {
+				return DOMFired, nil
+			}
+			return Failed, nil
+		case update := <-bgChan:
+			if update == nil {
+				bgChan = nil // don't bother with it anymore if the send false *or* close the channel
+				goto again
+			}
+			return BackgroundUpdate, update
 		}
-		return Failed, nil
-	case update := <-bgChan:
-		if update == nil {
-			bgChan = nil // don't bother with it anymore if the send false *or* close the channel
-			return BackgroundClosed, nil
-		}
-		return BackgroundUpdate, update
 	}
 }
 
@@ -604,7 +608,6 @@ func (e *JSEnv) handleRawDOMEvent(this js.Value, args []js.Value) interface{} {
 	if len(args) < 1 {
 		panic(fmt.Errorf("args should be at least 1 element, instead was: %#v", args))
 	}
-
 	// TODO: give this more thought - but for now we just do a non-blocking push to the
 	// eventWaitCh, telling the render loop that a render is required, but if a bunch
 	// of them stack up we don't wait

@@ -100,7 +100,7 @@ func (p *ParserGoPkg) Run() error {
 		return fmt.Errorf("no .vugu files found, please create one and try again")
 	}
 
-	pkgName := goGuessPkgName(p.pkgPath)
+	pkgName := goGuessPkgName(p.pkgPath, p.opts.RootTypeName)
 
 	namesToCheck := []string{"main"}
 
@@ -150,6 +150,7 @@ func (p *ParserGoPkg) Run() error {
 	}
 
 	// if main package, generate main_wasm.go with default stuff if no main func in the package and no main_wasm.go
+	// note that we need to compute the main package in the face of different root types
 	if (!p.opts.SkipMainGo) && pkgName == "main" {
 
 		mainGoPath := filepath.Join(p.pkgPath, "main_wasm.go")
@@ -233,6 +234,9 @@ func main() {
 
 	env := vugu.NewJSEnv("#root_mount_parent", instance, vugu.RegisteredComponentTypes())
 	env.DebugWriter = os.Stdout
+	if err:=env.Render(); err!=nil {
+		panic(err)
+	}
 
 	for {
 		f, payload:=env.EventWait(readyChannel)
@@ -264,7 +268,6 @@ func main() {
 				rootType = "Root" //this is to allow people to call this with a zero-valued p.opts
 			}
 			mainstr = strings.Replace(mainstr, "$$ROOTNAME$$", rootType, 1)
-
 			err := ioutil.WriteFile(mainGoPath, []byte(mainstr), 0644)
 			if err != nil {
 				return err
@@ -320,7 +323,7 @@ func main() {
 			if _, ok := namesFound[compTypeName+".GetStarter"]; !ok {
 				fmt.Fprintf(f, "\nfunc (c *%s) GetStarter() vugu.Starter {return nil}\n", compTypeName)
 			}
-			fmt.Printf("found it? %v\n", namesFound[compTypeName+".GetCapabilityChecker"])
+
 			if _, ok := namesFound[compTypeName+".GetCapabilityChecker"]; !ok {
 				fmt.Fprintf(f, "\nfunc (c *%s) GetCapabilityChecker() vugu.CapabilityChecker {return nil}\n", compTypeName)
 			}
@@ -377,7 +380,7 @@ func fnameToGoTypeName(s string) string {
 	return strings.Join(parts, "")
 }
 
-func goGuessPkgName(pkgPath string) (ret string) {
+func goGuessPkgName(pkgPath string, rootName string) (ret string) {
 
 	// defer func() { log.Printf("goGuessPkgName returning %q", ret) }()
 
@@ -404,6 +407,15 @@ checkMore:
 	_, err = os.Stat(filepath.Join(pkgPath, "root.vugu"))
 	if err == nil {
 		return "main"
+	}
+
+	//if they supplied a root type, we look for a package of that name
+	if rootName != "" && rootName != "Root" {
+		lowerName := strings.ToLower(rootName)
+		_, err = os.Stat(filepath.Join(pkgPath, lowerName+".vugu"))
+		if err == nil {
+			return "main"
+		}
 	}
 
 	// otherwise we use the name of the folder...
