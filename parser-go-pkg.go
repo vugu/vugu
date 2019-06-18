@@ -174,7 +174,7 @@ import (
 	"os"
 	"syscall/js"
 
-	"github.com/vugu/vugu"
+	"github.com/iansmith/vugu"
 )
 
 func main() {
