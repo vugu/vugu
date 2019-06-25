@@ -224,18 +224,19 @@ func main() {
 		readyChannel = make(chan interface{})
 		backgrounder.BackgroundInit(readyChannel)
 	}
+
+	env := vugu.NewJSEnv("#root_mount_parent", instance, vugu.RegisteredComponentTypes())
+	env.DebugWriter = os.Stdout
+	if err:=env.Render(); err!=nil {
+		panic(err)
+	}
+
 	//
 	// Starter
 	//
 	starter := instance.Type.GetStarter()
 	if starter!=nil {
 		starter.Start()
-	}
-
-	env := vugu.NewJSEnv("#root_mount_parent", instance, vugu.RegisteredComponentTypes())
-	env.DebugWriter = os.Stdout
-	if err:=env.Render(); err!=nil {
-		panic(err)
 	}
 
 	for {
