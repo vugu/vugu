@@ -58,7 +58,7 @@ func (e *StaticHTMLEnv) Render() error {
 
 	// walk the vdom and handle components along the way;
 	// since this is a static render, we can be pretty naive
-	// about how and when we instanciate the components
+	// about how and when we instantiate the components
 
 	// compInstMap := make(map[*VGNode]*ComponentInst)
 	err = vdom.Walk(func(vgn *VGNode) error {
