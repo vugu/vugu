@@ -1,90 +1,82 @@
 package vugu
 
-import (
-	"log"
-	"regexp"
-	"testing"
+// func TestComponents(t *testing.T) {
 
-	"github.com/stretchr/testify/assert"
-)
+// 	assert := assert.New(t)
 
-func TestComponents(t *testing.T) {
+// 	outs, err := parserGoBuildAndRunMulti(map[string]string{
+// 		"RootComp": `
+// <div id="root">
+// 	<comp-one :headline="data.TheTitle"></comp-one>
+// </div>
 
-	assert := assert.New(t)
+// <script type="application/x-go">
+// import "os"
 
-	outs, err := parserGoBuildAndRunMulti(map[string]string{
-		"RootComp": `
-<div id="root">
-	<comp-one :headline="data.TheTitle"></comp-one>
-</div>
+// func main() {
+// 	r, err := vugu.New(&RootComp{}, nil)
+// 	if err != nil { panic(err) }
+// 	env := vugu.NewStaticHTMLEnv(os.Stdout, r, nil)
+// 	env.RegisterComponentType("comp-one", &CompOne{})
+// 	err = env.Render()
+// 	if err != nil { panic(err) }
+// }
 
-<script type="application/x-go">
-import "os"
+// type RootComp struct {}
 
-func main() {
-	r, err := vugu.New(&RootComp{}, nil)
-	if err != nil { panic(err) }
-	env := vugu.NewStaticHTMLEnv(os.Stdout, r, nil)
-	env.RegisterComponentType("comp-one", &CompOne{})
-	err = env.Render()
-	if err != nil { panic(err) }
-}
+// type RootCompData struct {
+// 	TheTitle string
+// }
+// func (c *RootComp) NewData(props vugu.Props) (interface{}, error) {
+// 	return &RootCompData {
+// 		TheTitle: "title goes here",
+// 	}, nil
+// }
+// </script>
+// `,
+// 		"CompOne": `
+// <div class="comp-one">
+// 	<h1 vg-html="data.Headline"></h1>
+// </div>
 
-type RootComp struct {}
+// <script type="application/x-go">
 
-type RootCompData struct {
-	TheTitle string
-}
-func (c *RootComp) NewData(props vugu.Props) (interface{}, error) {
-	return &RootCompData {
-		TheTitle: "title goes here",
-	}, nil
-}
-</script>
-`,
-		"CompOne": `
-<div class="comp-one">
-	<h1 vg-html="data.Headline"></h1>
-</div>
+// type CompOne struct {}
 
-<script type="application/x-go">
+// type CompOneData struct {
+// 	Headline string
+// }
+// func (c *CompOne) NewData(props vugu.Props) (interface{}, error) {
+// 	ret := &CompOneData {}
+// 	ret.Headline, _ = props["headline"].(string)
+// 	return ret, nil
+// }
+// </script>
+// `,
+// 	}, false)
+// 	assert.NoError(err)
+// 	log.Printf("outs: %s", outs)
+// 	assert.True(noWSEqual(`<div id="root">
+// <div class="comp-one">
+// 	<h1>title goes here</h1>
+// </div>
+// </div>`, outs))
 
-type CompOne struct {}
+// 	// var buf bytes.Buffer
+// 	// env := NewStaticHTMLEnv(&buf, nil)
+// 	// assert.NotNil(env)
 
-type CompOneData struct {
-	Headline string
-}
-func (c *CompOne) NewData(props vugu.Props) (interface{}, error) {
-	ret := &CompOneData {}
-	ret.Headline, _ = props["headline"].(string)
-	return ret, nil
-}
-</script>
-`,
-	}, false)
-	assert.NoError(err)
-	log.Printf("outs: %s", outs)
-	assert.True(noWSEqual(`<div id="root">
-<div class="comp-one">
-	<h1>title goes here</h1>
-</div>
-</div>`, outs))
+// 	// env.RegisterComponentType("comp-one")
 
-	// var buf bytes.Buffer
-	// env := NewStaticHTMLEnv(&buf, nil)
-	// assert.NotNil(env)
+// 	// env.
 
-	// env.RegisterComponentType("comp-one")
+// 	// assert.NoError(env.Render())
 
-	// env.
+// }
 
-	// assert.NoError(env.Render())
+// var wsre = regexp.MustCompile(`\s`)
 
-}
-
-var wsre = regexp.MustCompile(`\s`)
-
-func noWSEqual(s1, s2 string) bool {
-	return wsre.ReplaceAllLiteralString(s1, "") ==
-		wsre.ReplaceAllLiteralString(s2, "")
-}
+// func noWSEqual(s1, s2 string) bool {
+// 	return wsre.ReplaceAllLiteralString(s1, "") ==
+// 		wsre.ReplaceAllLiteralString(s2, "")
+// }

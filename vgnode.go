@@ -42,27 +42,19 @@ const (
 // VGAtom is an integer corresponding to golang.org/x/net/html/atom.Atom.
 // Note that this may be removed for simplicity and to remove the dependency
 // on the package above.  Suggest you don't use it.
-type VGAtom uint32
+// type VGAtom uint32
 
 // VGAttribute is the attribute on an HTML tag.
 type VGAttribute struct {
 	Namespace, Key, Val string
 }
 
-func attrFromHtml(attr html.Attribute) VGAttribute {
-	return VGAttribute{
-		Namespace: attr.Namespace,
-		Key:       attr.Key,
-		Val:       attr.Val,
-	}
-}
-
 // VGNode represents a node from our virtual DOM with the dynamic parts wired up into functions.
 type VGNode struct {
 	Parent, FirstChild, LastChild, PrevSibling, NextSibling *VGNode
 
-	Type      VGNodeType
-	DataAtom  VGAtom
+	Type VGNodeType
+	// DataAtom  VGAtom // FIXME: This needs to come out, we're not using it and without well-defined behavior it just becomes confusing and problematic
 	Data      string
 	Namespace string
 	Attr      []VGAttribute

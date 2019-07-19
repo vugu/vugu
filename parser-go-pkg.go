@@ -114,6 +114,7 @@ func (p *ParserGoPkg) Run() error {
 
 		pg.PackageName = pkgName
 		pg.ComponentType = compTypeName
+		pg.StructType = compTypeName
 		pg.DataType = pg.ComponentType + "Data"
 		pg.OutDir = p.pkgPath
 		pg.OutFile = goFileName
@@ -130,7 +131,7 @@ func (p *ParserGoPkg) Run() error {
 		}
 
 		// parse it
-		err = pg.Parse(bytes.NewReader(b))
+		err = pg.Parse(bytes.NewReader(b), fn)
 		if err != nil {
 			return fmt.Errorf("error parsing %q: %v", fn, err)
 		}
@@ -170,7 +171,6 @@ import (
 	"github.com/vugu/vugu"
 )
 
-
 func main() {
 
 	println("Entering main()")
@@ -192,11 +192,41 @@ func main() {
 	}
 
 }
-
-
-
-
 `), 0644)
+
+			// 			err := ioutil.WriteFile(mainGoPath, []byte(`// +build wasm
+
+			// package main
+
+			// import (
+			// 	"log"
+			// 	"os"
+
+			// 	"github.com/vugu/vugu"
+			// )
+
+			// func main() {
+
+			// 	println("Entering main()")
+			// 	defer println("Exiting main()")
+
+			// 	rootInst, err := vugu.New(&Root{}, nil)
+			// 	if err != nil {
+			// 		log.Fatal(err)
+			// 	}
+
+			// 	env := vugu.NewJSEnv("#root_mount_parent", rootInst, vugu.RegisteredComponentTypes())
+			// 	env.DebugWriter = os.Stdout
+
+			// 	for ok := true; ok; ok = env.EventWait() {
+			// 		err = env.Render()
+			// 		if err != nil {
+			// 			panic(err)
+			// 		}
+			// 	}
+
+			// }
+			// `), 0644)
 			if err != nil {
 				return err
 			}

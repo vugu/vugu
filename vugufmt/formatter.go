@@ -81,7 +81,7 @@ func breaks(input string) int {
 }
 
 // FormatHTML formats script and css nodes.
-func (f *Formatter) FormatHTML(filename string, in io.Reader, out io.Writer) *FmtError {
+func (f *Formatter) FormatHTML(filename string, in io.Reader, out io.Writer) error {
 	izer := htmlx.NewTokenizer(in)
 	ts := tokenStack{}
 

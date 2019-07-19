@@ -59,6 +59,38 @@ func (p Props) Merge(p2 Props) Props {
 	return p
 }
 
+type BuildIn struct {
+	BuildEnv *BuildEnv
+
+	SlotMap map[string]BuilderFunc
+}
+
+type BuildOut struct {
+	Doc *VGNode   // output element (required)
+	CSS []*VGNode // optional CSS style tag
+	JS  []*VGNode // optional JS script tag
+}
+
+func (b *BuildOut) AppendCSS(css string) {
+	vgn := &VGNode{Type: ElementNode, Data: "style"}
+	vgn.AppendChild(&VGNode{Type: TextNode, Data: css})
+	b.CSS = append(b.CSS, vgn)
+}
+
+func (b *BuildOut) AppendJS(js string) {
+	vgn := &VGNode{Type: ElementNode, Data: "script"}
+	vgn.AppendChild(&VGNode{Type: TextNode, Data: js})
+	b.JS = append(b.JS, vgn)
+}
+
+type Builder interface {
+	Build(in *BuildIn) (out *BuildOut, err error)
+}
+
+type BuilderFunc func(in *BuildIn) (out *BuildOut, err error)
+
+func (f BuilderFunc) Build(in *BuildIn) (out *BuildOut, err error) { return f(in) }
+
 // ComponentType is implemented by any type that wants to be a component.
 // The BuildVDOM method is called to generate the virtual DOM for a component; and this method
 // is usually code generated (by ParserGo) from a .vugu file.

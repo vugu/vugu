@@ -5,12 +5,11 @@
 </div>
 
 <script type="application/x-go">
-type RootData struct {
+type Root struct {
     Success bool
 }
 
-func (data *RootData) Run(event *vugu.DOMEvent) {
-    //panic("HERE")
-    data.Success = true
+func (c *Root) Run(event *vugu.DOMEvent) {
+    c.Success = true
 }
 </script>

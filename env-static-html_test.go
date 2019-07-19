@@ -1,53 +1,47 @@
 package vugu
 
-import (
-	"testing"
+// func TestStaticHTMLEnv(t *testing.T) {
 
-	"github.com/stretchr/testify/assert"
-)
+// 	assert := assert.New(t)
 
-func TestStaticHTMLEnv(t *testing.T) {
+// 	s, err := parserGoBuildAndRun(`
 
-	assert := assert.New(t)
+// <style>
+// .outer { background: green; }
+// </style>
 
-	s, err := parserGoBuildAndRun(`
+// <div class="outer">
+// 	<p vg-html="data.Example"></p>
+// </div>
 
-<style>
-.outer { background: green; }
-</style>
+// <script type="application/x-go">
+// import "os"
 
-<div class="outer">
-	<p vg-html="data.Example"></p>
-</div>
+// type DemoComp struct {}
 
-<script type="application/x-go">
-import "os"
+// func (c *DemoComp) NewData(props vugu.Props) (interface{}, error) {
+// 	return &DemoCompData{Example:"Some Data!"}, nil
+// }
 
-type DemoComp struct {}
+// type DemoCompData struct {
+// 	Example string
+// }
 
-func (c *DemoComp) NewData(props vugu.Props) (interface{}, error) {
-	return &DemoCompData{Example:"Some Data!"}, nil
-}
+// func main() {
+// 	inst, err := vugu.New(&DemoComp{}, nil)
+// 	if err != nil { panic(err) }
+// 	env := vugu.NewStaticHTMLEnv(os.Stdout, inst, nil)
+// 	err = env.Render()
+// 	if err != nil { panic(err) }
+// }
+// </script>
+// `, false)
+// 	assert.NoError(err)
+// 	// log.Printf("OUT: %s", s)
+// 	assert.Equal(`<style>
+// .outer { background: green; }
+// </style><div class="outer">
+// 	<p>Some Data!</p>
+// </div>`, s)
 
-type DemoCompData struct {
-	Example string
-}
-
-func main() {
-	inst, err := vugu.New(&DemoComp{}, nil)
-	if err != nil { panic(err) }
-	env := vugu.NewStaticHTMLEnv(os.Stdout, inst, nil)
-	err = env.Render()
-	if err != nil { panic(err) }
-}
-</script>
-`, false)
-	assert.NoError(err)
-	// log.Printf("OUT: %s", s)
-	assert.Equal(`<style>
-.outer { background: green; }
-</style><div class="outer">
-	<p>Some Data!</p>
-</div>`, s)
-
-}
+// }

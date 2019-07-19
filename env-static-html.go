@@ -10,7 +10,7 @@ import (
 	"golang.org/x/net/html"
 )
 
-var _ Env = (*StaticHTMLEnv)(nil) // assert type
+// var _ Env = (*StaticHTMLEnv)(nil) // assert type
 
 // StaticHTMLEnv is an environment that renders to static HTML.  Can be used to implement "server side rendering"
 // as well as during testing.
@@ -179,7 +179,7 @@ func (e *StaticHTMLEnv) Render() error {
 
 		// copy the other type and attr info
 		n.Type = html.NodeType(vgn.Type)
-		n.DataAtom = atom.Atom(vgn.DataAtom)
+		// n.DataAtom = atom.Atom(vgn.DataAtom)
 		n.Data = vgn.Data
 		n.Namespace = vgn.Namespace
 

@@ -4,8 +4,25 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/vugu/vugu/internal/htmlx"
 	"golang.org/x/net/html"
 )
+
+func attrFromHtml(attr html.Attribute) VGAttribute {
+	return VGAttribute{
+		Namespace: attr.Namespace,
+		Key:       attr.Key,
+		Val:       attr.Val,
+	}
+}
+
+func attrFromHtmlx(attr htmlx.Attribute) VGAttribute {
+	return VGAttribute{
+		Namespace: attr.Namespace,
+		Key:       attr.Key,
+		Val:       attr.Val,
+	}
+}
 
 // stuff that is common to both parsers can get moved into here
 
@@ -26,7 +43,33 @@ func staticVGAttr(inAttr []html.Attribute) (ret []VGAttribute) {
 	return ret
 }
 
+func staticVGAttrx(inAttr []htmlx.Attribute) (ret []VGAttribute) {
+
+	for _, a := range inAttr {
+		switch {
+		case a.Key == "vg-if":
+		case a.Key == "vg-for":
+		case a.Key == "vg-html":
+		case strings.HasPrefix(a.Key, ":"):
+		case strings.HasPrefix(a.Key, "@"):
+		default:
+			ret = append(ret, attrFromHtmlx(a))
+		}
+	}
+
+	return ret
+}
+
 func vgIfExpr(n *html.Node) string {
+	for _, a := range n.Attr {
+		if a.Key == "vg-if" {
+			return a.Val
+		}
+	}
+	return ""
+}
+
+func vgIfExprx(n *htmlx.Node) string {
 	for _, a := range n.Attr {
 		if a.Key == "vg-if" {
 			return a.Val
@@ -51,7 +94,32 @@ func vgForExpr(n *html.Node) string {
 	return ""
 }
 
+func vgForExprx(n *htmlx.Node) string {
+	for _, a := range n.Attr {
+		if a.Key == "vg-for" {
+
+			v := strings.TrimSpace(a.Val)
+
+			if !strings.Contains(v, " ") { // make it so `w` is a shorthand for `key, value := range w`
+				v = "key, value := range " + v
+			}
+
+			return v
+		}
+	}
+	return ""
+}
+
 func vgHTMLExpr(n *html.Node) string {
+	for _, a := range n.Attr {
+		if a.Key == "vg-html" {
+			return a.Val
+		}
+	}
+	return ""
+}
+
+func vgHTMLExprx(n *htmlx.Node) string {
 	for _, a := range n.Attr {
 		if a.Key == "vg-html" {
 			return a.Val

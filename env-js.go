@@ -16,7 +16,7 @@ import (
 
 var _ js.Value
 
-var _ Env = (*JSEnv)(nil) // assert type
+// var _ Env = (*JSEnv)(nil) // assert type
 
 var document js.Value
 var domEventCB js.Func
