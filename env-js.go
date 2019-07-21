@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"os"
 	"reflect"
 	"runtime/debug"
 	"strings"
@@ -21,8 +22,10 @@ var _ Env = (*JSEnv)(nil) // assert type
 
 var document js.Value
 var domEventCB js.Func
+var wantRenderTime bool
 
 func init() {
+	_, wantRenderTime = os.LookupEnv("RENDER_TIME")
 	document = js.Global().Get("document")
 	// we use a single callback function for all of our event handling and dispatch the events from it
 	domEventCB = js.FuncOf(func(this js.Value, args []js.Value) interface{} {
@@ -163,14 +166,10 @@ func (e *JSEnv) Render() (reterr error) {
 	// log.Print("testing2")
 
 	renderStart := time.Now()
-	// log.Print(time.Now())
-
-	e.debugf("Render() starting")
-
 	defer func() {
-		// log.Print(time.Now())
-
-		e.debugf("Render() exiting, total time %v (err=%v)", time.Since(renderStart), reterr)
+		if wantRenderTime {
+			e.debugf("Render() exiting, total time %v (err=%v)", time.Since(renderStart), reterr)
+		}
 	}()
 
 	c := e.rootInst

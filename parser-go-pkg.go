@@ -245,7 +245,6 @@ func main() {
 			log.Printf("received notification from EventWait that we should bail out")
 			return
 		}
-		log.Printf("at main.wasm, received %d",f)
 		switch f {
 		case vugu.BackgroundClosed:
 			continue //this is a noop from a rendering standpoint
