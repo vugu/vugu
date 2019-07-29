@@ -1,14 +1,12 @@
 package vugufmt
 
-import (
-	"github.com/vugu/vugu/internal/htmlx"
-)
+import "golang.org/x/net/html"
 
 // tokenStack is a stack of nodes.
-type tokenStack []*htmlx.Token
+type tokenStack []*html.Token
 
 // pop pops the stack. It will panic if s is empty.
-func (s *tokenStack) pop() *htmlx.Token {
+func (s *tokenStack) pop() *html.Token {
 	i := len(*s)
 	n := (*s)[i-1]
 	*s = (*s)[:i-1]
@@ -16,14 +14,14 @@ func (s *tokenStack) pop() *htmlx.Token {
 }
 
 // push inserts a node
-func (s *tokenStack) push(n *htmlx.Token) {
+func (s *tokenStack) push(n *html.Token) {
 	i := len(*s)
 	(*s) = append(*s, nil)
 	(*s)[i] = n
 }
 
 // top returns the most recently pushed node, or nil if s is empty.
-func (s *tokenStack) top() *htmlx.Token {
+func (s *tokenStack) top() *html.Token {
 	if i := len(*s); i > 0 {
 		return (*s)[i-1]
 	}
@@ -32,7 +30,7 @@ func (s *tokenStack) top() *htmlx.Token {
 
 // index returns the index of the top-most occurrence of n in the stack, or -1
 // if n is not present.
-func (s *tokenStack) index(n *htmlx.Token) int {
+func (s *tokenStack) index(n *html.Token) int {
 	for i := len(*s) - 1; i >= 0; i-- {
 		if (*s)[i] == n {
 			return i
@@ -42,14 +40,14 @@ func (s *tokenStack) index(n *htmlx.Token) int {
 }
 
 // insert inserts a node at the given index.
-func (s *tokenStack) insert(i int, n *htmlx.Token) {
+func (s *tokenStack) insert(i int, n *html.Token) {
 	(*s) = append(*s, nil)
 	copy((*s)[i+1:], (*s)[i:])
 	(*s)[i] = n
 }
 
 // remove removes a node from the stack. It is a no-op if n is not present.
-func (s *tokenStack) remove(n *htmlx.Token) {
+func (s *tokenStack) remove(n *html.Token) {
 	i := s.index(n)
 	if i == -1 {
 		return

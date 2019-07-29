@@ -9,8 +9,9 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/vugu/vugu/internal/htmlx"
-	"github.com/vugu/vugu/internal/htmlx/atom"
+	"github.com/erinpentecost/byteline"
+	"golang.org/x/net/html"
+	"golang.org/x/net/html/atom"
 )
 
 // Formatter allows you to format vugu files.
@@ -82,25 +83,25 @@ func breaks(input string) int {
 
 // FormatHTML formats script and css nodes.
 func (f *Formatter) FormatHTML(filename string, in io.Reader, out io.Writer) *FmtError {
-	izer := htmlx.NewTokenizer(in)
+	lineTracker := byteline.NewReader(in)
+	izer := html.NewTokenizer(lineTracker)
 	ts := tokenStack{}
-
-	curTok := htmlx.Token{}
 
 	previousLineBreak := false
 
 loop:
 	for {
 		curTokType := izer.Next()
+		curLine, curCol, _ := lineTracker.GetCurrentLineAndColumn()
 
 		// quit on errors.
-		if curTokType == htmlx.ErrorToken {
+		if curTokType == html.ErrorToken {
 			if err := izer.Err(); err != nil {
 				if err != io.EOF {
 					return &FmtError{
 						Msg:    err.Error(),
-						Line:   curTok.Line,
-						Column: curTok.Column,
+						Line:   curLine,
+						Column: curCol,
 					}
 				}
 				// it's ok if we hit the end,
@@ -114,14 +115,14 @@ loop:
 				}
 				return &FmtError{
 					Msg:    fmt.Sprintf("missing end tags (%s)", strings.Join(tagNames, ", ")),
-					Line:   curTok.Line,
-					Column: curTok.Column,
+					Line:   curLine,
+					Column: curCol,
 				}
 			}
 			return &FmtError{
 				Msg:    "tokenization error",
-				Line:   curTok.Line,
-				Column: curTok.Column,
+				Line:   curLine,
+				Column: curCol,
 			}
 		}
 
@@ -130,7 +131,7 @@ loop:
 		// do indentation if we broke the line before this token.
 		if previousLineBreak {
 			indentLevel := len(ts)
-			if curTokType == htmlx.EndTagToken && indentLevel > 0 {
+			if curTokType == html.EndTagToken && indentLevel > 0 {
 				indentLevel--
 			}
 			for i := 0; i < indentLevel; i++ {
@@ -143,20 +144,20 @@ loop:
 		raws := string(raw)
 		// add or remove tokens from the stack
 		switch curTokType {
-		case htmlx.StartTagToken:
+		case html.StartTagToken:
 			ts.push(&curTok)
 			out.Write(raw)
-		case htmlx.EndTagToken:
+		case html.EndTagToken:
 			lastPushed := ts.pop()
 			if lastPushed.DataAtom != curTok.DataAtom {
 				return &FmtError{
 					Msg:    fmt.Sprintf("mismatched ending tag (expected %s, found %s)", lastPushed.Data, curTok.Data),
-					Line:   curTok.Line,
-					Column: curTok.Column,
+					Line:   curLine,
+					Column: curCol,
 				}
 			}
 			out.Write(raw)
-		case htmlx.TextToken:
+		case html.TextToken:
 			parent := ts.top()
 
 			if breakCount := breaks(raws); breakCount > 0 {
@@ -170,8 +171,7 @@ loop:
 
 			if parent == nil {
 				out.Write(raw)
-				//return fmt.Errorf("%s:%v:%v: orphaned text node",
-				//	filename, curTok.Line, curTok.Column)
+				// orphaned text node
 			} else if parent.DataAtom == atom.Script {
 				// determine the type of the script
 				scriptType := ""
@@ -185,7 +185,7 @@ loop:
 				fmtr, err := f.FormatScript(scriptType, raw)
 				// Exit out on error.
 				if err != nil {
-					err.Line += curTok.Line
+					err.Line += curLine
 					err.FileName = filename
 					return err
 				}
@@ -197,8 +197,8 @@ loop:
 				if err != nil {
 					return &FmtError{
 						Msg:    err.Error(),
-						Line:   curTok.Line,
-						Column: curTok.Column,
+						Line:   curLine,
+						Column: curCol,
 					}
 				}
 				out.Write(fmtr)
