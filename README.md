@@ -16,6 +16,7 @@ No node. No JS. No npm. No node_modules folder competing with your music library
 
 ## Updates ♨
 
+* 2019-07-28 Making some hard choices on how to do DOM syncing in a performant and reliable way.  https://github.com/vugu/vugu/wiki/DOM-Syncing-Instructions
 * 2019-07-20 Some design info on how "data binding" (hashing actually) will work in Vugu: https://github.com/vugu/vugu/wiki/Data-Hashing-vs-Binding
 * 2019-07-16 Vugu has a logo! https://www.instagram.com/p/Bz3zmtYAYcM/  Good things are in the works, the plan is to get a bunch of much-awaited updates pushed to master before the end of the month.
 * 2019-05-19 Refactor still in progress - this is the cleaned-up architecture concept: https://github.com/vugu/vugu/wiki/Architecture-Overview
