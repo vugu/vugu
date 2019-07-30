@@ -89,10 +89,16 @@ func (f *Formatter) FormatHTML(filename string, in io.Reader, out io.Writer) *Fm
 
 	previousLineBreak := false
 
+	prevLine := 0
+	prevCol := 0
+
 loop:
 	for {
 		curTokType := izer.Next()
-		curLine, curCol, _ := lineTracker.GetCurrentLineAndColumn()
+
+		totalOffset, _ := lineTracker.GetCurrentOffset()
+		tokenOffset := totalOffset - len(izer.Buffered())
+		curLine, curCol, _ := lineTracker.GetLineAndColumn(tokenOffset)
 
 		// quit on errors.
 		if curTokType == html.ErrorToken {
@@ -100,8 +106,8 @@ loop:
 				if err != io.EOF {
 					return &FmtError{
 						Msg:    err.Error(),
-						Line:   curLine,
-						Column: curCol,
+						Line:   prevLine,
+						Column: prevCol,
 					}
 				}
 				// it's ok if we hit the end,
@@ -115,14 +121,14 @@ loop:
 				}
 				return &FmtError{
 					Msg:    fmt.Sprintf("missing end tags (%s)", strings.Join(tagNames, ", ")),
-					Line:   curLine,
-					Column: curCol,
+					Line:   prevLine,
+					Column: prevCol,
 				}
 			}
 			return &FmtError{
 				Msg:    "tokenization error",
-				Line:   curLine,
-				Column: curCol,
+				Line:   prevLine,
+				Column: prevCol,
 			}
 		}
 
@@ -152,8 +158,8 @@ loop:
 			if lastPushed.DataAtom != curTok.DataAtom {
 				return &FmtError{
 					Msg:    fmt.Sprintf("mismatched ending tag (expected %s, found %s)", lastPushed.Data, curTok.Data),
-					Line:   curLine,
-					Column: curCol,
+					Line:   prevLine,
+					Column: prevCol,
 				}
 			}
 			out.Write(raw)
@@ -185,7 +191,7 @@ loop:
 				fmtr, err := f.FormatScript(scriptType, raw)
 				// Exit out on error.
 				if err != nil {
-					err.Line += curLine
+					err.Line = prevLine + err.Line // messy!
 					err.FileName = filename
 					return err
 				}
@@ -197,8 +203,8 @@ loop:
 				if err != nil {
 					return &FmtError{
 						Msg:    err.Error(),
-						Line:   curLine,
-						Column: curCol,
+						Line:   prevLine,
+						Column: prevCol,
 					}
 				}
 				out.Write(fmtr)
@@ -209,6 +215,9 @@ loop:
 		default:
 			out.Write(raw)
 		}
+
+		prevLine = curLine
+		prevCol = curCol
 	}
 }
 
