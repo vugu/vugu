@@ -83,12 +83,15 @@ func (b *BuildOut) AppendJS(js string) {
 	b.JS = append(b.JS, vgn)
 }
 
+// Builder is the interface that components implement.
 type Builder interface {
 	Build(in *BuildIn) (out *BuildOut, err error)
 }
 
+// BuilderFunc is a Build-like function that implements Builder.
 type BuilderFunc func(in *BuildIn) (out *BuildOut, err error)
 
+// Build implements Builder.
 func (f BuilderFunc) Build(in *BuildIn) (out *BuildOut, err error) { return f(in) }
 
 // ComponentType is implemented by any type that wants to be a component.

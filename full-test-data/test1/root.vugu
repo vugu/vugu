@@ -1,6 +1,6 @@
 <div>
     This is a test.
-    <button id="run" @click="data.Run(event)">run</button>
+    <button id="run" @click="data.OnClickRun(event)">run</button>
     <div id="success" vg-if="data.Success">success</div>
 </div>
 
@@ -9,7 +9,7 @@ type Root struct {
     Success bool
 }
 
-func (c *Root) Run(event *vugu.DOMEvent) {
+func (c *Root) OnClickRun(event *vugu.DOMEvent) {
     c.Success = true
 }
 </script>

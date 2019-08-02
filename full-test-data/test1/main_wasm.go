@@ -4,34 +4,40 @@ package main
 
 import (
 	"log"
-	"os"
 
 	"github.com/vugu/vugu"
 )
-
 
 func main() {
 
 	println("Entering main()")
 	defer println("Exiting main()")
 
-	rootInst, err := vugu.New(&Root{}, nil)
+	// runMemTest()
+
+	rootBuilder := &Root{}
+
+	buildEnv, err := vugu.NewBuildEnv(rootBuilder)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	env := vugu.NewJSEnv("#root_mount_parent", rootInst, vugu.RegisteredComponentTypes())
-	env.DebugWriter = os.Stdout
+	renderer, err := vugu.NewJSRenderer("#root_mount_parent")
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	for ok := true; ok; ok = env.EventWait() {
-		err = env.Render()
+	for ok := true; ok; ok = renderer.EventWait() {
+
+		buildOut, err := buildEnv.BuildRoot()
+		if err != nil {
+			panic(err)
+		}
+
+		err = renderer.Render(buildOut)
 		if err != nil {
 			panic(err)
 		}
 	}
-
+	
 }
-
-
-
-

@@ -178,15 +178,15 @@ func (v Value) Length() int {
 }
 
 func (v Value) Call(m string, args ...interface{}) Value {
-	return Value(sjs.Value(v).Call(m, args))
+	return Value(sjs.Value(v).Call(m, fixArgsToSjs(args)...))
 }
 
 func (v Value) Invoke(args ...interface{}) Value {
-	return Value(sjs.Value(v).Invoke(args...))
+	return Value(sjs.Value(v).Invoke(fixArgsToSjs(args)...))
 }
 
 func (v Value) New(args ...interface{}) Value {
-	return Value(sjs.Value(v).New(args...))
+	return Value(sjs.Value(v).New(fixArgsToSjs(args)...))
 }
 
 func (v Value) Float() float64 {
@@ -211,4 +211,20 @@ func (v Value) String() string {
 
 func (v Value) InstanceOf(t Value) bool {
 	return sjs.Value(v).InstanceOf(sjs.Value(t))
+}
+
+func fixArgsToSjs(args []interface{}) []interface{} {
+	for i := 0; i < len(args); i++ {
+		v := args[i]
+		if val, ok := v.(Value); ok {
+			args[i] = sjs.Value(val) // convert to sjs.Value
+		}
+		if f, ok := v.(Func); ok {
+			args[i] = f.f
+		}
+		if ta, ok := v.(TypedArray); ok {
+			args[i] = sjs.TypedArray{Value: sjs.Value(ta.Value)}
+		}
+	}
+	return args
 }

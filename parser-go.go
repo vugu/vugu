@@ -77,6 +77,12 @@ func (p *ParserGo) Parse(r io.Reader, fname string) error {
 	fmt.Fprintf(&goBuf, "import js %q\n", "github.com/vugu/vugu/js")
 	fmt.Fprintf(&goBuf, "\n")
 
+	fmt.Fprintf(&goBuf, "// 'fix' unused imports\n")
+	fmt.Fprintf(&goBuf, "var _ = fmt.Sprintf\n")
+	fmt.Fprintf(&goBuf, "var _ = reflect.New\n")
+	fmt.Fprintf(&goBuf, "var _ = js.ValueOf\n")
+	fmt.Fprintf(&goBuf, "\n")
+
 	// TODO: we use a prefix like "vg" as our namespace; should document that user code should not use that prefix to avoid conflicts
 	fmt.Fprintf(&buildBuf, "func (c *%s) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut, vgreterr error) {\n", p.StructType)
 	fmt.Fprintf(&buildBuf, "    \n")
@@ -158,6 +164,8 @@ func (p *ParserGo) Parse(r io.Reader, fname string) error {
 				fmt.Fprintf(&buildBuf, "vgn = &vugu.VGNode{Type:vugu.VGNodeType(%d),Data:%q,Attr:%#v}\n", n.Type, n.Data, staticVGAttrx(n.Attr))
 				if didFirstNode {
 					fmt.Fprintf(&buildBuf, "vgparent.AppendChild(vgn)\n") // if not root, make AppendChild call
+				} else {
+					fmt.Fprintf(&buildBuf, "vgout.Doc = vgn // Doc root for output\n") // for first element we need to assign as Doc on BuildOut
 				}
 
 				// dynamic attrs
@@ -175,7 +183,7 @@ func (p *ParserGo) Parse(r io.Reader, fname string) error {
 		// if descending into a child we need to set the parent appropriately
 		if n.FirstChild != nil {
 			fmt.Fprintf(&buildBuf, "{\n")
-			fmt.Fprintf(&buildBuf, "vgparent := vgn\n") // vgparent set for this block to vgn
+			fmt.Fprintf(&buildBuf, "vgparent := vgn; _ = vgparent\n") // vgparent set for this block to vgn
 			err := visit(n.FirstChild)
 			if err != nil {
 				return err
@@ -263,7 +271,7 @@ func (p *ParserGo) Parse(r io.Reader, fname string) error {
 		fmt.Fprintf(&buildBuf, "    out.AppendJS(%q)\n\n", chunk.Code)
 	}
 
-	fmt.Fprintf(&buildBuf, "    return out, nil\n")
+	fmt.Fprintf(&buildBuf, "    return vgout, nil\n")
 	fmt.Fprintf(&buildBuf, "}\n\n")
 
 	var buf bytes.Buffer

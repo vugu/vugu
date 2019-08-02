@@ -166,7 +166,6 @@ package main
 
 import (
 	"log"
-	"os"
 
 	"github.com/vugu/vugu"
 )
@@ -176,21 +175,32 @@ func main() {
 	println("Entering main()")
 	defer println("Exiting main()")
 
-	rootInst, err := vugu.New(&Root{}, nil)
+	rootBuilder := &Root{}
+
+	buildEnv, err := vugu.NewBuildEnv(rootBuilder)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	env := vugu.NewJSEnv("#root_mount_parent", rootInst, vugu.RegisteredComponentTypes())
-	env.DebugWriter = os.Stdout
+	renderer, err := vugu.NewJSRenderer("#root_mount_parent")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer renderer.Release()
 
-	for ok := true; ok; ok = env.EventWait() {
-		err = env.Render()
+	for ok := true; ok; ok = renderer.EventWait() {
+
+		buildOut, err := buildEnv.BuildRoot()
+		if err != nil {
+			panic(err)
+		}
+
+		err = renderer.Render(buildOut)
 		if err != nil {
 			panic(err)
 		}
 	}
-
+	
 }
 `), 0644)
 
@@ -265,21 +275,21 @@ func main() {
 				fmt.Fprintf(f, "\ntype %s struct {}\n", compTypeName)
 			}
 
-			// create CompNameData struct if it doesn't exist in the package
-			if _, ok := namesFound[compTypeName+"Data"]; !ok {
-				fmt.Fprintf(f, "\ntype %s struct {}\n", compTypeName+"Data")
-			}
+			// // create CompNameData struct if it doesn't exist in the package
+			// if _, ok := namesFound[compTypeName+"Data"]; !ok {
+			// 	fmt.Fprintf(f, "\ntype %s struct {}\n", compTypeName+"Data")
+			// }
 
 			// create CompName.NewData with defaults if it doesn't exist in the package
-			if _, ok := namesFound[compTypeName+".NewData"]; !ok {
-				fmt.Fprintf(f, "\nfunc (ct *%s) NewData(props vugu.Props) (interface{}, error) { return &%s{}, nil }\n",
-					compTypeName, compTypeName+"Data")
-			}
+			// if _, ok := namesFound[compTypeName+".NewData"]; !ok {
+			// 	fmt.Fprintf(f, "\nfunc (ct *%s) NewData(props vugu.Props) (interface{}, error) { return &%s{}, nil }\n",
+			// 		compTypeName, compTypeName+"Data")
+			// }
 
-			// register component unless disabled
-			if !p.opts.SkipRegisterComponentTypes && !fileHasInitFunc(goFilePath) {
-				fmt.Fprintf(f, "\nfunc init() { vugu.RegisterComponentType(%q, &%s{}) }\n", strings.TrimSuffix(goFileName, ".go"), compTypeName)
-			}
+			// // register component unless disabled - nope, no more component registry
+			// if !p.opts.SkipRegisterComponentTypes && !fileHasInitFunc(goFilePath) {
+			// 	fmt.Fprintf(f, "\nfunc init() { vugu.RegisterComponentType(%q, &%s{}) }\n", strings.TrimSuffix(goFileName, ".go"), compTypeName)
+			// }
 
 			return nil
 		}()

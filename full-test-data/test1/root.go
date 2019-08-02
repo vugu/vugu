@@ -7,12 +7,16 @@ import "reflect"
 import "github.com/vugu/vugu"
 import js "github.com/vugu/vugu/js"
 
+// 'fix' unused imports
+var _ = fmt.Sprintf
+var _ = reflect.New
+var _ = js.ValueOf
+
 type Root struct {
 	Success bool
 }
 
-func (c *Root) Run(event *vugu.DOMEvent) {
-	//panic("HERE")
+func (c *Root) OnClickRun(event *vugu.DOMEvent) {
 	c.Success = true
 }
 func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut, vgreterr error) {
@@ -22,25 +26,31 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut, vgreterr error) 
 	var vgn *vugu.VGNode
 	{
 		vgparent := vgn
+		_ = vgparent
 		vgn = &vugu.VGNode{Type: vugu.VGNodeType(3), Data: "html", Attr: []vugu.VGAttribute(nil)}
+		vgout.Doc = vgn // Doc root for output
 		{
 			vgparent := vgn
+			_ = vgparent
 			vgn = &vugu.VGNode{Type: vugu.VGNodeType(3), Data: "head", Attr: []vugu.VGAttribute(nil)}
 			vgparent.AppendChild(vgn)
 			vgn = &vugu.VGNode{Type: vugu.VGNodeType(3), Data: "body", Attr: []vugu.VGAttribute(nil)}
 			vgparent.AppendChild(vgn)
 			{
 				vgparent := vgn
+				_ = vgparent
 				vgn = &vugu.VGNode{Type: vugu.VGNodeType(3), Data: "div", Attr: []vugu.VGAttribute(nil)}
 				vgparent.AppendChild(vgn)
 				{
 					vgparent := vgn
+					_ = vgparent
 					vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n    This is a test.\n    ", Attr: []vugu.VGAttribute(nil)}
 					vgparent.AppendChild(vgn)
 					vgn = &vugu.VGNode{Type: vugu.VGNodeType(3), Data: "button", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "id", Val: "run"}}}
 					vgparent.AppendChild(vgn)
 					{
 						vgparent := vgn
+						_ = vgparent
 						vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "run", Attr: []vugu.VGAttribute(nil)}
 						vgparent.AppendChild(vgn)
 					}
@@ -50,6 +60,7 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut, vgreterr error) 
 					vgparent.AppendChild(vgn)
 					{
 						vgparent := vgn
+						_ = vgparent
 						vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "success", Attr: []vugu.VGAttribute(nil)}
 						vgparent.AppendChild(vgn)
 					}
@@ -60,7 +71,8 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut, vgreterr error) 
 				vgparent.AppendChild(vgn)
 				{
 					vgparent := vgn
-					vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\ntype Root struct {\n    Success bool\n}\n\nfunc (c *Root) Run(event *vugu.DOMEvent) {\n    //panic(\"HERE\")\n    c.Success = true\n}\n", Attr: []vugu.VGAttribute(nil)}
+					_ = vgparent
+					vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\ntype Root struct {\n    Success bool\n}\n\nfunc (c *Root) OnClickRun(event *vugu.DOMEvent) {\n    c.Success = true\n}\n", Attr: []vugu.VGAttribute(nil)}
 					vgparent.AppendChild(vgn)
 				}
 				vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n", Attr: []vugu.VGAttribute(nil)}
@@ -68,11 +80,5 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut, vgreterr error) 
 			}
 		}
 	}
-	return out, nil
+	return vgout, nil
 }
-
-type RootData struct {}
-
-func (ct *Root) NewData(props vugu.Props) (interface{}, error) { return &RootData{}, nil }
-
-func init() { vugu.RegisterComponentType("root", &Root{}) }
