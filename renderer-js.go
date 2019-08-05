@@ -3,6 +3,7 @@ package vugu
 import (
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	js "github.com/vugu/vugu/js"
@@ -10,13 +11,13 @@ import (
 
 //go:generate go run renderer-js-script-maker.go
 
-// NewJSRenderer will create a new JSRenderer with the speicifc mount parent selector.
+// NewJSRenderer will create a new JSRenderer with the speicifc mount point selector.
 // If an empty string is passed then the root component should include a top level <html> tag
 // and the entire page will be rendered.
-func NewJSRenderer(mountParentSelector string) (*JSRenderer, error) {
+func NewJSRenderer(mountPointSelector string) (*JSRenderer, error) {
 
 	ret := &JSRenderer{
-		MountParentSelector: mountParentSelector,
+		MountPointSelector: mountPointSelector,
 	}
 
 	ret.domEventCB = js.FuncOf(func(this js.Value, args []js.Value) interface{} {
@@ -24,12 +25,21 @@ func NewJSRenderer(mountParentSelector string) (*JSRenderer, error) {
 	})
 
 	ret.instructionBuffer = make([]byte, 4096)
-	ret.instructionBuffer[0] = 3
 	ret.instructionTypedArray = js.TypedArrayOf(ret.instructionBuffer)
 
 	ret.window = js.Global().Get("window")
-	// log.Printf("ret.window: %#v", ret.window)
+
 	ret.window.Call("eval", jsHelperScript)
+
+	ret.instructionList = newInstructionList(ret.instructionBuffer, func(il *instructionList) error {
+
+		// call vuguRender to have the instructions processed in JS
+		ret.window.Call("vuguRender", ret.instructionTypedArray)
+
+		return nil
+	})
+
+	// log.Printf("ret.window: %#v", ret.window)
 	// log.Printf("eval: %#v", ret.window.Get("eval"))
 
 	return ret, nil
@@ -37,12 +47,13 @@ func NewJSRenderer(mountParentSelector string) (*JSRenderer, error) {
 
 // JSRenderer implements Renderer against the browser's DOM.
 type JSRenderer struct {
-	MountParentSelector string
+	MountPointSelector string
 
 	domEventCB js.Func // the callback function for DOM events
 
 	instructionBuffer     []byte
 	instructionTypedArray js.TypedArray
+	instructionList       *instructionList
 
 	window js.Value
 }
@@ -150,24 +161,126 @@ func (r *JSRenderer) Render(bo *BuildOut) error {
 
 	log.Printf("BuildOut: %#v", bo)
 
-	startTime := time.Now()
-	il := newInstructionList(r.instructionBuffer)
-	// for i := 0; i < 10; i++ {
-	il.writeClearRefmap()
-	il.writeSetHTMLRef(99)
-	il.writeSelectRef(99)
-	// il.writeSetAttrStr("lang", "en-gb")
-	il.writeSetAttrStr("whatever", "yes it is")
+	el := bo.Doc
+	log.Printf("el: %#v", el)
+
+	// NOTE: Mount rules:
+	// <body>, <head> forbidden as top level component tag
+	// * if component tag is not <html>, then whatever it is gets mounted at mount point
+	// * if component tag is <html>, then html attrs are sync, head elements are synced, body attrs are synced,
+	//   and first element inside <body> is mounted at mount point
+
+	// how do we do this mountpoint thing, it's pretty important...
+
+	// start cases:
+	// * starts with html tag
+	// * starts with something else
+	// loop cases:
+	// * in html, waiting for head or body
+	// * in head, needs careful replacement
+	// * in body, waiting for mount point
+	// * inside mounted aread, main dom sync logic
+
+	err := r.visitFirst(bo, bo.Doc)
+	if err != nil {
+		return err
+	}
+
+	err = r.instructionList.flush()
+	if err != nil {
+		return err
+	}
+
+	return nil
+
+	// il := r.instructionList
+
+	// const (
+	// 	modeStart int = iota // first element
+	// 	// modeHTML                // in html tag
+	// 	modePreMount // found the tag that needs to be mounted
+	// 	modeHead     // in head tag
+	// 	// modeBodyUnmounted            // in body tag but not yet mounted
+	// 	// modeMounted                  // in the mounted tag (could be body or something else)
+	// )
+
+	// // TODO: replace these strings.ToLower(n.Data) == "tagname" with Atoms
+
+	// var visit func(n *VGNode, mode int) error
+	// visit = func(n *VGNode, mode int) error {
+
+	// 	switch mode {
+	// 	case modeStart:
+
+	// 		if n.Type != ElementNode {
+	// 			return fmt.Errorf("root of component must be element")
+	// 		}
+
+	// 		// first tag is html
+	// 		if strings.ToLower(n.Data) == "html" {
+
+	// 			// TODO: sync html tag attributes
+
+	// 			for nchild := n.FirstChild; nchild != nil; nchild = nchild.NextSibling {
+
+	// 				if strings.ToLower(nchild.Data) == "head" {
+	// 					err := visit(nchild, modeHead)
+	// 					if err != nil {
+	// 						return err
+	// 					}
+	// 					continue
+	// 				} else if strings.ToLower(nchild.Data) == "body" {
+
+	// 					continue
+	// 				}
+
+	// 				return fmt.Errorf("unexpected tag inside html %q (VGNode=%#v)", nchild.Data, nchild)
+
+	// 			}
+
+	// 			return nil
+	// 		}
+
+	// 		// else, first tag is anything else - set mode to pre mount and try again
+	// 		mode = modePreMount
+	// 		return visit(n)
+
+	// 	default:
+	// 		return fmt.Errorf("unknown mode %v", mode)
+	// 	}
+
+	// 	return nil
 	// }
-	il.writeEnd()
-	log.Printf("instruction write time: %v", time.Since(startTime))
 
-	r.window.Call("vuguRender", r.instructionTypedArray)
-	// r.window.Call("vuguRender")
+	// err := visit(bo.Doc)
+	// if err != nil {
+	// 	return err
+	// }
 
-	// log.Printf("at pos 6: %#v", r.instructionBuffer[6])
+	// // startTime := time.Now()
 
-	panic(fmt.Errorf("not yet implemented"))
+	// // for i := 0; i < 10; i++ {
+	// // il.writeClearRefmap()
+	// // il.writeSetHTMLRef(99)
+	// // il.writeSelectRef(99)
+	// // // il.writeSetAttrStr("lang", "en-gb")
+	// // il.writeSetAttrStr("whatever", "yes it is")
+	// // // }
+	// // il.writeEnd()
+	// // log.Printf("instruction write time: %v", time.Since(startTime))
+
+	// err = il.flush()
+	// if err != nil {
+	// 	return err
+	// }
+
+	// // r.window.Call("vuguRender", r.instructionTypedArray)
+	// // r.window.Call("vuguRender")
+
+	// // log.Printf("at pos 6: %#v", r.instructionBuffer[6])
+
+	// // panic(fmt.Errorf("not yet implemented"))
+	// return nil
 }
 
 // EventWait blocks until an event has occurred which causes a re-render.
@@ -197,4 +310,139 @@ func (r *JSRenderer) handleRawDOMEvent(this js.Value, args []js.Value) interface
 // 	if window.Truthy() {
 // 		js.Global().Call("eval", jsHelperScript)
 // 	}
+// }
+
+func (r *JSRenderer) visitFirst(bo *BuildOut, n *VGNode) error {
+
+	log.Printf("JSRenderer.visitFirst")
+
+	if n.Type != ElementNode {
+		return fmt.Errorf("root of component must be element")
+	}
+
+	err := r.instructionList.writeClearEl()
+	if err != nil {
+		return err
+	}
+
+	// first tag is html
+	if strings.ToLower(n.Data) == "html" {
+
+		// TODO: sync html tag attributes
+
+		for nchild := n.FirstChild; nchild != nil; nchild = nchild.NextSibling {
+
+			if strings.ToLower(nchild.Data) == "head" {
+
+				err := r.visitHead(bo, nchild)
+				if err != nil {
+					return err
+				}
+
+			} else if strings.ToLower(nchild.Data) == "body" {
+
+				err := r.visitBody(bo, nchild)
+				if err != nil {
+					return err
+				}
+
+			} else {
+				return fmt.Errorf("unexpected tag inside html %q (VGNode=%#v)", nchild.Data, nchild)
+			}
+
+		}
+
+		return nil
+	}
+
+	// else, first tag is anything else - try again as the element to be mounted
+	return r.visitMount(bo, n)
+
+}
+
+func (r *JSRenderer) visitHead(bo *BuildOut, n *VGNode) error {
+	log.Printf("TODO: visitHead")
+	return nil
+}
+
+func (r *JSRenderer) visitBody(bo *BuildOut, n *VGNode) error {
+	log.Printf("TODO: visitBody")
+	return nil
+}
+
+func (r *JSRenderer) visitMount(bo *BuildOut, n *VGNode) error {
+
+	log.Printf("visitMount got here")
+
+	err := r.instructionList.writeSelectMountPoint(r.MountPointSelector, n.Data)
+	if err != nil {
+		return err
+	}
+
+	err = r.writeAllStaticAttrs(n)
+	if err != nil {
+		return err
+	}
+
+	if n.FirstChild != nil {
+
+		err = r.instructionList.writePicardFirstChild(uint8(n.Type), n.Data)
+		if err != nil {
+			return err
+		}
+
+		// err := r.writePicardFirstChildNode(n)
+		// if err != nil {
+		// 	return err
+		// }
+
+		for nchild := n.FirstChild; nchild != nil; nchild = nchild.NextSibling {
+			err = r.visitSync(bo, nchild)
+			if err != nil {
+				return err
+			}
+		}
+		err = r.instructionList.writeSelectParent()
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (r *JSRenderer) visitSync(bo *BuildOut, n *VGNode) error {
+
+	log.Printf("visitSync")
+
+	return nil
+}
+
+// writeAllStaticAttrs is a helper to write all the static attrs from a VGNode
+func (r *JSRenderer) writeAllStaticAttrs(n *VGNode) error {
+	for _, a := range n.Attr {
+		err := r.instructionList.writeSetAttrStr(a.Key, a.Val)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// // writePicardFirstChildNode calls writePicardFirstChildElement or other variation based on node type
+// func (r *JSRenderer) writePicardFirstChildNode(n *VGNode) error {
+
+// 	return r.instructionList.writePicardFirstChild(htmlx.NodeType(n.Type),n.Data)
+
+// 	switch n.Type {
+// 	case ElementNode:
+// 		return r.instructionList.writePicardFirstChild(n.Data)
+// 	case TextNode:
+// 		return r.instructionList.writePicardFirstChildText(n.Data)
+// 	case CommentNode:
+// 		return r.instructionList.writePicardFirstChildComment(n.Data)
+// 	}
+
+// 	return fmt.Errorf("writePicardFirstChildNode unknown node type %v", n.Type)
+
 // }

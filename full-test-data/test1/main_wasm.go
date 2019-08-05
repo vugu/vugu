@@ -4,14 +4,19 @@ package main
 
 import (
 	"log"
+	"fmt"
+	"flag"
 
 	"github.com/vugu/vugu"
 )
 
 func main() {
 
-	println("Entering main()")
-	defer println("Exiting main()")
+	mountPoint := flag.String("mount-point", "#root_mount_point", "The query selector for the mount point for the root component, if it is not a full HTML component")
+	flag.Parse()
+
+	fmt.Printf("Entering main(): %#v\n", *mountPoint)
+	defer fmt.Printf("Exiting main()\n")
 
 	// runMemTest()
 
@@ -22,7 +27,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	renderer, err := vugu.NewJSRenderer("#root_mount_parent")
+	renderer, err := vugu.NewJSRenderer(*mountPoint)
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -1,8 +1,8 @@
-<div>
+<span class="test-span" id="test_span_id">
     This is a test.
     <button id="run" @click="data.OnClickRun(event)">run</button>
     <div id="success" vg-if="data.Success">success</div>
-</div>
+</span>
 
 <script type="application/x-go">
 type Root struct {

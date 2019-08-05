@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/vugu/vugu/internal/htmlx"
+	"github.com/vugu/vugu/internal/htmlx/atom"
 )
 
 // Parse2 is an experiment...
@@ -42,9 +43,46 @@ func (p *ParserGo) Parse(r io.Reader, fname string) error {
 
 	log.Printf("isFullHTML: %v", isFullHTML)
 
-	n, err := htmlx.Parse(bytes.NewReader(inRaw))
-	if err != nil {
-		return err
+	var docNodeList []*htmlx.Node
+
+	if isFullHTML {
+
+		n, err := htmlx.Parse(bytes.NewReader(inRaw))
+		if err != nil {
+			return err
+		}
+		docNodeList = append(docNodeList, n) // docNodeList is just this one item
+
+	} else {
+
+		nlist, err := htmlx.ParseFragment(bytes.NewReader(inRaw), &htmlx.Node{
+			Type:     htmlx.ElementNode,
+			DataAtom: atom.Div,
+			Data:     "div",
+		})
+		if err != nil {
+			return err
+		}
+
+		// only add elements
+		for _, n := range nlist {
+			if n.Type != htmlx.ElementNode {
+				continue
+			}
+			docNodeList = append(docNodeList, n)
+		}
+
+		// // log.Printf("nlist = %#v", nlist)
+		// for _, nl := range nlist {
+		// 	log.Printf("nl.Data = %q", nl.Data)
+		// }
+
+		// if len(nlist) != 1 {
+		// 	return fmt.Errorf("found %d fragment(s) instead of exactly 1", len(nlist))
+		// }
+
+		// n = nlist[0]
+
 	}
 
 	// err = htmlx.Render(os.Stdout, n)
@@ -55,9 +93,11 @@ func (p *ParserGo) Parse(r io.Reader, fname string) error {
 	// run n through the optimizer and convert large chunks of static elements into
 	// vg-html attributes, this should provide a significiant performance boost for static HTML
 	if !p.NoOptimizeStatic {
-		err = compactNodeTree(n)
-		if err != nil {
-			return err
+		for _, n := range docNodeList {
+			err = compactNodeTree(n)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -125,6 +165,9 @@ func (p *ParserGo) Parse(r io.Reader, fname string) error {
 				return fmt.Errorf("unknown script type %q", typeAttr.Val)
 			}
 
+			// for script, this is it we're done with the visit
+			return nil
+
 		} else if n.Type == htmlx.ElementNode && n.Data == "style" {
 
 			// CSS
@@ -134,6 +177,9 @@ func (p *ParserGo) Parse(r io.Reader, fname string) error {
 				}
 				cssChunkList = append(cssChunkList, codeChunk{Line: childN.Line, Code: childN.Data})
 			}
+
+			// for style, this is it we're done with the visit
+			return nil
 
 		} else {
 
@@ -201,9 +247,12 @@ func (p *ParserGo) Parse(r io.Reader, fname string) error {
 
 		return nil
 	}
-	err = visit(n)
-	if err != nil {
-		return err
+
+	for _, n := range docNodeList {
+		err = visit(n)
+		if err != nil {
+			return err
+		}
 	}
 
 	// TODO: walk n

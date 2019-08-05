@@ -11,65 +11,77 @@ import (
 // majority of which is not needed.  So I'm proceeding with the idea that the encoding/decoding is simple enough to just do
 // by hand.  I hope I'm right.  -bgp
 
-// NOTE: prefix "ri" is for "render instruction"
+// NOTE: I needed a single concise word which means, essentially "make it so".  The idea being that the element described
+// should exist and if it does not update/replace whatever is there so it is.  Unable to suitable term in the English language,
+// I've chosen the word "Picard" for this purpose.
 
 const (
-	opcodeEnd         uint8 = 0 // no more instructions in this buffer
-	opcodeClearRefmap uint8 = 1 // clear the reference map, all following instructions must not reference prior IDs
-	opcodeSetHTMLRef  uint8 = 2 // assign ref for html tag
-	opcodeSetHeadRef  uint8 = 3 // assign ref for head tag
-	opcodeSetBodyRef  uint8 = 4 // assign ref for body tag
-	opcodeSelectRef   uint8 = 5 // select element by ref
-	opcodeSetAttrStr  uint8 = 6 // assign attribute string to the current selected element
+	opcodeEnd uint8 = 0 // no more instructions in this buffer
+	// opcodeClearRefmap      uint8 = 1 // clear the reference map, all following instructions must not reference prior IDs
+	// opcodeClearElStack uint8 = 1 // clear the stack of elements
+	opcodeClearEl uint8 = 1 // unset current element
+	// opcodeSetHTMLRef       uint8 = 2 // assign ref for html tag
+	// opcodeSetHeadRef       uint8 = 3 // assign ref for head tag
+	// opcodeSetBodyRef       uint8 = 4 // assign ref for body tag
+	// opcodeSelectRef        uint8 = 5 // select element by ref
+	opcodeSetAttrStr       uint8 = 6 // assign attribute string to the current selected element
+	opcodeSelectMountPoint uint8 = 7 // selects the mount point element and pushes to the stack - the first time by selector but every subsequent time it will reuse the element from before (because the selector may not match after it's been synced over, it's id etc), also make sure it's of this element name and recreate if so
+	// opcodePicardFirstChildElement uint8 = 8  // ensure an element first child and select element
+	// opcodePicardFirstChildText    uint8 = 9  // ensure a text first child and select element
+	// opcodePicardFirstChildComment uint8 = 10 // ensure a comment first child and select element
+	opcodeSelectParent     uint8 = 11 // select parent element
+	opcodePicardFirstChild uint8 = 12 // ensure an element first child and select element
 )
 
-// type riOneRef struct {
-// 	opcode uint8
-// 	ref    riUint64
-// }
-
-// var riOneRefSize = int(unsafe.Sizeof(riOneRef{}))
-
-// func riOneRefAt(ptr *byte) *riOneRef {
-// 	return (*riOneRef)(unsafe.Pointer(ptr))
-// }
-
-// // riUint64 is a 64-bit big-endian unsigned int.
-// type riUint64 [8]byte
-
-// // func (r *riUint64) newRiUint64(v uint64) riUint64 {
-// // 	var ret riUint64
-// // 	ret.Set(v)
-// // 	return ret
-// // }
-
-// func (r *riUint64) Set(v uint64) {
-// 	binary.BigEndian.PutUint64((*r)[:], v)
-// }
-
-// func (r *riUint64) Get() uint64 {
-// 	return binary.BigEndian.Uint64((*r)[:])
-// }
-
-// type riUint32 [4]byte
-
-// type riString struct {
-// 	strlen  riUint32
-// 	strdata byte
-// }
-
-func newInstructionList(buf []byte) *instructionList {
+// newInstructionList will create a new instance backed by the specified slice and with a clearBufFunc
+// that is called when the buffer is about to overflow.
+func newInstructionList(buf []byte, flushBufFunc func(il *instructionList) error) *instructionList {
+	if buf == nil {
+		panic("buf is nil")
+	}
+	if flushBufFunc == nil {
+		panic("flushBufFunc is nil")
+	}
 	return &instructionList{
-		buf: buf,
+		buf:          buf,
+		flushBufFunc: flushBufFunc,
 	}
 }
 
 type instructionList struct {
-	buf []byte
-	pos int
+	buf          []byte
+	pos          int
+	flushBufFunc func(il *instructionList) error
 }
 
 var errDoesNotFit = fmt.Errorf("requested instruction does not fit in the buffer")
+
+func (il *instructionList) flush() error {
+	err := il.flushBufFunc(il)
+	if err != nil {
+		return err
+	}
+	il.pos = 0
+	return nil
+}
+
+// checkLenAndFlush calls checkLen(), if it fails attempts to flush the buffer and checkLen again, at which point any error is returned.
+func (il *instructionList) checkLenAndFlush(l int) error {
+
+	err := il.checkLen(l)
+	if err != nil {
+
+		if err == errDoesNotFit {
+			err = il.flush()
+			if err != nil {
+				return err
+			}
+			err = il.checkLen(l)
+		}
+	}
+
+	return err
+}
 
 func (il *instructionList) checkLen(l int) error {
 	if il.pos+l >= len(il.buf)-1 {
@@ -83,107 +95,164 @@ func (il *instructionList) writeEnd() {
 	il.pos++
 }
 
-func (il *instructionList) writeClearRefmap() error {
+// func (il *instructionList) writeClearRefmap() error {
 
-	err := il.checkLen(1)
-	if err != nil {
-		return err
-	}
-	// if il.pos+1 >= len(il.buf)-1 {
-	// 	return errDoesNotFit
-	// }
+// 	err := il.checkLenAndFlush(1)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	il.writeValUint8(opcodeClearRefmap)
+// 	il.writeValUint8(opcodeClearRefmap)
 
-	// il.buf[il.pos] = opcodeClearRefmap
-	// il.pos++
+// 	return nil
+// }
 
-	return nil
-}
+func (il *instructionList) writeClearEl() error {
 
-func (il *instructionList) writeSetHTMLRef(ref uint64) error {
-
-	err := il.checkLen(9)
+	err := il.checkLenAndFlush(1)
 	if err != nil {
 		return err
 	}
 
-	// if il.pos+9 >= len(il.buf)-1 {
-	// 	return errDoesNotFit
-	// }
-
-	il.writeValUint8(opcodeSetHTMLRef)
-	il.writeValUint64(ref)
-
-	// data := riOneRefAt(&il.buf[il.pos])
-	// data.opcode = opcodeSetHTMLRef
-	// data.ref.Set(ref)
-	// il.pos += riOneRefSize
+	il.writeValUint8(opcodeClearEl)
 
 	return nil
 }
 
-func (il *instructionList) writeSelectRef(ref uint64) error {
+// func (il *instructionList) writeSetHTMLRef(ref uint64) error {
 
-	err := il.checkLen(9)
-	if err != nil {
-		return err
-	}
+// 	err := il.checkLenAndFlush(9)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	// if il.pos+9 >= len(il.buf)-1 {
-	// 	return errDoesNotFit
-	// }
+// 	il.writeValUint8(opcodeSetHTMLRef)
+// 	il.writeValUint64(ref)
 
-	il.writeValUint8(opcodeSelectRef)
-	il.writeValUint64(ref)
+// 	return nil
+// }
 
-	// data := riOneRefAt(&il.buf[il.pos])
-	// data.opcode = opcodeSelectRef
-	// data.ref.Set(ref)
-	// il.pos += riOneRefSize
+// func (il *instructionList) writeSelectRef(ref uint64) error {
 
-	return nil
-}
+// 	err := il.checkLenAndFlush(9)
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	il.writeValUint8(opcodeSelectRef)
+// 	il.writeValUint64(ref)
+
+// 	return nil
+// }
 
 func (il *instructionList) writeSetAttrStr(name, value string) error {
 
 	size := len(name) + len(value) + 9
 
-	err := il.checkLen(size)
+	err := il.checkLenAndFlush(size)
 	if err != nil {
 		return err
 	}
-
-	// if il.pos+size >= len(il.buf)-1 {
-	// 	return errDoesNotFit
-	// }
 
 	il.writeValUint8(opcodeSetAttrStr)
 	il.writeValString(name)
 	il.writeValString(value)
 
-	// il.buf[il.pos] = opcodeSetAttrStr
-	// pos := il.pos + 1
-	// pos = riWriteString(il.buf, pos, name)
-	// pos = riWriteString(il.buf, pos, value)
-	// il.pos = pos
+	return nil
+}
 
-	// namelen := len(name)
-	// nameoffset := il.pos + 5
-	// valuelen := len(name)
-	// valueoffset := nameoffset + namelen + 5
+func (il *instructionList) writeSelectMountPoint(selector, nodeName string) error {
 
-	// il.buf[il.pos] = opcodeSetAttrStr
-	// binary.BigEndian.PutUint32(il.buf[il.pos+1:il.pos+5], uint32(namelen))
-	// copy()
-	// binary.BigEndian.PutUint32(il.buf[il.pos+5+namelen:il.pos+9+namelen], uint32(valuelen))
+	err := il.checkLenAndFlush(len(selector) + len(nodeName) + 9)
+	if err != nil {
+		return err
+	}
 
-	// data := riOneRefAt(&il.buf[il.pos])
-	// data.opcode = opcodeSetAttrStr
-	// data.ref.Set(ref)
-	// il.pos += riOneRefSize
+	il.writeValUint8(opcodeSelectMountPoint)
+	il.writeValString(selector)
+	il.writeValString(nodeName)
 
 	return nil
+
+}
+
+func (il *instructionList) writePicardFirstChild(nodeType uint8, data string) error {
+
+	// ensure an element first child and push onto element stack
+
+	err := il.checkLenAndFlush(len(data) + 6)
+	if err != nil {
+		return err
+	}
+
+	il.writeValUint8(opcodePicardFirstChild)
+	il.writeValUint8(nodeType)
+	il.writeValString(data)
+
+	return nil
+
+}
+
+// func (il *instructionList) writePicardFirstChildElement(nodeName string) error {
+
+// 	// ensure an element first child and push onto element stack
+
+// 	err := il.checkLenAndFlush(len(nodeName) + 5)
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	il.writeValUint8(opcodePicardFirstChildElement)
+// 	il.writeValString(nodeName)
+
+// 	return nil
+
+// }
+
+// func (il *instructionList) writePicardFirstChildText(text string) error {
+
+// 	// ensure a text first child and push onto element stack
+
+// 	err := il.checkLenAndFlush(len(text) + 5)
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	il.writeValUint8(opcodePicardFirstChildText)
+// 	il.writeValString(text)
+
+// 	return nil
+// }
+
+// func (il *instructionList) writePicardFirstChildComment(comment string) error {
+
+// 	// ensure a comment first child and push onto element stack
+
+// 	err := il.checkLenAndFlush(len(comment) + 5)
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	il.writeValUint8(opcodePicardFirstChildComment)
+// 	il.writeValString(comment)
+
+// 	return nil
+
+// }
+
+func (il *instructionList) writeSelectParent() error {
+
+	// pop from the element stack
+
+	err := il.checkLenAndFlush(1)
+	if err != nil {
+		return err
+	}
+
+	il.writeValUint8(opcodeSelectParent)
+
+	return nil
+
 }
 
 func (il *instructionList) writeValUint8(b uint8) {
@@ -209,17 +278,3 @@ func (il *instructionList) writeValString(s string) {
 
 	il.pos = pos + 4 + lenstr
 }
-
-// func riWriteString(buf []byte, pos int, str string) int {
-
-// 	lenstr := len(str)
-
-// 	// write length as uint32
-// 	binary.BigEndian.PutUint32(buf[pos:pos+4], uint32(lenstr))
-
-// 	// copy bytes directly from string into buf
-// 	copy(buf[pos+4:pos+4+lenstr], str)
-
-// 	// return new position
-// 	return pos + 4 + lenstr
-// }
