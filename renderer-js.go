@@ -314,6 +314,8 @@ func (r *JSRenderer) handleRawDOMEvent(this js.Value, args []js.Value) interface
 
 func (r *JSRenderer) visitFirst(bo *BuildOut, n *VGNode) error {
 
+	log.Printf("TODO: We need to go through and optimize away unneeded calls to create elements, set attributes, set event handlers, etc. for cases where they are the same per hash")
+
 	log.Printf("JSRenderer.visitFirst")
 
 	if n.Type != ElementNode {
@@ -379,41 +381,111 @@ func (r *JSRenderer) visitMount(bo *BuildOut, n *VGNode) error {
 		return err
 	}
 
-	err = r.writeAllStaticAttrs(n)
+	return r.visitSyncElementEtc(bo, n)
+
+	// err = r.writeAllStaticAttrs(n)
+	// if err != nil {
+	// 	return err
+	// }
+
+	// if n.FirstChild != nil {
+
+	// 	err = r.instructionList.writeMoveToFirstChild()
+	// 	if err != nil {
+	// 		return err
+	// 	}
+
+	// 	// err = r.instructionList.writePicardFirstChild(uint8(n.FirstChild.Type), n.FirstChild.Data)
+	// 	// if err != nil {
+	// 	// 	return err
+	// 	// }
+
+	// 	// err := r.writePicardFirstChildNode(n)
+	// 	// if err != nil {
+	// 	// 	return err
+	// 	// }
+
+	// 	for nchild := n.FirstChild; nchild != nil; nchild = nchild.NextSibling {
+	// 		err = r.visitSyncNode(bo, nchild)
+	// 		if err != nil {
+	// 			return err
+	// 		}
+	// 		err = r.instructionList.writeMoveToNextSibling()
+	// 		if err != nil {
+	// 			return err
+	// 		}
+	// 	}
+
+	// 	err = r.instructionList.writeMoveToParent()
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// }
+
+	return nil
+}
+
+func (r *JSRenderer) visitSyncNode(bo *BuildOut, n *VGNode) error {
+
+	log.Printf("visitSyncNode")
+
+	var err error
+
+	switch n.Type {
+	case ElementNode:
+		err = r.instructionList.writeSetElement(n.Data)
+		if err != nil {
+			return err
+		}
+	case TextNode:
+		return r.instructionList.writeSetText(n.Data) // no children possible, just return
+	case CommentNode:
+		return r.instructionList.writeSetComment(n.Data) // no children possible, just return
+	default:
+		return fmt.Errorf("unknown node type %v", n.Type)
+	}
+
+	// only elements have attributes, child or events
+	return r.visitSyncElementEtc(bo, n)
+
+}
+
+// visitSyncElementEtc syncs the rest of the stuff that only applies to elements
+func (r *JSRenderer) visitSyncElementEtc(bo *BuildOut, n *VGNode) error {
+
+	err := r.writeAllStaticAttrs(n)
+	if err != nil {
+		return err
+	}
+
+	err = r.instructionList.writeRemoveOtherAttrs()
 	if err != nil {
 		return err
 	}
 
 	if n.FirstChild != nil {
 
-		err = r.instructionList.writePicardFirstChild(uint8(n.Type), n.Data)
+		err = r.instructionList.writeMoveToFirstChild()
 		if err != nil {
 			return err
 		}
 
-		// err := r.writePicardFirstChildNode(n)
-		// if err != nil {
-		// 	return err
-		// }
-
 		for nchild := n.FirstChild; nchild != nil; nchild = nchild.NextSibling {
-			err = r.visitSync(bo, nchild)
+			err = r.visitSyncNode(bo, nchild)
+			if err != nil {
+				return err
+			}
+			err = r.instructionList.writeMoveToNextSibling()
 			if err != nil {
 				return err
 			}
 		}
-		err = r.instructionList.writeSelectParent()
+
+		err = r.instructionList.writeMoveToParent()
 		if err != nil {
 			return err
 		}
 	}
-
-	return nil
-}
-
-func (r *JSRenderer) visitSync(bo *BuildOut, n *VGNode) error {
-
-	log.Printf("visitSync")
 
 	return nil
 }

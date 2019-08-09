@@ -24,6 +24,7 @@ const (
 	// opcodeSetHeadRef       uint8 = 3 // assign ref for head tag
 	// opcodeSetBodyRef       uint8 = 4 // assign ref for body tag
 	// opcodeSelectRef        uint8 = 5 // select element by ref
+	opcodeRemoveOtherAttrs uint8 = 5 // remove any elements for the current element that we didn't just set
 	opcodeSetAttrStr       uint8 = 6 // assign attribute string to the current selected element
 	opcodeSelectMountPoint uint8 = 7 // selects the mount point element and pushes to the stack - the first time by selector but every subsequent time it will reuse the element from before (because the selector may not match after it's been synced over, it's id etc), also make sure it's of this element name and recreate if so
 	// opcodePicardFirstChildElement uint8 = 8  // ensure an element first child and select element
@@ -31,6 +32,17 @@ const (
 	// opcodePicardFirstChildComment uint8 = 10 // ensure a comment first child and select element
 	opcodeSelectParent     uint8 = 11 // select parent element
 	opcodePicardFirstChild uint8 = 12 // ensure an element first child and select element
+
+	opcodeMoveToFirstChild uint8 = 20 // move node selection to first child (doesn't have to exist)
+	opcodeSetElement       uint8 = 21 // assign current selected node as an element of the specified type
+	// opcodeSetElementAttr      uint8 = 22 // set attribute on current element
+	opcodeSetText             uint8 = 23 // assign current selected node as text with specified content
+	opcodeSetComment          uint8 = 24 // assign current selected node as comment with specified content
+	opcodeMoveToParent        uint8 = 25 // move node selection to parent
+	opcodeMoveToNextSibling   uint8 = 26 // move node selection to next sibling (doesn't have to exist)
+	opcodeClearEventListeners uint8 = 27 // remove all event listeners from currently selected element
+	opcodeSetEventListener    uint8 = 28 // assign event listener to currently selected element
+
 )
 
 // newInstructionList will create a new instance backed by the specified slice and with a clearBufFunc
@@ -145,6 +157,18 @@ func (il *instructionList) writeClearEl() error {
 // 	return nil
 // }
 
+func (il *instructionList) writeRemoveOtherAttrs() error {
+
+	err := il.checkLenAndFlush(1)
+	if err != nil {
+		return err
+	}
+
+	il.writeValUint8(opcodeRemoveOtherAttrs)
+
+	return nil
+}
+
 func (il *instructionList) writeSetAttrStr(name, value string) error {
 
 	size := len(name) + len(value) + 9
@@ -191,6 +215,84 @@ func (il *instructionList) writePicardFirstChild(nodeType uint8, data string) er
 
 	return nil
 
+}
+
+func (il *instructionList) writeMoveToFirstChild() error {
+
+	err := il.checkLenAndFlush(1)
+	if err != nil {
+		return err
+	}
+
+	il.writeValUint8(opcodeMoveToFirstChild)
+
+	return nil
+}
+
+func (il *instructionList) writeSetElement(nodeName string) error {
+
+	err := il.checkLenAndFlush(len(nodeName) + 5)
+	if err != nil {
+		return err
+	}
+
+	il.writeValUint8(opcodeSetElement)
+	il.writeValString(nodeName)
+
+	return nil
+
+}
+
+func (il *instructionList) writeSetText(text string) error {
+
+	err := il.checkLenAndFlush(len(text) + 5)
+	if err != nil {
+		return err
+	}
+
+	il.writeValUint8(opcodeSetText)
+	il.writeValString(text)
+
+	return nil
+
+}
+
+func (il *instructionList) writeSetComment(comment string) error {
+
+	err := il.checkLenAndFlush(len(comment) + 5)
+	if err != nil {
+		return err
+	}
+
+	il.writeValUint8(opcodeSetComment)
+	il.writeValString(comment)
+
+	return nil
+
+}
+
+func (il *instructionList) writeMoveToParent() error {
+
+	err := il.checkLenAndFlush(1)
+	if err != nil {
+		return err
+	}
+
+	il.writeValUint8(opcodeMoveToParent)
+
+	return nil
+}
+
+func (il *instructionList) writeMoveToNextSibling() error {
+
+	err := il.checkLenAndFlush(1)
+	if err != nil {
+		return err
+	}
+
+	il.writeValUint8(opcodeMoveToNextSibling)
+
+	return nil
 }
 
 // func (il *instructionList) writePicardFirstChildElement(nodeName string) error {
