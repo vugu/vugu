@@ -16,8 +16,8 @@
 	// const opcodePicardFirstChildElement = 8  // ensure an element first child and push onto element stack
 	// const opcodePicardFirstChildText    = 9  // ensure a text first child and push onto element stack
 	// const opcodePicardFirstChildComment = 10 // ensure a comment first child and push onto element stack
-	const opcodeSelectParent                   = 11 // pop from the element stack
-	const opcodePicardFirstChild = 12  // ensure an element first child and push onto element stack
+	// const opcodeSelectParent                   = 11 // pop from the element stack
+	// const opcodePicardFirstChild = 12  // ensure an element first child and push onto element stack
 
     const opcodeMoveToFirstChild     = 20 // move node selection to first child (doesn't have to exist)
 	const opcodeSetElement           = 21 // assign current selected node as an element of the specified type
@@ -28,6 +28,7 @@
 	const opcodeMoveToNextSibling    = 26 // move node selection to next sibling (doesn't have to exist)
 	const opcodeClearEventListeners  = 27 // remove all event listeners from currently selected element
 	const opcodeSetEventListener     = 28 // assign event listener to currently selected element
+    const opcodeSetInnerHTML         = 29 // set the innerHTML for an element
 
     // Decoder provides our binary decoding.
     // Using a class because that's what all the cool JS kids are doing these days.
@@ -109,7 +110,10 @@
 
         instructionLoop: while (true) {
 
-			let opcode = decoder.readUint8();
+            let opcode = decoder.readUint8();
+            
+            // console.log("processing opcode", opcode);
+            // console.log("test_span_id: ", document.querySelector("#test_span_id"));
 
             switch (opcode) {
 
@@ -166,9 +170,11 @@
                     // console.log("GOT HERE selector,nodeName = ", selector, nodeName);
                     // console.log("state.mountPointEl", state.mountPointEl);
                     if (state.mountPointEl) {
+                        console.log("opcodeSelectMountPoint: state.mountPointEl already exists, using it", state.mountPointEl, "parent is", state.mountPointEl.parentNode);
                         state.el = state.mountPointEl;
                         // state.elStack.push(state.mountPointEl);
                     } else {
+                        console.log("opcodeSelectMountPoint: state.mountPointEl does not exist, using selector to find it", selector);
                         let el = document.querySelector(selector);
                         if (!el) {
                             throw "mount point selector not found: " + selector;
@@ -183,7 +189,7 @@
                     // make sure it's the right element name and replace if not
                     if (el.nodeName.toUpperCase() != nodeName.toUpperCase()) {
 
-                        var newEl = document.createElement(nodeName);
+                        let newEl = document.createElement(nodeName);
                         el.parentNode.replaceChild(newEl, el);
 
                         state.mountPointEl = newEl;
@@ -369,7 +375,7 @@
                 
                 // assign current selected node as an element of the specified type
                 case opcodeSetElement: {
-
+                    
                     let nodeName = decoder.readString();
 
                     state.elAttrNames = {};
@@ -379,7 +385,10 @@
                     if (state.nextElMove == "first_child") {
                         state.nextElMove = null;
                         let newEl = state.el.firstChild;
-                        if (!newEl) {
+                        if (newEl) { 
+                            state.el = newEl; 
+                            break; 
+                        } else {
                             newEl = document.createElement(nodeName);
                             state.el.appendChild(newEl);
                             state.el = newEl;
@@ -388,7 +397,10 @@
                     } else if (state.nextElMove == "next_sibling") {
                         state.nextElMove = null;
                         let newEl = state.el.nextSibling;
-                        if (!newEl) {
+                        if (newEl) { 
+                            state.el = newEl; 
+                            break; 
+                        } else {
                             newEl = document.createElement(nodeName);
                             // console.log("HERE1", state.el);
                             // state.el.insertAdjacentElement(newEl, 'afterend');
@@ -403,9 +415,10 @@
                     // if we get here we need to verify that state.el is in fact an element of the right type
                     // and replace if not
 
-                    if (state.el.nodeType != 1 || state.el.nodeName != nodeName) {
+                    if (state.el.nodeType != 1 || state.el.nodeName.toUpperCase() != nodeName.toUpperCase()) {
 
                         let newEl = document.createElement(nodeName);
+                        // throw "stopping here";
                         state.el.parentNode.replaceChild(newEl, state.el);
                         state.el = newEl;
 
@@ -419,25 +432,37 @@
 
                     let content = decoder.readString();
 
+                    // console.log("in opcodeSetText 1");
+
                     // handle nextElMove cases
 
                     if (state.nextElMove == "first_child") {
                         state.nextElMove = null;
                         let newEl = state.el.firstChild;
-                        if (!newEl) {
+                        // console.log("in opcodeSetText 2");
+                        if (newEl) { 
+                            state.el = newEl; 
+                            break; 
+                        } else {
                             let newEl = document.createTextNode(content);
                             state.el.appendChild(newEl);
                             state.el = newEl;
+                            // console.log("in opcodeSetText 3");
                             break; // we're done here, since we just created the right element
                         }
                     } else if (state.nextElMove == "next_sibling") {
                         state.nextElMove = null;
                         let newEl = state.el.nextSibling;
-                        if (!newEl) {
+                        // console.log("in opcodeSetText 4");
+                        if (newEl) { 
+                            state.el = newEl; 
+                            break; 
+                        } else {
                             let newEl = document.createTextNode(content);
                             // state.el.insertAdjacentElement(newEl, 'afterend');
                             state.el.parentNode.appendChild(newEl);
                             state.el = newEl;
+                            // console.log("in opcodeSetText 5");
                             break; // we're done here, since we just created the right element
                         }
                     } else if (state.nextElMove) {
@@ -446,16 +471,20 @@
 
                     // if we get here we need to verify that state.el is in fact a node of the right type
                     // and with right content and replace if not
+                    // console.log("in opcodeSetText 6");
 
                     if (state.el.nodeType != 3) {
 
                         let newEl = document.createTextNode(content);
                         state.el.parentNode.replaceChild(newEl, state.el);
                         state.el = newEl;
+                        // console.log("in opcodeSetText 7");
 
                     } else {
+                        // console.log("in opcodeSetText 8");
                         state.el.textContent = content;
                     }
+                    // console.log("in opcodeSetText 9");
 
                     break;
                 }
@@ -470,7 +499,10 @@
                     if (state.nextElMove == "first_child") {
                         state.nextElMove = null;
                         let newEl = state.el.firstChild;
-                        if (!newEl) {
+                        if (newEl) { 
+                            state.el = newEl; 
+                            break; 
+                        } else {
                             let newEl = document.createComment(content);
                             state.el.appendChild(newEl);
                             state.el = newEl;
@@ -479,7 +511,10 @@
                     } else if (state.nextElMove == "next_sibling") {
                         state.nextElMove = null;
                         let newEl = state.el.nextSibling;
-                        if (!newEl) {
+                        if (newEl) { 
+                            state.el = newEl; 
+                            break; 
+                        } else {
                             let newEl = document.createComment(content);
                             // state.el.insertAdjacentElement(newEl, 'afterend');
                             state.el.parentNode.appendChild(newEl);
@@ -502,6 +537,19 @@
                     } else {
                         state.el.textContent = content;
                     }
+
+                    break;
+                }
+
+                case opcodeSetInnerHTML: {
+
+                    let html = decoder.readString();
+                    
+                    if (!state.el) { throw "opcodeSetInnerHTML must have currently selected element"; }
+                    if (state.nextElMove) { throw "opcodeSetInnerHTML nextElMove must not be set"; }
+                    if (state.el.nodeType != 1) { throw "opcodeSetInnerHTML currently selected element expected nodeType 1 but has: " + state.el.nodeType; }
+
+                    state.el.innerHTML = html;
 
                     break;
                 }

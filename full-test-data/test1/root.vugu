@@ -1,15 +1,17 @@
 <span class="test-span" id="test_span_id">
     This is a test.
-    <button id="run" @click="data.OnClickRun(event)">run</button>
-    <div id="success" vg-if="data.Success">success</div>
+    <button id="run" @click="c.OnClickRun(event, 7)" :data-whatever="c.Something">run</button>
+    <div id="success" vg-if="c.Success">success</div>
+    <div vg-html='"Some <strong>content</strong> here"'></div>
 </span>
 
 <script type="application/x-go">
 type Root struct {
+    Something int
     Success bool
 }
 
-func (c *Root) OnClickRun(event *vugu.DOMEvent) {
+func (c *Root) OnClickRun(event *vugu.DOMEvent, n int) {
     c.Success = true
 }
 </script>

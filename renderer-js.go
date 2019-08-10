@@ -21,7 +21,9 @@ func NewJSRenderer(mountPointSelector string) (*JSRenderer, error) {
 	}
 
 	ret.domEventCB = js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-		return jsEnv.handleRawDOMEvent(this, args)
+		log.Printf("FIXME: figure out what we're doing here")
+		return nil
+		// return jsEnv.handleRawDOMEvent(this, args)
 	})
 
 	ret.instructionBuffer = make([]byte, 4096)
@@ -461,6 +463,10 @@ func (r *JSRenderer) visitSyncElementEtc(bo *BuildOut, n *VGNode) error {
 	err = r.instructionList.writeRemoveOtherAttrs()
 	if err != nil {
 		return err
+	}
+
+	if n.InnerHTML != nil {
+		return r.instructionList.writeSetInnerHTML(*n.InnerHTML)
 	}
 
 	if n.FirstChild != nil {

@@ -2,6 +2,7 @@ package vugu
 
 import (
 	"regexp"
+	"sort"
 	"strings"
 
 	"github.com/vugu/vugu/internal/htmlx"
@@ -129,7 +130,7 @@ func vgHTMLExprx(n *htmlx.Node) string {
 }
 
 // extract ":prop" stuff from a node
-func vgPropExprs(n *html.Node) (ret map[string]string) {
+func dynamicVGAttrExpr(n *html.Node) (ret map[string]string) {
 	var da []html.Attribute
 	// get dynamic attrs first
 	for _, a := range n.Attr {
@@ -145,6 +146,30 @@ func vgPropExprs(n *html.Node) (ret map[string]string) {
 	for _, a := range da {
 		ret[strings.TrimPrefix(a.Key, ":")] = a.Val
 	}
+	return
+}
+
+// extract ":prop" stuff from a node
+func dynamicVGAttrExprx(n *htmlx.Node) (ret map[string]string, retKeys []string) {
+	var da []htmlx.Attribute
+	// get dynamic attrs first
+	for _, a := range n.Attr {
+		if strings.HasPrefix(a.Key, ":") {
+			da = append(da, a)
+		}
+	}
+	if len(da) == 0 { // don't allocate map if we don't have to
+		return
+	}
+	// make map as small as possible
+	ret = make(map[string]string, len(da))
+	retKeys = make([]string, len(da))
+	for i, a := range da {
+		k := strings.TrimPrefix(a.Key, ":")
+		retKeys[i] = k
+		ret[k] = a.Val
+	}
+	sort.Strings(retKeys)
 	return
 }
 

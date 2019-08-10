@@ -183,46 +183,70 @@ func (p *ParserGo) Parse(r io.Reader, fname string) error {
 
 		} else {
 
-			// vg-for
-			if forx := vgForExprx(n); forx != "" {
-				// fmt.Fprintf(&buildBuf, "for /*line %s:%d*/%s {\n", fname, n.Line, forx)
-				fmt.Fprintf(&buildBuf, "for %s {\n", forx)
-				defer fmt.Fprintf(&buildBuf, "}\n")
-			}
+			// group the processing of this one node into a func so the defer's are called before moving onto the next sibling
+			err := func() error {
 
-			// vg-if
-
-			if n.Type == htmlx.ElementNode && strings.Contains(n.Data, ":") {
-
-				// component
-
-				// dynamic attrs
-
-				// component events
-
-			} else {
-
-				// regular element
-
-				// if n.Line > 0 {
-				// 	fmt.Fprintf(&buildBuf, "//line %s:%d\n", fname, n.Line)
-				// }
-				fmt.Fprintf(&buildBuf, "vgn = &vugu.VGNode{Type:vugu.VGNodeType(%d),Data:%q,Attr:%#v}\n", n.Type, n.Data, staticVGAttrx(n.Attr))
-				if didFirstNode {
-					fmt.Fprintf(&buildBuf, "vgparent.AppendChild(vgn)\n") // if not root, make AppendChild call
-				} else {
-					fmt.Fprintf(&buildBuf, "vgout.Doc = vgn // Doc root for output\n") // for first element we need to assign as Doc on BuildOut
+				// vg-for
+				if forx := vgForExprx(n); forx != "" {
+					// fmt.Fprintf(&buildBuf, "for /*line %s:%d*/%s {\n", fname, n.Line, forx)
+					fmt.Fprintf(&buildBuf, "for %s {\n", forx)
+					defer fmt.Fprintf(&buildBuf, "}\n")
 				}
 
-				// dynamic attrs
+				// vg-if
+				ife := vgIfExprx(n)
+				if ife != "" {
+					fmt.Fprintf(&buildBuf, "if %s {\n", ife)
+					defer fmt.Fprintf(&buildBuf, "}\n")
+				}
 
-				// vg-html
+				if n.Type == htmlx.ElementNode && strings.Contains(n.Data, ":") {
 
-				// DOM events
+					// component
 
+					// dynamic attrs
+
+					// component events
+
+				} else {
+
+					// regular element
+
+					// if n.Line > 0 {
+					// 	fmt.Fprintf(&buildBuf, "//line %s:%d\n", fname, n.Line)
+					// }
+					fmt.Fprintf(&buildBuf, "vgn = &vugu.VGNode{Type:vugu.VGNodeType(%d),Data:%q,Attr:%#v}\n", n.Type, n.Data, staticVGAttrx(n.Attr))
+					if didFirstNode {
+						fmt.Fprintf(&buildBuf, "vgparent.AppendChild(vgn)\n") // if not root, make AppendChild call
+					} else {
+						fmt.Fprintf(&buildBuf, "vgout.Doc = vgn // Doc root for output\n") // for first element we need to assign as Doc on BuildOut
+					}
+
+					// dynamic attrs
+					dynExprMap, dynExprMapKeys := dynamicVGAttrExprx(n)
+					for _, k := range dynExprMapKeys {
+						valExpr := dynExprMap[k]
+						fmt.Fprintf(&buildBuf, "vgn.Attr = append(vgn.Attr, vugu.VGAttribute{Key:%q,Val:fmt.Sprint(%s)})\n", k, valExpr)
+					}
+
+					// vg-html
+					htmlExpr := vgHTMLExprx(n)
+					if htmlExpr != "" {
+						fmt.Fprintf(&buildBuf, "{\nvghtml := %s; \nvgn.InnerHTML = &vghtml\n}\n", htmlExpr)
+					}
+
+					// DOM events
+					// vgDOMEventExprs()
+
+				}
+
+				didFirstNode = true
+
+				return nil
+			}()
+			if err != nil {
+				return err
 			}
-
-			didFirstNode = true
 
 		}
 

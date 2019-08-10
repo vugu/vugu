@@ -13,7 +13,8 @@ var _ = reflect.New
 var _ = js.ValueOf
 
 type Root struct {
-	Success bool
+	Something int
+	Success   bool
 }
 
 func (c *Root) OnClickRun(event *vugu.DOMEvent) {
@@ -33,6 +34,7 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut, vgreterr error) 
 		vgparent.AppendChild(vgn)
 		vgn = &vugu.VGNode{Type: vugu.VGNodeType(3), Data: "button", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "id", Val: "run"}}}
 		vgparent.AppendChild(vgn)
+		vgn.Attr = append(vgn.Attr, vugu.VGAttribute{Key: "data-whatever", Val: fmt.Sprint(c.Something)})
 		{
 			vgparent := vgn
 			_ = vgparent
@@ -41,13 +43,23 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut, vgreterr error) 
 		}
 		vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n    ", Attr: []vugu.VGAttribute(nil)}
 		vgparent.AppendChild(vgn)
-		vgn = &vugu.VGNode{Type: vugu.VGNodeType(3), Data: "div", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "id", Val: "success"}}}
-		vgparent.AppendChild(vgn)
+		if c.Success {
+			vgn = &vugu.VGNode{Type: vugu.VGNodeType(3), Data: "div", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "id", Val: "success"}}}
+			vgparent.AppendChild(vgn)
+		}
 		{
 			vgparent := vgn
 			_ = vgparent
 			vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "success", Attr: []vugu.VGAttribute(nil)}
 			vgparent.AppendChild(vgn)
+		}
+		vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n    ", Attr: []vugu.VGAttribute(nil)}
+		vgparent.AppendChild(vgn)
+		vgn = &vugu.VGNode{Type: vugu.VGNodeType(3), Data: "div", Attr: []vugu.VGAttribute(nil)}
+		vgparent.AppendChild(vgn)
+		{
+			vghtml := "Some <strong>content</strong> here"
+			vgn.InnerHTML = &vghtml
 		}
 		vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n", Attr: []vugu.VGAttribute(nil)}
 		vgparent.AppendChild(vgn)

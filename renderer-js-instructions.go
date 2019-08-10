@@ -30,8 +30,8 @@ const (
 	// opcodePicardFirstChildElement uint8 = 8  // ensure an element first child and select element
 	// opcodePicardFirstChildText    uint8 = 9  // ensure a text first child and select element
 	// opcodePicardFirstChildComment uint8 = 10 // ensure a comment first child and select element
-	opcodeSelectParent     uint8 = 11 // select parent element
-	opcodePicardFirstChild uint8 = 12 // ensure an element first child and select element
+	// opcodeSelectParent     uint8 = 11 // select parent element
+	// opcodePicardFirstChild uint8 = 12 // ensure an element first child and select element
 
 	opcodeMoveToFirstChild uint8 = 20 // move node selection to first child (doesn't have to exist)
 	opcodeSetElement       uint8 = 21 // assign current selected node as an element of the specified type
@@ -42,6 +42,7 @@ const (
 	opcodeMoveToNextSibling   uint8 = 26 // move node selection to next sibling (doesn't have to exist)
 	opcodeClearEventListeners uint8 = 27 // remove all event listeners from currently selected element
 	opcodeSetEventListener    uint8 = 28 // assign event listener to currently selected element
+	opcodeSetInnerHTML        uint8 = 29 // set the innerHTML for an element
 
 )
 
@@ -200,22 +201,22 @@ func (il *instructionList) writeSelectMountPoint(selector, nodeName string) erro
 
 }
 
-func (il *instructionList) writePicardFirstChild(nodeType uint8, data string) error {
+// func (il *instructionList) writePicardFirstChild(nodeType uint8, data string) error {
 
-	// ensure an element first child and push onto element stack
+// 	// ensure an element first child and push onto element stack
 
-	err := il.checkLenAndFlush(len(data) + 6)
-	if err != nil {
-		return err
-	}
+// 	err := il.checkLenAndFlush(len(data) + 6)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	il.writeValUint8(opcodePicardFirstChild)
-	il.writeValUint8(nodeType)
-	il.writeValString(data)
+// 	il.writeValUint8(opcodePicardFirstChild)
+// 	il.writeValUint8(nodeType)
+// 	il.writeValString(data)
 
-	return nil
+// 	return nil
 
-}
+// }
 
 func (il *instructionList) writeMoveToFirstChild() error {
 
@@ -295,63 +296,30 @@ func (il *instructionList) writeMoveToNextSibling() error {
 	return nil
 }
 
-// func (il *instructionList) writePicardFirstChildElement(nodeName string) error {
+// func (il *instructionList) writeSelectParent() error {
 
-// 	// ensure an element first child and push onto element stack
+// 	// pop from the element stack
 
-// 	err := il.checkLenAndFlush(len(nodeName) + 5)
+// 	err := il.checkLenAndFlush(1)
 // 	if err != nil {
 // 		return err
 // 	}
 
-// 	il.writeValUint8(opcodePicardFirstChildElement)
-// 	il.writeValString(nodeName)
+// 	il.writeValUint8(opcodeSelectParent)
 
 // 	return nil
 
 // }
 
-// func (il *instructionList) writePicardFirstChildText(text string) error {
+func (il *instructionList) writeSetInnerHTML(html string) error {
 
-// 	// ensure a text first child and push onto element stack
-
-// 	err := il.checkLenAndFlush(len(text) + 5)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	il.writeValUint8(opcodePicardFirstChildText)
-// 	il.writeValString(text)
-
-// 	return nil
-// }
-
-// func (il *instructionList) writePicardFirstChildComment(comment string) error {
-
-// 	// ensure a comment first child and push onto element stack
-
-// 	err := il.checkLenAndFlush(len(comment) + 5)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	il.writeValUint8(opcodePicardFirstChildComment)
-// 	il.writeValString(comment)
-
-// 	return nil
-
-// }
-
-func (il *instructionList) writeSelectParent() error {
-
-	// pop from the element stack
-
-	err := il.checkLenAndFlush(1)
+	err := il.checkLenAndFlush(len(html) + 5)
 	if err != nil {
 		return err
 	}
 
-	il.writeValUint8(opcodeSelectParent)
+	il.writeValUint8(opcodeSetInnerHTML)
+	il.writeValString(html)
 
 	return nil
 

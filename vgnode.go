@@ -1,7 +1,6 @@
 package vugu
 
 import (
-	"bytes"
 	"encoding/binary"
 	"fmt"
 	"sort"
@@ -59,9 +58,9 @@ type VGNode struct {
 	Namespace string
 	Attr      []VGAttribute
 
-	Props Props // dynamic attributes, used as input for components or converted to attributes for regular HTML elements
+	// Props Props // dynamic attributes, used as input for components or converted to attributes for regular HTML elements
 
-	InnerHTML string // indicates that children should be ignored and this raw HTML is the children of this tag
+	InnerHTML *string // indicates that children should be ignored and this raw HTML is the children of this tag; nil means not set, empty string means explicitly set to empty string
 
 	DOMEventHandlers map[string]DOMEventHandler // describes invocations when DOM events happen
 
@@ -251,16 +250,16 @@ func (vgn *VGNode) elementHash(start uint64) uint64 {
 		fmt.Fprint(h, a.Val)
 	}
 
-	// hash props (dynamic attrs)
-	pks := vgn.Props.OrderedKeys() // stable sequence
-	for _, pk := range pks {
-		fmt.Fprint(h, pk) // key goes in as string
+	// // hash props (dynamic attrs)
+	// pks := vgn.Props.OrderedKeys() // stable sequence
+	// for _, pk := range pks {
+	// 	fmt.Fprint(h, pk) // key goes in as string
 
-		// use ComputeHash on the value because we don't know it's type
-		vh := ComputeHash(vgn.Props[pk])
-		binary.BigEndian.PutUint64(b8, vh)
-		h.Write(b8)
-	}
+	// 	// use ComputeHash on the value because we don't know it's type
+	// 	vh := ComputeHash(vgn.Props[pk])
+	// 	binary.BigEndian.PutUint64(b8, vh)
+	// 	h.Write(b8)
+	// }
 
 	// hash events
 	if len(vgn.DOMEventHandlers) > 0 {
@@ -277,52 +276,52 @@ func (vgn *VGNode) elementHash(start uint64) uint64 {
 	}
 
 	// innerHTML if any
-	if vgn.InnerHTML != "" {
-		fmt.Fprint(h, vgn.InnerHTML)
+	if vgn.InnerHTML != nil {
+		fmt.Fprint(h, *vgn.InnerHTML)
 	}
 
 	return h.Sum64()
 }
 
-var cruftHtml *html.Node
-var cruftBody *html.Node
+// var cruftHtml *html.Node
+// var cruftBody *html.Node
 
-func init() {
+// func init() {
 
-	// startTime := time.Now()
-	// defer func() { log.Printf("init() took %v", time.Since(startTime)) }() // NOTE: 35us on my laptop
+// 	// startTime := time.Now()
+// 	// defer func() { log.Printf("init() took %v", time.Since(startTime)) }() // NOTE: 35us on my laptop
 
-	n, err := html.Parse(bytes.NewReader([]byte(`<html><body></body></html>`)))
-	if err != nil {
-		panic(err)
-	}
-	cruftHtml = n
+// 	n, err := html.Parse(bytes.NewReader([]byte(`<html><body></body></html>`)))
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// 	cruftHtml = n
 
-	// find the body tag and store in cruftBody
-	var walk func(n *html.Node)
-	walk = func(n *html.Node) {
+// 	// find the body tag and store in cruftBody
+// 	var walk func(n *html.Node)
+// 	walk = func(n *html.Node) {
 
-		// log.Printf("walk: %#v", n)
+// 		// log.Printf("walk: %#v", n)
 
-		if n == nil {
-			return
-		}
+// 		if n == nil {
+// 			return
+// 		}
 
-		if n.Type == html.ElementNode && n.Data == "body" {
-			cruftBody = n
-			return
-		}
+// 		if n.Type == html.ElementNode && n.Data == "body" {
+// 			cruftBody = n
+// 			return
+// 		}
 
-		if n.FirstChild != nil {
-			walk(n.FirstChild)
-		}
-		if n.NextSibling != nil {
-			walk(n.NextSibling)
-		}
-	}
-	walk(cruftHtml)
+// 		if n.FirstChild != nil {
+// 			walk(n.FirstChild)
+// 		}
+// 		if n.NextSibling != nil {
+// 			walk(n.NextSibling)
+// 		}
+// 	}
+// 	walk(cruftHtml)
 
-	if cruftBody == nil {
-		panic("unable to find <body> tag in html, something went terribly wrong")
-	}
-}
+// 	if cruftBody == nil {
+// 		panic("unable to find <body> tag in html, something went terribly wrong")
+// 	}
+// }
