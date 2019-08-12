@@ -26,7 +26,7 @@
 	const opcodeSetComment           = 24 // assign current selected node as comment with specified content
 	const opcodeMoveToParent         = 25 // move node selection to parent
 	const opcodeMoveToNextSibling    = 26 // move node selection to next sibling (doesn't have to exist)
-	const opcodeClearEventListeners  = 27 // remove all event listeners from currently selected element
+	const opcodeRemoveOtherEventListeners  = 27 // remove all event listeners from currently selected element that were not just set
 	const opcodeSetEventListener     = 28 // assign event listener to currently selected element
     const opcodeSetInnerHTML         = 29 // set the innerHTML for an element
 
@@ -68,6 +68,13 @@
 
     let utf8decoder = new TextDecoder();
 
+	window.vuguSetEventHandlerAndBuffer = function(eventHandlerFunc, eventBuffer) { 
+		let state = window.vuguRenderState || {};
+        window.vuguRenderState = state;
+        state.eventBuffer = eventBuffer;
+        state.eventHandlerFunc = eventHandlerFunc;
+    }
+
 	window.vuguRender = function(buffer) { 
         
         // NOTE: vuguRender must not automatically reset anything between calls.
@@ -105,8 +112,14 @@
         // (Parents always exist and so doesn't use this mechanism.)
         state.nextElMove = state.nextElMove || null;
 
-        // keeps track of attributes that are being set on an element, we can remove any extras
+        // keeps track of attributes that are being set on the current element, so we can remove any extras
         state.elAttrNames = state.elAttrNames || {};
+
+        // map of positionID -> array of listener spec and handler function, for all elements
+        state.eventHandlerMap = state.eventHandlerMap || {};
+    
+        // keeps track of event listeners that are being set on the current element, so we can remvoe any extras
+        state.elEventKeys = state.elEventKeys || {};
 
         instructionLoop: while (true) {
 
@@ -163,6 +176,7 @@
                 case opcodeSelectMountPoint: {
                     
                     state.elAttrNames = {}; // reset attribute list
+                    state.elEventKeys = {};
 
                     // select mount point using selector or if it was done earlier re-use the one from before
                     let selector = decoder.readString();
@@ -379,6 +393,7 @@
                     let nodeName = decoder.readString();
 
                     state.elAttrNames = {};
+                    state.elEventKeys = {};
 
                     // handle nextElMove cases
 
@@ -442,7 +457,7 @@
                         // console.log("in opcodeSetText 2");
                         if (newEl) { 
                             state.el = newEl; 
-                            break; 
+                            break;
                         } else {
                             let newEl = document.createTextNode(content);
                             state.el.appendChild(newEl);
@@ -544,7 +559,7 @@
                 case opcodeSetInnerHTML: {
 
                     let html = decoder.readString();
-                    
+
                     if (!state.el) { throw "opcodeSetInnerHTML must have currently selected element"; }
                     if (state.nextElMove) { throw "opcodeSetInnerHTML nextElMove must not be set"; }
                     if (state.el.nodeType != 1) { throw "opcodeSetInnerHTML currently selected element expected nodeType 1 but has: " + state.el.nodeType; }
@@ -554,13 +569,77 @@
                     break;
                 }
 
-                // remove all event listeners from currently selected element
-                case opcodeClearEventListeners: {
+                // remove all event listeners from currently selected element that were not just set
+                case opcodeRemoveOtherEventListeners: {
+                    this.console.log("opcodeRemoveOtherEventListeners");
+
+                    let positionID = decoder.readString();
+
+                    // look at all registered events for this positionID
+                    let emap = state.eventHandlerMap[positionID] || {};
+                    // for any that we didn't just set, remove them
+                    let toBeRemoved = [];
+                    for (let k in emap) {
+                        if (!state.elEventKeys[k]) {
+                            toBeRemoved.push(k);
+                        }
+                    }
+
+                    // for each one that was missing, we remove from emap and call removeEventListener
+                    for (let i = 0; i < toBeRemoved.length; i++) {
+                        let f = emap[k];
+                        let k = toBeRemoved[i];
+                        let kparts = k.split("|");
+                        state.el.removeEventListener(kparts[0], f, {capture:!!kparts[1], passive:!!kparts[2]});
+                        delete emap[k];
+                    }
+
+                    // if emap is empty now, remove the entry from eventHandlerMap altogether
+                    if (Object.keys(emap).length == 0) {
+                        delete state.eventHandlerMap[positionID];
+                    } else {
+                        state.eventHandlerMap[positionID] = emap;
+                    }
+
                     break;
                 }
-
+            
                 // assign event listener to currently selected element
                 case opcodeSetEventListener: {
+                    let positionID = decoder.readString();
+                    let eventType = decoder.readString();
+                    let capture = decoder.readUint8();
+                    let passive = decoder.readUint8();
+
+                    if (!state.el) {
+                        throw "must have state.el set in order to call opcodeSetEventListener";
+                    }
+
+                    var eventKey = eventType + "|" + (capture?"1":"0") + "|" + (passive?"1":"0");
+                    state.elEventKeys[eventKey] = true;
+
+                    // map of positionID -> map of listener spec and handler function, for all elements
+                    //state.eventHandlerMap
+                    let emap = state.eventHandlerMap[positionID] || {};
+
+                    // register function if not done already
+                    let f = emap[eventKey];
+                    if (!f) {
+                        f = function(event) {
+                            // TODO: serialize event into the event buffer, somehow,
+                            // and keep track of the target element, also consider grabbing
+                            // the value or relevant properties as appropriate for form things
+                            state.eventHandlerFunc.call(null); // call with null this avoid unnecessary js.Value reference
+                        };    
+                        emap[eventKey] = f;
+
+                        this.console.log("addEventListener", eventType);
+                        state.el.addEventListener(eventType, f, {capture:capture, passive:passive});
+                    }
+
+                    state.eventHandlerMap[positionID] = emap;
+
+                    this.console.log("opcodeSetEventListener", positionID, eventType, capture, passive);
                     break;
                 }
             

@@ -17,7 +17,7 @@ type Root struct {
 	Success   bool
 }
 
-func (c *Root) OnClickRun(event *vugu.DOMEvent) {
+func (c *Root) OnClickRun(event *vugu.DOMEvent, n int) {
 	c.Success = true
 }
 func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut, vgreterr error) {
@@ -35,6 +35,11 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut, vgreterr error) 
 		vgn = &vugu.VGNode{Type: vugu.VGNodeType(3), Data: "button", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "id", Val: "run"}}}
 		vgparent.AppendChild(vgn)
 		vgn.Attr = append(vgn.Attr, vugu.VGAttribute{Key: "data-whatever", Val: fmt.Sprint(c.Something)})
+		vgn.DOMEventHandlerSpecList = append(vgn.DOMEventHandlerSpecList, vugu.DOMEventHandlerSpec{
+			EventType: "click",
+			Func:      func(event *vugu.DOMEvent) { c.OnClickRun(event, 7) },
+			// TODO: implement capture, etc.
+		})
 		{
 			vgparent := vgn
 			_ = vgparent

@@ -36,13 +36,13 @@ const (
 	opcodeMoveToFirstChild uint8 = 20 // move node selection to first child (doesn't have to exist)
 	opcodeSetElement       uint8 = 21 // assign current selected node as an element of the specified type
 	// opcodeSetElementAttr      uint8 = 22 // set attribute on current element
-	opcodeSetText             uint8 = 23 // assign current selected node as text with specified content
-	opcodeSetComment          uint8 = 24 // assign current selected node as comment with specified content
-	opcodeMoveToParent        uint8 = 25 // move node selection to parent
-	opcodeMoveToNextSibling   uint8 = 26 // move node selection to next sibling (doesn't have to exist)
-	opcodeClearEventListeners uint8 = 27 // remove all event listeners from currently selected element
-	opcodeSetEventListener    uint8 = 28 // assign event listener to currently selected element
-	opcodeSetInnerHTML        uint8 = 29 // set the innerHTML for an element
+	opcodeSetText                   uint8 = 23 // assign current selected node as text with specified content
+	opcodeSetComment                uint8 = 24 // assign current selected node as comment with specified content
+	opcodeMoveToParent              uint8 = 25 // move node selection to parent
+	opcodeMoveToNextSibling         uint8 = 26 // move node selection to next sibling (doesn't have to exist)
+	opcodeRemoveOtherEventListeners uint8 = 27 // remove all event listeners from currently selected element that were not just set
+	opcodeSetEventListener          uint8 = 28 // assign event listener to currently selected element
+	opcodeSetInnerHTML              uint8 = 29 // set the innerHTML for an element
 
 )
 
@@ -296,21 +296,6 @@ func (il *instructionList) writeMoveToNextSibling() error {
 	return nil
 }
 
-// func (il *instructionList) writeSelectParent() error {
-
-// 	// pop from the element stack
-
-// 	err := il.checkLenAndFlush(1)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	il.writeValUint8(opcodeSelectParent)
-
-// 	return nil
-
-// }
-
 func (il *instructionList) writeSetInnerHTML(html string) error {
 
 	err := il.checkLenAndFlush(len(html) + 5)
@@ -320,6 +305,47 @@ func (il *instructionList) writeSetInnerHTML(html string) error {
 
 	il.writeValUint8(opcodeSetInnerHTML)
 	il.writeValString(html)
+
+	return nil
+
+}
+
+func (il *instructionList) writeSetEventListener(positionID []byte, eventType string, capture, passive bool) error {
+
+	err := il.checkLenAndFlush(len(positionID) + len(eventType) + 11)
+	if err != nil {
+		return err
+	}
+
+	il.writeValUint8(opcodeSetEventListener)
+	il.writeValBytes(positionID)
+	il.writeValString(eventType)
+
+	captureB := uint8(0)
+	if capture {
+		captureB = 1
+	}
+	il.writeValUint8(captureB)
+
+	passiveB := uint8(0)
+	if passive {
+		passiveB = 1
+	}
+	il.writeValUint8(passiveB)
+
+	return nil
+
+}
+
+func (il *instructionList) writeRemoveOtherEventListeners(positionID []byte) error {
+
+	err := il.checkLenAndFlush(1)
+	if err != nil {
+		return err
+	}
+
+	il.writeValUint8(opcodeRemoveOtherEventListeners)
+	il.writeValBytes(positionID)
 
 	return nil
 
@@ -336,6 +362,20 @@ func (il *instructionList) writeValUint64(ref uint64) {
 }
 
 func (il *instructionList) writeValString(s string) {
+
+	lenstr := len(s)
+	pos := il.pos
+
+	// write length as uint32
+	binary.BigEndian.PutUint32(il.buf[pos:pos+4], uint32(lenstr))
+
+	// copy bytes directly from string into buf
+	copy(il.buf[pos+4:pos+4+lenstr], s)
+
+	il.pos = pos + 4 + lenstr
+}
+
+func (il *instructionList) writeValBytes(s []byte) {
 
 	lenstr := len(s)
 	pos := il.pos

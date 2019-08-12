@@ -236,7 +236,15 @@ func (p *ParserGo) Parse(r io.Reader, fname string) error {
 					}
 
 					// DOM events
-					// vgDOMEventExprs()
+					eventMap, eventKeys := vgDOMEventExprsx(n)
+					for _, k := range eventKeys {
+						expr := eventMap[k]
+						fmt.Fprintf(&buildBuf, "vgn.DOMEventHandlerSpecList = append(vgn.DOMEventHandlerSpecList, vugu.DOMEventHandlerSpec{\n")
+						fmt.Fprintf(&buildBuf, "EventType: %q,\n", k)
+						fmt.Fprintf(&buildBuf, "Func: func(event *vugu.DOMEvent) { %s },\n", expr)
+						fmt.Fprintf(&buildBuf, "// TODO: implement capture, etc.\n")
+						fmt.Fprintf(&buildBuf, "})\n")
+					}
 
 				}
 

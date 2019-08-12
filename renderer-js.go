@@ -20,12 +20,6 @@ func NewJSRenderer(mountPointSelector string) (*JSRenderer, error) {
 		MountPointSelector: mountPointSelector,
 	}
 
-	ret.domEventCB = js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-		log.Printf("FIXME: figure out what we're doing here")
-		return nil
-		// return jsEnv.handleRawDOMEvent(this, args)
-	})
-
 	ret.instructionBuffer = make([]byte, 4096)
 	ret.instructionTypedArray = js.TypedArrayOf(ret.instructionBuffer)
 
@@ -41,6 +35,18 @@ func NewJSRenderer(mountPointSelector string) (*JSRenderer, error) {
 		return nil
 	})
 
+	ret.eventHandlerBuffer = make([]byte, 4096)
+	ret.eventHandlerTypedArray = js.TypedArrayOf(ret.eventHandlerBuffer)
+
+	ret.eventHandlerFunc = js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+		ret.handleDOMEvent() // discard this and args, all data should be in eventHandlerBuffer; avoid using js.Value
+		return nil
+		// return jsEnv.handleRawDOMEvent(this, args)
+	})
+
+	// wire up the event handler func and the array that we used to communicate with instead of js.Value
+	ret.window.Call("vuguSetEventHandlerAndBuffer", ret.eventHandlerFunc, ret.eventHandlerTypedArray)
+
 	// log.Printf("ret.window: %#v", ret.window)
 	// log.Printf("eval: %#v", ret.window.Get("eval"))
 
@@ -51,7 +57,9 @@ func NewJSRenderer(mountPointSelector string) (*JSRenderer, error) {
 type JSRenderer struct {
 	MountPointSelector string
 
-	domEventCB js.Func // the callback function for DOM events
+	eventHandlerFunc       js.Func // the callback function for DOM events
+	eventHandlerBuffer     []byte
+	eventHandlerTypedArray js.TypedArray
 
 	instructionBuffer     []byte
 	instructionTypedArray js.TypedArray
@@ -183,7 +191,7 @@ func (r *JSRenderer) Render(bo *BuildOut) error {
 	// * in body, waiting for mount point
 	// * inside mounted aread, main dom sync logic
 
-	err := r.visitFirst(bo, bo.Doc)
+	err := r.visitFirst(bo, bo.Doc, []byte("0"))
 	if err != nil {
 		return err
 	}
@@ -300,11 +308,6 @@ func (r *JSRenderer) EventWait() bool {
 	return true
 }
 
-func (r *JSRenderer) handleRawDOMEvent(this js.Value, args []js.Value) interface{} {
-	panic(fmt.Errorf("not yet implemented"))
-	return nil
-}
-
 // var window js.Value
 
 // func init() {
@@ -314,7 +317,7 @@ func (r *JSRenderer) handleRawDOMEvent(this js.Value, args []js.Value) interface
 // 	}
 // }
 
-func (r *JSRenderer) visitFirst(bo *BuildOut, n *VGNode) error {
+func (r *JSRenderer) visitFirst(bo *BuildOut, n *VGNode, positionID []byte) error {
 
 	log.Printf("TODO: We need to go through and optimize away unneeded calls to create elements, set attributes, set event handlers, etc. for cases where they are the same per hash")
 
@@ -338,14 +341,16 @@ func (r *JSRenderer) visitFirst(bo *BuildOut, n *VGNode) error {
 
 			if strings.ToLower(nchild.Data) == "head" {
 
-				err := r.visitHead(bo, nchild)
+				// FIXME: positionID value?
+				err := r.visitHead(bo, nchild, positionID)
 				if err != nil {
 					return err
 				}
 
 			} else if strings.ToLower(nchild.Data) == "body" {
 
-				err := r.visitBody(bo, nchild)
+				// FIXME: positionID value?
+				err := r.visitBody(bo, nchild, positionID)
 				if err != nil {
 					return err
 				}
@@ -360,21 +365,21 @@ func (r *JSRenderer) visitFirst(bo *BuildOut, n *VGNode) error {
 	}
 
 	// else, first tag is anything else - try again as the element to be mounted
-	return r.visitMount(bo, n)
+	return r.visitMount(bo, n, positionID)
 
 }
 
-func (r *JSRenderer) visitHead(bo *BuildOut, n *VGNode) error {
+func (r *JSRenderer) visitHead(bo *BuildOut, n *VGNode, positionID []byte) error {
 	log.Printf("TODO: visitHead")
 	return nil
 }
 
-func (r *JSRenderer) visitBody(bo *BuildOut, n *VGNode) error {
+func (r *JSRenderer) visitBody(bo *BuildOut, n *VGNode, positionID []byte) error {
 	log.Printf("TODO: visitBody")
 	return nil
 }
 
-func (r *JSRenderer) visitMount(bo *BuildOut, n *VGNode) error {
+func (r *JSRenderer) visitMount(bo *BuildOut, n *VGNode, positionID []byte) error {
 
 	log.Printf("visitMount got here")
 
@@ -383,51 +388,11 @@ func (r *JSRenderer) visitMount(bo *BuildOut, n *VGNode) error {
 		return err
 	}
 
-	return r.visitSyncElementEtc(bo, n)
+	return r.visitSyncElementEtc(bo, n, positionID)
 
-	// err = r.writeAllStaticAttrs(n)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// if n.FirstChild != nil {
-
-	// 	err = r.instructionList.writeMoveToFirstChild()
-	// 	if err != nil {
-	// 		return err
-	// 	}
-
-	// 	// err = r.instructionList.writePicardFirstChild(uint8(n.FirstChild.Type), n.FirstChild.Data)
-	// 	// if err != nil {
-	// 	// 	return err
-	// 	// }
-
-	// 	// err := r.writePicardFirstChildNode(n)
-	// 	// if err != nil {
-	// 	// 	return err
-	// 	// }
-
-	// 	for nchild := n.FirstChild; nchild != nil; nchild = nchild.NextSibling {
-	// 		err = r.visitSyncNode(bo, nchild)
-	// 		if err != nil {
-	// 			return err
-	// 		}
-	// 		err = r.instructionList.writeMoveToNextSibling()
-	// 		if err != nil {
-	// 			return err
-	// 		}
-	// 	}
-
-	// 	err = r.instructionList.writeMoveToParent()
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// }
-
-	return nil
 }
 
-func (r *JSRenderer) visitSyncNode(bo *BuildOut, n *VGNode) error {
+func (r *JSRenderer) visitSyncNode(bo *BuildOut, n *VGNode, positionID []byte) error {
 
 	log.Printf("visitSyncNode")
 
@@ -448,19 +413,35 @@ func (r *JSRenderer) visitSyncNode(bo *BuildOut, n *VGNode) error {
 	}
 
 	// only elements have attributes, child or events
-	return r.visitSyncElementEtc(bo, n)
+	return r.visitSyncElementEtc(bo, n, positionID)
 
 }
 
 // visitSyncElementEtc syncs the rest of the stuff that only applies to elements
-func (r *JSRenderer) visitSyncElementEtc(bo *BuildOut, n *VGNode) error {
+func (r *JSRenderer) visitSyncElementEtc(bo *BuildOut, n *VGNode, positionID []byte) error {
 
-	err := r.writeAllStaticAttrs(n)
+	for _, a := range n.Attr {
+		err := r.instructionList.writeSetAttrStr(a.Key, a.Val)
+		if err != nil {
+			return err
+		}
+	}
+
+	err := r.instructionList.writeRemoveOtherAttrs()
 	if err != nil {
 		return err
 	}
 
-	err = r.instructionList.writeRemoveOtherAttrs()
+	if len(n.DOMEventHandlerSpecList) > 0 {
+		for _, hs := range n.DOMEventHandlerSpecList {
+			err := r.instructionList.writeSetEventListener(positionID, hs.EventType, hs.Capture, hs.Passive)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	// always write the remove for event listeners so any previous ones are taken away
+	err = r.instructionList.writeRemoveOtherEventListeners(positionID)
 	if err != nil {
 		return err
 	}
@@ -476,8 +457,12 @@ func (r *JSRenderer) visitSyncElementEtc(bo *BuildOut, n *VGNode) error {
 			return err
 		}
 
+		childIndex := 1
 		for nchild := n.FirstChild; nchild != nil; nchild = nchild.NextSibling {
-			err = r.visitSyncNode(bo, nchild)
+
+			childPositionID := append(positionID, []byte(fmt.Sprintf("_%d", childIndex))...)
+
+			err = r.visitSyncNode(bo, nchild, childPositionID)
 			if err != nil {
 				return err
 			}
@@ -485,6 +470,7 @@ func (r *JSRenderer) visitSyncElementEtc(bo *BuildOut, n *VGNode) error {
 			if err != nil {
 				return err
 			}
+			childIndex++
 		}
 
 		err = r.instructionList.writeMoveToParent()
@@ -496,31 +482,20 @@ func (r *JSRenderer) visitSyncElementEtc(bo *BuildOut, n *VGNode) error {
 	return nil
 }
 
-// writeAllStaticAttrs is a helper to write all the static attrs from a VGNode
-func (r *JSRenderer) writeAllStaticAttrs(n *VGNode) error {
-	for _, a := range n.Attr {
-		err := r.instructionList.writeSetAttrStr(a.Key, a.Val)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
+// // writeAllStaticAttrs is a helper to write all the static attrs from a VGNode
+// func (r *JSRenderer) writeAllStaticAttrs(n *VGNode) error {
+// 	for _, a := range n.Attr {
+// 		err := r.instructionList.writeSetAttrStr(a.Key, a.Val)
+// 		if err != nil {
+// 			return err
+// 		}
+// 	}
+// 	return nil
+// }
+
+func (r *JSRenderer) handleDOMEvent() {
+	panic(fmt.Errorf("handleDOMEvent not yet implemented"))
 }
 
-// // writePicardFirstChildNode calls writePicardFirstChildElement or other variation based on node type
-// func (r *JSRenderer) writePicardFirstChildNode(n *VGNode) error {
-
-// 	return r.instructionList.writePicardFirstChild(htmlx.NodeType(n.Type),n.Data)
-
-// 	switch n.Type {
-// 	case ElementNode:
-// 		return r.instructionList.writePicardFirstChild(n.Data)
-// 	case TextNode:
-// 		return r.instructionList.writePicardFirstChildText(n.Data)
-// 	case CommentNode:
-// 		return r.instructionList.writePicardFirstChildComment(n.Data)
-// 	}
-
-// 	return fmt.Errorf("writePicardFirstChildNode unknown node type %v", n.Type)
-
-// }
+// preventDefault()
+// stopPropagation()

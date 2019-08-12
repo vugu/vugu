@@ -193,6 +193,28 @@ func vgDOMEventExprs(n *html.Node) (ret map[string]string) {
 	return
 }
 
+// extract "@event" stuff from a node
+func vgDOMEventExprsx(n *htmlx.Node) (ret map[string]string, retKeys []string) {
+	var da []htmlx.Attribute
+	// get attrs first
+	for _, a := range n.Attr {
+		if strings.HasPrefix(a.Key, "@") {
+			da = append(da, a)
+		}
+	}
+	if len(da) == 0 { // don't allocate map if we don't have to
+		return
+	}
+	// make map as small as possible
+	ret = make(map[string]string, len(da))
+	for _, a := range da {
+		k := strings.TrimPrefix(a.Key, "@")
+		retKeys = append(retKeys, k)
+		ret[k] = a.Val
+	}
+	return
+}
+
 var vgDOMParseExprRE = regexp.MustCompile(`^([a-zA-Z0-9_.]+)\((.*)\)$`)
 
 func vgDOMParseExpr(expr string) (receiver string, methodName string, argList string) {
