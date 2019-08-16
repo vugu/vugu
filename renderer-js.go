@@ -1,10 +1,13 @@
 package vugu
 
 import (
+	"encoding/binary"
+	"encoding/json"
 	"fmt"
 	"log"
+	"runtime/debug"
 	"strings"
-	"time"
+	"sync"
 
 	js "github.com/vugu/vugu/js"
 )
@@ -20,7 +23,7 @@ func NewJSRenderer(mountPointSelector string) (*JSRenderer, error) {
 		MountPointSelector: mountPointSelector,
 	}
 
-	ret.instructionBuffer = make([]byte, 4096)
+	ret.instructionBuffer = make([]byte, 16384)
 	ret.instructionTypedArray = js.TypedArrayOf(ret.instructionBuffer)
 
 	ret.window = js.Global().Get("window")
@@ -35,7 +38,7 @@ func NewJSRenderer(mountPointSelector string) (*JSRenderer, error) {
 		return nil
 	})
 
-	ret.eventHandlerBuffer = make([]byte, 4096)
+	ret.eventHandlerBuffer = make([]byte, 16384)
 	ret.eventHandlerTypedArray = js.TypedArrayOf(ret.eventHandlerBuffer)
 
 	ret.eventHandlerFunc = js.FuncOf(func(this js.Value, args []js.Value) interface{} {
@@ -50,12 +53,34 @@ func NewJSRenderer(mountPointSelector string) (*JSRenderer, error) {
 	// log.Printf("ret.window: %#v", ret.window)
 	// log.Printf("eval: %#v", ret.window.Get("eval"))
 
+	ret.eventWaitCh = make(chan bool, 64)
+
+	ret.eventEnv = &eventEnv{
+		rwmu:            &ret.eventRWMU,
+		requestRenderCH: ret.eventWaitCh,
+	}
+
 	return ret, nil
+}
+
+type jsRenderState struct {
+	// stores positionID to slice of DOMEventHandlerSpec
+	domHandlerMap map[string][]DOMEventHandlerSpec
+}
+
+func newJsRenderState() *jsRenderState {
+	return &jsRenderState{
+		domHandlerMap: make(map[string][]DOMEventHandlerSpec, 8),
+	}
 }
 
 // JSRenderer implements Renderer against the browser's DOM.
 type JSRenderer struct {
 	MountPointSelector string
+
+	eventWaitCh chan bool    // events send to this and EventWait receives from it
+	eventRWMU   sync.RWMutex // make sure Render and event handling are not attempted at the same time (not totally sure if this is necessary in terms of the wasm threading model but enforce it with a rwmutex all the same)
+	eventEnv    *eventEnv    // our EventEnv implementation that exposes eventRWMU and eventWaitCh to events in a clean way
 
 	eventHandlerFunc       js.Func // the callback function for DOM events
 	eventHandlerBuffer     []byte
@@ -66,6 +91,8 @@ type JSRenderer struct {
 	instructionList       *instructionList
 
 	window js.Value
+
+	jsRenderState *jsRenderState
 }
 
 // Release calls release on any resources that this renderer allocated.
@@ -75,6 +102,11 @@ func (r *JSRenderer) Release() {
 
 // Render implements Renderer.
 func (r *JSRenderer) Render(bo *BuildOut) error {
+
+	// acquire read lock so events are not changing data while Render is in progress
+	r.eventRWMU.RLock()
+	defer r.eventRWMU.RUnlock()
+
 	if !js.Global().Truthy() {
 		return fmt.Errorf("js environment not available")
 	}
@@ -169,6 +201,11 @@ func (r *JSRenderer) Render(bo *BuildOut) error {
 	// r.instructionBuffer[0] = 7
 	// r.instructionBuffer[1] = 9
 
+	// always make sure we have at least a non-nil render state
+	if r.jsRenderState == nil {
+		r.jsRenderState = newJsRenderState()
+	}
+
 	log.Printf("BuildOut: %#v", bo)
 
 	el := bo.Doc
@@ -191,7 +228,9 @@ func (r *JSRenderer) Render(bo *BuildOut) error {
 	// * in body, waiting for mount point
 	// * inside mounted aread, main dom sync logic
 
-	err := r.visitFirst(bo, bo.Doc, []byte("0"))
+	state := newJsRenderState()
+
+	err := r.visitFirst(state, bo, bo.Doc, []byte("0"))
 	if err != nil {
 		return err
 	}
@@ -200,6 +239,8 @@ func (r *JSRenderer) Render(bo *BuildOut) error {
 	if err != nil {
 		return err
 	}
+
+	r.jsRenderState = state
 
 	return nil
 
@@ -295,17 +336,21 @@ func (r *JSRenderer) Render(bo *BuildOut) error {
 
 // EventWait blocks until an event has occurred which causes a re-render.
 // It returns true if the render loop should continue or false if it should exit.
-func (r *JSRenderer) EventWait() bool {
+func (r *JSRenderer) EventWait() (ok bool) {
 
 	// make sure the JS environment is still available, returning false otherwise
 	if !js.Global().Truthy() {
 		return false
 	}
 
-	// TODO: implement event loop
-	time.Sleep(10 * time.Second)
+	// FIXME: this should probably have some sort of "debouncing" on it to handle the case of
+	// several events in rapid succession causing multiple renders - maybe we read from eventWaitCH
+	// continuously until it's empty, with a max of like 20ms pause between each or something, and then
+	// only return after we don't see anything for that time frame.
 
-	return true
+	ok = <-r.eventWaitCh
+	return
+
 }
 
 // var window js.Value
@@ -317,7 +362,7 @@ func (r *JSRenderer) EventWait() bool {
 // 	}
 // }
 
-func (r *JSRenderer) visitFirst(bo *BuildOut, n *VGNode, positionID []byte) error {
+func (r *JSRenderer) visitFirst(state *jsRenderState, bo *BuildOut, n *VGNode, positionID []byte) error {
 
 	log.Printf("TODO: We need to go through and optimize away unneeded calls to create elements, set attributes, set event handlers, etc. for cases where they are the same per hash")
 
@@ -342,7 +387,7 @@ func (r *JSRenderer) visitFirst(bo *BuildOut, n *VGNode, positionID []byte) erro
 			if strings.ToLower(nchild.Data) == "head" {
 
 				// FIXME: positionID value?
-				err := r.visitHead(bo, nchild, positionID)
+				err := r.visitHead(state, bo, nchild, positionID)
 				if err != nil {
 					return err
 				}
@@ -350,7 +395,7 @@ func (r *JSRenderer) visitFirst(bo *BuildOut, n *VGNode, positionID []byte) erro
 			} else if strings.ToLower(nchild.Data) == "body" {
 
 				// FIXME: positionID value?
-				err := r.visitBody(bo, nchild, positionID)
+				err := r.visitBody(state, bo, nchild, positionID)
 				if err != nil {
 					return err
 				}
@@ -365,21 +410,21 @@ func (r *JSRenderer) visitFirst(bo *BuildOut, n *VGNode, positionID []byte) erro
 	}
 
 	// else, first tag is anything else - try again as the element to be mounted
-	return r.visitMount(bo, n, positionID)
+	return r.visitMount(state, bo, n, positionID)
 
 }
 
-func (r *JSRenderer) visitHead(bo *BuildOut, n *VGNode, positionID []byte) error {
+func (r *JSRenderer) visitHead(state *jsRenderState, bo *BuildOut, n *VGNode, positionID []byte) error {
 	log.Printf("TODO: visitHead")
 	return nil
 }
 
-func (r *JSRenderer) visitBody(bo *BuildOut, n *VGNode, positionID []byte) error {
+func (r *JSRenderer) visitBody(state *jsRenderState, bo *BuildOut, n *VGNode, positionID []byte) error {
 	log.Printf("TODO: visitBody")
 	return nil
 }
 
-func (r *JSRenderer) visitMount(bo *BuildOut, n *VGNode, positionID []byte) error {
+func (r *JSRenderer) visitMount(state *jsRenderState, bo *BuildOut, n *VGNode, positionID []byte) error {
 
 	log.Printf("visitMount got here")
 
@@ -388,11 +433,11 @@ func (r *JSRenderer) visitMount(bo *BuildOut, n *VGNode, positionID []byte) erro
 		return err
 	}
 
-	return r.visitSyncElementEtc(bo, n, positionID)
+	return r.visitSyncElementEtc(state, bo, n, positionID)
 
 }
 
-func (r *JSRenderer) visitSyncNode(bo *BuildOut, n *VGNode, positionID []byte) error {
+func (r *JSRenderer) visitSyncNode(state *jsRenderState, bo *BuildOut, n *VGNode, positionID []byte) error {
 
 	log.Printf("visitSyncNode")
 
@@ -413,12 +458,12 @@ func (r *JSRenderer) visitSyncNode(bo *BuildOut, n *VGNode, positionID []byte) e
 	}
 
 	// only elements have attributes, child or events
-	return r.visitSyncElementEtc(bo, n, positionID)
+	return r.visitSyncElementEtc(state, bo, n, positionID)
 
 }
 
 // visitSyncElementEtc syncs the rest of the stuff that only applies to elements
-func (r *JSRenderer) visitSyncElementEtc(bo *BuildOut, n *VGNode, positionID []byte) error {
+func (r *JSRenderer) visitSyncElementEtc(state *jsRenderState, bo *BuildOut, n *VGNode, positionID []byte) error {
 
 	for _, a := range n.Attr {
 		err := r.instructionList.writeSetAttrStr(a.Key, a.Val)
@@ -433,6 +478,10 @@ func (r *JSRenderer) visitSyncElementEtc(bo *BuildOut, n *VGNode, positionID []b
 	}
 
 	if len(n.DOMEventHandlerSpecList) > 0 {
+
+		// store in domHandlerMap
+		state.domHandlerMap[string(positionID)] = n.DOMEventHandlerSpecList
+
 		for _, hs := range n.DOMEventHandlerSpecList {
 			err := r.instructionList.writeSetEventListener(positionID, hs.EventType, hs.Capture, hs.Passive)
 			if err != nil {
@@ -462,7 +511,7 @@ func (r *JSRenderer) visitSyncElementEtc(bo *BuildOut, n *VGNode, positionID []b
 
 			childPositionID := append(positionID, []byte(fmt.Sprintf("_%d", childIndex))...)
 
-			err = r.visitSyncNode(bo, nchild, childPositionID)
+			err = r.visitSyncNode(state, bo, nchild, childPositionID)
 			if err != nil {
 				return err
 			}
@@ -494,8 +543,82 @@ func (r *JSRenderer) visitSyncElementEtc(bo *BuildOut, n *VGNode, positionID []b
 // }
 
 func (r *JSRenderer) handleDOMEvent() {
-	panic(fmt.Errorf("handleDOMEvent not yet implemented"))
-}
 
-// preventDefault()
-// stopPropagation()
+	strlen := binary.BigEndian.Uint32(r.eventHandlerBuffer[:4])
+	b := r.eventHandlerBuffer[4 : strlen+4]
+	// log.Printf("handleDOMEvent JSON from event buffer: %q", b)
+
+	var ee eventEnv
+	// rwmu            *sync.RWMutex
+	// requestRenderCH chan bool
+
+	var domEvent DOMEvent
+	domEvent.eventEnv = &ee
+	domEvent.window = r.window
+
+	var eventDetail struct {
+		PositionID string `json:"position_id"`
+		EventType  string `json:"event_type"`
+		Capture    bool   `json:"capture"`
+		Passive    bool   `json:"passive"`
+
+		// the event object data as extracted above
+		EventSummary map[string]interface{} `json:"event_summary"`
+	}
+
+	err := json.Unmarshal(b, &eventDetail)
+	if err != nil {
+		panic(err)
+	}
+	domEvent.eventSummary = eventDetail.EventSummary
+
+	// log.Printf("eventDetail: %#v", eventDetail)
+
+	// acquire exclusive lock before we actually process event
+	r.eventRWMU.Lock()
+	defer r.eventRWMU.Unlock()
+
+	// TODO: give this more thought - but for now we just do a non-blocking push to the
+	// eventWaitCh, telling the render loop that a render is required, but if a bunch
+	// of them stack up we don't wait
+	defer func() {
+
+		if panicr := recover(); panicr != nil {
+			fmt.Println("handleRawDOMEvent caught panic", panicr)
+			debug.PrintStack()
+
+			// in error case send false to tell event loop to exit
+			select {
+			case r.eventWaitCh <- false:
+			default:
+			}
+			return
+
+		}
+
+		// in normal case send true to the channel to tell the event loop it should render
+		select {
+		case r.eventWaitCh <- true:
+		default:
+		}
+	}()
+
+	handlers := r.jsRenderState.domHandlerMap[eventDetail.PositionID]
+	var f func(*DOMEvent)
+	for _, h := range handlers {
+		if h.EventType == eventDetail.EventType && h.Capture == eventDetail.Capture {
+			f = h.Func
+			break
+		}
+	}
+
+	// make sure we found something, panic if not
+	if f == nil {
+		panic(fmt.Errorf("Unable to find event handler for positionID=%q, eventType=%q, capture=%v",
+			eventDetail.PositionID, eventDetail.EventType, eventDetail.Capture))
+	}
+
+	// invoke handler
+	f(&domEvent)
+
+}

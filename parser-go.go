@@ -101,8 +101,9 @@ func (p *ParserGo) Parse(r io.Reader, fname string) error {
 		}
 	}
 
-	var goBuf bytes.Buffer    // additional Go code (at top)
-	var buildBuf bytes.Buffer // Build() method Go code (below)
+	var goBuf bytes.Buffer       // additional Go code (at top)
+	var buildBuf bytes.Buffer    // Build() method Go code (below)
+	var goBufBottom bytes.Buffer // additional Go code that is put as the very last thing
 
 	// var buildCSSBuf bytes.Buffer // CSS block
 	// var buildJSBuf bytes.Buffer  // JS block
@@ -117,11 +118,11 @@ func (p *ParserGo) Parse(r io.Reader, fname string) error {
 	fmt.Fprintf(&goBuf, "import js %q\n", "github.com/vugu/vugu/js")
 	fmt.Fprintf(&goBuf, "\n")
 
-	fmt.Fprintf(&goBuf, "// 'fix' unused imports\n")
-	fmt.Fprintf(&goBuf, "var _ = fmt.Sprintf\n")
-	fmt.Fprintf(&goBuf, "var _ = reflect.New\n")
-	fmt.Fprintf(&goBuf, "var _ = js.ValueOf\n")
-	fmt.Fprintf(&goBuf, "\n")
+	fmt.Fprintf(&goBufBottom, "// 'fix' unused imports\n")
+	fmt.Fprintf(&goBufBottom, "var _ = fmt.Sprintf\n")
+	fmt.Fprintf(&goBufBottom, "var _ = reflect.New\n")
+	fmt.Fprintf(&goBufBottom, "var _ = js.ValueOf\n")
+	fmt.Fprintf(&goBufBottom, "\n")
 
 	// TODO: we use a prefix like "vg" as our namespace; should document that user code should not use that prefix to avoid conflicts
 	fmt.Fprintf(&buildBuf, "func (c *%s) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut, vgreterr error) {\n", p.StructType)
@@ -359,6 +360,7 @@ func (p *ParserGo) Parse(r io.Reader, fname string) error {
 	// log.Printf("goBuf.Len == %v", goBuf.Len())
 	buf.Write(goBuf.Bytes())
 	buf.Write(buildBuf.Bytes())
+	buf.Write(goBufBottom.Bytes())
 
 	outPath := filepath.Join(p.OutDir, p.OutFile)
 	// err = ioutil.WriteFile(outPath, buf.Bytes(), 0644)

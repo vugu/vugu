@@ -49,7 +49,7 @@ type VGNode struct {
 
 	InnerHTML *string // indicates that children should be ignored and this raw HTML is the children of this tag; nil means not set, empty string means explicitly set to empty string
 
-	DOMEventHandlers map[string]DOMEventHandler // describes invocations when DOM events happen
+	// DOMEventHandlers map[string]DOMEventHandler // describes invocations when DOM events happen
 
 	DOMEventHandlerSpecList []DOMEventHandlerSpec // replacing DOMEventHandlers
 
@@ -57,15 +57,15 @@ type VGNode struct {
 	positionHashVal uint64
 }
 
-// SetDOMEventHandler will assign a named event to DOMEventHandlers (will allocate the map if nil).
-// Used during VDOM construction and during render to determine browser events to hook up.
-func (n *VGNode) SetDOMEventHandler(name string, h DOMEventHandler) {
-	if n.DOMEventHandlers == nil {
-		n.DOMEventHandlers = map[string]DOMEventHandler{name: h}
-		return
-	}
-	n.DOMEventHandlers[name] = h
-}
+// // SetDOMEventHandler will assign a named event to DOMEventHandlers (will allocate the map if nil).
+// // Used during VDOM construction and during render to determine browser events to hook up.
+// func (n *VGNode) SetDOMEventHandler(name string, h DOMEventHandler) {
+// 	if n.DOMEventHandlers == nil {
+// 		n.DOMEventHandlers = map[string]DOMEventHandler{name: h}
+// 		return
+// 	}
+// 	n.DOMEventHandlers[name] = h
+// }
 
 // InsertBefore inserts newChild as a child of n, immediately before oldChild
 // in the sequence of n's children. oldChild may be nil, in which case newChild

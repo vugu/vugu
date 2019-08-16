@@ -6,6 +6,9 @@
 </span>
 
 <script type="application/x-go">
+
+import "log"
+
 type Root struct {
     Something int
     Success bool
@@ -13,5 +16,6 @@ type Root struct {
 
 func (c *Root) OnClickRun(event *vugu.DOMEvent, n int) {
     c.Success = true
+    log.Printf("HEY, GOT HERE!")
 }
 </script>

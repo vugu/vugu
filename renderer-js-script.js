@@ -68,10 +68,36 @@
 
     let utf8decoder = new TextDecoder();
 
+    window.vuguGetActiveEvent = function() {
+        let state = window.vuguState || {}; window.vuguState = state;
+        return state.activeEvent;
+    }
+    window.vuguGetActiveEventTarget = function() {
+        let state = window.vuguState || {}; window.vuguState = state;
+        return state.activeEvent && state.activeEvent.target;
+    }
+    window.vuguGetActiveEventCurrentTarget = function() {
+        let state = window.vuguState || {}; window.vuguState = state;
+        return state.activeEvent && state.activeEvent.currentTarget;
+    }
+    window.vuguActiveEventPreventDefault = function() {
+        let state = window.vuguState || {}; window.vuguState = state;
+        if (state.activeEvent && state.activeEvent.preventDefault) {
+            state.activeEvent.preventDefault();
+        }
+    }
+    window.vuguActiveEventStopPropagation = function() {
+        let state = window.vuguState || {}; window.vuguState = state;
+        if (state.activeEvent && state.activeEvent.stopPropagation) {
+            state.activeEvent.stopPropagation();
+        }
+    }
+
 	window.vuguSetEventHandlerAndBuffer = function(eventHandlerFunc, eventBuffer) { 
-		let state = window.vuguRenderState || {};
-        window.vuguRenderState = state;
+		let state = window.vuguState || {};
+        window.vuguState = state;
         state.eventBuffer = eventBuffer;
+        state.eventBufferView = new DataView(eventBuffer.buffer, eventBuffer.byteOffset, eventBuffer.byteLength);
         state.eventHandlerFunc = eventHandlerFunc;
     }
 
@@ -83,10 +109,12 @@
         // The caller decides when to reset things by sending the appropriate
         // instruction(s).
 
-		let state = window.vuguRenderState || {};
-		window.vuguRenderState = state;
+		let state = window.vuguState || {};
+		window.vuguState = state;
 
 		console.log("vuguRender called", buffer);
+
+        let textEncoder = new TextEncoder();
 
 		let bufferView = new DataView(buffer.buffer, buffer.byteOffset, buffer.byteLength);
 
@@ -626,14 +654,78 @@
                     let f = emap[eventKey];
                     if (!f) {
                         f = function(event) {
-                            // TODO: serialize event into the event buffer, somehow,
+
+                            // set the active event, so the Go code and call back in and examine it if needed
+                            state.activeEvent = event; 
+
+                            let eventObj = {};
+                            // console.log(event);
+                            for (let i in event) {
+                                let itype = typeof(event[i]);
+                                // copy primitive values directly
+                                if ((itype == "boolean" || itype == "number" || itype == "string") && true/*event.hasOwnProperty(i)*/) {
+                                    eventObj[i] = event[i];
+                                }
+                            }
+
+                            // also do the same for anything in "target"
+                            if (event.target) {
+                                eventObj.target = {};
+                                let et = event.target;
+                                for (let i in et) {
+                                    let itype = typeof(et[i]);
+                                    if ((itype == "boolean" || itype == "number" || itype == "string") && true/*et.hasOwnProperty(i)*/) {
+                                        eventObj.target[i] = et[i];
+                                    }
+                                }
+                            }
+                            
+                            // console.log(eventObj);
+                            // console.log(JSON.stringify(eventObj));
+
+                            let fullJSON = JSON.stringify({
+                                
+                                // include properties from event registration
+                                position_id: positionID,
+                                event_type: eventType,
+                                capture: !!capture,
+                                passive: !!passive,
+
+                                // the event object data as extracted above
+                                event_summary: eventObj,
+
+                            });
+
+                            // console.log(state.eventBuffer);
+
+                            // write JSON to state.eventBuffer with zero char as termination
+
+                            
+                            let encodeResultBuffer = textEncoder.encode(fullJSON);
+                            //console.log("encodeResult", encodeResult);
+                            state.eventBuffer.set(encodeResultBuffer, 4); // copy encoded string to event buffer
+                            // now write length using DataView as uint32
+                            state.eventBufferView.setUint32(0, encodeResultBuffer.byteLength - encodeResultBuffer.byteOffset);
+
+                            // let result = textEncoder.encodeInto(fullJSON, state.eventBuffer);
+                            // let eventBufferDataView = new DataView(state.eventBuffer.buffer, state.eventBuffer.byteOffset, state.eventBuffer.byteLength);
+                            // eventBufferDataView.setUint8(result.written, 0);
+
+                            // write length after, since only now do we know the final length
+                            // state.eventBufferView.setUint32(0, result.written);
+
+                            // serialize event into the event buffer, somehow,
                             // and keep track of the target element, also consider grabbing
                             // the value or relevant properties as appropriate for form things
+                            
                             state.eventHandlerFunc.call(null); // call with null this avoid unnecessary js.Value reference
+
+                            // unset the active event
+                            state.activeEvent = null;
                         };    
                         emap[eventKey] = f;
 
-                        this.console.log("addEventListener", eventType);
+                        // this.console.log("addEventListener", eventType);
                         state.el.addEventListener(eventType, f, {capture:capture, passive:passive});
                     }
 

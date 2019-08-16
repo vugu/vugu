@@ -7,10 +7,7 @@ import "reflect"
 import "github.com/vugu/vugu"
 import js "github.com/vugu/vugu/js"
 
-// 'fix' unused imports
-var _ = fmt.Sprintf
-var _ = reflect.New
-var _ = js.ValueOf
+import "log"
 
 type Root struct {
 	Something int
@@ -19,6 +16,7 @@ type Root struct {
 
 func (c *Root) OnClickRun(event *vugu.DOMEvent, n int) {
 	c.Success = true
+	log.Printf("HEY, GOT HERE!")
 }
 func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut, vgreterr error) {
 
@@ -71,3 +69,8 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut, vgreterr error) 
 	}
 	return vgout, nil
 }
+
+// 'fix' unused imports
+var _ = fmt.Sprintf
+var _ = reflect.New
+var _ = js.ValueOf
