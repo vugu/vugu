@@ -62,22 +62,24 @@ func (p Props) Merge(p2 Props) Props {
 type BuildIn struct {
 	BuildEnv *BuildEnv
 
-	SlotMap map[string]BuilderFunc
+	// SlotMap map[string]BuilderFunc
 }
 
 type BuildOut struct {
-	Doc *VGNode   // output element (required)
-	CSS []*VGNode // optional CSS style tag
-	JS  []*VGNode // optional JS script tag
+	Out []*VGNode // output element(s) - usually just one but slots can have multiple
+	CSS []*VGNode // optional CSS style tag(s)
+	JS  []*VGNode // optional JS script tag(s)
 }
 
 func (b *BuildOut) AppendCSS(css string) {
+	// FIXME: should we be deduplicating here??
 	vgn := &VGNode{Type: ElementNode, Data: "style"}
 	vgn.AppendChild(&VGNode{Type: TextNode, Data: css})
 	b.CSS = append(b.CSS, vgn)
 }
 
 func (b *BuildOut) AppendJS(js string) {
+	// FIXME: should we be deduplicating here??
 	vgn := &VGNode{Type: ElementNode, Data: "script"}
 	vgn.AppendChild(&VGNode{Type: TextNode, Data: js})
 	b.JS = append(b.JS, vgn)

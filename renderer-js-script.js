@@ -112,7 +112,7 @@
 		let state = window.vuguState || {};
 		window.vuguState = state;
 
-		console.log("vuguRender called", buffer);
+		console.log("vuguRender called");
 
         let textEncoder = new TextEncoder();
 
@@ -153,599 +153,504 @@
 
             let opcode = decoder.readUint8();
             
-            // console.log("processing opcode", opcode);
-            // console.log("test_span_id: ", document.querySelector("#test_span_id"));
+            try {
 
-            switch (opcode) {
+                console.log("processing opcode", opcode);
+                // console.log("test_span_id: ", document.querySelector("#test_span_id"));
 
-                case opcodeEnd: {
-                    break instructionLoop;
-                }
-    
-                // case opcodeClearRefmap:
-                //     state.refMap = {};
-                //     state.curRef = "";
-                //     state.curRefEl = null;
-                //     break;
+                switch (opcode) {
 
-                case opcodeClearEl: {
-                    state.el = null;
-                    state.nextElMove = null;
-                    break;
-                }
+                    case opcodeEnd: {
+                        break instructionLoop;
+                    }
         
-                // case opcodeSetHTMLRef:
-                //     var refstr = decoder.readRefToString();
-                //     state.refMap[refstr] = document.querySelector("html");
-                //     break;
-
-                // case opcodeSelectRef:
-                //     var refstr = decoder.readRefToString();
-                //     state.curRef = refstr;
-                //     state.curRefEl = state.refMap[refstr];
-                //     if (!state.curRefEl) {
-                //         throw "opcodeSelectRef: refstr does not exist - " + refstr;
-                //     }
-                //     break;
-
-                case opcodeSetAttrStr: {
-                    let el = state.el;
-                    if (!el) {
-                        return "opcodeSetAttrStr: no current reference";
-                    }
-                    let attrName = decoder.readString();
-                    let attrValue = decoder.readString();
-                    el.setAttribute(attrName, attrValue);
-                    state.elAttrNames[attrName] = true;
-                    // console.log("setting attr", attrName, attrValue, el)
-                    break;
-                }
-
-                case opcodeSelectMountPoint: {
-                    
-                    state.elAttrNames = {}; // reset attribute list
-                    state.elEventKeys = {};
-
-                    // select mount point using selector or if it was done earlier re-use the one from before
-                    let selector = decoder.readString();
-                    let nodeName = decoder.readString();
-                    // console.log("GOT HERE selector,nodeName = ", selector, nodeName);
-                    // console.log("state.mountPointEl", state.mountPointEl);
-                    if (state.mountPointEl) {
-                        console.log("opcodeSelectMountPoint: state.mountPointEl already exists, using it", state.mountPointEl, "parent is", state.mountPointEl.parentNode);
-                        state.el = state.mountPointEl;
-                        // state.elStack.push(state.mountPointEl);
-                    } else {
-                        console.log("opcodeSelectMountPoint: state.mountPointEl does not exist, using selector to find it", selector);
-                        let el = document.querySelector(selector);
-                        if (!el) {
-                            throw "mount point selector not found: " + selector;
-                        }
-                        state.mountPointEl = el;
-                        // state.elStack.push(el);
-                        state.el = el;
-                    }
-
-                    let el = state.el;
-
-                    // make sure it's the right element name and replace if not
-                    if (el.nodeName.toUpperCase() != nodeName.toUpperCase()) {
-
-                        let newEl = document.createElement(nodeName);
-                        el.parentNode.replaceChild(newEl, el);
-
-                        state.mountPointEl = newEl;
-                        el = newEl;
-
-                    }
-
-                    state.el = el;
-
-                    state.nextElMove = null;
-
-                    break;
-                }
-
-                // case opcodePicardFirstChild: {
-
-            	// 	let nodeType = decoder.readUint8();
-                //     let data = decoder.readString();
-
-                //     let oldFirstChildEl = state.el.firstChild;
-
-                //     let newFirstChildEl = null;
-
-                //     let needsCreate = true;
-                //     if (oldFirstChildEl) {
-                //         // node types from Go are https://godoc.org/golang.org/x/net/html#NodeType
-                //         // whereas node types in DOM are https://developer.mozilla.org/en-US/docs/Web/API/Node/nodeType
-
-                //         // text
-                //         if (nodeType == 1 && oldFirstChildEl.nodeType == 3) {
-                //             needsCreate = false;
-                //         } else 
-                //         // element
-                //         if (nodeType == 3 && oldFirstChildEl.nodeType == 1) {
-                //             needsCreate = false;
-                //         } else 
-                //         // comment
-                //         if (nodeType == 4 && oldFirstChildEl.nodeType == 8) {
-                //             needsCreate = false;
-                //         }
-
-                //     }
-
-                //     if (needsCreate) {
-
-                //         switch (nodeType) {
-                //             case 1: {
-                //                 newFirstChildEl = document.createTextNode(data);
-                //                 break;
-                //             }
-                //             case 3: {
-                //                 newFirstChildEl = document.createElement(data);
-                //                 break;
-                //             }
-                //             case 4: {
-                //                 newFirstChildEl = document.createComment(data);
-                //                 break;
-                //             }
-                //         }
-    
-                //     }
-
-                //     if (newFirstChildEl) {
-                //         if (oldFirstChildEl) {
-                //             state.el.replaceChild(newFirstChildEl, oldFirstChildEl);
-                //         } else {
-                //             state.el.appendChild(newFirstChildEl);
-                //         }
-                //         state.el = newFirstChildEl;
-                //     } else {
-                //         state.el = oldFirstChildEl;
-                //     }
-
-                //     break;
-                // }
-
-                // case opcodePicardFirstChildElement: {
-                //     // ensure an element first child and select
-
-                //     let el = state.el;
-                //     let nextEl = el.firstChild;
-                //     if (!nextEl) {
-                //         nextEl = 
-                //     }
-                //     state.el = el;
-
-                //     break;
-                // }
-
-                // case opcodePicardFirstChildText: {
-                //     // ensure a text first child and select
-                //     break;
-                // }
-
-                // case opcodePicardFirstChildComment: {
-                //     // ensure a comment first child and select
-                //     break;
-                // }
-
-                // remove any elements for the current element that we didn't just set
-                case opcodeRemoveOtherAttrs: {
-
-                    if (!state.el) {
-                        throw "no element selected";
-                    }
-
-                    if (state.nextElMove) {
-                        throw "cannot call opcodeRemoveOtherAttrs when nextElMove is set";
-                    }
-
-                    // build a list of attribute names to remove
-                    let rmAttrNames = [];
-                    for (let i = 0; i < state.el.attributes.length; i++) {
-                        if (!state.elAttrNames[state.el.attributes[i].name]) {
-                            rmAttrNames.push(state.el.attributes[i].name);
-                        }
-                    }
-
-                    // remove them
-                    for (let i = 0; i < rmAttrNames.length; i++) {
-                        state.el.attributes.removeNamedItem(rmAttrNames[i]);
-                    }
-
-                    break;
-                }
-
-                // move node selection to parent
-                case opcodeMoveToParent: {
-
-                    // if first_child is next move then we just unset this
-                    if (state.nextElMove == "first_child") {
+                    case opcodeClearEl: {
+                        state.el = null;
                         state.nextElMove = null;
-                    } else {
-                        // otherwise we actually move and also reset nextElMove
-                        state.el = state.el.parentNode;
-                        state.nextElMove = null;
+                        break;
                     }
-
-                    break;
-                }
-
-                // move node selection to first child (doesn't have to exist)
-                case opcodeMoveToFirstChild: {
-
-                    // if a next move already set, then we need to execute it before we can do this
-                    if (state.nextElMove) {
-                        if (state.nextElMove == "first_child") {
-                            state.el = state.el.firstChild;
-                            if (!state.el) { throw "unable to find state.el.firstChild"; }
-                        } else if (state.nextElMove == "next_sibling") {
-                            state.el = state.el.nextSibling;
-                            if (!state.el) { throw "unable to find state.el.nextSibling"; }
-                        }
-                        state.nextElMove = null;
-                    }
-
-                    if (!state.el) { throw "must have current selection to use opcodeMoveToFirstChild"; }
-                    state.nextElMove = "first_child";
-
-                    break;
-                }
-                
-                // move node selection to next sibling (doesn't have to exist)
-                case opcodeMoveToNextSibling: {
-
-                    // if a next move already set, then we need to execute it before we can do this
-                    if (state.nextElMove) {
-                        if (state.nextElMove == "first_child") {
-                            state.el = state.el.firstChild;
-                            if (!state.el) { throw "unable to find state.el.firstChild"; }
-                        } else if (state.nextElMove == "next_sibling") {
-                            state.el = state.el.nextSibling;
-                            if (!state.el) { throw "unable to find state.el.nextSibling"; }
-                        }
-                        state.nextElMove = null;
-                    }
-
-                    if (!state.el) { throw "must have current selection to use opcodeMoveToNextSibling"; }
-                    state.nextElMove = "next_sibling";
-
-                    break;
-                }
-                
-                // assign current selected node as an element of the specified type
-                case opcodeSetElement: {
-                    
-                    let nodeName = decoder.readString();
-
-                    state.elAttrNames = {};
-                    state.elEventKeys = {};
-
-                    // handle nextElMove cases
-
-                    if (state.nextElMove == "first_child") {
-                        state.nextElMove = null;
-                        let newEl = state.el.firstChild;
-                        if (newEl) { 
-                            state.el = newEl; 
-                            break; 
-                        } else {
-                            newEl = document.createElement(nodeName);
-                            state.el.appendChild(newEl);
-                            state.el = newEl;
-                            break; // we're done here, since we just created the right element
-                        }
-                    } else if (state.nextElMove == "next_sibling") {
-                        state.nextElMove = null;
-                        let newEl = state.el.nextSibling;
-                        if (newEl) { 
-                            state.el = newEl; 
-                            break; 
-                        } else {
-                            newEl = document.createElement(nodeName);
-                            // console.log("HERE1", state.el);
-                            // state.el.insertAdjacentElement(newEl, 'afterend');
-                            state.el.parentNode.appendChild(newEl);
-                            state.el = newEl;
-                            break; // we're done here, since we just created the right element
-                        }
-                    } else if (state.nextElMove) {
-                        throw "bad state.nextElMove value: " + state.nextElMove;
-                    }
-
-                    // if we get here we need to verify that state.el is in fact an element of the right type
-                    // and replace if not
-
-                    if (state.el.nodeType != 1 || state.el.nodeName.toUpperCase() != nodeName.toUpperCase()) {
-
-                        let newEl = document.createElement(nodeName);
-                        // throw "stopping here";
-                        state.el.parentNode.replaceChild(newEl, state.el);
-                        state.el = newEl;
-
-                    }
-
-                    break;
-                }
-
-                // assign current selected node as text with specified content
-                case opcodeSetText: {
-
-                    let content = decoder.readString();
-
-                    // console.log("in opcodeSetText 1");
-
-                    // handle nextElMove cases
-
-                    if (state.nextElMove == "first_child") {
-                        state.nextElMove = null;
-                        let newEl = state.el.firstChild;
-                        // console.log("in opcodeSetText 2");
-                        if (newEl) { 
-                            state.el = newEl; 
-                            break;
-                        } else {
-                            let newEl = document.createTextNode(content);
-                            state.el.appendChild(newEl);
-                            state.el = newEl;
-                            // console.log("in opcodeSetText 3");
-                            break; // we're done here, since we just created the right element
-                        }
-                    } else if (state.nextElMove == "next_sibling") {
-                        state.nextElMove = null;
-                        let newEl = state.el.nextSibling;
-                        // console.log("in opcodeSetText 4");
-                        if (newEl) { 
-                            state.el = newEl; 
-                            break; 
-                        } else {
-                            let newEl = document.createTextNode(content);
-                            // state.el.insertAdjacentElement(newEl, 'afterend');
-                            state.el.parentNode.appendChild(newEl);
-                            state.el = newEl;
-                            // console.log("in opcodeSetText 5");
-                            break; // we're done here, since we just created the right element
-                        }
-                    } else if (state.nextElMove) {
-                        throw "bad state.nextElMove value: " + state.nextElMove;
-                    }
-
-                    // if we get here we need to verify that state.el is in fact a node of the right type
-                    // and with right content and replace if not
-                    // console.log("in opcodeSetText 6");
-
-                    if (state.el.nodeType != 3) {
-
-                        let newEl = document.createTextNode(content);
-                        state.el.parentNode.replaceChild(newEl, state.el);
-                        state.el = newEl;
-                        // console.log("in opcodeSetText 7");
-
-                    } else {
-                        // console.log("in opcodeSetText 8");
-                        state.el.textContent = content;
-                    }
-                    // console.log("in opcodeSetText 9");
-
-                    break;
-                }
-
-                // assign current selected node as comment with specified content
-                case opcodeSetComment: {
-                    
-                    let content = decoder.readString();
-
-                    // handle nextElMove cases
-
-                    if (state.nextElMove == "first_child") {
-                        state.nextElMove = null;
-                        let newEl = state.el.firstChild;
-                        if (newEl) { 
-                            state.el = newEl; 
-                            break; 
-                        } else {
-                            let newEl = document.createComment(content);
-                            state.el.appendChild(newEl);
-                            state.el = newEl;
-                            break; // we're done here, since we just created the right element
-                        }
-                    } else if (state.nextElMove == "next_sibling") {
-                        state.nextElMove = null;
-                        let newEl = state.el.nextSibling;
-                        if (newEl) { 
-                            state.el = newEl; 
-                            break; 
-                        } else {
-                            let newEl = document.createComment(content);
-                            // state.el.insertAdjacentElement(newEl, 'afterend');
-                            state.el.parentNode.appendChild(newEl);
-                            state.el = newEl;
-                            break; // we're done here, since we just created the right element
-                        }
-                    } else if (state.nextElMove) {
-                        throw "bad state.nextElMove value: " + state.nextElMove;
-                    }
-
-                    // if we get here we need to verify that state.el is in fact a node of the right type
-                    // and with right content and replace if not
-
-                    if (state.el.nodeType != 8) {
-
-                        let newEl = document.createComment(content);
-                        state.el.parentNode.replaceChild(newEl, state.el);
-                        state.el = newEl;
-
-                    } else {
-                        state.el.textContent = content;
-                    }
-
-                    break;
-                }
-
-                case opcodeSetInnerHTML: {
-
-                    let html = decoder.readString();
-
-                    if (!state.el) { throw "opcodeSetInnerHTML must have currently selected element"; }
-                    if (state.nextElMove) { throw "opcodeSetInnerHTML nextElMove must not be set"; }
-                    if (state.el.nodeType != 1) { throw "opcodeSetInnerHTML currently selected element expected nodeType 1 but has: " + state.el.nodeType; }
-
-                    state.el.innerHTML = html;
-
-                    break;
-                }
-
-                // remove all event listeners from currently selected element that were not just set
-                case opcodeRemoveOtherEventListeners: {
-                    this.console.log("opcodeRemoveOtherEventListeners");
-
-                    let positionID = decoder.readString();
-
-                    // look at all registered events for this positionID
-                    let emap = state.eventHandlerMap[positionID] || {};
-                    // for any that we didn't just set, remove them
-                    let toBeRemoved = [];
-                    for (let k in emap) {
-                        if (!state.elEventKeys[k]) {
-                            toBeRemoved.push(k);
-                        }
-                    }
-
-                    // for each one that was missing, we remove from emap and call removeEventListener
-                    for (let i = 0; i < toBeRemoved.length; i++) {
-                        let f = emap[k];
-                        let k = toBeRemoved[i];
-                        let kparts = k.split("|");
-                        state.el.removeEventListener(kparts[0], f, {capture:!!kparts[1], passive:!!kparts[2]});
-                        delete emap[k];
-                    }
-
-                    // if emap is empty now, remove the entry from eventHandlerMap altogether
-                    if (Object.keys(emap).length == 0) {
-                        delete state.eventHandlerMap[positionID];
-                    } else {
-                        state.eventHandlerMap[positionID] = emap;
-                    }
-
-                    break;
-                }
             
-                // assign event listener to currently selected element
-                case opcodeSetEventListener: {
-                    let positionID = decoder.readString();
-                    let eventType = decoder.readString();
-                    let capture = decoder.readUint8();
-                    let passive = decoder.readUint8();
-
-                    if (!state.el) {
-                        throw "must have state.el set in order to call opcodeSetEventListener";
+                    case opcodeSetAttrStr: {
+                        let el = state.el;
+                        if (!el) {
+                            return "opcodeSetAttrStr: no current reference";
+                        }
+                        let attrName = decoder.readString();
+                        let attrValue = decoder.readString();
+                        el.setAttribute(attrName, attrValue);
+                        state.elAttrNames[attrName] = true;
+                        // console.log("setting attr", attrName, attrValue, el)
+                        break;
                     }
 
-                    var eventKey = eventType + "|" + (capture?"1":"0") + "|" + (passive?"1":"0");
-                    state.elEventKeys[eventKey] = true;
+                    case opcodeSelectMountPoint: {
+                        
+                        state.elAttrNames = {}; // reset attribute list
+                        state.elEventKeys = {};
 
-                    // map of positionID -> map of listener spec and handler function, for all elements
-                    //state.eventHandlerMap
-                    let emap = state.eventHandlerMap[positionID] || {};
-
-                    // register function if not done already
-                    let f = emap[eventKey];
-                    if (!f) {
-                        f = function(event) {
-
-                            // set the active event, so the Go code and call back in and examine it if needed
-                            state.activeEvent = event; 
-
-                            let eventObj = {};
-                            // console.log(event);
-                            for (let i in event) {
-                                let itype = typeof(event[i]);
-                                // copy primitive values directly
-                                if ((itype == "boolean" || itype == "number" || itype == "string") && true/*event.hasOwnProperty(i)*/) {
-                                    eventObj[i] = event[i];
-                                }
+                        // select mount point using selector or if it was done earlier re-use the one from before
+                        let selector = decoder.readString();
+                        let nodeName = decoder.readString();
+                        // console.log("GOT HERE selector,nodeName = ", selector, nodeName);
+                        // console.log("state.mountPointEl", state.mountPointEl);
+                        if (state.mountPointEl) {
+                            console.log("opcodeSelectMountPoint: state.mountPointEl already exists, using it", state.mountPointEl, "parent is", state.mountPointEl.parentNode);
+                            state.el = state.mountPointEl;
+                            // state.elStack.push(state.mountPointEl);
+                        } else {
+                            console.log("opcodeSelectMountPoint: state.mountPointEl does not exist, using selector to find it", selector);
+                            let el = document.querySelector(selector);
+                            if (!el) {
+                                throw "mount point selector not found: " + selector;
                             }
+                            state.mountPointEl = el;
+                            // state.elStack.push(el);
+                            state.el = el;
+                        }
 
-                            // also do the same for anything in "target"
-                            if (event.target) {
-                                eventObj.target = {};
-                                let et = event.target;
-                                for (let i in et) {
-                                    let itype = typeof(et[i]);
-                                    if ((itype == "boolean" || itype == "number" || itype == "string") && true/*et.hasOwnProperty(i)*/) {
-                                        eventObj.target[i] = et[i];
+                        let el = state.el;
+
+                        // make sure it's the right element name and replace if not
+                        if (el.nodeName.toUpperCase() != nodeName.toUpperCase()) {
+
+                            let newEl = document.createElement(nodeName);
+                            el.parentNode.replaceChild(newEl, el);
+
+                            state.mountPointEl = newEl;
+                            el = newEl;
+
+                        }
+
+                        state.el = el;
+
+                        state.nextElMove = null;
+
+                        break;
+                    }
+
+                    // remove any elements for the current element that we didn't just set
+                    case opcodeRemoveOtherAttrs: {
+
+                        if (!state.el) {
+                            throw "no element selected";
+                        }
+
+                        if (state.nextElMove) {
+                            throw "cannot call opcodeRemoveOtherAttrs when nextElMove is set";
+                        }
+
+                        // build a list of attribute names to remove
+                        let rmAttrNames = [];
+                        for (let i = 0; i < state.el.attributes.length; i++) {
+                            if (!state.elAttrNames[state.el.attributes[i].name]) {
+                                rmAttrNames.push(state.el.attributes[i].name);
+                            }
+                        }
+
+                        // remove them
+                        for (let i = 0; i < rmAttrNames.length; i++) {
+                            state.el.attributes.removeNamedItem(rmAttrNames[i]);
+                        }
+
+                        break;
+                    }
+
+                    // move node selection to parent
+                    case opcodeMoveToParent: {
+
+                        // if first_child is next move then we just unset this
+                        if (state.nextElMove == "first_child") {
+                            state.nextElMove = null;
+                        } else {
+                            // otherwise we actually move and also reset nextElMove
+                            state.el = state.el.parentNode;
+                            state.nextElMove = null;
+                        }
+
+                        break;
+                    }
+
+                    // move node selection to first child (doesn't have to exist)
+                    case opcodeMoveToFirstChild: {
+
+                        // if a next move already set, then we need to execute it before we can do this
+                        if (state.nextElMove) {
+                            if (state.nextElMove == "first_child") {
+                                state.el = state.el.firstChild;
+                                if (!state.el) { throw "unable to find state.el.firstChild"; }
+                            } else if (state.nextElMove == "next_sibling") {
+                                state.el = state.el.nextSibling;
+                                if (!state.el) { throw "unable to find state.el.nextSibling"; }
+                            }
+                            state.nextElMove = null;
+                        }
+
+                        if (!state.el) { throw "must have current selection to use opcodeMoveToFirstChild"; }
+                        state.nextElMove = "first_child";
+
+                        break;
+                    }
+                    
+                    // move node selection to next sibling (doesn't have to exist)
+                    case opcodeMoveToNextSibling: {
+
+                        // if a next move already set, then we need to execute it before we can do this
+                        if (state.nextElMove) {
+                            if (state.nextElMove == "first_child") {
+                                state.el = state.el.firstChild;
+                                if (!state.el) { throw "unable to find state.el.firstChild"; }
+                            } else if (state.nextElMove == "next_sibling") {
+                                state.el = state.el.nextSibling;
+                                if (!state.el) { throw "unable to find state.el.nextSibling"; }
+                            }
+                            state.nextElMove = null;
+                        }
+
+                        if (!state.el) { throw "must have current selection to use opcodeMoveToNextSibling"; }
+                        state.nextElMove = "next_sibling";
+
+                        break;
+                    }
+                    
+                    // assign current selected node as an element of the specified type
+                    case opcodeSetElement: {
+                        
+                        let nodeName = decoder.readString();
+
+                        this.console.log("opcodeSetElement for ",
+                            "nodeName=", nodeName, 
+                            ", state.el=", state.el, 
+                            ", state.nextElMove=", state.nextElMove);
+
+                        state.elAttrNames = {};
+                        state.elEventKeys = {};
+
+                        // handle nextElMove cases
+
+                        if (state.nextElMove == "first_child") {
+                            state.nextElMove = null;
+                            let newEl = state.el.firstChild;
+                            if (newEl) { 
+                                state.el = newEl; 
+                                break; 
+                            } else {
+                                newEl = document.createElement(nodeName);
+                                state.el.appendChild(newEl);
+                                state.el = newEl;
+                                break; // we're done here, since we just created the right element
+                            }
+                        } else if (state.nextElMove == "next_sibling") {
+                            state.nextElMove = null;
+                            let newEl = state.el.nextSibling;
+                            if (newEl) { 
+                                state.el = newEl; 
+                                break; 
+                            } else {
+                                newEl = document.createElement(nodeName);
+                                // console.log("HERE1", state.el);
+                                // state.el.insertAdjacentElement(newEl, 'afterend');
+                                state.el.parentNode.appendChild(newEl);
+                                state.el = newEl;
+                                break; // we're done here, since we just created the right element
+                            }
+                        } else if (state.nextElMove) {
+                            throw "bad state.nextElMove value: " + state.nextElMove;
+                        }
+
+                        // if we get here we need to verify that state.el is in fact an element of the right type
+                        // and replace if not
+
+                        if (state.el.nodeType != 1 || state.el.nodeName.toUpperCase() != nodeName.toUpperCase()) {
+
+                            let newEl = document.createElement(nodeName);
+                            // throw "stopping here";
+                            state.el.parentNode.replaceChild(newEl, state.el);
+                            state.el = newEl;
+
+                        }
+
+                        break;
+                    }
+
+                    // assign current selected node as text with specified content
+                    case opcodeSetText: {
+
+                        let content = decoder.readString();
+
+                        // console.log("in opcodeSetText 1");
+
+                        // handle nextElMove cases
+
+                        if (state.nextElMove == "first_child") {
+                            state.nextElMove = null;
+                            let newEl = state.el.firstChild;
+                            // console.log("in opcodeSetText 2");
+                            if (newEl) { 
+                                state.el = newEl; 
+                                break;
+                            } else {
+                                let newEl = document.createTextNode(content);
+                                state.el.appendChild(newEl);
+                                state.el = newEl;
+                                // console.log("in opcodeSetText 3");
+                                break; // we're done here, since we just created the right element
+                            }
+                        } else if (state.nextElMove == "next_sibling") {
+                            state.nextElMove = null;
+                            let newEl = state.el.nextSibling;
+                            // console.log("in opcodeSetText 4");
+                            if (newEl) { 
+                                state.el = newEl; 
+                                break; 
+                            } else {
+                                let newEl = document.createTextNode(content);
+                                // state.el.insertAdjacentElement(newEl, 'afterend');
+                                state.el.parentNode.appendChild(newEl);
+                                state.el = newEl;
+                                // console.log("in opcodeSetText 5");
+                                break; // we're done here, since we just created the right element
+                            }
+                        } else if (state.nextElMove) {
+                            throw "bad state.nextElMove value: " + state.nextElMove;
+                        }
+
+                        // if we get here we need to verify that state.el is in fact a node of the right type
+                        // and with right content and replace if not
+                        // console.log("in opcodeSetText 6");
+
+                        if (state.el.nodeType != 3) {
+
+                            let newEl = document.createTextNode(content);
+                            state.el.parentNode.replaceChild(newEl, state.el);
+                            state.el = newEl;
+                            // console.log("in opcodeSetText 7");
+
+                        } else {
+                            // console.log("in opcodeSetText 8");
+                            state.el.textContent = content;
+                        }
+                        // console.log("in opcodeSetText 9");
+
+                        break;
+                    }
+
+                    // assign current selected node as comment with specified content
+                    case opcodeSetComment: {
+                        
+                        let content = decoder.readString();
+
+                        // handle nextElMove cases
+
+                        if (state.nextElMove == "first_child") {
+                            state.nextElMove = null;
+                            let newEl = state.el.firstChild;
+                            if (newEl) { 
+                                state.el = newEl; 
+                                break; 
+                            } else {
+                                let newEl = document.createComment(content);
+                                state.el.appendChild(newEl);
+                                state.el = newEl;
+                                break; // we're done here, since we just created the right element
+                            }
+                        } else if (state.nextElMove == "next_sibling") {
+                            state.nextElMove = null;
+                            let newEl = state.el.nextSibling;
+                            if (newEl) { 
+                                state.el = newEl; 
+                                break; 
+                            } else {
+                                let newEl = document.createComment(content);
+                                // state.el.insertAdjacentElement(newEl, 'afterend');
+                                state.el.parentNode.appendChild(newEl);
+                                state.el = newEl;
+                                break; // we're done here, since we just created the right element
+                            }
+                        } else if (state.nextElMove) {
+                            throw "bad state.nextElMove value: " + state.nextElMove;
+                        }
+
+                        // if we get here we need to verify that state.el is in fact a node of the right type
+                        // and with right content and replace if not
+
+                        if (state.el.nodeType != 8) {
+
+                            let newEl = document.createComment(content);
+                            state.el.parentNode.replaceChild(newEl, state.el);
+                            state.el = newEl;
+
+                        } else {
+                            state.el.textContent = content;
+                        }
+
+                        break;
+                    }
+
+                    case opcodeSetInnerHTML: {
+
+                        let html = decoder.readString();
+
+                        if (!state.el) { throw "opcodeSetInnerHTML must have currently selected element"; }
+                        if (state.nextElMove) { throw "opcodeSetInnerHTML nextElMove must not be set"; }
+                        if (state.el.nodeType != 1) { throw "opcodeSetInnerHTML currently selected element expected nodeType 1 but has: " + state.el.nodeType; }
+
+                        state.el.innerHTML = html;
+
+                        break;
+                    }
+
+                    // remove all event listeners from currently selected element that were not just set
+                    case opcodeRemoveOtherEventListeners: {
+                        this.console.log("opcodeRemoveOtherEventListeners");
+
+                        let positionID = decoder.readString();
+
+                        // look at all registered events for this positionID
+                        let emap = state.eventHandlerMap[positionID] || {};
+                        // for any that we didn't just set, remove them
+                        let toBeRemoved = [];
+                        for (let k in emap) {
+                            if (!state.elEventKeys[k]) {
+                                toBeRemoved.push(k);
+                            }
+                        }
+
+                        // for each one that was missing, we remove from emap and call removeEventListener
+                        for (let i = 0; i < toBeRemoved.length; i++) {
+                            let f = emap[k];
+                            let k = toBeRemoved[i];
+                            let kparts = k.split("|");
+                            state.el.removeEventListener(kparts[0], f, {capture:!!kparts[1], passive:!!kparts[2]});
+                            delete emap[k];
+                        }
+
+                        // if emap is empty now, remove the entry from eventHandlerMap altogether
+                        if (Object.keys(emap).length == 0) {
+                            delete state.eventHandlerMap[positionID];
+                        } else {
+                            state.eventHandlerMap[positionID] = emap;
+                        }
+
+                        break;
+                    }
+                
+                    // assign event listener to currently selected element
+                    case opcodeSetEventListener: {
+                        let positionID = decoder.readString();
+                        let eventType = decoder.readString();
+                        let capture = decoder.readUint8();
+                        let passive = decoder.readUint8();
+
+                        if (!state.el) {
+                            throw "must have state.el set in order to call opcodeSetEventListener";
+                        }
+
+                        var eventKey = eventType + "|" + (capture?"1":"0") + "|" + (passive?"1":"0");
+                        state.elEventKeys[eventKey] = true;
+
+                        // map of positionID -> map of listener spec and handler function, for all elements
+                        //state.eventHandlerMap
+                        let emap = state.eventHandlerMap[positionID] || {};
+
+                        // register function if not done already
+                        let f = emap[eventKey];
+                        if (!f) {
+                            f = function(event) {
+
+                                // set the active event, so the Go code and call back in and examine it if needed
+                                state.activeEvent = event; 
+
+                                let eventObj = {};
+                                // console.log(event);
+                                for (let i in event) {
+                                    let itype = typeof(event[i]);
+                                    // copy primitive values directly
+                                    if ((itype == "boolean" || itype == "number" || itype == "string") && true/*event.hasOwnProperty(i)*/) {
+                                        eventObj[i] = event[i];
                                     }
                                 }
-                            }
-                            
-                            // console.log(eventObj);
-                            // console.log(JSON.stringify(eventObj));
 
-                            let fullJSON = JSON.stringify({
+                                // also do the same for anything in "target"
+                                if (event.target) {
+                                    eventObj.target = {};
+                                    let et = event.target;
+                                    for (let i in et) {
+                                        let itype = typeof(et[i]);
+                                        if ((itype == "boolean" || itype == "number" || itype == "string") && true/*et.hasOwnProperty(i)*/) {
+                                            eventObj.target[i] = et[i];
+                                        }
+                                    }
+                                }
                                 
-                                // include properties from event registration
-                                position_id: positionID,
-                                event_type: eventType,
-                                capture: !!capture,
-                                passive: !!passive,
+                                // console.log(eventObj);
+                                // console.log(JSON.stringify(eventObj));
 
-                                // the event object data as extracted above
-                                event_summary: eventObj,
+                                let fullJSON = JSON.stringify({
+                                    
+                                    // include properties from event registration
+                                    position_id: positionID,
+                                    event_type: eventType,
+                                    capture: !!capture,
+                                    passive: !!passive,
 
-                            });
+                                    // the event object data as extracted above
+                                    event_summary: eventObj,
 
-                            // console.log(state.eventBuffer);
+                                });
 
-                            // write JSON to state.eventBuffer with zero char as termination
+                                // console.log(state.eventBuffer);
 
-                            
-                            let encodeResultBuffer = textEncoder.encode(fullJSON);
-                            //console.log("encodeResult", encodeResult);
-                            state.eventBuffer.set(encodeResultBuffer, 4); // copy encoded string to event buffer
-                            // now write length using DataView as uint32
-                            state.eventBufferView.setUint32(0, encodeResultBuffer.byteLength - encodeResultBuffer.byteOffset);
+                                // write JSON to state.eventBuffer with zero char as termination
 
-                            // let result = textEncoder.encodeInto(fullJSON, state.eventBuffer);
-                            // let eventBufferDataView = new DataView(state.eventBuffer.buffer, state.eventBuffer.byteOffset, state.eventBuffer.byteLength);
-                            // eventBufferDataView.setUint8(result.written, 0);
+                                
+                                let encodeResultBuffer = textEncoder.encode(fullJSON);
+                                //console.log("encodeResult", encodeResult);
+                                state.eventBuffer.set(encodeResultBuffer, 4); // copy encoded string to event buffer
+                                // now write length using DataView as uint32
+                                state.eventBufferView.setUint32(0, encodeResultBuffer.byteLength - encodeResultBuffer.byteOffset);
 
-                            // write length after, since only now do we know the final length
-                            // state.eventBufferView.setUint32(0, result.written);
+                                // let result = textEncoder.encodeInto(fullJSON, state.eventBuffer);
+                                // let eventBufferDataView = new DataView(state.eventBuffer.buffer, state.eventBuffer.byteOffset, state.eventBuffer.byteLength);
+                                // eventBufferDataView.setUint8(result.written, 0);
 
-                            // serialize event into the event buffer, somehow,
-                            // and keep track of the target element, also consider grabbing
-                            // the value or relevant properties as appropriate for form things
-                            
-                            state.eventHandlerFunc.call(null); // call with null this avoid unnecessary js.Value reference
+                                // write length after, since only now do we know the final length
+                                // state.eventBufferView.setUint32(0, result.written);
 
-                            // unset the active event
-                            state.activeEvent = null;
-                        };    
-                        emap[eventKey] = f;
+                                // serialize event into the event buffer, somehow,
+                                // and keep track of the target element, also consider grabbing
+                                // the value or relevant properties as appropriate for form things
+                                
+                                state.eventHandlerFunc.call(null); // call with null this avoid unnecessary js.Value reference
 
-                        // this.console.log("addEventListener", eventType);
-                        state.el.addEventListener(eventType, f, {capture:capture, passive:passive});
+                                // unset the active event
+                                state.activeEvent = null;
+                            };    
+                            emap[eventKey] = f;
+
+                            // this.console.log("addEventListener", eventType);
+                            state.el.addEventListener(eventType, f, {capture:capture, passive:passive});
+                        }
+
+                        state.eventHandlerMap[positionID] = emap;
+
+                        this.console.log("opcodeSetEventListener", positionID, eventType, capture, passive);
+                        break;
                     }
 
-                    state.eventHandlerMap[positionID] = emap;
-
-                    this.console.log("opcodeSetEventListener", positionID, eventType, capture, passive);
-                    break;
+                    default: {
+                        console.error("found invalid opcode", opcode);
+                        return;
+                    }
                 }
-            
-                // case opcodeSelectParent: {
-                //     // select parent
-                //     state.el = state.el.parentNode;
-                //     break;
-                // }
 
-                default: {
-                    console.error("found invalid opcode", opcode);
-                    return;
-                }
+            } catch (e) {
+                this.console.log("Error during instruction loop. Data opcode=", opcode, 
+                    ", state.el=", state.el, 
+                    ", state.nextElMove=", state.nextElMove, 
+                    ", with error: ", e)
+                throw e;
             }
+
 
 		}
 

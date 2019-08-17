@@ -115,12 +115,12 @@ func (r *JSRenderer) Render(bo *BuildOut) error {
 		return fmt.Errorf("BuildOut is nil")
 	}
 
-	if bo.Doc == nil {
-		return fmt.Errorf("BuildOut.Doc is nil")
+	if len(bo.Out) != 1 {
+		return fmt.Errorf("BuildOut.Out has ben len %d", len(bo.Out))
 	}
 
-	if bo.Doc.Type != ElementNode {
-		return fmt.Errorf("BuildOut.Doc.Type is (%v), not ElementNode", bo.Doc.Type)
+	if bo.Out[0].Type != ElementNode {
+		return fmt.Errorf("BuildOut.Out[0].Type is (%v), not ElementNode", bo.Out[0].Type)
 	}
 
 	// log.Printf("BuildOut: %#v", b)
@@ -208,7 +208,7 @@ func (r *JSRenderer) Render(bo *BuildOut) error {
 
 	log.Printf("BuildOut: %#v", bo)
 
-	el := bo.Doc
+	el := bo.Out[0]
 	log.Printf("el: %#v", el)
 
 	// NOTE: Mount rules:
@@ -230,7 +230,7 @@ func (r *JSRenderer) Render(bo *BuildOut) error {
 
 	state := newJsRenderState()
 
-	err := r.visitFirst(state, bo, bo.Doc, []byte("0"))
+	err := r.visitFirst(state, bo, bo.Out[0], []byte("0"))
 	if err != nil {
 		return err
 	}

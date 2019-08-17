@@ -24,11 +24,11 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut, vgreterr error) 
 
 	var vgn *vugu.VGNode
 	vgn = &vugu.VGNode{Type: vugu.VGNodeType(3), Data: "span", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "class", Val: "test-span"}, vugu.VGAttribute{Namespace: "", Key: "id", Val: "test_span_id"}}}
-	vgout.Doc = vgn // Doc root for output
+	vgout.Out = append(vgout.Out, vgn) // root for output
 	{
 		vgparent := vgn
 		_ = vgparent
-		vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n    This is a test.\n    ", Attr: []vugu.VGAttribute(nil)}
+		vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n    This is a test.\n    "}
 		vgparent.AppendChild(vgn)
 		vgn = &vugu.VGNode{Type: vugu.VGNodeType(3), Data: "button", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "id", Val: "run"}}}
 		vgparent.AppendChild(vgn)
@@ -36,27 +36,27 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut, vgreterr error) 
 		vgn.DOMEventHandlerSpecList = append(vgn.DOMEventHandlerSpecList, vugu.DOMEventHandlerSpec{
 			EventType: "click",
 			Func:      func(event *vugu.DOMEvent) { c.OnClickRun(event, 7) },
-			// TODO: implement capture, etc.
+			// TODO: implement capture, etc. mostly need to decide syntax
 		})
 		{
 			vgparent := vgn
 			_ = vgparent
-			vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "run", Attr: []vugu.VGAttribute(nil)}
+			vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "run"}
 			vgparent.AppendChild(vgn)
 		}
-		vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n    ", Attr: []vugu.VGAttribute(nil)}
+		vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n    "}
 		vgparent.AppendChild(vgn)
 		if c.Success {
 			vgn = &vugu.VGNode{Type: vugu.VGNodeType(3), Data: "div", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "id", Val: "success"}}}
 			vgparent.AppendChild(vgn)
+			{
+				vgparent := vgn
+				_ = vgparent
+				vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "success"}
+				vgparent.AppendChild(vgn)
+			}
 		}
-		{
-			vgparent := vgn
-			_ = vgparent
-			vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "success", Attr: []vugu.VGAttribute(nil)}
-			vgparent.AppendChild(vgn)
-		}
-		vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n    ", Attr: []vugu.VGAttribute(nil)}
+		vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n    "}
 		vgparent.AppendChild(vgn)
 		vgn = &vugu.VGNode{Type: vugu.VGNodeType(3), Data: "div", Attr: []vugu.VGAttribute(nil)}
 		vgparent.AppendChild(vgn)
@@ -64,7 +64,7 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut, vgreterr error) 
 			vghtml := "Some <strong>content</strong> here"
 			vgn.InnerHTML = &vghtml
 		}
-		vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n", Attr: []vugu.VGAttribute(nil)}
+		vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n"}
 		vgparent.AppendChild(vgn)
 	}
 	return vgout, nil
