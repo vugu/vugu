@@ -33,6 +33,7 @@ func NewJSRenderer(mountPointSelector string) (*JSRenderer, error) {
 	ret.instructionList = newInstructionList(ret.instructionBuffer, func(il *instructionList) error {
 
 		// call vuguRender to have the instructions processed in JS
+		ret.instructionBuffer[il.pos] = 0 // ensure zero terminator
 		ret.window.Call("vuguRender", ret.instructionTypedArray)
 
 		return nil

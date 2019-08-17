@@ -7,7 +7,7 @@ import "reflect"
 import "github.com/vugu/vugu"
 import js "github.com/vugu/vugu/js"
 
-import "log"
+//import "log"
 
 type Root struct {
 	Something int
@@ -15,8 +15,8 @@ type Root struct {
 }
 
 func (c *Root) OnClickRun(event *vugu.DOMEvent, n int) {
-	c.Success = true
-	log.Printf("HEY, GOT HERE!")
+	c.Success = !c.Success
+	//log.Printf("HEY, GOT HERE!")
 }
 func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut, vgreterr error) {
 

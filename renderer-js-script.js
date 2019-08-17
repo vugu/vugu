@@ -332,7 +332,7 @@
                             let newEl = state.el.firstChild;
                             if (newEl) { 
                                 state.el = newEl; 
-                                break; 
+                                // fall through to verify state.el is correct below
                             } else {
                                 newEl = document.createElement(nodeName);
                                 state.el.appendChild(newEl);
@@ -344,7 +344,7 @@
                             let newEl = state.el.nextSibling;
                             if (newEl) { 
                                 state.el = newEl; 
-                                break; 
+                                // fall through to verify state.el is correct below
                             } else {
                                 newEl = document.createElement(nodeName);
                                 // console.log("HERE1", state.el);
@@ -387,7 +387,7 @@
                             // console.log("in opcodeSetText 2");
                             if (newEl) { 
                                 state.el = newEl; 
-                                break;
+                                // fall through to verify state.el is correct below
                             } else {
                                 let newEl = document.createTextNode(content);
                                 state.el.appendChild(newEl);
@@ -401,7 +401,7 @@
                             // console.log("in opcodeSetText 4");
                             if (newEl) { 
                                 state.el = newEl; 
-                                break; 
+                                // fall through to verify state.el is correct below
                             } else {
                                 let newEl = document.createTextNode(content);
                                 // state.el.insertAdjacentElement(newEl, 'afterend');
@@ -446,7 +446,7 @@
                             let newEl = state.el.firstChild;
                             if (newEl) { 
                                 state.el = newEl; 
-                                break; 
+                                // fall through to verify state.el is correct below
                             } else {
                                 let newEl = document.createComment(content);
                                 state.el.appendChild(newEl);
@@ -458,7 +458,7 @@
                             let newEl = state.el.nextSibling;
                             if (newEl) { 
                                 state.el = newEl; 
-                                break; 
+                                // fall through to verify state.el is correct below
                             } else {
                                 let newEl = document.createComment(content);
                                 // state.el.insertAdjacentElement(newEl, 'afterend');
