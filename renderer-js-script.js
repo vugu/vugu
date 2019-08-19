@@ -30,6 +30,12 @@
 	const opcodeSetEventListener     = 28 // assign event listener to currently selected element
     const opcodeSetInnerHTML         = 29 // set the innerHTML for an element
 
+    const opcodeSetCSSTag            = 30 // write a CSS (style or link) tag
+	const opcodeRemoveOtherCSSTags   = 31 // remove any CSS tags that have not been written since the last call
+	const opcodeSetJSTag             = 32 // write a JS (script) tag
+	const opcodeRemoveOtherJSTags    = 33 // remove any JS tags that have not been written since the last call
+
+
     // Decoder provides our binary decoding.
     // Using a class because that's what all the cool JS kids are doing these days.
     class Decoder {
@@ -634,6 +640,25 @@
                         state.eventHandlerMap[positionID] = emap;
 
                         this.console.log("opcodeSetEventListener", positionID, eventType, capture, passive);
+                        break;
+                    }
+
+                    case opcodeSetCSSTag: {
+                        
+                        // TODO: 
+                        // * find all tags that have the same element type (link or style)
+                        // * for each one for style use textContent as key, for link use url
+                        // * see if matching tag already exists
+                        // * if it has vuguCreated==true on it, then add to map of css tags set, else ignore
+                        // * if no matching tag then create and set vuguCreated=true, add to map of css tags set
+
+                        break;
+                    }
+                    case opcodeRemoveOtherCSSTags: {
+
+                        // any link or style tag in doc that has vuguCreated==true and is not in css tags set map
+                        // gets removed
+
                         break;
                     }
 

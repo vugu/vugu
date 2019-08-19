@@ -44,6 +44,10 @@ const (
 	opcodeSetEventListener          uint8 = 28 // assign event listener to currently selected element
 	opcodeSetInnerHTML              uint8 = 29 // set the innerHTML for an element
 
+	opcodeSetCSSTag          uint8 = 30 // write a CSS (style or link) tag
+	opcodeRemoveOtherCSSTags uint8 = 31 // remove any CSS tags that have not been written since the last call
+	opcodeSetJSTag           uint8 = 32 // write a JS (script) tag
+	opcodeRemoveOtherJSTags  uint8 = 33 // remove any JS tags that have not been written since the last call
 )
 
 // newInstructionList will create a new instance backed by the specified slice and with a clearBufFunc
@@ -339,7 +343,7 @@ func (il *instructionList) writeSetEventListener(positionID []byte, eventType st
 
 func (il *instructionList) writeRemoveOtherEventListeners(positionID []byte) error {
 
-	err := il.checkLenAndFlush(1)
+	err := il.checkLenAndFlush(5 + len(positionID))
 	if err != nil {
 		return err
 	}
@@ -349,6 +353,48 @@ func (il *instructionList) writeRemoveOtherEventListeners(positionID []byte) err
 
 	return nil
 
+}
+
+func (il *instructionList) writeSetCSSTag(hashCode uint64, elementName, textContent string, attrPairs []string) error {
+
+	var al = 0
+	for _, s := range attrPairs {
+		al += len(s) + 4
+	}
+
+	var l = 1 + // opcode
+		al + // attrs
+		8 + // hashCode
+		len(elementName) + 4 +
+		len(textContent) + 4
+
+	err := il.checkLenAndFlush(l)
+	if err != nil {
+		return err
+	}
+
+	il.writeValUint8(opcodeSetCSSTag)
+	il.writeValUint64(hashCode)
+	il.writeValString(elementName)
+	il.writeValString(textContent)
+	for _, s := range attrPairs {
+		il.writeValString(s)
+	}
+
+	return nil
+
+}
+
+func (il *instructionList) writeRemoveOtherCSSTags() error {
+
+	err := il.checkLenAndFlush(1)
+	if err != nil {
+		return err
+	}
+
+	il.writeValUint8(opcodeRemoveOtherCSSTags)
+
+	return nil
 }
 
 func (il *instructionList) writeValUint8(b uint8) {
@@ -388,3 +434,13 @@ func (il *instructionList) writeValBytes(s []byte) {
 
 	il.pos = pos + 4 + lenstr
 }
+
+// // "element and text" pattern (used for script, style, link) goes like:
+// // string - element name
+// // string - text content (zero length means no text content)
+// // uint32 - number of attributes
+// // string... - string pairs of key and then value for attributes (number of pairs is number of attributes above, so 1 attr would be 1 in the uint32 above and 2 string - 2 would mean 4 strings, etc.)
+// func (il *instructionList) writeValElementAndText(elName, textContent string, attrKV []string) error {
+
+// 	return nil
+// }

@@ -12,7 +12,7 @@ import (
 
 func main() {
 
-	mountPoint := flag.String("mount-point", "#root_mount_point", "The query selector for the mount point for the root component, if it is not a full HTML component")
+	mountPoint := flag.String("mount-point", "#vugu_mount_point", "The query selector for the mount point for the root component, if it is not a full HTML component")
 	flag.Parse()
 
 	fmt.Printf("Entering main(): %#v\n", *mountPoint)

@@ -231,10 +231,18 @@ func (r *JSRenderer) Render(bo *BuildOut) error {
 
 	state := newJsRenderState()
 
+	// CSS stuff first
+	log.Printf("TODO: handle CSS")
+	// r.instructionList.writeSetCSSTag()
+
+	// main output
 	err := r.visitFirst(state, bo, bo.Out[0], []byte("0"))
 	if err != nil {
 		return err
 	}
+
+	// JS stuff last
+	log.Printf("TODO: handle JS")
 
 	err = r.instructionList.flush()
 	if err != nil {
