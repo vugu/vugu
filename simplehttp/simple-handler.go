@@ -396,7 +396,7 @@ var DefaultPageTemplateSource = `<!doctype html>
 <script src="/wasm_exec.js"></script>
 </head>
 <body>
-<div id="root_mount_parent">
+<div id="root_mount_point">
 {{if .ServerRenderedOutput}}{{.ServerRenderedOutput}}{{else}}
 <img style="position: absolute; top: 50%; left: 50%;" src="https://cdnjs.cloudflare.com/ajax/libs/galleriffic/2.0.1/css/loader.gif">
 {{end}}
@@ -415,7 +415,7 @@ if (wasmSupported) {
 		go.run(result.instance);
 	});
 } else {
-	document.getElementById("root_mount_parent").innerHTML = 'This application requires WebAssembly support.  Please upgrade your browser.';
+	document.getElementById("root_mount_point").innerHTML = 'This application requires WebAssembly support.  Please upgrade your browser.';
 }
 </script>
 </body>

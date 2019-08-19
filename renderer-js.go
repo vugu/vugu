@@ -421,13 +421,17 @@ func (r *JSRenderer) visitHead(state *jsRenderState, bo *BuildOut, n *VGNode, po
 }
 
 func (r *JSRenderer) visitBody(state *jsRenderState, bo *BuildOut, n *VGNode, positionID []byte) error {
-	log.Printf("TODO: visitBody")
-	return nil
+
+	if !(n.FirstChild != nil && n.FirstChild.NextSibling == nil) {
+		return fmt.Errorf("body tag must contain exactly one element child")
+	}
+
+	return r.visitMount(state, bo, n.FirstChild, positionID)
 }
 
 func (r *JSRenderer) visitMount(state *jsRenderState, bo *BuildOut, n *VGNode, positionID []byte) error {
 
-	log.Printf("visitMount got here")
+	// log.Printf("visitMount got here")
 
 	err := r.instructionList.writeSelectMountPoint(r.MountPointSelector, n.Data)
 	if err != nil {

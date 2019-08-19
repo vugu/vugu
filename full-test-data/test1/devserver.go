@@ -51,7 +51,7 @@ if (wasmSupported) {
 		go.run(result.instance);
 	});
 } else {
-	document.getElementById("root_mount_parent").innerHTML = 'This application requires WebAssembly support.  Please upgrade your browser.';
+	document.getElementById("root_mp").innerHTML = 'This application requires WebAssembly support.  Please upgrade your browser.';
 }
 </script>
 </body>
