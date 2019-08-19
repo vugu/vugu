@@ -1,6 +1,7 @@
 <span class="test-span" id="test_span_id">
     This is a test.
-    <button id="run" @click="c.OnClickRun(event, 7)" :data-whatever="c.Something">run</button>
+    <button id="run1" @click="c.OnClickRun(event, 7)" :data-whatever="c.Something">run1</button>
+    <button id="run2" @click="c.Success=!c.Success" :data-whatever="c.Something">run2</button>
     <div id="success" vg-if="c.Success">success</div>
     <div vg-html='"Some <strong>content</strong> here"'></div>
 </span>

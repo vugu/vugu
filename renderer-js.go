@@ -117,7 +117,7 @@ func (r *JSRenderer) Render(bo *BuildOut) error {
 	}
 
 	if len(bo.Out) != 1 {
-		return fmt.Errorf("BuildOut.Out has ben len %d", len(bo.Out))
+		return fmt.Errorf("BuildOut.Out has bad len %d", len(bo.Out))
 	}
 
 	if bo.Out[0].Type != ElementNode {

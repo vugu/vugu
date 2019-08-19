@@ -66,24 +66,30 @@ type BuildIn struct {
 }
 
 type BuildOut struct {
-	Out []*VGNode // output element(s) - usually just one but slots can have multiple
-	CSS []*VGNode // optional CSS style tag(s)
-	JS  []*VGNode // optional JS script tag(s)
+
+	// output element(s) - usually just one that is parent to the rest but slots can have multiple
+	Out []*VGNode
+
+	// optional CSS style or link tag(s)
+	CSS []*VGNode
+
+	// optional JS script tag(s)
+	JS []*VGNode
 }
 
-func (b *BuildOut) AppendCSS(css string) {
-	// FIXME: should we be deduplicating here??
-	vgn := &VGNode{Type: ElementNode, Data: "style"}
-	vgn.AppendChild(&VGNode{Type: TextNode, Data: css})
-	b.CSS = append(b.CSS, vgn)
-}
+// func (b *BuildOut) AppendCSS(css string) {
+// 	// FIXME: should we be deduplicating here??
+// 	vgn := &VGNode{Type: ElementNode, Data: "style"}
+// 	vgn.AppendChild(&VGNode{Type: TextNode, Data: css})
+// 	b.CSS = append(b.CSS, vgn)
+// }
 
-func (b *BuildOut) AppendJS(js string) {
-	// FIXME: should we be deduplicating here??
-	vgn := &VGNode{Type: ElementNode, Data: "script"}
-	vgn.AppendChild(&VGNode{Type: TextNode, Data: js})
-	b.JS = append(b.JS, vgn)
-}
+// func (b *BuildOut) AppendJS(js string) {
+// 	// FIXME: should we be deduplicating here??
+// 	vgn := &VGNode{Type: ElementNode, Data: "script"}
+// 	vgn.AppendChild(&VGNode{Type: TextNode, Data: js})
+// 	b.JS = append(b.JS, vgn)
+// }
 
 // Builder is the interface that components implement.
 type Builder interface {

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"mime"
 	"path/filepath"
 	"strings"
@@ -13,15 +12,6 @@ import (
 	"github.com/vugu/vugu/internal/htmlx"
 	"github.com/vugu/vugu/internal/htmlx/atom"
 )
-
-func attrWithKey(n *htmlx.Node, key string) *htmlx.Attribute {
-	for i := range n.Attr {
-		if n.Attr[i].Key == key {
-			return &n.Attr[i]
-		}
-	}
-	return nil
-}
 
 // Parse2 is an experiment...
 // r is the actual input, fname is only used to emit line directives
@@ -53,7 +43,7 @@ func (p *ParserGo) Parse(r io.Reader, fname string) error {
 		break
 	}
 
-	log.Printf("isFullHTML: %v", state.isFullHTML)
+	// log.Printf("isFullHTML: %v", state.isFullHTML)
 
 	if state.isFullHTML {
 
@@ -82,23 +72,7 @@ func (p *ParserGo) Parse(r io.Reader, fname string) error {
 			state.docNodeList = append(state.docNodeList, n)
 		}
 
-		// // log.Printf("nlist = %#v", nlist)
-		// for _, nl := range nlist {
-		// 	log.Printf("nl.Data = %q", nl.Data)
-		// }
-
-		// if len(nlist) != 1 {
-		// 	return fmt.Errorf("found %d fragment(s) instead of exactly 1", len(nlist))
-		// }
-
-		// n = nlist[0]
-
 	}
-
-	// err = htmlx.Render(os.Stdout, n)
-	// if err != nil {
-	// 	panic(err)
-	// }
 
 	// run n through the optimizer and convert large chunks of static elements into
 	// vg-html attributes, this should provide a significiant performance boost for static HTML
@@ -111,179 +85,20 @@ func (p *ParserGo) Parse(r io.Reader, fname string) error {
 		}
 	}
 
+	// log.Printf("parsed document looks like so upon start of parsing:")
+	// for i, n := range state.docNodeList {
+	// 	var buf bytes.Buffer
+	// 	err := htmlx.Render(&buf, n)
+	// 	if err != nil {
+	// 		return fmt.Errorf("error during debug render: %v", err)
+	// 	}
+	// 	log.Printf("state.docNodeList[%d]:\n%s", i, buf.Bytes())
+	// }
+
 	err = p.visitOverall(state)
 	if err != nil {
 		return err
 	}
-
-	// didFirstNode := false
-
-	// var visit func(n *htmlx.Node) error
-	// visit = func(n *htmlx.Node) error {
-
-	// 	// log.Printf("n.Type = %v", n.Type)
-
-	// 	if n.Type == htmlx.DocumentNode {
-	// 		// nop
-	// 	} else if n.Type == htmlx.ElementNode && n.Data == "script" {
-
-	// 		// // script tag, determine if it's JS or Go
-	// 		// typeAttr := attrWithKey(n, "type")
-	// 		// if typeAttr == nil || typeAttr.Val == "application/javascript" {
-	// 		// 	// for childN := n.FirstChild; childN != nil; childN = childN.NextSibling {
-	// 		// 	// 	if childN.Type != htmlx.TextNode {
-	// 		// 	// 		return fmt.Errorf("unexpected node type %v inside of script tag", childN.Type)
-	// 		// 	// 	}
-	// 		// 	// 	jsChunkList = append(jsChunkList, codeChunk{Line: childN.Line, Code: childN.Data})
-	// 		// 	// }
-	// 		// } else if typeAttr.Val == "application/x-go" {
-	// 		// 	// for childN := n.FirstChild; childN != nil; childN = childN.NextSibling {
-	// 		// 	// 	if childN.Type != htmlx.TextNode {
-	// 		// 	// 		return fmt.Errorf("unexpected node type %v inside of script tag", childN.Type)
-	// 		// 	// 	}
-	// 		// 	// 	// if childN.Line > 0 {
-	// 		// 	// 	// 	fmt.Fprintf(&goBuf, "//line %s:%d\n", fname, childN.Line)
-	// 		// 	// 	// }
-	// 		// 	// 	goBuf.WriteString(childN.Data)
-	// 		// 	// }
-	// 		// } else {
-	// 		// 	return fmt.Errorf("unknown script type %q", typeAttr.Val)
-	// 		// }
-
-	// 		// // for script, this is it we're done with the visit
-	// 		// return nil
-
-	// 	} else if n.Type == htmlx.ElementNode && n.Data == "style" {
-
-	// 		// // CSS
-	// 		// for childN := n.FirstChild; childN != nil; childN = childN.NextSibling {
-	// 		// 	if childN.Type != htmlx.TextNode {
-	// 		// 		return fmt.Errorf("unexpected node type %v inside of style tag", childN.Type)
-	// 		// 	}
-	// 		// 	cssChunkList = append(cssChunkList, codeChunk{Line: childN.Line, Code: childN.Data})
-	// 		// }
-
-	// 		// // for style, this is it we're done with the visit
-	// 		// return nil
-
-	// 	} else {
-
-	// 		// group the processing of this one node into a func so the defer's are called before moving onto the next sibling
-	// 		err := func() error {
-
-	// 			// // vg-for
-	// 			// if forx := vgForExprx(n); forx != "" {
-	// 			// 	// fmt.Fprintf(&buildBuf, "for /*line %s:%d*/%s {\n", fname, n.Line, forx)
-	// 			// 	fmt.Fprintf(&buildBuf, "for %s {\n", forx)
-	// 			// 	defer fmt.Fprintf(&buildBuf, "}\n")
-	// 			// }
-
-	// 			// // vg-if
-	// 			// ife := vgIfExprx(n)
-	// 			// if ife != "" {
-	// 			// 	fmt.Fprintf(&buildBuf, "if %s {\n", ife)
-	// 			// 	defer fmt.Fprintf(&buildBuf, "}\n")
-	// 			// }
-
-	// 			// if n.Type == htmlx.ElementNode && strings.Contains(n.Data, ":") {
-
-	// 			// 	// component
-
-	// 			// 	// dynamic attrs
-
-	// 			// 	// component events
-
-	// 			// } else {
-
-	// 			// 	// regular element
-
-	// 			// 	// if n.Line > 0 {
-	// 			// 	// 	fmt.Fprintf(&buildBuf, "//line %s:%d\n", fname, n.Line)
-	// 			// 	// }
-	// 			// 	fmt.Fprintf(&buildBuf, "vgn = &vugu.VGNode{Type:vugu.VGNodeType(%d),Data:%q,Attr:%#v}\n", n.Type, n.Data, staticVGAttrx(n.Attr))
-	// 			// 	if didFirstNode {
-	// 			// 		fmt.Fprintf(&buildBuf, "vgparent.AppendChild(vgn)\n") // if not root, make AppendChild call
-	// 			// 	} else {
-	// 			// 		fmt.Fprintf(&buildBuf, "vgout.Doc = vgn // Doc root for output\n") // for first element we need to assign as Doc on BuildOut
-	// 			// 	}
-
-	// 			// 	// dynamic attrs
-	// 			// 	dynExprMap, dynExprMapKeys := dynamicVGAttrExprx(n)
-	// 			// 	for _, k := range dynExprMapKeys {
-	// 			// 		valExpr := dynExprMap[k]
-	// 			// 		fmt.Fprintf(&buildBuf, "vgn.Attr = append(vgn.Attr, vugu.VGAttribute{Key:%q,Val:fmt.Sprint(%s)})\n", k, valExpr)
-	// 			// 	}
-
-	// 			// 	// vg-html
-	// 			// 	htmlExpr := vgHTMLExprx(n)
-	// 			// 	if htmlExpr != "" {
-	// 			// 		fmt.Fprintf(&buildBuf, "{\nvghtml := %s; \nvgn.InnerHTML = &vghtml\n}\n", htmlExpr)
-	// 			// 	}
-
-	// 			// 	// DOM events
-	// 			// 	eventMap, eventKeys := vgDOMEventExprsx(n)
-	// 			// 	for _, k := range eventKeys {
-	// 			// 		expr := eventMap[k]
-	// 			// 		fmt.Fprintf(&buildBuf, "vgn.DOMEventHandlerSpecList = append(vgn.DOMEventHandlerSpecList, vugu.DOMEventHandlerSpec{\n")
-	// 			// 		fmt.Fprintf(&buildBuf, "EventType: %q,\n", k)
-	// 			// 		fmt.Fprintf(&buildBuf, "Func: func(event *vugu.DOMEvent) { %s },\n", expr)
-	// 			// 		fmt.Fprintf(&buildBuf, "// TODO: implement capture, etc.\n")
-	// 			// 		fmt.Fprintf(&buildBuf, "})\n")
-	// 			// 	}
-
-	// 			// }
-
-	// 			// didFirstNode = true
-
-	// 			return nil
-	// 		}()
-	// 		if err != nil {
-	// 			return err
-	// 		}
-
-	// 	}
-
-	// 	// if descending into a child we need to set the parent appropriately
-	// 	if n.FirstChild != nil {
-	// 		fmt.Fprintf(&buildBuf, "{\n")
-	// 		fmt.Fprintf(&buildBuf, "vgparent := vgn; _ = vgparent\n") // vgparent set for this block to vgn
-	// 		err := visit(n.FirstChild)
-	// 		if err != nil {
-	// 			return err
-	// 		}
-	// 		fmt.Fprintf(&buildBuf, "}\n")
-	// 	}
-
-	// 	// siblings don't need special handling, they can just add to the same parent
-	// 	if n.NextSibling != nil {
-	// 		err := visit(n.NextSibling)
-	// 		if err != nil {
-	// 			return err
-	// 		}
-	// 	}
-
-	// 	return nil
-	// }
-
-	// for _, n := range docNodeList {
-	// 	err = visit(n)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// }
-
-	// for _, chunk := range state.cssChunkList {
-	// 	// fmt.Fprintf(&buildBuf, "    out.AppendCSS(/*line %s:%d*/%q)\n\n", fname, chunk.Line, chunk.Code)
-	// 	fmt.Fprintf(&state.buildBuf, "    out.AppendCSS(%q)\n\n", chunk.Code)
-	// }
-
-	// for _, chunk := range state.jsChunkList {
-	// 	// fmt.Fprintf(&buildBuf, "    out.AppendJS(/*line %s:%d*/%q)\n\n", fname, chunk.Line, chunk.Code)
-	// 	fmt.Fprintf(&state.buildBuf, "    out.AppendJS(%q)\n\n", chunk.Code)
-	// }
-
-	// fmt.Fprintf(&state.buildBuf, "    return vgout, nil\n")
-	// fmt.Fprintf(&state.buildBuf, "}\n\n")
 
 	var buf bytes.Buffer
 	// log.Printf("goBuf.Len == %v", goBuf.Len())
@@ -292,10 +107,6 @@ func (p *ParserGo) Parse(r io.Reader, fname string) error {
 	buf.Write(state.goBufBottom.Bytes())
 
 	outPath := filepath.Join(p.OutDir, p.OutFile)
-	// err = ioutil.WriteFile(outPath, buf.Bytes(), 0644)
-	// if err != nil {
-	// 	return err
-	// }
 
 	fo, err := p.gofmt(buf.String())
 	if err != nil {
@@ -321,23 +132,15 @@ type codeChunk struct {
 }
 
 type parseGoState struct {
-	isFullHTML   bool
-	docNodeList  []*htmlx.Node
-	goBuf        bytes.Buffer // additional Go code (at top)
-	buildBuf     bytes.Buffer // Build() method Go code (below)
-	goBufBottom  bytes.Buffer // additional Go code that is put as the very last thing
-	cssChunkList []codeChunk
-	jsChunkList  []codeChunk
-	outIsSet     bool // set to true when vgout.Out has been set for to the level node
+	isFullHTML  bool          // is the first node an <html> tag
+	docNodeList []*htmlx.Node // top level nodes parsed out of source file
+	goBuf       bytes.Buffer  // additional Go code (at top)
+	buildBuf    bytes.Buffer  // Build() method Go code (below)
+	goBufBottom bytes.Buffer  // additional Go code that is put as the very last thing
+	// cssChunkList []codeChunk
+	// jsChunkList  []codeChunk
+	outIsSet bool // set to true when vgout.Out has been set for to the level node
 }
-
-// cases:
-// - html
-// - js
-// - css
-// - go code
-// - top node
-// - node
 
 func (p *ParserGo) visitOverall(state *parseGoState) error {
 
@@ -404,43 +207,8 @@ func (p *ParserGo) visitOverall(state *parseGoState) error {
 				return fmt.Errorf("unexpected node type %v; node=%#v", n.Type, n)
 			}
 
-			nodeName := strings.ToLower(n.Data)
-
-			// script tag
-			if nodeName == "script" {
-
-				ty := attrWithKey(n, "type")
-				if ty == nil {
-					return fmt.Errorf("script tag without type attribute is not valid")
-				}
-
-				mt, _, _ := mime.ParseMediaType(ty.Val)
-
-				// go code
-				if mt == "application/x-go" {
-					err := p.visitGo(state, n)
-					if err != nil {
-						return err
-					}
-					continue
-				}
-
-				// component js
-				if mt == "application/javascript" {
-					err := p.visitBuildJS(state, n)
-					if err != nil {
-						return err
-					}
-					continue
-				}
-
-				return fmt.Errorf("found script tag with invalid mime type %q", mt)
-
-			}
-
-			// component css
-			if nodeName == "style" {
-				err := p.visitBuildCSS(state, n)
+			if isScriptOrStyle(n) {
+				err := p.visitScriptOrStyle(state, n)
 				if err != nil {
 					return err
 				}
@@ -450,6 +218,7 @@ func (p *ParserGo) visitOverall(state *parseGoState) error {
 			// top node
 
 			// check for forbidden top level tags
+			nodeName := strings.ToLower(n.Data)
 			if nodeName == "head" ||
 				nodeName == "body" {
 				return fmt.Errorf("component cannot use %q as top level tag", nodeName)
@@ -465,15 +234,19 @@ func (p *ParserGo) visitOverall(state *parseGoState) error {
 
 	}
 
-	for _, chunk := range state.cssChunkList {
-		// fmt.Fprintf(&buildBuf, "    out.AppendCSS(/*line %s:%d*/%q)\n\n", fname, chunk.Line, chunk.Code)
-		fmt.Fprintf(&state.buildBuf, "    out.AppendCSS(%q)\n\n", chunk.Code)
-	}
+	// for _, chunk := range state.cssChunkList {
+	// 	// fmt.Fprintf(&buildBuf, "    out.AppendCSS(/*line %s:%d*/%q)\n\n", fname, chunk.Line, chunk.Code)
+	// 	// fmt.Fprintf(&state.buildBuf, "    out.AppendCSS(%q)\n\n", chunk.Code)
+	// 	_ = chunk
+	// 	panic("need to append whole node, not AppendCSS")
+	// }
 
-	for _, chunk := range state.jsChunkList {
-		// fmt.Fprintf(&buildBuf, "    out.AppendJS(/*line %s:%d*/%q)\n\n", fname, chunk.Line, chunk.Code)
-		fmt.Fprintf(&state.buildBuf, "    out.AppendJS(%q)\n\n", chunk.Code)
-	}
+	// for _, chunk := range state.jsChunkList {
+	// 	// fmt.Fprintf(&buildBuf, "    out.AppendJS(/*line %s:%d*/%q)\n\n", fname, chunk.Line, chunk.Code)
+	// 	// fmt.Fprintf(&state.buildBuf, "    out.AppendJS(%q)\n\n", chunk.Code)
+	// 	_ = chunk
+	// 	panic("need to append whole node, not AppendJS")
+	// }
 
 	fmt.Fprintf(&state.buildBuf, "    return vgout, nil\n")
 	fmt.Fprintf(&state.buildBuf, "}\n\n")
@@ -482,29 +255,316 @@ func (p *ParserGo) visitOverall(state *parseGoState) error {
 }
 
 func (p *ParserGo) visitHTML(state *parseGoState, n *htmlx.Node) error {
-	return fmt.Errorf("html tag not yet supported: %#v", n)
-}
 
-func (p *ParserGo) visitBuildJS(state *parseGoState, n *htmlx.Node) error {
+	pOutputTag(state, n)
+	// fmt.Fprintf(&state.buildBuf, "vgn = &vugu.VGNode{Type:vugu.VGNodeType(%d),Data:%q,Attr:%#v}\n", n.Type, n.Data, staticVGAttrx(n.Attr))
+	// fmt.Fprintf(&state.buildBuf, "vgout.Out = append(vgout.Out, vgn) // root for output\n") // for first element we need to assign as Doc on BuildOut
+	// state.outIsSet = true
+
+	// dynamic attrs
+	dynExprMap, dynExprMapKeys := dynamicVGAttrExprx(n)
+	for _, k := range dynExprMapKeys {
+		valExpr := dynExprMap[k]
+		fmt.Fprintf(&state.buildBuf, "vgn.Attr = append(vgn.Attr, vugu.VGAttribute{Key:%q,Val:fmt.Sprint(%s)})\n", k, valExpr)
+	}
+
+	fmt.Fprintf(&state.buildBuf, "{\n")
+	fmt.Fprintf(&state.buildBuf, "vgparent := vgn; _ = vgparent\n") // vgparent set for this block to vgn
 
 	for childN := n.FirstChild; childN != nil; childN = childN.NextSibling {
-		if childN.Type != htmlx.TextNode {
-			return fmt.Errorf("unexpected node type %v inside of script tag", childN.Type)
+
+		if childN.Type != htmlx.ElementNode {
+			continue
 		}
-		state.jsChunkList = append(state.jsChunkList, codeChunk{Line: childN.Line, Code: childN.Data})
+
+		var err error
+		if strings.ToLower(childN.Data) == "head" {
+			err = p.visitHead(state, childN)
+		} else if strings.ToLower(childN.Data) == "body" {
+			err = p.visitBody(state, childN)
+		} else {
+			return fmt.Errorf("unknown tag inside html %q", childN.Data)
+
+		}
+
+		if err != nil {
+			return err
+		}
+
+	}
+
+	fmt.Fprintf(&state.buildBuf, "}\n")
+
+	return nil
+}
+
+func (p *ParserGo) visitHead(state *parseGoState, n *htmlx.Node) error {
+
+	pOutputTag(state, n)
+	// fmt.Fprintf(&state.buildBuf, "vgn = &vugu.VGNode{Type:vugu.VGNodeType(%d),Data:%q,Attr:%#v}\n", n.Type, n.Data, staticVGAttrx(n.Attr))
+	// fmt.Fprintf(&state.buildBuf, "vgout.Out = append(vgout.Out, vgn) // root for output\n") // for first element we need to assign as Doc on BuildOut
+	// state.outIsSet = true
+
+	// dynamic attrs
+	dynExprMap, dynExprMapKeys := dynamicVGAttrExprx(n)
+	for _, k := range dynExprMapKeys {
+		valExpr := dynExprMap[k]
+		fmt.Fprintf(&state.buildBuf, "vgn.Attr = append(vgn.Attr, vugu.VGAttribute{Key:%q,Val:fmt.Sprint(%s)})\n", k, valExpr)
+	}
+
+	fmt.Fprintf(&state.buildBuf, "{\n")
+	fmt.Fprintf(&state.buildBuf, "vgparent := vgn; _ = vgparent\n") // vgparent set for this block to vgn
+
+	for childN := n.FirstChild; childN != nil; childN = childN.NextSibling {
+
+		if isScriptOrStyle(childN) {
+			err := p.visitScriptOrStyle(state, childN)
+			if err != nil {
+				return err
+			}
+			continue
+		}
+
+		err := p.visitDefaultByType(state, childN)
+		if err != nil {
+			return err
+		}
+
+	}
+
+	fmt.Fprintf(&state.buildBuf, "}\n")
+
+	return nil
+
+}
+
+func (p *ParserGo) visitBody(state *parseGoState, n *htmlx.Node) error {
+
+	pOutputTag(state, n)
+	// fmt.Fprintf(&state.buildBuf, "vgn = &vugu.VGNode{Type:vugu.VGNodeType(%d),Data:%q,Attr:%#v}\n", n.Type, n.Data, staticVGAttrx(n.Attr))
+	// fmt.Fprintf(&state.buildBuf, "vgout.Out = append(vgout.Out, vgn) // root for output\n") // for first element we need to assign as Doc on BuildOut
+	// state.outIsSet = true
+
+	// dynamic attrs
+	dynExprMap, dynExprMapKeys := dynamicVGAttrExprx(n)
+	for _, k := range dynExprMapKeys {
+		valExpr := dynExprMap[k]
+		fmt.Fprintf(&state.buildBuf, "vgn.Attr = append(vgn.Attr, vugu.VGAttribute{Key:%q,Val:fmt.Sprint(%s)})\n", k, valExpr)
+	}
+
+	fmt.Fprintf(&state.buildBuf, "{\n")
+	fmt.Fprintf(&state.buildBuf, "vgparent := vgn; _ = vgparent\n") // vgparent set for this block to vgn
+
+	foundMountEl := false
+
+	for childN := n.FirstChild; childN != nil; childN = childN.NextSibling {
+
+		// ignore whitespace and comments directly in body
+		if childN.Type != htmlx.ElementNode {
+			continue
+		}
+
+		if isScriptOrStyle(childN) {
+			err := p.visitScriptOrStyle(state, childN)
+			if err != nil {
+				return err
+			}
+			continue
+		}
+
+		if foundMountEl {
+			return fmt.Errorf("element %q found after we already have a mount element", childN.Data)
+		}
+		foundMountEl = true
+
+		err := p.visitDefaultByType(state, childN)
+		if err != nil {
+			return err
+		}
+
+	}
+
+	fmt.Fprintf(&state.buildBuf, "}\n")
+
+	return nil
+
+}
+
+// visitScriptOrStyle calls visitJS, visitCSS or visitGo accordingly,
+// will error if the node does not correspond to one of those
+func (p *ParserGo) visitScriptOrStyle(state *parseGoState, n *htmlx.Node) error {
+
+	nodeName := strings.ToLower(n.Data)
+
+	// script tag
+	if nodeName == "script" {
+
+		var mt string // mime type
+
+		ty := attrWithKey(n, "type")
+		if ty == nil {
+			//return fmt.Errorf("script tag without type attribute is not valid")
+			mt = ""
+		} else {
+			mt, _, _ = mime.ParseMediaType(ty.Val)
+		}
+
+		// go code
+		if mt == "application/x-go" {
+			err := p.visitGo(state, n)
+			if err != nil {
+				return err
+			}
+			return nil
+		}
+
+		// component js (type attr omitted okay - means it is JS)
+		if mt == "application/javascript" || mt == "" {
+			err := p.visitJS(state, n)
+			if err != nil {
+				return err
+			}
+			return nil
+		}
+
+		return fmt.Errorf("found script tag with invalid mime type %q", mt)
+
+	}
+
+	// component css
+	if nodeName == "style" || nodeName == "link" {
+		err := p.visitCSS(state, n)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+
+	return fmt.Errorf("element %q is not a valid script or style - %#v", n.Data, n)
+}
+
+func (p *ParserGo) visitJS(state *parseGoState, n *htmlx.Node) error {
+
+	if n.Type != htmlx.ElementNode {
+		return fmt.Errorf("visitJS, not an element node %#v", n)
+	}
+
+	nodeName := strings.ToLower(n.Data)
+
+	if nodeName != "script" {
+		return fmt.Errorf("visitJS, tag %q not a script", nodeName)
+	}
+
+	// see if there's a script inside, or if this is a script include
+	if n.FirstChild == nil {
+		// script include - we pretty much just let this through, don't care what the attrs are
+	} else {
+		// if there is a script inside, we do not allow attributes other than "type", to avoid
+		// people using features that might not be compatible with the funky stuff we have to do
+		// in vugu to make all this work
+
+		for _, a := range n.Attr {
+			if a.Key != "type" {
+				return fmt.Errorf("attribute %q not allowed on script tag that contains JS code", a.Key)
+			}
+			if a.Val != "application/javascript" {
+				return fmt.Errorf("script type %q invalid (must be application/javascript)", a.Val)
+			}
+		}
+
+		// verify that all children are text nodes
+		for childN := n.FirstChild; childN != nil; childN = childN.NextSibling {
+			if childN.Type != htmlx.ElementNode {
+				return fmt.Errorf("style tag contains non-text child: %#v", childN)
+			}
+		}
+
+	}
+
+	// allow control stuff, why not
+
+	// vg-for
+	if forx := vgForExprx(n); forx != "" {
+		// fmt.Fprintf(&buildBuf, "for /*line %s:%d*/%s {\n", fname, n.Line, forx)
+		fmt.Fprintf(&state.buildBuf, "for %s {\n", forx)
+		defer fmt.Fprintf(&state.buildBuf, "}\n")
+	}
+
+	// vg-if
+	ife := vgIfExprx(n)
+	if ife != "" {
+		fmt.Fprintf(&state.buildBuf, "if %s {\n", ife)
+		defer fmt.Fprintf(&state.buildBuf, "}\n")
+	}
+
+	// but then for the actual output, we append to vgout.JS, instead of parentNode
+	fmt.Fprintf(&state.buildBuf, "vgn = &vugu.VGNode{Type:vugu.VGNodeType(%d),Data:%q,Attr:%#v}\n", n.Type, n.Data, staticVGAttrx(n.Attr))
+	fmt.Fprintf(&state.buildBuf, "vgout.JS = append(vgout.JS, vgn)\n")
+
+	// dynamic attrs
+	dynExprMap, dynExprMapKeys := dynamicVGAttrExprx(n)
+	for _, k := range dynExprMapKeys {
+		valExpr := dynExprMap[k]
+		fmt.Fprintf(&state.buildBuf, "vgn.Attr = append(vgn.Attr, vugu.VGAttribute{Key:%q,Val:fmt.Sprint(%s)})\n", k, valExpr)
 	}
 
 	return nil
 }
 
-func (p *ParserGo) visitBuildCSS(state *parseGoState, n *htmlx.Node) error {
+func (p *ParserGo) visitCSS(state *parseGoState, n *htmlx.Node) error {
 
-	// CSS
-	for childN := n.FirstChild; childN != nil; childN = childN.NextSibling {
-		if childN.Type != htmlx.TextNode {
-			return fmt.Errorf("unexpected node type %v inside of style tag", childN.Type)
+	if n.Type != htmlx.ElementNode {
+		return fmt.Errorf("visitCSS, not an element node %#v", n)
+	}
+
+	nodeName := strings.ToLower(n.Data)
+	switch nodeName {
+	case "link":
+
+		// okay as long as nothing is inside this node
+
+		if n.FirstChild != nil {
+			return fmt.Errorf("link tag should not have children")
 		}
-		state.cssChunkList = append(state.cssChunkList, codeChunk{Line: childN.Line, Code: childN.Data})
+
+	case "style":
+
+		// okay as long as only text nodes inside
+		for childN := n.FirstChild; childN != nil; childN = childN.NextSibling {
+			if childN.Type != htmlx.ElementNode {
+				return fmt.Errorf("style tag contains non-text child: %#v", childN)
+			}
+		}
+
+	default:
+		return fmt.Errorf("visitCSS, unexpected tag name %q", nodeName)
+	}
+
+	// allow control stuff, why not
+
+	// vg-for
+	if forx := vgForExprx(n); forx != "" {
+		// fmt.Fprintf(&buildBuf, "for /*line %s:%d*/%s {\n", fname, n.Line, forx)
+		fmt.Fprintf(&state.buildBuf, "for %s {\n", forx)
+		defer fmt.Fprintf(&state.buildBuf, "}\n")
+	}
+
+	// vg-if
+	ife := vgIfExprx(n)
+	if ife != "" {
+		fmt.Fprintf(&state.buildBuf, "if %s {\n", ife)
+		defer fmt.Fprintf(&state.buildBuf, "}\n")
+	}
+
+	// but then for the actual output, we append to vgout.CSS, instead of parentNode
+	fmt.Fprintf(&state.buildBuf, "vgn = &vugu.VGNode{Type:vugu.VGNodeType(%d),Data:%q,Attr:%#v}\n", n.Type, n.Data, staticVGAttrx(n.Attr))
+	fmt.Fprintf(&state.buildBuf, "vgout.CSS = append(vgout.CSS, vgn)\n")
+
+	// dynamic attrs
+	dynExprMap, dynExprMapKeys := dynamicVGAttrExprx(n)
+	for _, k := range dynExprMapKeys {
+		valExpr := dynExprMap[k]
+		fmt.Fprintf(&state.buildBuf, "vgn.Attr = append(vgn.Attr, vugu.VGAttribute{Key:%q,Val:fmt.Sprint(%s)})\n", k, valExpr)
 	}
 
 	return nil
@@ -572,13 +632,14 @@ func (p *ParserGo) visitNodeJustElement(state *parseGoState, n *htmlx.Node) erro
 	// 	fmt.Fprintf(&buildBuf, "//line %s:%d\n", fname, n.Line)
 	// }
 
-	fmt.Fprintf(&state.buildBuf, "vgn = &vugu.VGNode{Type:vugu.VGNodeType(%d),Data:%q,Attr:%#v}\n", n.Type, n.Data, staticVGAttrx(n.Attr))
-	if state.outIsSet {
-		fmt.Fprintf(&state.buildBuf, "vgparent.AppendChild(vgn)\n") // if not root, make AppendChild call
-	} else {
-		fmt.Fprintf(&state.buildBuf, "vgout.Out = append(vgout.Out, vgn) // root for output\n") // for first element we need to assign as Doc on BuildOut
-		state.outIsSet = true
-	}
+	pOutputTag(state, n)
+	// fmt.Fprintf(&state.buildBuf, "vgn = &vugu.VGNode{Type:vugu.VGNodeType(%d),Data:%q,Attr:%#v}\n", n.Type, n.Data, staticVGAttrx(n.Attr))
+	// if state.outIsSet {
+	// 	fmt.Fprintf(&state.buildBuf, "vgparent.AppendChild(vgn)\n") // if not root, make AppendChild call
+	// } else {
+	// 	fmt.Fprintf(&state.buildBuf, "vgout.Out = append(vgout.Out, vgn) // root for output\n") // for first element we need to assign as Doc on BuildOut
+	// 	state.outIsSet = true
+	// }
 
 	// dynamic attrs
 	dynExprMap, dynExprMapKeys := dynamicVGAttrExprx(n)
@@ -612,23 +673,7 @@ func (p *ParserGo) visitNodeJustElement(state *parseGoState, n *htmlx.Node) erro
 		// iterate over children
 		for childN := n.FirstChild; childN != nil; childN = childN.NextSibling {
 
-			// handle child according to type
-			var err error
-			switch {
-			case childN.Type == htmlx.CommentNode:
-				err = p.visitNodeComment(state, childN)
-			case childN.Type == htmlx.TextNode:
-				err = p.visitNodeText(state, childN)
-			case childN.Type == htmlx.ElementNode:
-				if strings.Contains(childN.Data, ":") {
-					err = p.visitNodeComponentElement(state, childN)
-				} else {
-					err = p.visitNodeElementAndCtrl(state, childN)
-				}
-			default:
-				return fmt.Errorf("child node of unknown type %v: %#v", childN.Type, childN)
-			}
-
+			err := p.visitDefaultByType(state, childN)
 			if err != nil {
 				return err
 			}
@@ -636,6 +681,32 @@ func (p *ParserGo) visitNodeJustElement(state *parseGoState, n *htmlx.Node) erro
 
 		fmt.Fprintf(&state.buildBuf, "}\n")
 
+	}
+
+	return nil
+}
+
+func (p *ParserGo) visitDefaultByType(state *parseGoState, n *htmlx.Node) error {
+
+	// handle child according to type
+	var err error
+	switch {
+	case n.Type == htmlx.CommentNode:
+		err = p.visitNodeComment(state, n)
+	case n.Type == htmlx.TextNode:
+		err = p.visitNodeText(state, n)
+	case n.Type == htmlx.ElementNode:
+		if strings.Contains(n.Data, ":") {
+			err = p.visitNodeComponentElement(state, n)
+		} else {
+			err = p.visitNodeElementAndCtrl(state, n)
+		}
+	default:
+		return fmt.Errorf("child node of unknown type %v: %#v", n.Type, n)
+	}
+
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -673,4 +744,37 @@ func (p *ParserGo) visitNodeComponentElement(state *parseGoState, n *htmlx.Node)
 	// slots
 
 	return fmt.Errorf("component tag not yet supported (%q)", nodeName)
+}
+
+// isScriptOrStyle returns true if this is a "script", "style" or "link" tag
+func isScriptOrStyle(n *htmlx.Node) bool {
+	if n.Type != htmlx.ElementNode {
+		return false
+	}
+	switch strings.ToLower(n.Data) {
+	case "script", "style", "link":
+		return true
+	}
+	return false
+}
+
+func pOutputTag(state *parseGoState, n *htmlx.Node) {
+
+	fmt.Fprintf(&state.buildBuf, "vgn = &vugu.VGNode{Type:vugu.VGNodeType(%d),Data:%q,Attr:%#v}\n", n.Type, n.Data, staticVGAttrx(n.Attr))
+	if state.outIsSet {
+		fmt.Fprintf(&state.buildBuf, "vgparent.AppendChild(vgn)\n") // if not root, make AppendChild call
+	} else {
+		fmt.Fprintf(&state.buildBuf, "vgout.Out = append(vgout.Out, vgn) // root for output\n") // for first element we need to assign as Doc on BuildOut
+		state.outIsSet = true
+	}
+
+}
+
+func attrWithKey(n *htmlx.Node, key string) *htmlx.Attribute {
+	for i := range n.Attr {
+		if n.Attr[i].Key == key {
+			return &n.Attr[i]
+		}
+	}
+	return nil
 }
