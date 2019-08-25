@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"mime"
 	"path/filepath"
 	"strings"
@@ -499,6 +500,7 @@ func (p *ParserGo) visitJS(state *parseGoState, n *htmlx.Node) error {
 
 	// but then for the actual output, we append to vgout.JS, instead of parentNode
 	fmt.Fprintf(&state.buildBuf, "vgn = &vugu.VGNode{Type:vugu.VGNodeType(%d),Data:%q,Attr:%#v}\n", n.Type, n.Data, staticVGAttrx(n.Attr))
+	log.Printf("TODO: instead of appending to JS we should call a method on vgout to deduplicate first")
 	fmt.Fprintf(&state.buildBuf, "vgout.JS = append(vgout.JS, vgn)\n")
 
 	// dynamic attrs
@@ -519,6 +521,7 @@ func (p *ParserGo) visitCSS(state *parseGoState, n *htmlx.Node) error {
 
 	nodeName := strings.ToLower(n.Data)
 	switch nodeName {
+
 	case "link":
 
 		// okay as long as nothing is inside this node
@@ -527,7 +530,18 @@ func (p *ParserGo) visitCSS(state *parseGoState, n *htmlx.Node) error {
 			return fmt.Errorf("link tag should not have children")
 		}
 
+		// and it needs to have an href (url)
+		hrefAttr := attrWithKey(n, "href")
+		if hrefAttr == nil {
+			return fmt.Errorf("link tag must have href attribute but does not: %#v", n)
+		}
+
 	case "style":
+
+		// style must have child (will verify it is text below)
+		if n.FirstChild == nil {
+			return fmt.Errorf("style must have contents but does not: %#v", n)
+		}
 
 		// okay as long as only text nodes inside
 		for childN := n.FirstChild; childN != nil; childN = childN.NextSibling {
@@ -558,6 +572,7 @@ func (p *ParserGo) visitCSS(state *parseGoState, n *htmlx.Node) error {
 
 	// but then for the actual output, we append to vgout.CSS, instead of parentNode
 	fmt.Fprintf(&state.buildBuf, "vgn = &vugu.VGNode{Type:vugu.VGNodeType(%d),Data:%q,Attr:%#v}\n", n.Type, n.Data, staticVGAttrx(n.Attr))
+	log.Printf("TODO: instead of appending to CSS we should call a method on vgout to deduplicate first")
 	fmt.Fprintf(&state.buildBuf, "vgout.CSS = append(vgout.CSS, vgn)\n")
 
 	// dynamic attrs

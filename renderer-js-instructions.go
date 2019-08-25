@@ -355,7 +355,11 @@ func (il *instructionList) writeRemoveOtherEventListeners(positionID []byte) err
 
 }
 
-func (il *instructionList) writeSetCSSTag(hashCode uint64, elementName, textContent string, attrPairs []string) error {
+func (il *instructionList) writeSetCSSTag( /*hashCode uint64, */ elementName string, textContent []byte, attrPairs []string) error {
+
+	if len(attrPairs) > 254 {
+		return fmt.Errorf("attrPairs is %d, too large, max is 254", len(attrPairs))
+	}
 
 	var al = 0
 	for _, s := range attrPairs {
@@ -364,7 +368,8 @@ func (il *instructionList) writeSetCSSTag(hashCode uint64, elementName, textCont
 
 	var l = 1 + // opcode
 		al + // attrs
-		8 + // hashCode
+		// 8 + // hashCode
+		1 + // 1 byte for number of strings to read
 		len(elementName) + 4 +
 		len(textContent) + 4
 
@@ -374,9 +379,10 @@ func (il *instructionList) writeSetCSSTag(hashCode uint64, elementName, textCont
 	}
 
 	il.writeValUint8(opcodeSetCSSTag)
-	il.writeValUint64(hashCode)
+	// il.writeValUint64(hashCode)
 	il.writeValString(elementName)
-	il.writeValString(textContent)
+	il.writeValBytes(textContent)
+	il.writeValUint8(uint8(len(attrPairs)))
 	for _, s := range attrPairs {
 		il.writeValString(s)
 	}

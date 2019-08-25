@@ -644,7 +644,36 @@
                     }
 
                     case opcodeSetCSSTag: {
+
+                        let elementName = decoder.readString();
+                        let textContent = decoder.readString();
+                        let attrPairsLen = decoder.readUint8();
+                        if (attrPairsLen % 2 != 0) {
+                            throw "attrPairsLen is odd number: " + attrPairsLen;
+                        }
+                        // loop over one key/value pair at a time and put them in a map
+                        var attrMap = {};
+                        for (let i = 0; i < attrPairsLen; i += 2) {
+                            let key = decoder.readString();
+                            let val = decoder.readString();
+                            attrMap[key] = val;
+                        }
+
+                        this.console.log("got opcodeSetCSSTag: elementName=", elementName, "textContent=", textContent, "attrMap=", attrMap)
                         
+                        state.elCSSTagsSet = state.elCSSTagsSet || []; // ensure state.elCSSTagsSet is set to empty array if not already set
+
+                        // let elementNameUC = elementName.toUpperCase();
+                        let thisTagKey = textContent;
+                        if (elementName == "link") {
+                            thisTagKey = attrMap["href"];
+                        }
+
+                        if (thisTagKey == "") { // nothing to do in this case
+                            this.console.log("element", elementName, "ignored due to empty key");
+                            break;
+                        }
+
                         // TODO: 
                         // * find all tags that have the same element type (link or style)
                         // * for each one for style use textContent as key, for link use url
@@ -652,12 +681,57 @@
                         // * if it has vuguCreated==true on it, then add to map of css tags set, else ignore
                         // * if no matching tag then create and set vuguCreated=true, add to map of css tags set
 
+                        let foundTag = null;
+                        this.document.querySelectorAll(elementName).forEach(cssEl => {
+                            let cssElKey;
+                            if (elementName == "style") {
+                                cssElKey = cssEl.textContent;
+                            } else /* elementName == "link" */ {
+                                cssElKey = cssEl.href;
+                            }
+                            
+                            if (thisTagKey == cssElKey) { // textContent or href as appropriate is used to determine "sameness"
+                                foundTag = cssEl;
+                            }
+                        });
+
+                        // could not find it, create
+                        if (!foundTag) {
+                            let cTag = this.document.createElement(elementName);
+                            for (let k in attrMap) {
+                                cTag.setAttribute(k, attrMap[k]);
+                            }
+                            cTag.vuguCreated = true; // so we know that we created this, as opposed to it already having been on the page
+                            this.document.head.appendChild(cTag); // add to end of head
+                            state.elCSSTagsSet.push(cTag); // add to elCSSTagsSet for use in opcodeRemoveOtherCSSTags
+                        } else {
+                            // if we did find it, we need to push to state.elCSSTagsSet to tell opcodeRemoveOtherCSSTags not to remove it
+                            state.elCSSTagsSet.push(foundTag);
+                        }
+
                         break;
                     }
                     case opcodeRemoveOtherCSSTags: {
 
-                        // any link or style tag in doc that has vuguCreated==true and is not in css tags set map
-                        // gets removed
+                        this.console.log("got opcodeRemoveOtherCSSTags");
+
+                        // any link or style tag in doc that has vuguCreated==true and is not in css tags set map gets removed
+
+                        state.elCSSTagsSet = state.elCSSTagsSet || [];
+
+                        this.document.querySelectorAll('style,link').forEach(cssEl => {
+
+                            // ignore any not created by vugu
+                            if (!cssEl.vuguCreated) { return; }
+
+                            // ignore if in elCSSTagsSet
+                            if (state.elCSSTagsSet.findIndex(el => el==cssEl) >= 0) { return; }
+
+                            // if we got here, we remove the tag
+                            cssEl.parentNode.removeChild(cssEl);
+                        });
+
+                        state.elCSSTagsSet = null; // clear this out so it gets reinitialized the next time opcodeSetCSSTag or this opcode is used
 
                         break;
                     }

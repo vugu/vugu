@@ -1,6 +1,7 @@
 package vugu
 
 import (
+	"bytes"
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
@@ -232,11 +233,43 @@ func (r *JSRenderer) Render(bo *BuildOut) error {
 	state := newJsRenderState()
 
 	// CSS stuff first
-	log.Printf("TODO: handle CSS")
-	// r.instructionList.writeSetCSSTag()
+	for _, cssEl := range bo.CSS {
+
+		// some basic sanity checking
+		if cssEl.Type != ElementNode || !(cssEl.Data == "style" || cssEl.Data == "link") {
+			return fmt.Errorf("CSS output must be link or style tag")
+		}
+
+		var textBuf bytes.Buffer
+		for childN := cssEl.FirstChild; childN != nil; childN = childN.NextSibling {
+			if childN.Type != TextNode {
+				return fmt.Errorf("CSS tag must contain only text children, found %d instead: %#v", childN.Type, childN)
+			}
+			textBuf.WriteString(cssEl.Data)
+		}
+
+		var attrPairs []string
+		if len(cssEl.Attr) > 0 {
+			attrPairs = make([]string, 0, len(cssEl.Attr)*2)
+			for _, attr := range cssEl.Attr {
+				attrPairs = append(attrPairs, attr.Key, attr.Val)
+			}
+		}
+
+		err := r.instructionList.writeSetCSSTag(cssEl.Data, textBuf.Bytes(), attrPairs)
+		if err != nil {
+			return err
+		}
+
+	}
+
+	err := r.instructionList.writeRemoveOtherCSSTags()
+	if err != nil {
+		return err
+	}
 
 	// main output
-	err := r.visitFirst(state, bo, bo.Out[0], []byte("0"))
+	err = r.visitFirst(state, bo, bo.Out[0], []byte("0"))
 	if err != nil {
 		return err
 	}
