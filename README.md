@@ -16,6 +16,7 @@ No node. No JS. No npm. No node_modules folder competing with your music library
 
 ## Updates ♨
 
+* 2019-08-25 CSS now supported on component-refactor branch, including in full-HTML mode, working sample that pulls in Bootstrap CSS.  Vugu's [js wrapper package](https://godoc.org/github.com/vugu/vugu/js) copied to master and made available.
 * 2019-08-18 Full HTML (root component can start with `<html>` tag) now supported on component-refactor branch, updated CSS and JS support figured out and implementation in-progress
 * 2019-08-12 Refactored DOM event listener code in-progress, event registration/deregistration works(-ish), filling out the remaining functionality to provide event summary, calls like preventDefault(), etc.
 * 2019-08-04 Some basic stuff in there on the DOM syncing rewrite and the new instruction workflow from VGNode -> binary encoded to raw bytes in Go -> read with DataView in JS -> DOM tree manipulation.  With the pattern in place the rest should get easier.
@@ -57,7 +58,7 @@ Still a work in progress, but a lot of things are already functional. Some work 
 - [x] DOM Events, click, etc.
 - [x] Basic data hashing to avoid unnecessary computation where possible.
 - [x] Basic dev and prod server tooling, easy to get started
-- [ ] Rewrite everything so it is not so terrible internally (big task, but well in-progress!)
+- [ ] Rewrite everything so it is not so terrible internally and stablize existing features to avoid breaking things moving forward as much as possible (big task, but well in-progress!)
 - [ ] URL Router
 - [ ] Server-side rendering (HTML generation works, needs URL Router to make it usable)
 - [ ] Performance optimizations
@@ -80,6 +81,6 @@ So you won't find a vugu command line tool that runs a development server, inste
 you'll find in the docs an appropriate snippet of code you can paste in a file and `go run` yourself.  For the code
 generation while there is an http.Handler that can do this upon page refresh, you also can (and should!) run `vugugen`
 via `go generate`. There are many small decisions in Vugu which follow this philosophy: wherever reasonably possible,
-just use the existing mechanism that already exists.  And keep doing that until there's proof that something
+just use the existing mechanism instead of inventing anew.  And keep doing that until there's proof that something
 else is really needed.  So far it's been working well.  And it allows Vugu to focus on the specific things it 
 brings to the table.
