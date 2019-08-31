@@ -73,12 +73,16 @@ func (c *Root) OnUseSuffixChange(event *vugu.DOMEvent) {
 
 func (c *Root) EmailChanged(event *vugu.DOMEvent) {
 
+    c.EmailValue = event.PropString("target", "value")
+
+    /*
     es := event.EventSummary()
     t, _ := es["target"].(map[string]interface{})
     c.EmailValue, _ = t["value"].(string)
 
     b, _ := json.Marshal(event.EventSummary())
     log.Printf("event.EventSummary: %s", b)
+    */
 }
 
 </script>

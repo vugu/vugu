@@ -20,6 +20,56 @@ type DOMEvent struct {
 	window js.Value // sure, why not
 }
 
+// Prop returns a value from the EventSummary using the keys you specify.
+// The keys is a list of map keys to be looked up. For example:
+// e.Prop("target", "name") will return the same value as e.EventSummary()["target"]["name"],
+// except that Prop helps with some edge cases and if a value is missing
+// of the wrong type, nil will be returned, instead of panicing.
+func (e *DOMEvent) Prop(keys ...string) interface{} {
+
+	var ret interface{}
+	ret = e.eventSummary
+
+	for _, key := range keys {
+
+		// see if ret is a map
+		m, _ := ret.(map[string]interface{})
+		if m == nil {
+			return nil
+		}
+
+		// and index into the map if so, replacing ret
+		ret = m[key]
+
+	}
+
+	return ret
+}
+
+// PropString is like Prop but returns it's value as a string.
+// No type conversion is done, if the requested value is not
+// already a string then an empty string will be returned.
+func (e *DOMEvent) PropString(keys ...string) string {
+	ret, _ := e.Prop(keys...).(string)
+	return ret
+}
+
+// PropFloat64 is like Prop but returns it's value as a float64.
+// No type conversion is done, if the requested value is not
+// already a float64 then float64(0) will be returned.
+func (e *DOMEvent) PropFloat64(keys ...string) float64 {
+	ret, _ := e.Prop(keys...).(float64)
+	return ret
+}
+
+// PropBool is like Prop but returns it's value as a bool.
+// No type conversion is done, if the requested value is not
+// already a bool then false will be returned.
+func (e *DOMEvent) PropBool(keys ...string) bool {
+	ret, _ := e.Prop(keys...).(bool)
+	return ret
+}
+
 // EventSummary returns a map with simple properties (primitive types) from the event.
 // Accessing values returns by EventSummary incurs no additional performance or memory
 // penalty, whereas calls to JSEvent, JSEventTarget, etc. require a call into the browser

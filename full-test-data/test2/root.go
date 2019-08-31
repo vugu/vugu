@@ -32,12 +32,16 @@ func (c *Root) OnUseSuffixChange(event *vugu.DOMEvent) {
 
 func (c *Root) EmailChanged(event *vugu.DOMEvent) {
 
-	es := event.EventSummary()
-	t, _ := es["target"].(map[string]interface{})
-	c.EmailValue, _ = t["value"].(string)
+	c.EmailValue = event.PropString("target", "value")
 
-	b, _ := json.Marshal(event.EventSummary())
-	log.Printf("event.EventSummary: %s", b)
+	/*
+	   es := event.EventSummary()
+	   t, _ := es["target"].(map[string]interface{})
+	   c.EmailValue, _ = t["value"].(string)
+
+	   b, _ := json.Marshal(event.EventSummary())
+	   log.Printf("event.EventSummary: %s", b)
+	*/
 }
 
 func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut, vgreterr error) {
