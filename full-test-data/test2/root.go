@@ -259,7 +259,7 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut, vgreterr error) 
 }
 
 // 'fix' unused imports
-var _ = fmt.Sprintf
-var _ = reflect.New
-var _ = json.Marshal
-var _ = js.ValueOf
+var _ fmt.Stringer
+var _ reflect.Type
+var _ json.RawMessage
+var _ js.Value

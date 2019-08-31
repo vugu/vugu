@@ -227,11 +227,13 @@ func (p *ParserGo) visitOverall(state *parseGoState) error {
 	fmt.Fprintf(&state.buildBuf, "    var vgn *vugu.VGNode\n")
 	// fmt.Fprintf(&buildBuf, "    var vgparent *vugu.VGNode\n")
 
+	// NOTE: Use things that are lightweight here - e.g. don't do var _ = fmt.Sprintf because that brings in all of the
+	// (possibly quite large) formatting code, which might otherwise be avoided.
 	fmt.Fprintf(&state.goBufBottom, "// 'fix' unused imports\n")
-	fmt.Fprintf(&state.goBufBottom, "var _ = fmt.Sprintf\n")
-	fmt.Fprintf(&state.goBufBottom, "var _ = reflect.New\n")
-	fmt.Fprintf(&state.goBufBottom, "var _ = json.Marshal\n")
-	fmt.Fprintf(&state.goBufBottom, "var _ = js.ValueOf\n")
+	fmt.Fprintf(&state.goBufBottom, "var _ fmt.Stringer\n")
+	fmt.Fprintf(&state.goBufBottom, "var _ reflect.Type\n")
+	fmt.Fprintf(&state.goBufBottom, "var _ json.RawMessage\n")
+	fmt.Fprintf(&state.goBufBottom, "var _ js.Value\n")
 	fmt.Fprintf(&state.goBufBottom, "\n")
 
 	// remove document node if present
