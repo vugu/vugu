@@ -1,5 +1,7 @@
 package vugu
 
+import "encoding/json"
+
 // Things to sort out:
 // * vg-if, vg-range, etc (JUST COPIED FROM ATTRS, EVALUATED LATER)
 // * :whatever syntax (ALSO JUST COPIED FROM ATTRS, EVALUATED LATER)
@@ -35,15 +37,24 @@ type VGAttribute struct {
 	Namespace, Key, Val string
 }
 
+// VGProperty is a JS property to be set on a DOM element.
+type VGProperty struct {
+	Key string
+	Val json.RawMessage
+}
+
 // VGNode represents a node from our virtual DOM with the dynamic parts wired up into functions.
 type VGNode struct {
 	Parent, FirstChild, LastChild, PrevSibling, NextSibling *VGNode
 
 	Type VGNodeType
-	// DataAtom  VGAtom // FIXME: This needs to come out, we're not using it and without well-defined behavior it just becomes confusing and problematic
+	// DataAtom  VGAtom // this needed to come out, we're not using it and without well-defined behavior it just becomes confusing and problematic
 	Data      string
 	Namespace string
 	Attr      []VGAttribute
+
+	// JS properties to e set during render
+	Prop []VGProperty
 
 	// Props Props // dynamic attributes, used as input for components or converted to attributes for regular HTML elements
 
@@ -54,7 +65,7 @@ type VGNode struct {
 	DOMEventHandlerSpecList []DOMEventHandlerSpec // replacing DOMEventHandlers
 
 	// default of 0 means it will be calculated when positionHash() is called
-	positionHashVal uint64
+	// positionHashVal uint64
 }
 
 // // SetDOMEventHandler will assign a named event to DOMEventHandlers (will allocate the map if nil).

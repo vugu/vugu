@@ -33,7 +33,9 @@
     const opcodeSetCSSTag            = 30 // write a CSS (style or link) tag
 	const opcodeRemoveOtherCSSTags   = 31 // remove any CSS tags that have not been written since the last call
 	const opcodeSetJSTag             = 32 // write a JS (script) tag
-	const opcodeRemoveOtherJSTags    = 33 // remove any JS tags that have not been written since the last call
+    const opcodeRemoveOtherJSTags    = 33 // remove any JS tags that have not been written since the last call
+    
+    const opcodeSetProperty          = 35 // assign a JS property to the current element
 
 
     // Decoder provides our binary decoding.
@@ -175,6 +177,17 @@
                         state.nextElMove = null;
                         break;
                     }
+
+                    case opcodeSetProperty: {
+                        let el = state.el;
+                        if (!el) {
+                            return "opcodeSetProperty: no current reference";
+                        }
+                        let propName = decoder.readString();
+                        let propValueJSON = decoder.readString();
+                        el[propName] = JSON.parse(propValueJSON);
+                        break;
+                    }                    
             
                     case opcodeSetAttrStr: {
                         let el = state.el;

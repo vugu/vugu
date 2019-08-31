@@ -48,6 +48,8 @@ const (
 	opcodeRemoveOtherCSSTags uint8 = 31 // remove any CSS tags that have not been written since the last call
 	opcodeSetJSTag           uint8 = 32 // write a JS (script) tag
 	opcodeRemoveOtherJSTags  uint8 = 33 // remove any JS tags that have not been written since the last call
+
+	opcodeSetProperty uint8 = 35 // assign a JS property to the current element
 )
 
 // newInstructionList will create a new instance backed by the specified slice and with a clearBufFunc
@@ -399,6 +401,22 @@ func (il *instructionList) writeRemoveOtherCSSTags() error {
 	}
 
 	il.writeValUint8(opcodeRemoveOtherCSSTags)
+
+	return nil
+}
+
+func (il *instructionList) writeSetProperty(key string, jsonValue []byte) error {
+
+	size := len(key) + len(jsonValue) + 9
+
+	err := il.checkLenAndFlush(size)
+	if err != nil {
+		return err
+	}
+
+	il.writeValUint8(opcodeSetProperty)
+	il.writeValString(key)
+	il.writeValBytes(jsonValue)
 
 	return nil
 }

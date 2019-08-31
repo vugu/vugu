@@ -1,0 +1,304 @@
+package vugu
+
+import (
+	"go/ast"
+	"go/parser"
+	"go/printer"
+	"go/token"
+	"io"
+	"sort"
+	"strings"
+
+	// "github.com/vugu/vugu/internal/htmlx"
+
+	"golang.org/x/net/html"
+)
+
+func attrFromHtml(attr html.Attribute) VGAttribute {
+	return VGAttribute{
+		Namespace: attr.Namespace,
+		Key:       attr.Key,
+		Val:       attr.Val,
+	}
+}
+
+// func attrFromHtmlx(attr htmlx.Attribute) VGAttribute {
+// 	return VGAttribute{
+// 		Namespace: attr.Namespace,
+// 		Key:       attr.Key,
+// 		Val:       attr.Val,
+// 	}
+// }
+
+// stuff that is common to both parsers can get moved into here
+
+func staticVGAttr(inAttr []html.Attribute) (ret []VGAttribute) {
+
+	for _, a := range inAttr {
+		switch {
+		case a.Key == "vg-if":
+		case a.Key == "vg-for":
+		case a.Key == "vg-html":
+		case strings.HasPrefix(a.Key, "."):
+		case strings.HasPrefix(a.Key, ":"):
+		case strings.HasPrefix(a.Key, "@"):
+		default:
+			ret = append(ret, attrFromHtml(a))
+		}
+	}
+
+	return ret
+}
+
+// func staticVGAttrx(inAttr []htmlx.Attribute) (ret []VGAttribute) {
+
+// 	for _, a := range inAttr {
+// 		switch {
+// 		case a.Key == "vg-if":
+// 		case a.Key == "vg-for":
+// 		case a.Key == "vg-html":
+// 		case strings.HasPrefix(a.Key, "."):
+// 		case strings.HasPrefix(a.Key, ":"):
+// 		case strings.HasPrefix(a.Key, "@"):
+// 		default:
+// 			ret = append(ret, attrFromHtmlx(a))
+// 		}
+// 	}
+
+// 	return ret
+// }
+
+func vgIfExpr(n *html.Node) string {
+	for _, a := range n.Attr {
+		if a.Key == "vg-if" {
+			return a.Val
+		}
+	}
+	return ""
+}
+
+// func vgIfExprx(n *htmlx.Node) string {
+// 	for _, a := range n.Attr {
+// 		if a.Key == "vg-if" {
+// 			return a.Val
+// 		}
+// 	}
+// 	return ""
+// }
+
+func vgForExpr(n *html.Node) string {
+	for _, a := range n.Attr {
+		if a.Key == "vg-for" {
+
+			v := strings.TrimSpace(a.Val)
+
+			if !strings.Contains(v, " ") { // make it so `w` is a shorthand for `key, value := range w`
+				v = "key, value := range " + v
+			}
+
+			return v
+		}
+	}
+	return ""
+}
+
+// func vgForExprx(n *htmlx.Node) string {
+// 	for _, a := range n.Attr {
+// 		if a.Key == "vg-for" {
+
+// 			v := strings.TrimSpace(a.Val)
+
+// 			if !strings.Contains(v, " ") { // make it so `w` is a shorthand for `key, value := range w`
+// 				v = "key, value := range " + v
+// 			}
+
+// 			return v
+// 		}
+// 	}
+// 	return ""
+// }
+
+func vgHTMLExpr(n *html.Node) string {
+	for _, a := range n.Attr {
+		if a.Key == "vg-html" {
+			return a.Val
+		}
+	}
+	return ""
+}
+
+// func vgHTMLExprx(n *htmlx.Node) string {
+// 	for _, a := range n.Attr {
+// 		if a.Key == "vg-html" {
+// 			return a.Val
+// 		}
+// 	}
+// 	return ""
+// }
+
+// extract ":attr" stuff from a node
+func dynamicVGAttrExpr(n *html.Node) (ret map[string]string, retKeys []string) {
+	var da []html.Attribute
+	// get dynamic attrs first
+	for _, a := range n.Attr {
+		if strings.HasPrefix(a.Key, ":") {
+			da = append(da, a)
+		}
+	}
+	if len(da) == 0 { // don't allocate map if we don't have to
+		return
+	}
+	// make map as small as possible
+	ret = make(map[string]string, len(da))
+	retKeys = make([]string, len(da))
+	for i, a := range da {
+		k := strings.TrimPrefix(a.Key, ":")
+		retKeys[i] = k
+		ret[k] = a.Val
+	}
+	sort.Strings(retKeys)
+	return
+}
+
+// extract ".prop" stuff from a node
+func propVGAttrExpr(n *html.Node) (ret map[string]string, retKeys []string) {
+	var da []html.Attribute
+	// get prop attrs first
+	for _, a := range n.Attr {
+		if strings.HasPrefix(a.Key, ".") {
+			da = append(da, a)
+		}
+	}
+	if len(da) == 0 { // don't allocate map if we don't have to
+		return
+	}
+	// make map as small as possible
+	ret = make(map[string]string, len(da))
+	retKeys = make([]string, len(da))
+	for i, a := range da {
+		k := strings.TrimPrefix(a.Key, ".")
+		retKeys[i] = k
+		ret[k] = a.Val
+	}
+	sort.Strings(retKeys)
+	return
+}
+
+// extract "@event" stuff from a node
+func vgDOMEventExprs(n *html.Node) (ret map[string]string, retKeys []string) {
+	var da []html.Attribute
+	// get attrs first
+	for _, a := range n.Attr {
+		if strings.HasPrefix(a.Key, "@") {
+			da = append(da, a)
+		}
+	}
+	if len(da) == 0 { // don't allocate map if we don't have to
+		return
+	}
+	// make map as small as possible
+	ret = make(map[string]string, len(da))
+	for _, a := range da {
+		k := strings.TrimPrefix(a.Key, "@")
+		retKeys = append(retKeys, k)
+		ret[k] = a.Val
+	}
+	return
+}
+
+// var vgDOMParseExprRE = regexp.MustCompile(`^([a-zA-Z0-9_.]+)\((.*)\)$`)
+
+// func vgDOMParseExpr(expr string) (receiver string, methodName string, argList string) {
+// 	parts := vgDOMParseExprRE.FindStringSubmatch(expr)
+// 	if len(parts) != 3 {
+// 		return
+// 	}
+// 	argList = parts[2]
+// 	f := parts[1]
+// 	fparts := strings.Split(f, ".")
+
+// 	receiver, methodName = strings.Join(fparts[:len(fparts)-1], "."), fparts[len(fparts)-1]
+
+// 	// if len(fparts) == 1 { // just "methodName"
+// 	// 	methodName = f
+// 	// } else if len(fparts) > 2 { // "a.b.MethodName"
+// 	// 	receiver, methodName = strings.Join(fparts[:len(fparts)-1], "."), fparts[len(fparts)-1]
+// 	// } else { // "a.MethodName"
+// 	// 	receiver, methodName = fparts[0], fparts[1]
+// 	// }
+// 	return
+// }
+
+// ^([a-zA-Z0-9_.]+)\((.*)\)$
+
+// dedupImports reads Go source and removes duplicate import statements.
+func dedupImports(r io.Reader, w io.Writer, fname string) error {
+
+	fset := token.NewFileSet() // positions are relative to fset
+	f, err := parser.ParseFile(fset, fname, r, parser.AllErrors|parser.ParseComments)
+	if err != nil {
+		return err
+	}
+
+	//ast.Print(fset, f)
+	//ast.Print(fset, f)
+
+	// ast.Print(fset, f.Decls)
+	//f.Decls = f.Decls[1:]
+	dedupAstFileImports(f)
+	ast.SortImports(fset, f)
+
+	err = printer.Fprint(w, fset, f)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func dedupAstFileImports(f *ast.File) {
+
+	imap := make(map[string]bool, len(f.Imports)+10)
+
+	outdecls := make([]ast.Decl, 0, len(f.Decls))
+	for _, decl := range f.Decls {
+
+		// check for import declaration
+		genDecl, _ := decl.(*ast.GenDecl)
+		// not an import declaration, just copy and continue
+		if genDecl == nil || genDecl.Tok != token.IMPORT {
+			outdecls = append(outdecls, decl)
+			continue
+		}
+
+		// for imports, we loop over each ImportSpec (each package, regardless of which form of import statement)
+		outspecs := make([]ast.Spec, 0, len(genDecl.Specs))
+		for _, spec := range genDecl.Specs {
+			ispec := spec.(*ast.ImportSpec)
+			// always use path
+			key := ispec.Path.Value
+			// if name is present, prepend
+			if ispec.Name != nil {
+				key = ispec.Name.Name + " " + key
+			}
+
+			// if we've seen this import before, then just move to the next
+			if imap[key] {
+				continue
+			}
+			imap[key] = true // mark this import as having been seen
+
+			// keep the import
+			outspecs = append(outspecs, ispec)
+		}
+
+		// use outspecs for this import decl, unless it's empty in which case we remove/skip the whole import decl
+		if len(outspecs) == 0 {
+			continue
+		}
+		genDecl.Specs = outspecs
+		outdecls = append(outdecls, genDecl)
+
+	}
+	f.Decls = outdecls
+}

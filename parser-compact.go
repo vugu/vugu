@@ -6,7 +6,8 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/vugu/vugu/internal/htmlx"
+	// "github.com/vugu/vugu/internal/html"
+	"golang.org/x/net/html"
 )
 
 // compactNodeTree operates on a Node tree in-place and find elements with static
@@ -15,26 +16,26 @@ import (
 // it is much faster for large blocks of HTML than individual syncing DOM nodes.
 // Any modern browser's native HTML parser is always going to be a lot faster than
 // we can achieve calling back and forth from wasm for each element.
-func compactNodeTree(rootN *htmlx.Node) error {
+func compactNodeTree(rootN *html.Node) error {
 
 	// do not collapse html, body or head, and nothing inside head
 
-	var visit func(n *htmlx.Node) (canCompact bool, err error)
-	visit = func(n *htmlx.Node) (canCompact bool, err error) {
+	var visit func(n *html.Node) (canCompact bool, err error)
+	visit = func(n *html.Node) (canCompact bool, err error) {
 
 		// certain tags we just refuse to examine at all
-		if n.Type == htmlx.ElementNode && (n.Data == "head" ||
+		if n.Type == html.ElementNode && (n.Data == "head" ||
 			n.Data == "script" ||
 			n.Data == "style") {
 			return false, nil
 		}
 
 		// text nodes are always compactable (at least in the current implementation)
-		if n.FirstChild == nil && n.Type == htmlx.TextNode {
+		if n.FirstChild == nil && n.Type == html.TextNode {
 			return true, nil
 		}
 
-		var compactableNodes []*htmlx.Node
+		var compactableNodes []*html.Node
 		allCompactable := true
 		// iterate over the immediate children of n
 		for n2 := n.FirstChild; n2 != nil; n2 = n2.NextSibling {
@@ -49,18 +50,18 @@ func compactNodeTree(rootN *htmlx.Node) error {
 		}
 
 		// if we're in the top level HTML tag, that's it, we visited already above and we're done
-		if n.Type == htmlx.ElementNode && n.Data == "html" {
+		if n.Type == html.ElementNode && n.Data == "html" {
 			return false, nil
 		}
 
 		// if not everything is compactable or it's the body node, then go through and compact the ones that can be
-		if !allCompactable || (n.Type == htmlx.ElementNode && n.Data == "body") {
+		if !allCompactable || (n.Type == html.ElementNode && n.Data == "body") {
 
 			for _, cn := range compactableNodes {
 
 				// NOTE: isStaticEl(cn) has already been run, since canCompact returned true above to put it in this list
 
-				if cn.Type != htmlx.ElementNode { // only work on elements
+				if cn.Type != html.ElementNode { // only work on elements
 					continue
 				}
 
@@ -68,14 +69,14 @@ func compactNodeTree(rootN *htmlx.Node) error {
 				// walk each immediate child of cn
 				for cnChild := cn.FirstChild; cnChild != nil; cnChild = cnChild.NextSibling {
 					// render directly into htmlBuf
-					err := htmlx.Render(&htmlBuf, cnChild)
+					err := html.Render(&htmlBuf, cnChild)
 					if err != nil {
 						return false, err
 					}
 				}
 
 				// add a vg-html with the static Go string expression of the contents
-				cn.Attr = append(cn.Attr, htmlx.Attribute{Key: "vg-html", Val: htmlGoQuoteString(htmlBuf.String())})
+				cn.Attr = append(cn.Attr, html.Attribute{Key: "vg-html", Val: htmlGoQuoteString(htmlBuf.String())})
 
 				// remove children, since vg-html supplants them
 				cn.FirstChild = nil
@@ -99,9 +100,9 @@ func compactNodeTree(rootN *htmlx.Node) error {
 	return err
 }
 
-func isStaticEl(n *htmlx.Node) bool {
+func isStaticEl(n *html.Node) bool {
 
-	if n.Type != htmlx.ElementNode { // must be element
+	if n.Type != html.ElementNode { // must be element
 		return false
 	}
 

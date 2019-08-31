@@ -523,6 +523,14 @@ func (r *JSRenderer) visitSyncElementEtc(state *jsRenderState, bo *BuildOut, n *
 		return err
 	}
 
+	// do any JS properties
+	for _, p := range n.Prop {
+		err := r.instructionList.writeSetProperty(p.Key, []byte(p.Val))
+		if err != nil {
+			return err
+		}
+	}
+
 	if len(n.DOMEventHandlerSpecList) > 0 {
 
 		// store in domHandlerMap

@@ -6,7 +6,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/vugu/vugu/internal/htmlx"
+	// "github.com/vugu/vugu/internal/htmlx"
+	"golang.org/x/net/html"
 )
 
 func TestCompactNodeTree(t *testing.T) {
@@ -27,7 +28,7 @@ func TestCompactNodeTree(t *testing.T) {
 </body>
 </html>`
 
-	n, err := htmlx.Parse(bytes.NewReader([]byte(in)))
+	n, err := html.Parse(bytes.NewReader([]byte(in)))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -35,7 +36,7 @@ func TestCompactNodeTree(t *testing.T) {
 	assert.NoError(compactNodeTree(n))
 
 	var buf bytes.Buffer
-	assert.NoError(htmlx.Render(&buf, n))
+	assert.NoError(html.Render(&buf, n))
 
 	log.Printf("OUT:\n%s", buf.String())
 
@@ -50,14 +51,14 @@ func TestCompactNodeTree(t *testing.T) {
 
 	// p := n.FirstChild.FirstChild.NextSibling.NextSibling.FirstChild.NextSibling.FirstChild.NextSibling.NextSibling.NextSibling
 	// log.Printf("p = %#v", p)
-	// assert.NoError(htmlx.Render(&buf, p))
+	// assert.NoError(html.Render(&buf, p))
 	// log.Printf("OUT:\n%s", buf.String())
 
 	// log.Printf("p.FirstChild = %#v", p.FirstChild)
 	// log.Printf("p.FirstChild.NextSibling = %#v", p.FirstChild.NextSibling)
 	// log.Printf("p.FirstChild.NextSibling.NextSibling = %#v", p.FirstChild.NextSibling.NextSibling)
 
-	// assert.NoError(htmlx.Render(&buf, p.FirstChild))
+	// assert.NoError(html.Render(&buf, p.FirstChild))
 	// log.Printf("OUT:\n%s", buf.String())
 
 }
