@@ -20,7 +20,7 @@ func main() {
 
 	rootBuilder := &Root{}
 
-	buildEnv, err := vugu.NewBuildEnv(rootBuilder)
+	buildEnv, err := vugu.NewBuildEnv()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -33,7 +33,7 @@ func main() {
 
 	for ok := true; ok; ok = renderer.EventWait() {
 
-		buildOut, err := buildEnv.BuildRoot()
+		buildOut, err := buildEnv.RunBuild(rootBuilder)
 		if err != nil {
 			panic(err)
 		}

@@ -1,5 +1,79 @@
 package vugu
 
+import (
+	"log"
+	"reflect"
+	"sync"
+	"testing"
+)
+
+//go:noinline
+func allocVGNode() *VGNode {
+	var ret VGNode
+	return &ret
+}
+
+func BenchmarkAlloc(b *testing.B) {
+
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		v := allocVGNode()
+		_ = v
+	}
+
+}
+
+var vgnodePool = sync.Pool{New: func() interface{} { return &VGNode{} }}
+
+func BenchmarkPool(b *testing.B) {
+
+	objlist := make([]*VGNode, 0, 10)
+
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		v := vgnodePool.Get().(*VGNode)
+		*v = VGNode{} // zero it out
+
+		// stack up 10 at a time and then release them to the pool
+		objlist = append(objlist, v)
+		if len(objlist) >= 10 {
+			for _, o := range objlist {
+				vgnodePool.Put(o)
+			}
+			objlist = objlist[:0]
+		}
+	}
+
+}
+
+func TestFuncPtr(t *testing.T) {
+
+	s1 := "s1"
+	s2 := "s2"
+
+	fA := fp(&s1)
+	fB := fp(&s1)
+	fC := fp(&s2)
+
+	log.Printf("fA()=%v, fB()=%v, fC()=%v", fA(), fB(), fC())
+
+	// log.Printf("fA=%v, fB=%v, fC=%v", unsafe.Pointer(fA), unsafe.Pointer(fB), unsafe.Pointer(fC))
+	// log.Printf("fA=%v, fB=%v, fC=%v", fA, fB, fC)
+	log.Printf("fA=%v, fB=%v, fC=%v", reflect.ValueOf(fA).Pointer(), reflect.ValueOf(fB).Pointer(), reflect.ValueOf(fC).Pointer())
+
+	log.Printf("fA==fB=%v, fA==fC=%v", fA == fB, fA == fC)
+
+}
+
+func fp(strp *string) func() string {
+	// capture one variable
+	return func() string {
+		return *strp
+	}
+}
+
 // func TestParseTemplate(t *testing.T) {
 
 // 	assert := assert.New(t)
