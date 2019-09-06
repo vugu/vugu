@@ -66,6 +66,9 @@ func NewJSRenderer(mountPointSelector string) (*JSRenderer, error) {
 	// wire up the event handler func and the array that we used to communicate with instead of js.Value
 	// ret.window.Call("vuguSetEventHandlerAndBuffer", ret.eventHandlerFunc, ret.eventHandlerTypedArray)
 
+	// wire up the event handler func
+	ret.window.Call("vuguSetEventHandler", ret.eventHandlerFunc)
+
 	// log.Printf("ret.window: %#v", ret.window)
 	// log.Printf("eval: %#v", ret.window.Get("eval"))
 

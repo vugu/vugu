@@ -109,6 +109,12 @@
     //     state.eventHandlerFunc = eventHandlerFunc;
     // }
 
+    window.vuguSetEventHandler = function(eventHandlerFunc) { 
+		let state = window.vuguState || {};
+        window.vuguState = state;
+        state.eventHandlerFunc = eventHandlerFunc;
+    }
+
     window.vuguGetRenderArray = function() {
         if (!window.vuguRenderArray) {
             window.vuguRenderArray = new Uint8Array(16384);
@@ -631,8 +637,18 @@
 
                                 // console.log(state.eventBuffer);
 
-                                // write JSON to state.eventBuffer with zero char as termination
+                                // make sure eventBuffer and eventBufferView are setup
+                                let eventBuffer = state.eventBuffer;
+                                if (!eventBuffer) {
+                                    // FIXME: not yet sure how to handle different lengths here,
+                                    // but for now this needs to be at least one byte shorter 
+                                    // than Go's buffer
+                                    eventBuffer = new Uint8Array(16383);
+                                    state.eventBuffer = eventBuffer;
+                                    state.eventBufferView = new DataView(eventBuffer.buffer, eventBuffer.byteOffset, eventBuffer.byteLength);
+                                }
 
+                                // write JSON to state.eventBuffer with uint32 length prefix
                                 
                                 let encodeResultBuffer = textEncoder.encode(fullJSON);
                                 //console.log("encodeResult", encodeResult);
@@ -651,7 +667,7 @@
                                 // and keep track of the target element, also consider grabbing
                                 // the value or relevant properties as appropriate for form things
                                 
-                                state.eventHandlerFunc.call(null); // call with null this avoid unnecessary js.Value reference
+                                state.eventHandlerFunc.call(null, eventBuffer); // call with null this avoid unnecessary js.Value reference
 
                                 // unset the active event
                                 state.activeEvent = null;
