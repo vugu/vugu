@@ -1,8 +1,6 @@
 package vugu
 
 import (
-	"log"
-	"reflect"
 	"sync"
 	"testing"
 )
@@ -48,31 +46,31 @@ func BenchmarkPool(b *testing.B) {
 
 }
 
-func TestFuncPtr(t *testing.T) {
+// func TestFuncPtr(t *testing.T) {
 
-	s1 := "s1"
-	s2 := "s2"
+// 	s1 := "s1"
+// 	s2 := "s2"
 
-	fA := fp(&s1)
-	fB := fp(&s1)
-	fC := fp(&s2)
+// 	fA := fp(&s1)
+// 	fB := fp(&s1)
+// 	fC := fp(&s2)
 
-	log.Printf("fA()=%v, fB()=%v, fC()=%v", fA(), fB(), fC())
+// 	log.Printf("fA()=%v, fB()=%v, fC()=%v", fA(), fB(), fC())
 
-	// log.Printf("fA=%v, fB=%v, fC=%v", unsafe.Pointer(fA), unsafe.Pointer(fB), unsafe.Pointer(fC))
-	// log.Printf("fA=%v, fB=%v, fC=%v", fA, fB, fC)
-	log.Printf("fA=%v, fB=%v, fC=%v", reflect.ValueOf(fA).Pointer(), reflect.ValueOf(fB).Pointer(), reflect.ValueOf(fC).Pointer())
+// 	// log.Printf("fA=%v, fB=%v, fC=%v", unsafe.Pointer(fA), unsafe.Pointer(fB), unsafe.Pointer(fC))
+// 	// log.Printf("fA=%v, fB=%v, fC=%v", fA, fB, fC)
+// 	log.Printf("fA=%v, fB=%v, fC=%v", reflect.ValueOf(fA).Pointer(), reflect.ValueOf(fB).Pointer(), reflect.ValueOf(fC).Pointer())
 
-	log.Printf("fA==fB=%v, fA==fC=%v", fA == fB, fA == fC)
+// 	log.Printf("fA==fB=%v, fA==fC=%v", fA == fB, fA == fC)
 
-}
+// }
 
-func fp(strp *string) func() string {
-	// capture one variable
-	return func() string {
-		return *strp
-	}
-}
+// func fp(strp *string) func() string {
+// 	// capture one variable
+// 	return func() string {
+// 		return *strp
+// 	}
+// }
 
 // func TestParseTemplate(t *testing.T) {
 
