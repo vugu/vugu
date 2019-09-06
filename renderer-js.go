@@ -25,32 +25,46 @@ func NewJSRenderer(mountPointSelector string) (*JSRenderer, error) {
 	}
 
 	ret.instructionBuffer = make([]byte, 16384)
-	ret.instructionTypedArray = js.TypedArrayOf(ret.instructionBuffer)
+	// ret.instructionTypedArray = js.TypedArrayOf(ret.instructionBuffer)
 
 	ret.window = js.Global().Get("window")
 
 	ret.window.Call("eval", jsHelperScript)
 
+	ret.instructionBufferJS = ret.window.Call("vuguGetRenderArray")
+
 	ret.instructionList = newInstructionList(ret.instructionBuffer, func(il *instructionList) error {
 
 		// call vuguRender to have the instructions processed in JS
 		ret.instructionBuffer[il.pos] = 0 // ensure zero terminator
-		ret.window.Call("vuguRender", ret.instructionTypedArray)
+
+		// copy the data over
+		js.CopyBytesToJS(ret.instructionBufferJS, ret.instructionBuffer)
+
+		// then call vuguRender
+		ret.window.Call("vuguRender" /*, ret.instructionBufferJS*/)
 
 		return nil
 	})
 
 	ret.eventHandlerBuffer = make([]byte, 16384)
-	ret.eventHandlerTypedArray = js.TypedArrayOf(ret.eventHandlerBuffer)
+	// ret.eventHandlerTypedArray = js.TypedArrayOf(ret.eventHandlerBuffer)
 
 	ret.eventHandlerFunc = js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+		if len(args) != 1 {
+			panic(fmt.Errorf("eventHandlerFunc got arg slice not exactly 1 element in length: %#v", args))
+		}
+		n := js.CopyBytesToGo(ret.eventHandlerBuffer, args[0])
+		if n >= len(ret.eventHandlerBuffer) {
+			panic(fmt.Errorf("event data is too large (%d bytes), cannot continue", n))
+		}
 		ret.handleDOMEvent() // discard this and args, all data should be in eventHandlerBuffer; avoid using js.Value
 		return nil
 		// return jsEnv.handleRawDOMEvent(this, args)
 	})
 
 	// wire up the event handler func and the array that we used to communicate with instead of js.Value
-	ret.window.Call("vuguSetEventHandlerAndBuffer", ret.eventHandlerFunc, ret.eventHandlerTypedArray)
+	// ret.window.Call("vuguSetEventHandlerAndBuffer", ret.eventHandlerFunc, ret.eventHandlerTypedArray)
 
 	// log.Printf("ret.window: %#v", ret.window)
 	// log.Printf("eval: %#v", ret.window.Get("eval"))
@@ -84,13 +98,14 @@ type JSRenderer struct {
 	eventRWMU   sync.RWMutex // make sure Render and event handling are not attempted at the same time (not totally sure if this is necessary in terms of the wasm threading model but enforce it with a rwmutex all the same)
 	eventEnv    *eventEnv    // our EventEnv implementation that exposes eventRWMU and eventWaitCh to events in a clean way
 
-	eventHandlerFunc       js.Func // the callback function for DOM events
-	eventHandlerBuffer     []byte
-	eventHandlerTypedArray js.TypedArray
+	eventHandlerFunc   js.Func // the callback function for DOM events
+	eventHandlerBuffer []byte
+	// eventHandlerTypedArray js.TypedArray
 
-	instructionBuffer     []byte
-	instructionTypedArray js.TypedArray
-	instructionList       *instructionList
+	instructionBuffer   []byte   // our local instruction buffer
+	instructionBufferJS js.Value // a Uint8Array on the JS side that we copy into
+	// instructionTypedArray js.TypedArray
+	instructionList *instructionList
 
 	window js.Value
 
@@ -99,7 +114,9 @@ type JSRenderer struct {
 
 // Release calls release on any resources that this renderer allocated.
 func (r *JSRenderer) Release() {
-	r.instructionTypedArray.Release()
+	// NOTE: seems sensible to leave this here in case we do need something to be released, better than
+	// omitting it and people getting used to no release being needed and then requiring it later.
+	// r.instructionTypedArray.Release()
 }
 
 // Render implements Renderer.

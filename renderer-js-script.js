@@ -101,16 +101,28 @@
         }
     }
 
-	window.vuguSetEventHandlerAndBuffer = function(eventHandlerFunc, eventBuffer) { 
-		let state = window.vuguState || {};
-        window.vuguState = state;
-        state.eventBuffer = eventBuffer;
-        state.eventBufferView = new DataView(eventBuffer.buffer, eventBuffer.byteOffset, eventBuffer.byteLength);
-        state.eventHandlerFunc = eventHandlerFunc;
+	// window.vuguSetEventHandlerAndBuffer = function(eventHandlerFunc, eventBuffer) { 
+	// 	let state = window.vuguState || {};
+    //     window.vuguState = state;
+    //     state.eventBuffer = eventBuffer;
+    //     state.eventBufferView = new DataView(eventBuffer.buffer, eventBuffer.byteOffset, eventBuffer.byteLength);
+    //     state.eventHandlerFunc = eventHandlerFunc;
+    // }
+
+    window.vuguGetRenderArray = function() {
+        if (!window.vuguRenderArray) {
+            window.vuguRenderArray = new Uint8Array(16384);
+        }
+        return window.vuguRenderArray;
     }
 
-	window.vuguRender = function(buffer) { 
+	window.vuguRender = function() { 
         
+        let buffer = window.vuguRenderArray;
+        if (!window.vuguRenderArray) {
+            throw "window.vuguRenderArray is not set";
+        }
+
         // NOTE: vuguRender must not automatically reset anything between calls.
         // Since a series of instructions might get cut off due to buffer end, we
         // need to be able to just pick right up with the next call where we left off.

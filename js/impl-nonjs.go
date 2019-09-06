@@ -74,20 +74,30 @@ func ValueOf(x interface{}) Value {
 	return Value{}
 }
 
-// TypedArray placeholder for syscall/js
-type TypedArray struct {
-	Value
+// CopyBytesToGo placeholder for syscall/js
+func CopyBytesToGo(dst []byte, src Value) int {
+	return 0
 }
 
-// TypedArrayOf placeholder for syscall/js
-func TypedArrayOf(slice interface{}) TypedArray {
-	return TypedArray{}
+// CopyBytesToJS placeholder for syscall/js
+func CopyBytesToJS(dst Value, src []byte) int {
+	return 0
 }
 
-// Release placeholder for syscall/js
-func (a TypedArray) Release() {
-	// nop
-}
+// // TypedArray placeholder for syscall/js
+// type TypedArray struct {
+// 	Value
+// }
+
+// // TypedArrayOf placeholder for syscall/js
+// func TypedArrayOf(slice interface{}) TypedArray {
+// 	return TypedArray{}
+// }
+
+// // Release placeholder for syscall/js
+// func (a TypedArray) Release() {
+// 	// nop
+// }
 
 // ValueError placeholder for syscall/js
 type ValueError struct {
