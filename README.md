@@ -16,6 +16,7 @@ No node. No JS. No npm. No node_modules folder competing with your music library
 
 ## Updates ♨
 
+* 2019-09-07 Updated everything for Go 1.13, including both master and component-refactor branches, Vugu's js wrapper package, site documentation.
 * 2019-09-01 On component-refactor branch: Form element values and other related data now available on DOMEvent, `.prop=` syntax implemented, various cleanup, imports are deduplicated automatically now, started on nested component implementation and all of that craziness.
 * 2019-08-25 CSS now supported on component-refactor branch, including in full-HTML mode, working sample that pulls in Bootstrap CSS.  Vugu's [js wrapper package](https://godoc.org/github.com/vugu/vugu/js) copied to master and made available.
 * 2019-08-18 Full HTML (root component can start with `<html>` tag) now supported on component-refactor branch, updated CSS and JS support figured out and implementation in-progress
