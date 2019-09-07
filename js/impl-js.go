@@ -112,20 +112,30 @@ func ValueOf(x interface{}) Value {
 	return Value(sjs.ValueOf(x))
 }
 
-// TypedArray alias to syscall/js
-type TypedArray struct {
-	Value
+// CopyBytesToGo alias to syscall/js
+func CopyBytesToGo(dst []byte, src Value) int {
+	return sjs.CopyBytesToGo(dst, sjs.Value(src))
 }
 
-// TypedArrayOf alias to syscall/js
-func TypedArrayOf(slice interface{}) TypedArray {
-	return TypedArray{Value: Value(sjs.TypedArrayOf(slice).Value)}
+// CopyBytesToJS alias to syscall/js
+func CopyBytesToJS(dst Value, src []byte) int {
+	return sjs.CopyBytesToJS(sjs.Value(dst), src)
 }
 
-// Release alias to syscall/js
-func (a TypedArray) Release() {
-	sjs.TypedArray{Value: sjs.Value(a.Value)}.Release()
-}
+// // TypedArray alias to syscall/js
+// type TypedArray struct {
+// 	Value
+// }
+
+// // TypedArrayOf alias to syscall/js
+// func TypedArrayOf(slice interface{}) TypedArray {
+// 	return TypedArray{Value: Value(sjs.TypedArrayOf(slice).Value)}
+// }
+
+// // Release alias to syscall/js
+// func (a TypedArray) Release() {
+// 	sjs.TypedArray{Value: sjs.Value(a.Value)}.Release()
+// }
 
 // ValueError alias to syscall/js
 type ValueError struct {
@@ -222,9 +232,9 @@ func fixArgsToSjs(args []interface{}) []interface{} {
 		if f, ok := v.(Func); ok {
 			args[i] = f.f
 		}
-		if ta, ok := v.(TypedArray); ok {
-			args[i] = sjs.TypedArray{Value: sjs.Value(ta.Value)}
-		}
+		// if ta, ok := v.(TypedArray); ok {
+		// 	args[i] = sjs.TypedArray{Value: sjs.Value(ta.Value)}
+		// }
 	}
 	return args
 }

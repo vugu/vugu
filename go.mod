@@ -7,3 +7,5 @@ require (
 	golang.org/x/text v0.3.0
 	golang.org/x/tools v0.0.0-20190407030857-0fdf0c73855b // indirect
 )
+
+go 1.13
