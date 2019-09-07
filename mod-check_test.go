@@ -1,92 +1,10 @@
 package vugu
 
 import (
-	"log"
-	"reflect"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
-
-func TestModCheckerChangeCounter(t *testing.T) {
-
-	assert := assert.New(t)
-
-	var wl WidgetList
-	wl.SetList([]Widget{
-		{ID: 1, Name: "Willy"},
-		{ID: 2, Name: "Nilly"},
-		{ID: 3, Name: "Silly"},
-	})
-
-	var mc ModTracker
-	mc.TrackNext()
-
-	changed := mc.ModCheckAll(&wl)
-	assert.True(changed)
-	log.Printf("changed(1) = %v", changed)
-
-	mc.TrackNext()
-
-	wl.Changed()
-	changed = mc.ModCheckAll(&wl)
-	assert.True(changed)
-	log.Printf("changed(2) = %v", changed)
-
-	mc.TrackNext()
-
-	changed = mc.ModCheckAll(&wl)
-	assert.False(changed)
-	log.Printf("changed(3) = %v", changed)
-
-	mc.TrackNext()
-
-	changed = mc.ModCheckAll(&wl)
-	assert.False(changed)
-	log.Printf("changed(4) = %v", changed)
-
-	mc.TrackNext()
-
-	wl.SetList([]Widget{
-		{ID: 4, Name: "Billy"},
-		{ID: 5, Name: "Lilly"},
-		{ID: 6, Name: "Milly"},
-	})
-
-	changed = mc.ModCheckAll(&wl)
-	assert.True(changed)
-	log.Printf("changed(5) = %v", changed)
-
-	mc.TrackNext()
-
-	changed = mc.ModCheckAll(&wl)
-	assert.False(changed)
-	log.Printf("changed(6) = %v", changed)
-
-}
-
-type Widget struct {
-	ID   uint64
-	Name string
-}
-
-type WidgetList struct {
-	items []Widget
-	ChangeCounter
-}
-
-func (l *WidgetList) SetList(items []Widget) {
-	l.items = items
-	l.Changed()
-}
-
-func (l *WidgetList) Len() int {
-	return len(l.items)
-}
-
-func (l *WidgetList) Index(idx int) Widget {
-	return l.items[idx]
-}
 
 func TestModCheckerStrings(t *testing.T) {
 
@@ -138,89 +56,310 @@ func TestModCheckerStrings(t *testing.T) {
 
 }
 
-func TestModCheckerNumbers(t *testing.T) {
+func TestModCheckerBool(t *testing.T) {
 
-	// assert := assert.New(t)
+	mt := NewModTracker()
 
-	vbool := true
-	vint := 1
-	vint8 := 1
-	vint16 := 1
-	vint32 := 1
-	vint64 := 1
-	vuint := 1
-	vuint8 := 1
-	vuint16 := 1
-	vuint32 := 1
-	vuint64 := 1
-	vfloat32 := 1
-	vfloat64 := 1
-	vcomplex64 := complex(1, 1)
-	vcomplex128 := complex(1, 1)
-
-	pointers := []interface{}{
-		&vbool, &vint, &vint8, &vint16, &vint32, &vint64, &vuint, &vuint8, &vuint16, &vuint32, &vuint64,
-		&vfloat32, &vfloat64, &vcomplex64, &vcomplex128,
-	}
-
-	assign := func(values ...interface{}) {
-		for i := range pointers {
-			p := pointers[i]
-			v := values[i]
-			log.Printf("GOT HERE: %v %T %#v | %T %#v", i, p, p, v, v)
-			reflect.ValueOf(p).Elem().Set(reflect.ValueOf(v))
+	var v1, v2 bool
+	check := func(vp *bool, newv bool, expectedMod bool) {
+		mt.TrackNext()
+		*vp = newv
+		mod := mt.ModCheckAll(vp)
+		if mod != expectedMod {
+			t.Errorf("check(%#v, %#v, %#v) wrong mod result: %v", vp, newv, expectedMod, mod)
 		}
 	}
 
-	var mt ModTracker
+	check(&v1, false, true)
+	check(&v1, false, false)
+	check(&v1, true, true)
+	check(&v1, true, false)
+	check(&v1, false, true)
+	check(&v1, false, false)
+	check(&v1, false, false)
+	check(&v2, false, true)
+	check(&v2, true, true)
+	check(&v2, false, true)
+	check(&v2, false, false)
 
-	assertMod := func(mods ...bool) {
-		for i, p := range pointers {
-			mod := mt.ModCheckAll(p)
-			if mods[i] != mod {
-				t.Errorf("mod for %T (value=%#v) was %v expected %v",
-					p, reflect.ValueOf(p).Elem().Interface(), mod, mods[i])
-			}
+}
+
+func TestModCheckerInt(t *testing.T) {
+
+	mt := NewModTracker()
+
+	var v1, v2 int
+	check := func(vp *int, newv int, expectedMod bool) {
+		mt.TrackNext()
+		*vp = newv
+		mod := mt.ModCheckAll(vp)
+		if mod != expectedMod {
+			t.Errorf("check(%#v, %#v, %#v) wrong mod result: %v", vp, newv, expectedMod, mod)
 		}
 	}
 
-	mt.TrackNext()
+	check(&v1, 1, true)
+	check(&v1, 1, false)
+	check(&v1, 2, true)
+	check(&v1, 2, false)
+	check(&v1, 1, true)
+	check(&v1, 1, false)
+	check(&v1, 1, false)
+	check(&v2, 1, true)
+	check(&v2, 2, true)
+	check(&v2, 1, true)
+	check(&v2, 1, false)
 
-	// assign all the same initial values
-	assign(
-		bool(true),
-		int(1),
-		int8(1),
-		int16(1),
-		int32(1),
-		int64(1),
-		uint(1),
-		uint8(1),
-		uint16(1),
-		uint32(1),
-		uint64(1),
-		float32(1),
-		float64(1),
-		complex64(complex(1, 1)),
-		complex128(complex(1, 1)),
-	)
+}
 
-	assertMod(
-		false,
-		false,
-		false,
-		false,
-		false,
-		false,
-		false,
-		false,
-		false,
-		false,
-		false,
-		false,
-		false,
-		false,
-		false,
-	)
+func TestModCheckerInt8(t *testing.T) {
+
+	mt := NewModTracker()
+
+	var v1, v2 int8
+	check := func(vp *int8, newv int8, expectedMod bool) {
+		mt.TrackNext()
+		*vp = newv
+		mod := mt.ModCheckAll(vp)
+		if mod != expectedMod {
+			t.Errorf("check(%#v, %#v, %#v) wrong mod result: %v", vp, newv, expectedMod, mod)
+		}
+	}
+
+	check(&v1, 1, true)
+	check(&v1, 1, false)
+	check(&v1, 2, true)
+	check(&v1, 2, false)
+	check(&v1, 1, true)
+	check(&v1, 1, false)
+	check(&v1, 1, false)
+	check(&v2, 1, true)
+	check(&v2, 2, true)
+	check(&v2, 1, true)
+	check(&v2, 1, false)
+
+}
+
+func TestModCheckerInt16(t *testing.T) {
+
+	mt := NewModTracker()
+
+	var v1, v2 int16
+	check := func(vp *int16, newv int16, expectedMod bool) {
+		mt.TrackNext()
+		*vp = newv
+		mod := mt.ModCheckAll(vp)
+		if mod != expectedMod {
+			t.Errorf("check(%#v, %#v, %#v) wrong mod result: %v", vp, newv, expectedMod, mod)
+		}
+	}
+
+	check(&v1, 1, true)
+	check(&v1, 1, false)
+	check(&v1, 2, true)
+	check(&v1, 2, false)
+	check(&v1, 1, true)
+	check(&v1, 1, false)
+	check(&v1, 1, false)
+	check(&v2, 1, true)
+	check(&v2, 2, true)
+	check(&v2, 1, true)
+	check(&v2, 1, false)
+
+}
+
+func TestModCheckerInt32(t *testing.T) {
+
+	mt := NewModTracker()
+
+	var v1, v2 int32
+	check := func(vp *int32, newv int32, expectedMod bool) {
+		mt.TrackNext()
+		*vp = newv
+		mod := mt.ModCheckAll(vp)
+		if mod != expectedMod {
+			t.Errorf("check(%#v, %#v, %#v) wrong mod result: %v", vp, newv, expectedMod, mod)
+		}
+	}
+
+	check(&v1, 1, true)
+	check(&v1, 1, false)
+	check(&v1, 2, true)
+	check(&v1, 2, false)
+	check(&v1, 1, true)
+	check(&v1, 1, false)
+	check(&v1, 1, false)
+	check(&v2, 1, true)
+	check(&v2, 2, true)
+	check(&v2, 1, true)
+	check(&v2, 1, false)
+
+}
+
+func TestModCheckerInt64(t *testing.T) {
+
+	mt := NewModTracker()
+
+	var v1, v2 int64
+	check := func(vp *int64, newv int64, expectedMod bool) {
+		mt.TrackNext()
+		*vp = newv
+		mod := mt.ModCheckAll(vp)
+		if mod != expectedMod {
+			t.Errorf("check(%#v, %#v, %#v) wrong mod result: %v", vp, newv, expectedMod, mod)
+		}
+	}
+
+	check(&v1, 1, true)
+	check(&v1, 1, false)
+	check(&v1, 2, true)
+	check(&v1, 2, false)
+	check(&v1, 1, true)
+	check(&v1, 1, false)
+	check(&v1, 1, false)
+	check(&v2, 1, true)
+	check(&v2, 2, true)
+	check(&v2, 1, true)
+	check(&v2, 1, false)
+
+}
+
+func TestModCheckerUint(t *testing.T) {
+
+	mt := NewModTracker()
+
+	var v1, v2 uint
+	check := func(vp *uint, newv uint, expectedMod bool) {
+		mt.TrackNext()
+		*vp = newv
+		mod := mt.ModCheckAll(vp)
+		if mod != expectedMod {
+			t.Errorf("check(%#v, %#v, %#v) wrong mod result: %v", vp, newv, expectedMod, mod)
+		}
+	}
+
+	check(&v1, 1, true)
+	check(&v1, 1, false)
+	check(&v1, 2, true)
+	check(&v1, 2, false)
+	check(&v1, 1, true)
+	check(&v1, 1, false)
+	check(&v1, 1, false)
+	check(&v2, 1, true)
+	check(&v2, 2, true)
+	check(&v2, 1, true)
+	check(&v2, 1, false)
+
+}
+
+func TestModCheckerUint8(t *testing.T) {
+
+	mt := NewModTracker()
+
+	var v1, v2 uint8
+	check := func(vp *uint8, newv uint8, expectedMod bool) {
+		mt.TrackNext()
+		*vp = newv
+		mod := mt.ModCheckAll(vp)
+		if mod != expectedMod {
+			t.Errorf("check(%#v, %#v, %#v) wrong mod result: %v", vp, newv, expectedMod, mod)
+		}
+	}
+
+	check(&v1, 1, true)
+	check(&v1, 1, false)
+	check(&v1, 2, true)
+	check(&v1, 2, false)
+	check(&v1, 1, true)
+	check(&v1, 1, false)
+	check(&v1, 1, false)
+	check(&v2, 1, true)
+	check(&v2, 2, true)
+	check(&v2, 1, true)
+	check(&v2, 1, false)
+
+}
+
+func TestModCheckerUint16(t *testing.T) {
+
+	mt := NewModTracker()
+
+	var v1, v2 uint16
+	check := func(vp *uint16, newv uint16, expectedMod bool) {
+		mt.TrackNext()
+		*vp = newv
+		mod := mt.ModCheckAll(vp)
+		if mod != expectedMod {
+			t.Errorf("check(%#v, %#v, %#v) wrong mod result: %v", vp, newv, expectedMod, mod)
+		}
+	}
+
+	check(&v1, 1, true)
+	check(&v1, 1, false)
+	check(&v1, 2, true)
+	check(&v1, 2, false)
+	check(&v1, 1, true)
+	check(&v1, 1, false)
+	check(&v1, 1, false)
+	check(&v2, 1, true)
+	check(&v2, 2, true)
+	check(&v2, 1, true)
+	check(&v2, 1, false)
+
+}
+
+func TestModCheckerUint32(t *testing.T) {
+
+	mt := NewModTracker()
+
+	var v1, v2 uint32
+	check := func(vp *uint32, newv uint32, expectedMod bool) {
+		mt.TrackNext()
+		*vp = newv
+		mod := mt.ModCheckAll(vp)
+		if mod != expectedMod {
+			t.Errorf("check(%#v, %#v, %#v) wrong mod result: %v", vp, newv, expectedMod, mod)
+		}
+	}
+
+	check(&v1, 1, true)
+	check(&v1, 1, false)
+	check(&v1, 2, true)
+	check(&v1, 2, false)
+	check(&v1, 1, true)
+	check(&v1, 1, false)
+	check(&v1, 1, false)
+	check(&v2, 1, true)
+	check(&v2, 2, true)
+	check(&v2, 1, true)
+	check(&v2, 1, false)
+
+}
+
+func TestModCheckerUint64(t *testing.T) {
+
+	mt := NewModTracker()
+
+	var v1, v2 uint64
+	check := func(vp *uint64, newv uint64, expectedMod bool) {
+		mt.TrackNext()
+		*vp = newv
+		mod := mt.ModCheckAll(vp)
+		if mod != expectedMod {
+			t.Errorf("check(%#v, %#v, %#v) wrong mod result: %v", vp, newv, expectedMod, mod)
+		}
+	}
+
+	check(&v1, 1, true)
+	check(&v1, 1, false)
+	check(&v1, 2, true)
+	check(&v1, 2, false)
+	check(&v1, 1, true)
+	check(&v1, 1, false)
+	check(&v1, 1, false)
+	check(&v2, 1, true)
+	check(&v2, 2, true)
+	check(&v2, 1, true)
+	check(&v2, 1, false)
 
 }

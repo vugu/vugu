@@ -1,6 +1,9 @@
 package vugu
 
-import "fmt"
+import (
+	"fmt"
+	"reflect"
+)
 
 // ModChecker interface is implemented by types that want to implement their own modification tracking.
 // The ModCheck method is passed a ModTracker (for use in checking child values for modification if needed),
@@ -22,6 +25,13 @@ type ModChecker interface {
 type mtResult struct {
 	modified bool
 	data     interface{}
+}
+
+// NewModTracker creates an empty ModTracker, calls TrackNext on it, and returns it.
+func NewModTracker() *ModTracker {
+	var ret ModTracker
+	ret.TrackNext()
+	return &ret
 }
 
 // ModTracker tracks modifications and maintains the appropriate state for this.
@@ -57,7 +67,7 @@ func (mt *ModTracker) TrackNext() {
 // Otherwise pointers to some built-in types are supported including all primitive single-value types -
 // bool, int/uint and all variations, both float types, both complex types, string.
 // Pointers to supported types are supported.
-// Arrays, slices and maps using supported types are supported.
+// Arrays, slices and maps(nope!) using supported types are supported.
 // Pointers to structs will be checked by
 // checking each field with a struct tag like `vugu:"modcheck"`.  Slices and arrays of
 // structs are okay, since their members have a stable position in memory and a pointer
@@ -93,11 +103,13 @@ func (mt *ModTracker) ModCheckAll(values ...interface{}) (ret bool) {
 		var mod bool
 		var newdata interface{}
 
-		// see if it implements the ModChecker interface
-		mc, ok := v.(ModChecker)
-		if ok {
-			mod, newdata = mc.ModCheck(mt, oldres.data)
-		} else {
+		{
+			// see if it implements the ModChecker interface
+			mc, ok := v.(ModChecker)
+			if ok {
+				mod, newdata = mc.ModCheck(mt, oldres.data)
+				goto handleData
+			}
 
 			// support for certain built-in types
 			switch vt := v.(type) {
@@ -128,27 +140,135 @@ func (mt *ModTracker) ModCheckAll(values ...interface{}) (ret bool) {
 				goto handleData
 
 			case *int8:
+				oldval, ok := oldres.data.(int8)
+				mod = !ok || oldval != *vt
+				newdata = *vt
+				goto handleData
+
 			case *int16:
+				oldval, ok := oldres.data.(int16)
+				mod = !ok || oldval != *vt
+				newdata = *vt
+				goto handleData
+
 			case *int32:
+				oldval, ok := oldres.data.(int32)
+				mod = !ok || oldval != *vt
+				newdata = *vt
+				goto handleData
+
 			case *int64:
+				oldval, ok := oldres.data.(int64)
+				mod = !ok || oldval != *vt
+				newdata = *vt
+				goto handleData
+
 			case *uint:
+				oldval, ok := oldres.data.(uint)
+				mod = !ok || oldval != *vt
+				newdata = *vt
+				goto handleData
+
 			case *uint8:
+				oldval, ok := oldres.data.(uint8)
+				mod = !ok || oldval != *vt
+				newdata = *vt
+				goto handleData
+
 			case *uint16:
+				oldval, ok := oldres.data.(uint16)
+				mod = !ok || oldval != *vt
+				newdata = *vt
+				goto handleData
+
 			case *uint32:
+				oldval, ok := oldres.data.(uint32)
+				mod = !ok || oldval != *vt
+				newdata = *vt
+				goto handleData
+
 			case *uint64:
-			case *uintptr:
+				oldval, ok := oldres.data.(uint64)
+				mod = !ok || oldval != *vt
+				newdata = *vt
+				goto handleData
+
 			case *float32:
+				oldval, ok := oldres.data.(float32)
+				mod = !ok || oldval != *vt
+				newdata = *vt
+				goto handleData
+
 			case *float64:
+				oldval, ok := oldres.data.(float64)
+				mod = !ok || oldval != *vt
+				newdata = *vt
+				goto handleData
+
 			case *complex64:
+				oldval, ok := oldres.data.(complex64)
+				mod = !ok || oldval != *vt
+				newdata = *vt
+				goto handleData
+
 			case *complex128:
+				oldval, ok := oldres.data.(complex128)
+				mod = !ok || oldval != *vt
+				newdata = *vt
+				goto handleData
 
 			}
 
-			// check pointer and deref
+			// when the scalpel (type switch) doesn't do it,
+			// gotta use the bonesaw (reflection)
 
-			// struct
-			// slice
-			// array
+			rv := reflect.ValueOf(v)
+
+			// check pointer and deref
+			if rv.Kind() != reflect.Ptr {
+				panic(fmt.Errorf("type not implemented: %T (pointer required)", v))
+			}
+			rvv := rv.Elem()
+
+			// slice and array are treated the same
+			if rvv.Kind() == reflect.Slice || rvv.Kind() == reflect.Array {
+				l := rvv.Len()
+
+				// use length as our data, and mark as modified if different
+				oldval, ok := oldres.data.(int)
+				mod = !ok || oldval != l
+				newdata = l
+
+				// recurse into each element and check, update mod as we go
+				// NOTE: it's important to recurse into children even if mod is already
+				// true, otherwise we'll never call ModCheckAll on these children and
+				// never get an unmodified response
+
+				for i := 0; i < l; i++ {
+					// pointer to the individual element
+					elv := rvv.Index(i).Addr().Interface()
+					mod = mod || mt.ModCheckAll(elv)
+				}
+
+				goto handleData
+
+			}
+
+			// for structs we iterate over the fields looked for tagged ones
+			if rvv.Kind() == reflect.Struct {
+				panic("TODO: structs!")
+			}
+
+			// pointer (meaning we were originally passed a pointer to a pointer),
+			// compare pointer value directly
+			// TODO: should we check for a ModCheck implementation here and call it?
+			if rvv.Kind() == reflect.Ptr {
+				vv := rvv.Pointer()
+				oldval, ok := oldres.data.(uintptr)
+				mod = !ok || oldval != vv
+				newdata = vv
+				goto handleData
+			}
 
 			panic(fmt.Errorf("type not implemented: %T", v))
 
