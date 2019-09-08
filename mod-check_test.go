@@ -6,6 +6,81 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestModCheckerStruct(t *testing.T) {
+	assert := assert.New(t)
+	mt := NewModTracker()
+
+	var s1 struct {
+		F1 string  `vugu:"data"`
+		F2 int     `vugu:"data"`
+		F3 float64 // not tagged
+	}
+
+	mt.TrackNext()
+	assert.True(mt.ModCheckAll(&s1))
+
+	mt.TrackNext()
+	assert.False(mt.ModCheckAll(&s1))
+
+	mt.TrackNext()
+	s1.F1 = "test1"
+	assert.True(mt.ModCheckAll(&s1))
+
+	mt.TrackNext()
+	s1.F2 = 1
+	assert.True(mt.ModCheckAll(&s1))
+
+	mt.TrackNext()
+	s1.F3 = 1.0 // field not tagged, should not cause modification
+	assert.False(mt.ModCheckAll(&s1))
+
+}
+
+func TestModCheckerSliceArray(t *testing.T) {
+
+	assert := assert.New(t)
+	mt := NewModTracker()
+
+	var a1 [3]string
+	a1[0] = "s1"
+	a1[1] = "s2"
+	a1[2] = "s3"
+
+	assert.True(mt.ModCheckAll(&a1))
+
+	// log.Printf("state1: \n%s", mt.dump())
+
+	mt.TrackNext()
+
+	// log.Printf("state2: \n%s", mt.dump())
+
+	assert.False(mt.ModCheckAll(&a1))
+
+	// log.Printf("state3: \n%s", mt.dump())
+
+	var s1 []string
+	s1 = a1[:]
+
+	mt.TrackNext()
+	assert.True(mt.ModCheckAll(&s1))
+
+	mt.TrackNext()
+	assert.False(mt.ModCheckAll(&s1))
+
+	mt.TrackNext()
+	s1 = a1[:2]
+	assert.True(mt.ModCheckAll(&s1))
+
+	// swap two elements
+	mt.TrackNext()
+	s1[0], s1[1] = s1[1], s1[0]
+	assert.True(mt.ModCheckAll(&s1))
+
+	mt.TrackNext()
+	assert.False(mt.ModCheckAll(&s1))
+
+}
+
 func TestModCheckerStrings(t *testing.T) {
 
 	assert := assert.New(t)
@@ -53,6 +128,21 @@ func TestModCheckerStrings(t *testing.T) {
 	mt.TrackNext()
 	b = []byte("testing") // same value
 	assert.False(mt.ModCheckAll(&b))
+
+	// check both
+	mt.TrackNext()
+
+	mt.TrackNext()
+	b = []byte("testing")
+	assert.True(mt.ModCheckAll(&b))
+	s = "testing"
+	assert.True(mt.ModCheckAll(&s))
+
+	mt.TrackNext()
+	b = []byte("testing")
+	assert.False(mt.ModCheckAll(&b))
+	s = "testing"
+	assert.False(mt.ModCheckAll(&s))
 
 }
 

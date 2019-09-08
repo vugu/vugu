@@ -1,8 +1,10 @@
 package vugu
 
 import (
+	"bytes"
 	"fmt"
 	"reflect"
+	"strings"
 )
 
 // ModChecker interface is implemented by types that want to implement their own modification tracking.
@@ -62,6 +64,19 @@ func (mt *ModTracker) TrackNext() {
 	// and swap them
 	mt.old, mt.cur = mt.cur, mt.old
 
+}
+
+func (mt *ModTracker) dump() []byte {
+	var buf bytes.Buffer
+	fmt.Fprintf(&buf, "-- cur (len=%d): --\n", len(mt.cur))
+	for k, v := range mt.cur {
+		fmt.Fprintf(&buf, " %#v = %#v\n", k, v)
+	}
+	fmt.Fprintf(&buf, "-- old (len=%d): --\n", len(mt.old))
+	for k, v := range mt.old {
+		fmt.Fprintf(&buf, " %#v = %#v\n", k, v)
+	}
+	return buf.Bytes()
 }
 
 // Otherwise pointers to some built-in types are supported including all primitive single-value types -
@@ -247,7 +262,7 @@ func (mt *ModTracker) ModCheckAll(values ...interface{}) (ret bool) {
 				for i := 0; i < l; i++ {
 					// pointer to the individual element
 					elv := rvv.Index(i).Addr().Interface()
-					mod = mod || mt.ModCheckAll(elv)
+					mod = mt.ModCheckAll(elv) || mod
 				}
 
 				goto handleData
@@ -256,12 +271,39 @@ func (mt *ModTracker) ModCheckAll(values ...interface{}) (ret bool) {
 
 			// for structs we iterate over the fields looked for tagged ones
 			if rvv.Kind() == reflect.Struct {
-				panic("TODO: structs!")
+
+				// just use bool(true) as the data value for a struct - this way it will always be modified the first time,
+				// but every subsequent check will solely depend on the checks on it's fields
+				oldval, ok := oldres.data.(bool)
+				mod = !ok || oldval != true
+				newdata = true
+
+				rvvt := rvv.Type()
+				for i := 0; i < rvvt.NumField(); i++ {
+					// skip untagged fields
+					if !hasTagPart(rvvt.Field(i).Tag.Get("vugu"), "data") {
+						continue
+					}
+
+					// call ModCheckAll on pointer to field
+					mod = mt.ModCheckAll(
+						rvv.Field(i).Addr().Interface(),
+					) || mod
+
+				}
+
+				goto handleData
 			}
 
 			// pointer (meaning we were originally passed a pointer to a pointer),
 			// compare pointer value directly
 			// TODO: should we check for a ModCheck implementation here and call it?
+			// We might want to follow these pointers or rather recurse into them (if not nil?)
+			// with a ModCheckAll.  Also look at how this ties into maps (if at all), since theoretically
+			// we could compare a map by storing its length and basically doing for k, v := range m { ...ModCheckAll(&k,&v)... }
+			// actually no that won't work because k and v will have different locations each time - but still could
+			// potentially make some mapKeyValue struct that does what we need - but not vital to solve right now.
+			// Pointers to pointers will probably come up first, and is likely why you are reading this comment.
 			if rvv.Kind() == reflect.Ptr {
 				vv := rvv.Pointer()
 				oldval, ok := oldres.data.(uintptr)
@@ -274,9 +316,8 @@ func (mt *ModTracker) ModCheckAll(values ...interface{}) (ret bool) {
 
 		}
 	handleData:
-
-		ret = ret || mod
 		mt.cur[v] = mtResult{modified: mod, data: newdata}
+		ret = ret || mod
 
 	}
 
@@ -294,3 +335,12 @@ func (mt *ModTracker) ModCheckAll(values ...interface{}) (ret bool) {
 // woudl be pretty clear - and then calling this would only update the "new" value.  Also the
 // presence of something in the "new" data would mean it's already been called in this pass
 // and so can be deduplicated.
+
+func hasTagPart(tagstr, part string) bool {
+	for _, p := range strings.Split(tagstr, ",") {
+		if p == part {
+			return true
+		}
+	}
+	return false
+}
