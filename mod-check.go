@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"unsafe"
+
+	"github.com/cespare/xxhash"
 )
 
 // ModChecker interface is implemented by types that want to implement their own modification tracking.
@@ -247,20 +250,60 @@ func (mt *ModTracker) ModCheckAll(values ...interface{}) (ret bool) {
 
 			// slice and array are treated the same
 			if rvv.Kind() == reflect.Slice || rvv.Kind() == reflect.Array {
+
 				l := rvv.Len()
 
-				// use length as our data, and mark as modified if different
-				oldval, ok := oldres.data.(int)
-				mod = !ok || oldval != l
-				newdata = l
+				// for slices and arrays we compute the hash of the raw contents,
+				// takes care of length and sequence changes
+				ha := xxhash.New()
+
+				var el0t reflect.Type
+
+				if l > 0 {
+					// use the unsafe package to make a byte slice corresponding to the raw slice contents
+					var bs []byte
+					bsh := (*reflect.SliceHeader)(unsafe.Pointer(&bs))
+
+					el0 := rvv.Index(0)
+					el0t = el0.Type()
+
+					bsh.Data = el0.Addr().Pointer() // point to first element of slice
+					bsh.Len = l * int(el0t.Size())
+					bsh.Cap = bsh.Len
+
+					// hash it
+					ha.Write(bs)
+				}
+
+				hashval := ha.Sum64()
+
+				// use hashval as our data, and mark as modified if different
+				oldval, ok := oldres.data.(uint64)
+				mod = !ok || oldval != hashval
+				newdata = hashval
+
+				// for types that by definition have already been checked with the hash above, we're done
+				if el0t != nil {
+					switch el0t.Kind() {
+					case reflect.Bool,
+						reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
+						reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64,
+						reflect.Uintptr,
+						reflect.Float32, reflect.Float64, reflect.Complex64, reflect.Complex128,
+						reflect.String:
+						goto handleData
+					}
+				}
 
 				// recurse into each element and check, update mod as we go
-				// NOTE: it's important to recurse into children even if mod is already
+				// NOTE: for "deep" element types that can have changes within them,
+				// it's important to recurse into children even if mod is already
 				// true, otherwise we'll never call ModCheckAll on these children and
 				// never get an unmodified response
 
 				for i := 0; i < l; i++ {
-					// pointer to the individual element
+
+					// get pointer to the individual element and recurse into it
 					elv := rvv.Index(i).Addr().Interface()
 					mod = mt.ModCheckAll(elv) || mod
 				}
@@ -295,20 +338,30 @@ func (mt *ModTracker) ModCheckAll(values ...interface{}) (ret bool) {
 				goto handleData
 			}
 
-			// pointer (meaning we were originally passed a pointer to a pointer),
-			// compare pointer value directly
-			// TODO: should we check for a ModCheck implementation here and call it?
+			// random stream of conciousness: should we check for a ModCheck implementation here and call it?
 			// We might want to follow these pointers or rather recurse into them (if not nil?)
 			// with a ModCheckAll.  Also look at how this ties into maps (if at all), since theoretically
 			// we could compare a map by storing its length and basically doing for k, v := range m { ...ModCheckAll(&k,&v)... }
 			// actually no that won't work because k and v will have different locations each time - but still could
 			// potentially make some mapKeyValue struct that does what we need - but not vital to solve right now.
 			// Pointers to pointers will probably come up first, and is likely why you are reading this comment.
+
+			// pointer (meaning we were originally passed a pointer to a pointer)
 			if rvv.Kind() == reflect.Ptr {
+
+				// use pointer value as data...
 				vv := rvv.Pointer()
 				oldval, ok := oldres.data.(uintptr)
 				mod = !ok || oldval != vv
 				newdata = vv
+
+				// ...but also recurse and call ModChecker with one level of pointer dereferencing, if not nil
+				if !rvv.IsNil() {
+					mod = mt.ModCheckAll(
+						rvv.Interface(),
+					) || mod
+				}
+
 				goto handleData
 			}
 
