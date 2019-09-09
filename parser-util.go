@@ -38,6 +38,7 @@ func staticVGAttr(inAttr []html.Attribute) (ret []VGAttribute) {
 		switch {
 		case a.Key == "vg-if":
 		case a.Key == "vg-for":
+		case a.Key == "vg-key":
 		case a.Key == "vg-html":
 		case strings.HasPrefix(a.Key, "."):
 		case strings.HasPrefix(a.Key, ":"):
@@ -71,6 +72,15 @@ func staticVGAttr(inAttr []html.Attribute) (ret []VGAttribute) {
 func vgIfExpr(n *html.Node) string {
 	for _, a := range n.Attr {
 		if a.Key == "vg-if" {
+			return a.Val
+		}
+	}
+	return ""
+}
+
+func vgKeyExpr(n *html.Node) string {
+	for _, a := range n.Attr {
+		if a.Key == "vg-key" {
 			return a.Val
 		}
 	}
@@ -184,8 +194,12 @@ func propVGAttrExpr(n *html.Node) (ret map[string]string, retKeys []string) {
 	return
 }
 
-// extract "@event" stuff from a node
 func vgDOMEventExprs(n *html.Node) (ret map[string]string, retKeys []string) {
+	return vgEventExprs(n)
+}
+
+// extract "@event" stuff from a node
+func vgEventExprs(n *html.Node) (ret map[string]string, retKeys []string) {
 	var da []html.Attribute
 	// get attrs first
 	for _, a := range n.Attr {

@@ -64,6 +64,9 @@ type VGNode struct {
 
 	DOMEventHandlerSpecList []DOMEventHandlerSpec // replacing DOMEventHandlers
 
+	// indicates this node's output should be delegated to the specified component
+	Component interface{}
+
 	// default of 0 means it will be calculated when positionHash() is called
 	// positionHashVal uint64
 }

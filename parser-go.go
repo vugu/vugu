@@ -11,6 +11,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"unicode"
 
 	// "github.com/vugu/vugu/internal/htmlx"
 	// "github.com/vugu/vugu/internal/htmlx/atom"
@@ -220,7 +221,7 @@ func (p *ParserGo) visitOverall(state *parseGoState) error {
 	fmt.Fprintf(&state.goBuf, "\n")
 
 	// TODO: we use a prefix like "vg" as our namespace; should document that user code should not use that prefix to avoid conflicts
-	fmt.Fprintf(&state.buildBuf, "func (c *%s) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut, vgreterr error) {\n", p.StructType)
+	fmt.Fprintf(&state.buildBuf, "func (c *%s) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {\n", p.StructType)
 	fmt.Fprintf(&state.buildBuf, "    \n")
 	fmt.Fprintf(&state.buildBuf, "    vgout = &vugu.BuildOut{}\n")
 	fmt.Fprintf(&state.buildBuf, "    \n")
@@ -318,7 +319,7 @@ func (p *ParserGo) visitOverall(state *parseGoState) error {
 	// 	panic("need to append whole node, not AppendJS")
 	// }
 
-	fmt.Fprintf(&state.buildBuf, "    return vgout, nil\n")
+	fmt.Fprintf(&state.buildBuf, "    return vgout\n")
 	fmt.Fprintf(&state.buildBuf, "}\n\n")
 
 	return nil
@@ -822,19 +823,120 @@ func (p *ParserGo) visitNodeComment(state *parseGoState, n *html.Node) error {
 // visitNodeComponentElement handles an element that is a call to a component
 func (p *ParserGo) visitNodeComponentElement(state *parseGoState, n *html.Node) error {
 
+	// components are just different so we handle all of our own vg-for vg-if and everything else
+
+	// vg-for
+	if forx := vgForExpr(n); forx != "" {
+		// fmt.Fprintf(&buildBuf, "for /*line %s:%d*/%s {\n", fname, n.Line, forx)
+		fmt.Fprintf(&state.buildBuf, "for %s {\n", forx)
+		defer fmt.Fprintf(&state.buildBuf, "}\n")
+	}
+
+	// vg-if
+	ife := vgIfExpr(n)
+	if ife != "" {
+		fmt.Fprintf(&state.buildBuf, "if %s {\n", ife)
+		defer fmt.Fprintf(&state.buildBuf, "}\n")
+	}
+
 	nodeName := n.Data
 	nodeNameParts := strings.Split(nodeName, ":")
 	if len(nodeNameParts) != 2 {
 		return fmt.Errorf("invalid component tag name %q must contain exactly one colon", nodeName)
 	}
 
+	// x.Y or just Y depending on if in same package
+	typeExpr := strings.Join(nodeNameParts, ".")
+	if nodeNameParts[0] == p.PackageName {
+		typeExpr = nodeNameParts[1]
+	}
+
+	compKeyID := MakeCompKeyID()
+
+	fmt.Fprintf(&state.buildBuf, "{\n")
+	defer fmt.Fprintf(&state.buildBuf, "}\n")
+
+	keyExpr := vgIfExpr(n)
+	if keyExpr != "" {
+		fmt.Fprintf(&state.buildBuf, "compKey := vugu.CompKey{ID:0x%X, IterKey: %s}\n", compKeyID, keyExpr)
+	} else {
+		fmt.Fprintf(&state.buildBuf, "compKey := vugu.CompKey{ID:0x%X, IterKey: vgiterkey}\n", compKeyID)
+	}
+	fmt.Fprintf(&state.buildBuf, "// ask BuildEnv for prior instance of this specific component\n")
+	fmt.Fprintf(&state.buildBuf, "comp, _ := vgin.BuildEnv.CachedComponent(compKey).(*%s)\n", typeExpr)
+	fmt.Fprintf(&state.buildBuf, "if comp == nil {\n")
+	fmt.Fprintf(&state.buildBuf, "// create new one if needed\n")
+	fmt.Fprintf(&state.buildBuf, "comp = new(%s)\n", typeExpr)
+	fmt.Fprintf(&state.buildBuf, "}\n")
+	fmt.Fprintf(&state.buildBuf, "vgin.BuildEnv.UseComponent(compKey, comp) // ensure we can use this in the cache next time around\n")
+
+	didAttrMap := false
+
 	// dynamic attrs
+	dynExprMap, dynExprMapKeys := dynamicVGAttrExpr(n)
+	for _, k := range dynExprMapKeys {
+		// if k == "" {
+		// 	return fmt.Errorf("invalid empty dynamic attribute name on component %#v", n)
+		// }
+
+		valExpr := dynExprMap[k]
+
+		// if starts with upper case, it's a field name
+		if hasUpperFirst(k) {
+			fmt.Fprintf(&state.buildBuf, "comp.%s = %s\n", k, valExpr)
+		} else {
+			// otherwise we use an "AttrMap"
+			if !didAttrMap {
+				didAttrMap = true
+				fmt.Fprintf(&state.buildBuf, "comp.AttrMap = make(map[string]interface{}, 8)\n")
+			}
+			fmt.Fprintf(&state.buildBuf, "comp.AttrMap[%q] = %s\n", k, valExpr)
+		}
+
+	}
+
+	// static attrs
+	vgAttrs := staticVGAttr(n.Attr)
+	for _, a := range vgAttrs {
+		// if starts with upper case, it's a field name
+		if hasUpperFirst(a.Key) {
+			fmt.Fprintf(&state.buildBuf, "comp.%s = %q\n", a.Key, a.Val)
+		} else {
+			// otherwise we use an "AttrMap"
+			if !didAttrMap {
+				didAttrMap = true
+				fmt.Fprintf(&state.buildBuf, "comp.AttrMap = make(map[string]interface{}, 8)\n")
+			}
+			fmt.Fprintf(&state.buildBuf, "comp.AttrMap[%q] = %q\n", a.Key, a.Val)
+		}
+	}
 
 	// component events
+	eventMap, eventKeys := vgEventExprs(n)
+	for _, k := range eventKeys {
+		expr := eventMap[k]
+		fmt.Fprintf(&state.buildBuf, "vgn.DOMEventHandlerSpecList = append(vgn.DOMEventHandlerSpecList, vugu.DOMEventHandlerSpec{\n")
+		fmt.Fprintf(&state.buildBuf, "EventType: %q,\n", k)
+		fmt.Fprintf(&state.buildBuf, "Func: func(event *vugu.DOMEvent) { %s },\n", expr)
+		fmt.Fprintf(&state.buildBuf, "// TODO: implement capture, etc. mostly need to decide syntax\n")
+		fmt.Fprintf(&state.buildBuf, "})\n")
+	}
 
-	// slots
+	// TODO: slots
 
-	return fmt.Errorf("component tag not yet supported (%q)", nodeName)
+	fmt.Fprintf(&state.buildBuf, "vgout.Components = append(vgout.Components, comp)\n")
+	fmt.Fprintf(&state.buildBuf, "vgn = &vugu.VGNode{Component:comp}\n")
+	fmt.Fprintf(&state.buildBuf, "vgparent.AppendChild(vgn)\n")
+
+	return nil
+	// return fmt.Errorf("component tag not yet supported (%q)", nodeName)
+}
+
+func hasUpperFirst(s string) bool {
+	for _, c := range s {
+		return unicode.IsUpper(c)
+	}
+	return false
 }
 
 // isScriptOrStyle returns true if this is a "script", "style" or "link" tag

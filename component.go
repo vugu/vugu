@@ -12,6 +12,10 @@ type BuildOut struct {
 	// output element(s) - usually just one that is parent to the rest but slots can have multiple
 	Out []*VGNode
 
+	// components that need to be built next - corresponding to each VGNode in Out with a Component value set,
+	// we make the Builder populate this so BuildEnv doesn't have to traverse Out to gather up each node with a component
+	Components []Builder
+
 	// optional CSS style or link tag(s)
 	CSS []*VGNode
 
@@ -40,14 +44,24 @@ type BuildOut struct {
 
 // Builder is the interface that components implement.
 type Builder interface {
-	Build(in *BuildIn) (out *BuildOut, err error)
+	// Build is called to construct a tree of VGNodes corresponding to the DOM of this component.
+	// Note that Build does not return an error because there is nothing the caller can do about
+	// it except for stop rendering.  This way we force errors during Build to either be handled
+	// internally or to explicitly result in a panic.
+	Build(in *BuildIn) (out *BuildOut)
 }
 
 // BuilderFunc is a Build-like function that implements Builder.
-type BuilderFunc func(in *BuildIn) (out *BuildOut, err error)
+type BuilderFunc func(in *BuildIn) (out *BuildOut)
 
 // Build implements Builder.
-func (f BuilderFunc) Build(in *BuildIn) (out *BuildOut, err error) { return f(in) }
+func (f BuilderFunc) Build(in *BuildIn) (out *BuildOut) { return f(in) }
+
+// BeforeBuilder can be implemented by components that need a chance to compute internal values
+// after properties have been set but before Build is called.
+type BeforeBuilder interface {
+	BeforeBuild()
+}
 
 // // RegisteredComponentTypes returns a copy of the map of registered component types.
 // func RegisteredComponentTypes() ComponentTypeMap {

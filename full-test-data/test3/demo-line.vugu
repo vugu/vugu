@@ -1,0 +1,9 @@
+<li><strong vg-html="c.Num"></strong> a line is here<li>
+
+<script type="application/x-go">
+
+type DemoLine struct {
+    Num int `vugu:"data"`
+}
+
+</script>

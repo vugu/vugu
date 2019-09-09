@@ -16,11 +16,17 @@ func NewBuildEnv() (*BuildEnv, error) {
 // BuildEnv is the environment used when building virtual DOM.
 type BuildEnv struct {
 
-	// components in pool from prior build
-	compPool map[string]Builder
+	// components in cache pool from prior build
+	compCache map[CompKey]Builder
 
 	// components used so far in this build
-	compUsed map[string]Builder
+	compUsed map[CompKey]Builder
+
+	// cache of build output by component from prior build pass
+	buildCache map[Builder]*BuildOut
+
+	// new build output from this build pass (becomes buildCache next build pass)
+	buildResults map[Builder]*BuildOut
 
 	// nodePositionHashMap map[*VGNode]uint64
 
@@ -29,17 +35,91 @@ type BuildEnv struct {
 }
 
 // RunBuild performs a bulid on a component, managing the lifecycles of nested components and related concerned.
-func (e *BuildEnv) RunBuild(builder Builder) (*BuildOut, error) {
+// In the map that is output, m[builder] will give the BuildOut for the component in question.  Child components
+// can likewise be indexed using the component (which should be a struct pointer) as the key.
+// Callers should not modify the return value as it is reused by subsequent calls.
+func (e *BuildEnv) RunBuild(builder Builder) map[Builder]*BuildOut {
+
+	if e.compCache == nil {
+		e.compCache = make(map[CompKey]Builder)
+	}
+	if e.compUsed == nil {
+		e.compUsed = make(map[CompKey]Builder)
+	}
+
+	// clear old prior build pass's cache
+	for k := range e.compCache {
+		delete(e.compCache, k)
+	}
+
+	// swap cache and used, so the prior used is the new cache
+	e.compCache, e.compUsed = e.compUsed, e.compCache
+
+	if e.buildCache == nil {
+		e.buildCache = make(map[Builder]*BuildOut)
+	}
+	if e.buildResults == nil {
+		e.buildResults = make(map[Builder]*BuildOut)
+	}
+
+	// clear old prior build pass's cache
+	for k := range e.buildCache {
+		delete(e.buildCache, k)
+	}
+
+	// swap cache and results, so the prior results is the new cache
+	e.buildCache, e.buildResults = e.buildResults, e.buildCache
+
+	// recursively build everything
+	e.buildOne(builder)
+
+	return e.buildResults
+}
+
+func (e *BuildEnv) buildOne(thisb Builder) {
+
+	beforeBuilder, ok := thisb.(BeforeBuilder)
+	if ok {
+		beforeBuilder.BeforeBuild()
+	}
+
 	var buildIn BuildIn
 	buildIn.BuildEnv = e
 
-	// the pool becomes the used, and used becomes empty
-	e.compPool = e.compUsed
-	e.compUsed = make(map[string]Builder, len(e.compPool))
+	buildOut := thisb.Build(&buildIn)
 
-	// e.nodePositionHashMap = make(map[*VGNode]uint64, len(e.nodePositionHashMap))
+	// store in buildResults
+	e.buildResults[thisb] = buildOut
 
-	return builder.Build(&buildIn)
+	for _, c := range buildOut.Components {
+		e.buildOne(c)
+	}
+}
+
+// CachedComponent will return the component that corresponds to a given CompKey.
+// The CompKey must contain a unique ID for the instance in question, and an optional
+// IterKey if applicable in the caller.
+// A nil value will be returned if nothing is found.  During a single build pass
+// only one component will be returned for a specified key (it is removed from the pool),
+// in order to protect against
+// broken callers that accidentally forget to set IterKey properly and ask for the same
+// component over and over, in whiich case the first call will return a value and
+// subsequent calls will return nil.
+func (e *BuildEnv) CachedComponent(compKey CompKey) Builder {
+	ret, ok := e.compCache[compKey]
+	if ok {
+		delete(e.compCache, compKey)
+		return ret
+	}
+	return nil
+}
+
+// UseComponent indicates the component which was actually used for a specified CompKey
+// during this build pass and stores it for later use.  In the next build pass, components
+// which have be provided UseComponent() will be available via CachedComponent().
+func (e *BuildEnv) UseComponent(compKey CompKey, component Builder) {
+	delete(e.compCache, compKey)    // make sure it's not in the cache
+	e.compUsed[compKey] = component // make sure it is in the used
 }
 
 // FIXME: IMPORTANT: If we can separate the hash computation from the equal comparision, then we can use
@@ -118,6 +198,23 @@ func (e *BuildEnv) RunBuild(builder Builder) (*BuildOut, error) {
 */
 
 /*
+MORE NOTES:
+
+On 9/6/19 6:23 PM, Brad Peabody wrote:
+> each unique position where a component is used could get a unique ID - generated, maybe with type name, doesn't matter really,
+  but then for cases where there is no loop it's just a straight up lookup; in loop cases it's that ID plus a key of some sort
+  (maybe vg-key specifies, with default of index number). could be a struct that has this ID string and key value and that's used
+  to cache which component was used for this last render cycle.
+>
+> interesting - then if we know which exact component was in this slot last time, we can just re-assign all of the fields each pass -
+  if they are the same, fine, if not, fine, either way we just assign the fields and tell the component to Build, etc.
+
+keys can be uint64: uint32 unix timestamp (goes up to 2106-02-07 06:28:15) plus 32 bits of crytographically random data -
+really should be random enough for all practical purposes (NOW IMPLEMENTED AS CompKey)
+
+*/
+
+/*
 
 STRUCT TAGS:
 
@@ -159,10 +256,10 @@ type SomeComponent struct {
 
 */
 
-func (e *BuildEnv) Component(vgparent *VGNode, comp Builder) Builder {
+// func (e *BuildEnv) Component(vgparent *VGNode, comp Builder) Builder {
 
-	return comp
-}
+// 	return comp
+// }
 
 // // BuildRoot creates a BuildIn struct and calls Build on the root component (Builder), returning it's output.
 // func (e *BuildEnv) BuildRoot() (*BuildOut, error) {
