@@ -851,6 +851,11 @@ func (p *ParserGo) visitNodeComponentElement(state *parseGoState, n *html.Node) 
 		typeExpr = nodeNameParts[1]
 	}
 
+	// FIXME: this really should produce the same value if run on the same file - to avoid unneeded git changes
+	// So probably instead of being random we need to use the timestamp of the input file and then hash things like
+	// the file name, the offset into the file, all of the bytes before it, stuff like that.  Either that or we
+	// find a way to re-use the earlier value - but it will get real annoying real fast when .vugu fiiles that didn't
+	// change have .go files marked as changed just because this ID was generated differently.
 	compKeyID := MakeCompKeyID()
 
 	fmt.Fprintf(&state.buildBuf, "{\n")
