@@ -7,7 +7,8 @@ import (
 	"unicode"
 
 	// "github.com/vugu/vugu/internal/html"
-	"golang.org/x/net/html"
+	// "golang.org/x/net/html"
+	"github.com/vugu/html"
 )
 
 // compactNodeTree operates on a Node tree in-place and find elements with static

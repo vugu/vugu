@@ -123,7 +123,10 @@ func (r *JSRenderer) Release() {
 }
 
 // Render implements Renderer.
-func (r *JSRenderer) Render(bo *BuildOut) error {
+func (r *JSRenderer) Render(buildOutMap map[interface{}]*BuildOut, root interface{}) error {
+
+	// FIXME: figure out map
+	bo := buildOutMap[root]
 
 	// acquire read lock so events are not changing data while Render is in progress
 	r.eventRWMU.RLock()

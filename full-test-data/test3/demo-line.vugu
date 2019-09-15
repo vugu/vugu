@@ -1,4 +1,4 @@
-<li><strong vg-html="c.Num"></strong> a line is here<li>
+<li><strong vg-html="c.Num"></strong> a line is here</li>
 
 <script type="application/x-go">
 

@@ -26,6 +26,8 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 
 	vgout = &vugu.BuildOut{}
 
+	var vgiterkey interface{}
+	_ = vgiterkey
 	var vgn *vugu.VGNode
 	vgn = &vugu.VGNode{Type: vugu.VGNodeType(3), Data: "html", Attr: []vugu.VGAttribute(nil)}
 	vgout.Out = append(vgout.Out, vgn)	// root for output
@@ -69,7 +71,7 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 				vgn = &vugu.VGNode{Type: vugu.VGNodeType(3), Data: "div", Attr: []vugu.VGAttribute(nil)}
 				vgparent.AppendChild(vgn)
 				{
-					vghtml := "Let\x26#39;s see how this goes:"
+					vghtml := fmt.Sprint("Let\x26#39;s see how this goes:")
 					vgn.InnerHTML = &vghtml
 				}
 				vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n\n            "}
@@ -82,19 +84,19 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 					vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n                "}
 					vgparent.AppendChild(vgn)
 					for i := 0; i < c.ItemCount; i++ {
+						var vgiterkey interface{} = i
 						{
-							compKey := vugu.CompKey{ID: 0x5D75B8DFCC2A928B, IterKey: vgiterkey}
+							vgcompKey := vugu.CompKey{ID: 0x5D7DA335A34B903B, IterKey: vgiterkey}
 							// ask BuildEnv for prior instance of this specific component
-							comp, _ := vgin.BuildEnv.CachedComponent(compKey).(*demoline)
-							if comp == nil {
+							vgcomp, _ := vgin.BuildEnv.CachedComponent(vgcompKey).(*DemoLine)
+							if vgcomp == nil {
 								// create new one if needed
-								comp = new(demoline)
+								vgcomp = new(DemoLine)
 							}
-							vgin.BuildEnv.UseComponent(compKey, comp)	// ensure we can use this in the cache next time around
-							comp.AttrMap = make(map[string]interface{}, 8)
-							comp.AttrMap["num"] = i
-							vgout.Components = append(vgout.Components, comp)
-							vgn = &vugu.VGNode{Component: comp}
+							vgin.BuildEnv.UseComponent(vgcompKey, vgcomp)	// ensure we can use this in the cache next time around
+							vgcomp.Num = i
+							vgout.Components = append(vgout.Components, vgcomp)
+							vgn = &vugu.VGNode{Component: vgcomp}
 							vgparent.AppendChild(vgn)
 						}
 					}

@@ -11,7 +11,8 @@ import (
 
 	// "github.com/vugu/vugu/internal/htmlx"
 
-	"golang.org/x/net/html"
+	// "golang.org/x/net/html"
+	"github.com/vugu/html"
 )
 
 func attrFromHtml(attr html.Attribute) VGAttribute {
@@ -102,9 +103,10 @@ func vgForExpr(n *html.Node) string {
 
 			v := strings.TrimSpace(a.Val)
 
-			if !strings.Contains(v, " ") { // make it so `w` is a shorthand for `key, value := range w`
-				v = "key, value := range " + v
-			}
+			// moved to ParserGo.emitForExpr
+			// if !strings.Contains(v, " ") { // make it so `w` is a shorthand for `key, value := range w`
+			// 	v = "key, value := range " + v
+			// }
 
 			return v
 		}
@@ -151,7 +153,7 @@ func dynamicVGAttrExpr(n *html.Node) (ret map[string]string, retKeys []string) {
 	var da []html.Attribute
 	// get dynamic attrs first
 	for _, a := range n.Attr {
-		if strings.HasPrefix(a.Key, ":") {
+		if strings.HasPrefix(a.OrigKey, ":") {
 			da = append(da, a)
 		}
 	}
@@ -162,7 +164,7 @@ func dynamicVGAttrExpr(n *html.Node) (ret map[string]string, retKeys []string) {
 	ret = make(map[string]string, len(da))
 	retKeys = make([]string, len(da))
 	for i, a := range da {
-		k := strings.TrimPrefix(a.Key, ":")
+		k := strings.TrimPrefix(a.OrigKey, ":")
 		retKeys[i] = k
 		ret[k] = a.Val
 	}
@@ -175,7 +177,7 @@ func propVGAttrExpr(n *html.Node) (ret map[string]string, retKeys []string) {
 	var da []html.Attribute
 	// get prop attrs first
 	for _, a := range n.Attr {
-		if strings.HasPrefix(a.Key, ".") {
+		if strings.HasPrefix(a.OrigKey, ".") {
 			da = append(da, a)
 		}
 	}
@@ -186,7 +188,7 @@ func propVGAttrExpr(n *html.Node) (ret map[string]string, retKeys []string) {
 	ret = make(map[string]string, len(da))
 	retKeys = make([]string, len(da))
 	for i, a := range da {
-		k := strings.TrimPrefix(a.Key, ".")
+		k := strings.TrimPrefix(a.OrigKey, ".")
 		retKeys[i] = k
 		ret[k] = a.Val
 	}
@@ -203,7 +205,7 @@ func vgEventExprs(n *html.Node) (ret map[string]string, retKeys []string) {
 	var da []html.Attribute
 	// get attrs first
 	for _, a := range n.Attr {
-		if strings.HasPrefix(a.Key, "@") {
+		if strings.HasPrefix(a.OrigKey, "@") {
 			da = append(da, a)
 		}
 	}
@@ -213,7 +215,7 @@ func vgEventExprs(n *html.Node) (ret map[string]string, retKeys []string) {
 	// make map as small as possible
 	ret = make(map[string]string, len(da))
 	for _, a := range da {
-		k := strings.TrimPrefix(a.Key, "@")
+		k := strings.TrimPrefix(a.OrigKey, "@")
 		retKeys = append(retKeys, k)
 		ret[k] = a.Val
 	}

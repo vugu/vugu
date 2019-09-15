@@ -23,10 +23,10 @@ type BuildEnv struct {
 	compUsed map[CompKey]Builder
 
 	// cache of build output by component from prior build pass
-	buildCache map[Builder]*BuildOut
+	buildCache map[interface{}]*BuildOut
 
 	// new build output from this build pass (becomes buildCache next build pass)
-	buildResults map[Builder]*BuildOut
+	buildResults map[interface{}]*BuildOut
 
 	// nodePositionHashMap map[*VGNode]uint64
 
@@ -38,7 +38,7 @@ type BuildEnv struct {
 // In the map that is output, m[builder] will give the BuildOut for the component in question.  Child components
 // can likewise be indexed using the component (which should be a struct pointer) as the key.
 // Callers should not modify the return value as it is reused by subsequent calls.
-func (e *BuildEnv) RunBuild(builder Builder) map[Builder]*BuildOut {
+func (e *BuildEnv) RunBuild(builder Builder) map[interface{}]*BuildOut {
 
 	if e.compCache == nil {
 		e.compCache = make(map[CompKey]Builder)
@@ -56,10 +56,10 @@ func (e *BuildEnv) RunBuild(builder Builder) map[Builder]*BuildOut {
 	e.compCache, e.compUsed = e.compUsed, e.compCache
 
 	if e.buildCache == nil {
-		e.buildCache = make(map[Builder]*BuildOut)
+		e.buildCache = make(map[interface{}]*BuildOut)
 	}
 	if e.buildResults == nil {
-		e.buildResults = make(map[Builder]*BuildOut)
+		e.buildResults = make(map[interface{}]*BuildOut)
 	}
 
 	// clear old prior build pass's cache

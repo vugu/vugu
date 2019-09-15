@@ -195,12 +195,9 @@ func main() {
 
 	for ok := true; ok; ok = renderer.EventWait() {
 
-		buildOut, err := buildEnv.RunBuild(rootBuilder)
-		if err != nil {
-			panic(err)
-		}
+		buildOutMap := buildEnv.RunBuild(rootBuilder)
 
-		err = renderer.Render(buildOut)
+		err = renderer.Render(buildOutMap, rootBuilder)
 		if err != nil {
 			panic(err)
 		}

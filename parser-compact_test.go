@@ -7,7 +7,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	// "github.com/vugu/vugu/internal/htmlx"
-	"golang.org/x/net/html"
+	// "golang.org/x/net/html"
+	"github.com/vugu/html"
 )
 
 func TestCompactNodeTree(t *testing.T) {

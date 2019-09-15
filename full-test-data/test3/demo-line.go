@@ -8,10 +8,16 @@ import "encoding/json"
 import "github.com/vugu/vugu"
 import js "github.com/vugu/vugu/js"
 
+type DemoLine struct {
+	Num int `vugu:"data"`
+}
+
 func (c *DemoLine) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 
 	vgout = &vugu.BuildOut{}
 
+	var vgiterkey interface{}
+	_ = vgiterkey
 	var vgn *vugu.VGNode
 	vgn = &vugu.VGNode{Type: vugu.VGNodeType(3), Data: "li", Attr: []vugu.VGAttribute(nil)}
 	vgout.Out = append(vgout.Out, vgn)	// root for output
@@ -21,28 +27,10 @@ func (c *DemoLine) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 		vgn = &vugu.VGNode{Type: vugu.VGNodeType(3), Data: "strong", Attr: []vugu.VGAttribute(nil)}
 		vgparent.AppendChild(vgn)
 		{
-			vghtml := c.Num
+			vghtml := fmt.Sprint(c.Num)
 			vgn.InnerHTML = &vghtml
 		}
 		vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: " a line is here"}
-		vgparent.AppendChild(vgn)
-	}
-	vgn = &vugu.VGNode{Type: vugu.VGNodeType(3), Data: "li", Attr: []vugu.VGAttribute(nil)}
-	vgparent.AppendChild(vgn)
-	{
-		vgparent := vgn
-		_ = vgparent
-		vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n\n"}
-		vgparent.AppendChild(vgn)
-		vgn = &vugu.VGNode{Type: vugu.VGNodeType(3), Data: "script", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "type", Val: "application/x-go"}}}
-		vgparent.AppendChild(vgn)
-		{
-			vgparent := vgn
-			_ = vgparent
-			vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n\ntype DemoLine struct {\n    Num int `vugu:\"data\"`\n}\n\n"}
-			vgparent.AppendChild(vgn)
-		}
-		vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n"}
 		vgparent.AppendChild(vgn)
 	}
 	return vgout
@@ -53,5 +41,3 @@ var _ fmt.Stringer
 var _ reflect.Type
 var _ json.RawMessage
 var _ js.Value
-
-type DemoLine struct {}

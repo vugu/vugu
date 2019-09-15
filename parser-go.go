@@ -15,8 +15,10 @@ import (
 
 	// "github.com/vugu/vugu/internal/htmlx"
 	// "github.com/vugu/vugu/internal/htmlx/atom"
-	"golang.org/x/net/html"
-	"golang.org/x/net/html/atom"
+	// "golang.org/x/net/html"
+	// "golang.org/x/net/html/atom"
+	"github.com/vugu/html"
+	"github.com/vugu/html/atom"
 )
 
 // ParserGo is a template parser that emits Go source code that will construct the appropriately wired VGNodes.
@@ -128,6 +130,7 @@ func (p *ParserGo) Parse(r io.Reader, fname string) error {
 			if n.Type != html.ElementNode {
 				continue
 			}
+			// log.Printf("FRAGMENT: %#v", n)
 			state.docNodeList = append(state.docNodeList, n)
 		}
 
@@ -225,6 +228,8 @@ func (p *ParserGo) visitOverall(state *parseGoState) error {
 	fmt.Fprintf(&state.buildBuf, "    \n")
 	fmt.Fprintf(&state.buildBuf, "    vgout = &vugu.BuildOut{}\n")
 	fmt.Fprintf(&state.buildBuf, "    \n")
+	fmt.Fprintf(&state.buildBuf, "    var vgiterkey interface{}\n")
+	fmt.Fprintf(&state.buildBuf, "    _ = vgiterkey\n")
 	fmt.Fprintf(&state.buildBuf, "    var vgn *vugu.VGNode\n")
 	// fmt.Fprintf(&buildBuf, "    var vgparent *vugu.VGNode\n")
 
@@ -254,6 +259,8 @@ func (p *ParserGo) visitOverall(state *parseGoState) error {
 
 	} else {
 
+		gotTopNode := false
+
 		for _, n := range state.docNodeList {
 
 			// ignore comments
@@ -279,6 +286,7 @@ func (p *ParserGo) visitOverall(state *parseGoState) error {
 			}
 
 			if isScriptOrStyle(n) {
+
 				err := p.visitScriptOrStyle(state, n)
 				if err != nil {
 					return err
@@ -286,7 +294,12 @@ func (p *ParserGo) visitOverall(state *parseGoState) error {
 				continue
 			}
 
-			// top node
+			if gotTopNode {
+				return fmt.Errorf("Found more than one top level element: %s", n.Data)
+			}
+			gotTopNode = true
+
+			// handle top node
 
 			// check for forbidden top level tags
 			nodeName := strings.ToLower(n.Data)
@@ -555,9 +568,10 @@ func (p *ParserGo) visitJS(state *parseGoState, n *html.Node) error {
 	// allow control stuff, why not
 
 	// vg-for
-	if forx := vgForExpr(n); forx != "" {
-		// fmt.Fprintf(&buildBuf, "for /*line %s:%d*/%s {\n", fname, n.Line, forx)
-		fmt.Fprintf(&state.buildBuf, "for %s {\n", forx)
+	if vgForExpr(n) != "" {
+		if err := p.emitForExpr(state, n); err != nil {
+			return err
+		}
 		defer fmt.Fprintf(&state.buildBuf, "}\n")
 	}
 
@@ -627,9 +641,10 @@ func (p *ParserGo) visitCSS(state *parseGoState, n *html.Node) error {
 	// allow control stuff, why not
 
 	// vg-for
-	if forx := vgForExpr(n); forx != "" {
-		// fmt.Fprintf(&buildBuf, "for /*line %s:%d*/%s {\n", fname, n.Line, forx)
-		fmt.Fprintf(&state.buildBuf, "for %s {\n", forx)
+	if vgForExpr(n) != "" {
+		if err := p.emitForExpr(state, n); err != nil {
+			return err
+		}
 		defer fmt.Fprintf(&state.buildBuf, "}\n")
 	}
 
@@ -687,9 +702,10 @@ func (p *ParserGo) visitTopNode(state *parseGoState, n *html.Node) error {
 func (p *ParserGo) visitNodeElementAndCtrl(state *parseGoState, n *html.Node) error {
 
 	// vg-for
-	if forx := vgForExpr(n); forx != "" {
-		// fmt.Fprintf(&buildBuf, "for /*line %s:%d*/%s {\n", fname, n.Line, forx)
-		fmt.Fprintf(&state.buildBuf, "for %s {\n", forx)
+	if vgForExpr(n) != "" {
+		if err := p.emitForExpr(state, n); err != nil {
+			return err
+		}
 		defer fmt.Fprintf(&state.buildBuf, "}\n")
 	}
 
@@ -743,7 +759,7 @@ func (p *ParserGo) visitNodeJustElement(state *parseGoState, n *html.Node) error
 	// vg-html
 	htmlExpr := vgHTMLExpr(n)
 	if htmlExpr != "" {
-		fmt.Fprintf(&state.buildBuf, "{\nvghtml := %s; \nvgn.InnerHTML = &vghtml\n}\n", htmlExpr)
+		fmt.Fprintf(&state.buildBuf, "{\nvghtml := fmt.Sprint(%s); \nvgn.InnerHTML = &vghtml\n}\n", htmlExpr)
 	}
 
 	// DOM events
@@ -826,9 +842,10 @@ func (p *ParserGo) visitNodeComponentElement(state *parseGoState, n *html.Node) 
 	// components are just different so we handle all of our own vg-for vg-if and everything else
 
 	// vg-for
-	if forx := vgForExpr(n); forx != "" {
-		// fmt.Fprintf(&buildBuf, "for /*line %s:%d*/%s {\n", fname, n.Line, forx)
-		fmt.Fprintf(&state.buildBuf, "for %s {\n", forx)
+	if vgForExpr(n) != "" {
+		if err := p.emitForExpr(state, n); err != nil {
+			return err
+		}
 		defer fmt.Fprintf(&state.buildBuf, "}\n")
 	}
 
@@ -839,7 +856,7 @@ func (p *ParserGo) visitNodeComponentElement(state *parseGoState, n *html.Node) 
 		defer fmt.Fprintf(&state.buildBuf, "}\n")
 	}
 
-	nodeName := n.Data
+	nodeName := n.OrigData // use original case of element
 	nodeNameParts := strings.Split(nodeName, ":")
 	if len(nodeNameParts) != 2 {
 		return fmt.Errorf("invalid component tag name %q must contain exactly one colon", nodeName)
@@ -856,24 +873,24 @@ func (p *ParserGo) visitNodeComponentElement(state *parseGoState, n *html.Node) 
 	// the file name, the offset into the file, all of the bytes before it, stuff like that.  Either that or we
 	// find a way to re-use the earlier value - but it will get real annoying real fast when .vugu fiiles that didn't
 	// change have .go files marked as changed just because this ID was generated differently.
-	compKeyID := MakeCompKeyID()
+	compKeyID := MakeCompKeyIDNowRand()
 
 	fmt.Fprintf(&state.buildBuf, "{\n")
 	defer fmt.Fprintf(&state.buildBuf, "}\n")
 
 	keyExpr := vgIfExpr(n)
 	if keyExpr != "" {
-		fmt.Fprintf(&state.buildBuf, "compKey := vugu.CompKey{ID:0x%X, IterKey: %s}\n", compKeyID, keyExpr)
+		fmt.Fprintf(&state.buildBuf, "vgcompKey := vugu.CompKey{ID:0x%X, IterKey: %s}\n", compKeyID, keyExpr)
 	} else {
-		fmt.Fprintf(&state.buildBuf, "compKey := vugu.CompKey{ID:0x%X, IterKey: vgiterkey}\n", compKeyID)
+		fmt.Fprintf(&state.buildBuf, "vgcompKey := vugu.CompKey{ID:0x%X, IterKey: vgiterkey}\n", compKeyID)
 	}
 	fmt.Fprintf(&state.buildBuf, "// ask BuildEnv for prior instance of this specific component\n")
-	fmt.Fprintf(&state.buildBuf, "comp, _ := vgin.BuildEnv.CachedComponent(compKey).(*%s)\n", typeExpr)
-	fmt.Fprintf(&state.buildBuf, "if comp == nil {\n")
+	fmt.Fprintf(&state.buildBuf, "vgcomp, _ := vgin.BuildEnv.CachedComponent(vgcompKey).(*%s)\n", typeExpr)
+	fmt.Fprintf(&state.buildBuf, "if vgcomp == nil {\n")
 	fmt.Fprintf(&state.buildBuf, "// create new one if needed\n")
-	fmt.Fprintf(&state.buildBuf, "comp = new(%s)\n", typeExpr)
+	fmt.Fprintf(&state.buildBuf, "vgcomp = new(%s)\n", typeExpr)
 	fmt.Fprintf(&state.buildBuf, "}\n")
-	fmt.Fprintf(&state.buildBuf, "vgin.BuildEnv.UseComponent(compKey, comp) // ensure we can use this in the cache next time around\n")
+	fmt.Fprintf(&state.buildBuf, "vgin.BuildEnv.UseComponent(vgcompKey, vgcomp) // ensure we can use this in the cache next time around\n")
 
 	didAttrMap := false
 
@@ -888,14 +905,14 @@ func (p *ParserGo) visitNodeComponentElement(state *parseGoState, n *html.Node) 
 
 		// if starts with upper case, it's a field name
 		if hasUpperFirst(k) {
-			fmt.Fprintf(&state.buildBuf, "comp.%s = %s\n", k, valExpr)
+			fmt.Fprintf(&state.buildBuf, "vgcomp.%s = %s\n", k, valExpr)
 		} else {
 			// otherwise we use an "AttrMap"
 			if !didAttrMap {
 				didAttrMap = true
-				fmt.Fprintf(&state.buildBuf, "comp.AttrMap = make(map[string]interface{}, 8)\n")
+				fmt.Fprintf(&state.buildBuf, "vgcomp.AttrMap = make(map[string]interface{}, 8)\n")
 			}
-			fmt.Fprintf(&state.buildBuf, "comp.AttrMap[%q] = %s\n", k, valExpr)
+			fmt.Fprintf(&state.buildBuf, "vgcomp.AttrMap[%q] = %s\n", k, valExpr)
 		}
 
 	}
@@ -905,14 +922,14 @@ func (p *ParserGo) visitNodeComponentElement(state *parseGoState, n *html.Node) 
 	for _, a := range vgAttrs {
 		// if starts with upper case, it's a field name
 		if hasUpperFirst(a.Key) {
-			fmt.Fprintf(&state.buildBuf, "comp.%s = %q\n", a.Key, a.Val)
+			fmt.Fprintf(&state.buildBuf, "vgcomp.%s = %q\n", a.Key, a.Val)
 		} else {
 			// otherwise we use an "AttrMap"
 			if !didAttrMap {
 				didAttrMap = true
-				fmt.Fprintf(&state.buildBuf, "comp.AttrMap = make(map[string]interface{}, 8)\n")
+				fmt.Fprintf(&state.buildBuf, "vgcomp.AttrMap = make(map[string]interface{}, 8)\n")
 			}
-			fmt.Fprintf(&state.buildBuf, "comp.AttrMap[%q] = %q\n", a.Key, a.Val)
+			fmt.Fprintf(&state.buildBuf, "vgcomp.AttrMap[%q] = %q\n", a.Key, a.Val)
 		}
 	}
 
@@ -929,12 +946,60 @@ func (p *ParserGo) visitNodeComponentElement(state *parseGoState, n *html.Node) 
 
 	// TODO: slots
 
-	fmt.Fprintf(&state.buildBuf, "vgout.Components = append(vgout.Components, comp)\n")
-	fmt.Fprintf(&state.buildBuf, "vgn = &vugu.VGNode{Component:comp}\n")
+	fmt.Fprintf(&state.buildBuf, "vgout.Components = append(vgout.Components, vgcomp)\n")
+	fmt.Fprintf(&state.buildBuf, "vgn = &vugu.VGNode{Component:vgcomp}\n")
 	fmt.Fprintf(&state.buildBuf, "vgparent.AppendChild(vgn)\n")
 
 	return nil
 	// return fmt.Errorf("component tag not yet supported (%q)", nodeName)
+}
+
+// NOTE: caller is responsible for emitting the closing curly bracket
+func (p *ParserGo) emitForExpr(state *parseGoState, n *html.Node) error {
+
+	forx := vgForExpr(n)
+
+	if forx == "" {
+		panic("no for expression, code should not be calling emitForExpr when no vg-for is present")
+	}
+
+	// cases:
+	// * _, v := // replace _ with something we use for iterval
+	// * key, value := // unused vars, use 'key' as iter val
+	// * k, v := // detect `k` and use as iterval
+
+	vgiterkeyx := vgKeyExpr(n)
+
+	// make it so `w` is a shorthand for `key, value := range w`
+	if !strings.Contains(forx, ":=") {
+		forx = "key, value := range " + forx
+		if vgiterkeyx == "" {
+			vgiterkeyx = "key"
+		}
+	}
+
+	// detect "_, k := " form combined with no vg-key specified and replace
+	if vgiterkeyx == "" && strings.HasPrefix(forx, "_") {
+		forx = "vgiterkeyt " + forx[1:]
+		vgiterkeyx = "vgiterkeyt"
+	}
+
+	// if still no vgiterkeyx use the first identifier
+	if vgiterkeyx == "" {
+		vgiterkeyx = strings.FieldsFunc(forx, func(r rune) bool {
+			return unicode.IsLetter(r) || unicode.IsDigit(r)
+		})[0]
+	}
+
+	fmt.Fprintf(&state.buildBuf, "for %s {\n", forx)
+	fmt.Fprintf(&state.buildBuf, "var vgiterkey interface{} = %s\n", vgiterkeyx)
+
+	// handle case of ensuring the key, value we put in earlier never gets an "unused variable" error
+	if strings.HasPrefix(forx, "key, value :=") {
+		fmt.Fprintf(&state.buildBuf, "_, _ = key, value\n")
+	}
+
+	return nil
 }
 
 func hasUpperFirst(s string) bool {

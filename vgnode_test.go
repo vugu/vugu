@@ -3,6 +3,10 @@ package vugu
 import (
 	"sync"
 	"testing"
+	// "github.com/vugu/html"
+	// "github.com/vugu/html/atom"
+	// html "golang.org/x/net/html"
+	// atom "golang.org/x/net/html/atom"
 )
 
 //go:noinline
@@ -101,5 +105,40 @@ func BenchmarkPool(b *testing.B) {
 // 		return nil
 // 	}))
 // 	assert.True(found)
+
+// }
+
+// func TestTmp(t *testing.T) {
+
+// 	inRaw := []byte(`<li>hello</li>
+
+// <script type="application/x-go">
+
+// type DemoLine struct {
+// 	Num int
+// }
+
+// </script>
+// `)
+
+// 	nlist, err := html.ParseFragment(bytes.NewReader(inRaw), &html.Node{
+// 		Type:     html.ElementNode,
+// 		DataAtom: atom.Body,
+// 		Data:     "body",
+// 	})
+// 	if err != nil {
+// 		panic(err)
+// 	}
+
+// 	var buf bytes.Buffer
+// 	for i := range nlist {
+// 		log.Printf("%#v\n", nlist[i])
+// 		err = html.Render(&buf, nlist[i])
+// 		if err != nil {
+// 			panic(err)
+// 		}
+// 	}
+
+// 	log.Printf("OUT: %s", buf.String())
 
 // }
