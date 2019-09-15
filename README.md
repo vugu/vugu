@@ -16,9 +16,22 @@ No node. No JS. No npm. No node_modules folder competing with your music library
 
 ## Updates ♨
 
+* 2019-09-08 Implemented ModTracker to keep track of changes to components and their data (this is also the beginning of Vuex-like functionality but without wrappers or events). Worked out the lifecycle of components in much more detail and work in progress on nested components implementation (component-refactor branch currently broken, but finally the core nested component functionality is going in - hopefully will finish next week).
+* 2019-09-07 Updated everything for Go 1.13, including both master and component-refactor branches, Vugu's js wrapper package, site documentation.
+* 2019-09-01 On component-refactor branch: Form element values and other related data now available on DOMEvent, `.prop=` syntax implemented, various cleanup, imports are deduplicated automatically now, started on nested component implementation and all of that craziness.
+* 2019-08-25 CSS now supported on component-refactor branch, including in full-HTML mode, working sample that pulls in Bootstrap CSS.  Vugu's [js wrapper package](https://godoc.org/github.com/vugu/vugu/js) copied to master and made available.
+* 2019-08-18 Full HTML (root component can start with `<html>` tag) now supported on component-refactor branch, updated CSS and JS support figured out and implementation in-progress
+* 2019-08-12 Refactored DOM event listener code in-progress, event registration/deregistration works(-ish), filling out the remaining functionality to provide event summary, calls like preventDefault(), etc.
+* 2019-08-04 Some basic stuff in there on the DOM syncing rewrite and the new instruction workflow from VGNode -> binary encoded to raw bytes in Go -> read with DataView in JS -> DOM tree manipulation.  With the pattern in place the rest should get easier.
+* 2019-07-28 Making some hard choices on how to do DOM syncing in a performant and reliable way.  https://github.com/vugu/vugu/wiki/DOM-Syncing-Instructions
+* 2019-07-20 Some design info on how "data binding" (hashing actually) will work in Vugu: https://github.com/vugu/vugu/wiki/Data-Hashing-vs-Binding
+* 2019-07-16 Vugu has a logo! https://www.instagram.com/p/Bz3zmtYAYcM/  Good things are in the works, the plan is to get a bunch of much-awaited updates pushed to master before the end of the month.
+* 2019-05-19 Refactor still in progress - this is the cleaned-up architecture concept: https://github.com/vugu/vugu/wiki/Architecture-Overview
 * 2019-04-07 The Vugu Playground is up at: https://play.vugu.org/
 * 2019-04-05 Thanks to @erinpentecost, **vugufmt is now available** and provides gofmt-like functionality on your .vugu files. ("go get github.com/vugu/vugu/cmd/vugufmt && go install github.com/vugu/vugu/cmd/vugufmt")
 * 2019-04-05 The component playground should be available soon; followed by some internal work to properly handle nested components in a type-safe way; then probably a router...
+
+<img src="https://cdnjs.cloudflare.com/ajax/libs/ionicons/4.5.6/collection/build/ionicons/svg/logo-slack.svg" width="17" height="17"> Join the conversation: [Gophers on Slack](https://invite.slack.golangbridge.org/), channel #vugu
 
 ## Highlights
 
@@ -48,6 +61,7 @@ Still a work in progress, but a lot of things are already functional. Some work 
 - [x] DOM Events, click, etc.
 - [x] Basic data hashing to avoid unnecessary computation where possible.
 - [x] Basic dev and prod server tooling, easy to get started
+- [ ] Rewrite everything so it is not so terrible internally and stablize existing features to avoid breaking things moving forward as much as possible (big task, but well in-progress!)
 - [ ] URL Router
 - [ ] Server-side rendering (HTML generation works, needs URL Router to make it usable)
 - [ ] Performance optimizations
@@ -70,6 +84,6 @@ So you won't find a vugu command line tool that runs a development server, inste
 you'll find in the docs an appropriate snippet of code you can paste in a file and `go run` yourself.  For the code
 generation while there is an http.Handler that can do this upon page refresh, you also can (and should!) run `vugugen`
 via `go generate`. There are many small decisions in Vugu which follow this philosophy: wherever reasonably possible,
-just use the existing mechanism that already exists.  And keep doing that until there's proof that something
+just use the existing mechanism instead of inventing anew.  And keep doing that until there's proof that something
 else is really needed.  So far it's been working well.  And it allows Vugu to focus on the specific things it 
 brings to the table.
