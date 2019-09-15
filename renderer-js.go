@@ -123,10 +123,9 @@ func (r *JSRenderer) Release() {
 }
 
 // Render implements Renderer.
-func (r *JSRenderer) Render(buildOutMap map[interface{}]*BuildOut, root interface{}) error {
+func (r *JSRenderer) Render(buildResults *BuildResults) error {
 
-	// FIXME: figure out map
-	bo := buildOutMap[root]
+	bo := buildResults.Out
 
 	// acquire read lock so events are not changing data while Render is in progress
 	r.eventRWMU.RLock()
@@ -292,7 +291,7 @@ func (r *JSRenderer) Render(buildOutMap map[interface{}]*BuildOut, root interfac
 	}
 
 	// main output
-	err = r.visitFirst(state, bo, bo.Out[0], []byte("0"))
+	err = r.visitFirst(state, bo, buildResults, bo.Out[0], []byte("0"))
 	if err != nil {
 		return err
 	}
@@ -427,7 +426,7 @@ func (r *JSRenderer) EventWait() (ok bool) {
 // 	}
 // }
 
-func (r *JSRenderer) visitFirst(state *jsRenderState, bo *BuildOut, n *VGNode, positionID []byte) error {
+func (r *JSRenderer) visitFirst(state *jsRenderState, bo *BuildOut, br *BuildResults, n *VGNode, positionID []byte) error {
 
 	log.Printf("TODO: We need to go through and optimize away unneeded calls to create elements, set attributes, set event handlers, etc. for cases where they are the same per hash")
 
@@ -452,7 +451,7 @@ func (r *JSRenderer) visitFirst(state *jsRenderState, bo *BuildOut, n *VGNode, p
 			if strings.ToLower(nchild.Data) == "head" {
 
 				// FIXME: positionID value?
-				err := r.visitHead(state, bo, nchild, positionID)
+				err := r.visitHead(state, bo, br, nchild, positionID)
 				if err != nil {
 					return err
 				}
@@ -460,7 +459,7 @@ func (r *JSRenderer) visitFirst(state *jsRenderState, bo *BuildOut, n *VGNode, p
 			} else if strings.ToLower(nchild.Data) == "body" {
 
 				// FIXME: positionID value?
-				err := r.visitBody(state, bo, nchild, positionID)
+				err := r.visitBody(state, bo, br, nchild, positionID)
 				if err != nil {
 					return err
 				}
@@ -475,25 +474,25 @@ func (r *JSRenderer) visitFirst(state *jsRenderState, bo *BuildOut, n *VGNode, p
 	}
 
 	// else, first tag is anything else - try again as the element to be mounted
-	return r.visitMount(state, bo, n, positionID)
+	return r.visitMount(state, bo, br, n, positionID)
 
 }
 
-func (r *JSRenderer) visitHead(state *jsRenderState, bo *BuildOut, n *VGNode, positionID []byte) error {
+func (r *JSRenderer) visitHead(state *jsRenderState, bo *BuildOut, br *BuildResults, n *VGNode, positionID []byte) error {
 	log.Printf("TODO: visitHead")
 	return nil
 }
 
-func (r *JSRenderer) visitBody(state *jsRenderState, bo *BuildOut, n *VGNode, positionID []byte) error {
+func (r *JSRenderer) visitBody(state *jsRenderState, bo *BuildOut, br *BuildResults, n *VGNode, positionID []byte) error {
 
 	if !(n.FirstChild != nil && n.FirstChild.NextSibling == nil) {
 		return fmt.Errorf("body tag must contain exactly one element child")
 	}
 
-	return r.visitMount(state, bo, n.FirstChild, positionID)
+	return r.visitMount(state, bo, br, n.FirstChild, positionID)
 }
 
-func (r *JSRenderer) visitMount(state *jsRenderState, bo *BuildOut, n *VGNode, positionID []byte) error {
+func (r *JSRenderer) visitMount(state *jsRenderState, bo *BuildOut, br *BuildResults, n *VGNode, positionID []byte) error {
 
 	// log.Printf("visitMount got here")
 
@@ -502,15 +501,25 @@ func (r *JSRenderer) visitMount(state *jsRenderState, bo *BuildOut, n *VGNode, p
 		return err
 	}
 
-	return r.visitSyncElementEtc(state, bo, n, positionID)
+	return r.visitSyncElementEtc(state, bo, br, n, positionID)
 
 }
 
-func (r *JSRenderer) visitSyncNode(state *jsRenderState, bo *BuildOut, n *VGNode, positionID []byte) error {
+func (r *JSRenderer) visitSyncNode(state *jsRenderState, bo *BuildOut, br *BuildResults, n *VGNode, positionID []byte) error {
 
 	log.Printf("visitSyncNode")
 
 	var err error
+
+	// check for Component, in which case we descend into it instead of processing like a regular node
+	if n.Component != nil {
+		compBuildOut := br.ResultFor(n.Component)
+		if len(compBuildOut.Out) != 1 {
+			return fmt.Errorf("component %#v expected exactly one Out element but got %d instead",
+				n.Component, len(compBuildOut.Out))
+		}
+		return r.visitSyncNode(state, compBuildOut, br, compBuildOut.Out[0], positionID)
+	}
 
 	switch n.Type {
 	case ElementNode:
@@ -527,12 +536,12 @@ func (r *JSRenderer) visitSyncNode(state *jsRenderState, bo *BuildOut, n *VGNode
 	}
 
 	// only elements have attributes, child or events
-	return r.visitSyncElementEtc(state, bo, n, positionID)
+	return r.visitSyncElementEtc(state, bo, br, n, positionID)
 
 }
 
 // visitSyncElementEtc syncs the rest of the stuff that only applies to elements
-func (r *JSRenderer) visitSyncElementEtc(state *jsRenderState, bo *BuildOut, n *VGNode, positionID []byte) error {
+func (r *JSRenderer) visitSyncElementEtc(state *jsRenderState, bo *BuildOut, br *BuildResults, n *VGNode, positionID []byte) error {
 
 	for _, a := range n.Attr {
 		err := r.instructionList.writeSetAttrStr(a.Key, a.Val)
@@ -588,7 +597,7 @@ func (r *JSRenderer) visitSyncElementEtc(state *jsRenderState, bo *BuildOut, n *
 
 			childPositionID := append(positionID, []byte(fmt.Sprintf("_%d", childIndex))...)
 
-			err = r.visitSyncNode(state, bo, nchild, childPositionID)
+			err = r.visitSyncNode(state, bo, br, nchild, childPositionID)
 			if err != nil {
 				return err
 			}

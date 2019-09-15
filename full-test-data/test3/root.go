@@ -86,7 +86,7 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 					for i := 0; i < c.ItemCount; i++ {
 						var vgiterkey interface{} = i
 						{
-							vgcompKey := vugu.CompKey{ID: 0x5D7DA335A34B903B, IterKey: vgiterkey}
+							vgcompKey := vugu.CompKey{ID: 0x5D7DAED63B1B8845, IterKey: vgiterkey}
 							// ask BuildEnv for prior instance of this specific component
 							vgcomp, _ := vgin.BuildEnv.CachedComponent(vgcompKey).(*DemoLine)
 							if vgcomp == nil {

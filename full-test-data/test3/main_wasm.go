@@ -33,9 +33,9 @@ func main() {
 
 	for ok := true; ok; ok = renderer.EventWait() {
 
-		buildOutMap := buildEnv.RunBuild(rootBuilder)
+		buildResults := buildEnv.RunBuild(rootBuilder)
 
-		err = renderer.Render(buildOutMap, rootBuilder)
+		err = renderer.Render(buildResults)
 		if err != nil {
 			panic(err)
 		}

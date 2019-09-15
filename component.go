@@ -14,6 +14,8 @@ type BuildOut struct {
 
 	// components that need to be built next - corresponding to each VGNode in Out with a Component value set,
 	// we make the Builder populate this so BuildEnv doesn't have to traverse Out to gather up each node with a component
+	// FIXME: should this be called ChildComponents, NextComponents? something to make it clear that these are pointers to more work to
+	// do rather than something already done
 	Components []Builder
 
 	// optional CSS style or link tag(s)
