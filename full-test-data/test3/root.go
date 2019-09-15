@@ -52,7 +52,7 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 			vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n        "}
 			vgparent.AppendChild(vgn)
 			vgn = &vugu.VGNode{Type: vugu.VGNodeType(3), Data: "link", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "rel", Val: "stylesheet"}, vugu.VGAttribute{Namespace: "", Key: "href", Val: "https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"}, vugu.VGAttribute{Namespace: "", Key: "integrity", Val: "sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T"}, vugu.VGAttribute{Namespace: "", Key: "crossorigin", Val: "anonymous"}}}
-			vgout.CSS = append(vgout.CSS, vgn)
+			vgout.AppendCSS(vgn)
 			vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n    "}
 			vgparent.AppendChild(vgn)
 		}
@@ -86,7 +86,7 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 					for i := 0; i < c.ItemCount; i++ {
 						var vgiterkey interface{} = i
 						{
-							vgcompKey := vugu.CompKey{ID: 0x5D7DAED63B1B8845, IterKey: vgiterkey}
+							vgcompKey := vugu.CompKey{ID: 0x5D7EC887AD9C25A5, IterKey: vgiterkey}
 							// ask BuildEnv for prior instance of this specific component
 							vgcomp, _ := vgin.BuildEnv.CachedComponent(vgcompKey).(*DemoLine)
 							if vgcomp == nil {
@@ -121,6 +121,11 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 				vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n\n        "}
 				vgparent.AppendChild(vgn)
 			}
+			vgn = &vugu.VGNode{Type: vugu.VGNodeType(3), Data: "style", Attr: []vugu.VGAttribute(nil)}
+			{
+				vgn.AppendChild(&vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n#test_div_id {\n    background: #ddd;\n}\n", Attr: []vugu.VGAttribute(nil)})
+			}
+			vgout.AppendCSS(vgn)
 		}
 	}
 	return vgout

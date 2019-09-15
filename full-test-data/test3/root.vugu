@@ -23,6 +23,12 @@
     </body>
 </html>
 
+<style>
+#test_div_id {
+    background: #ddd;
+}
+</style>
+
 <script type="application/x-go">
 
 type Root struct {

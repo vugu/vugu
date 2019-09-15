@@ -359,6 +359,8 @@ func (il *instructionList) writeRemoveOtherEventListeners(positionID []byte) err
 
 func (il *instructionList) writeSetCSSTag( /*hashCode uint64, */ elementName string, textContent []byte, attrPairs []string) error {
 
+	// log.Printf("writeSetCSSTag: elementName=%q, textContext=%q, attrPairs=%#v", elementName, textContent, attrPairs)
+
 	if len(attrPairs) > 254 {
 		return fmt.Errorf("attrPairs is %d, too large, max is 254", len(attrPairs))
 	}

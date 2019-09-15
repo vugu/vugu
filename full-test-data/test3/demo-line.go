@@ -19,7 +19,7 @@ func (c *DemoLine) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 	var vgiterkey interface{}
 	_ = vgiterkey
 	var vgn *vugu.VGNode
-	vgn = &vugu.VGNode{Type: vugu.VGNodeType(3), Data: "li", Attr: []vugu.VGAttribute(nil)}
+	vgn = &vugu.VGNode{Type: vugu.VGNodeType(3), Data: "li", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "class", Val: "demo-line"}}}
 	vgout.Out = append(vgout.Out, vgn)	// root for output
 	{
 		vgparent := vgn
@@ -33,6 +33,11 @@ func (c *DemoLine) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 		vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: " a line is here"}
 		vgparent.AppendChild(vgn)
 	}
+	vgn = &vugu.VGNode{Type: vugu.VGNodeType(3), Data: "style", Attr: []vugu.VGAttribute(nil)}
+	{
+		vgn.AppendChild(&vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n.demo-line {\n    color: green;\n}\n", Attr: []vugu.VGAttribute(nil)})
+	}
+	vgout.AppendCSS(vgn)
 	return vgout
 }
 

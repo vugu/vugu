@@ -1,5 +1,9 @@
 package vugu
 
+import (
+	"bytes"
+)
+
 // BuildIn is the input to a Build call.
 type BuildIn struct {
 	BuildEnv *BuildEnv
@@ -23,6 +27,82 @@ type BuildOut struct {
 
 	// optional JS script tag(s)
 	JS []*VGNode
+}
+
+// AppendCSS will append a unique node to CSS (nodes match exactly will not be added again).
+func (b *BuildOut) AppendCSS(nlist ...*VGNode) {
+	// FIXME: we really should consider doing this dedeplication with a map or something, but for now this works
+nlistloop:
+	for _, n := range nlist {
+		for _, css := range b.CSS {
+			if !ssNodeEq(n, css) {
+				continue
+			}
+			if ssText(n) != ssText(css) {
+				continue
+			}
+			// these are the same, skip duplicate add
+			continue nlistloop
+		}
+		// not a duplicate, add it
+		b.CSS = append(b.CSS, n)
+	}
+}
+
+// AppendJS will append a unique node to JS (nodes match exactly will not be added again).
+func (b *BuildOut) AppendJS(nlist ...*VGNode) {
+nlistloop:
+	for _, n := range nlist {
+		for _, js := range b.JS {
+			if !ssNodeEq(n, js) {
+				continue
+			}
+			if ssText(n) != ssText(js) {
+				continue
+			}
+			// these are the same, skip duplicate add
+			continue nlistloop
+		}
+		// not a duplicate, add it
+		b.JS = append(b.JS, n)
+	}
+}
+
+// returns text content of child of script/style tag (assumes only one level of children and all text)
+func ssText(n *VGNode) string {
+	// special case 0 children
+	if n.FirstChild == nil {
+		return ""
+	}
+	// special case 1 child
+	if n.FirstChild.NextSibling == nil {
+		return n.FirstChild.Data
+	}
+	// more than one child
+	var buf bytes.Buffer
+	for childN := n.FirstChild; childN != nil; childN = childN.NextSibling {
+		buf.WriteString(childN.Data)
+	}
+	return buf.String()
+}
+
+// script/style node compare - only care about Type, Data and Attributes, does not examine children
+func ssNodeEq(n1, n2 *VGNode) bool {
+	if n1.Type != n2.Type {
+		return false
+	}
+	if n1.Data != n2.Data {
+		return false
+	}
+	if len(n1.Attr) != len(n2.Attr) {
+		return false
+	}
+	for i := 0; i < len(n1.Attr); i++ {
+		if n1.Attr[i] != n2.Attr[i] {
+			return false
+		}
+	}
+	return true
 }
 
 // FIXME: CSS and JS are now full element nodes not just blocks of text (style, link, or script tags),

@@ -743,7 +743,13 @@
                                 cTag.setAttribute(k, attrMap[k]);
                             }
                             cTag.vuguCreated = true; // so we know that we created this, as opposed to it already having been on the page
+                            this.console.log("GOT TEXTCONTENT: ", textContent);
+                            if (textContent) {
+                                cTag.appendChild(document.createTextNode(textContent)) // set textContent if provided
+                                // cTag.innerText = textContent; // set textContent if provided
+                            }
                             this.document.head.appendChild(cTag); // add to end of head
+                            this.console.log("CREATED ctag: ", cTag);
                             state.elCSSTagsSet.push(cTag); // add to elCSSTagsSet for use in opcodeRemoveOtherCSSTags
                         } else {
                             // if we did find it, we need to push to state.elCSSTagsSet to tell opcodeRemoveOtherCSSTags not to remove it

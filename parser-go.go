@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"mime"
 	"os"
 	"os/exec"
@@ -558,8 +557,8 @@ func (p *ParserGo) visitJS(state *parseGoState, n *html.Node) error {
 
 		// verify that all children are text nodes
 		for childN := n.FirstChild; childN != nil; childN = childN.NextSibling {
-			if childN.Type != html.ElementNode {
-				return fmt.Errorf("style tag contains non-text child: %#v", childN)
+			if childN.Type != html.TextNode {
+				return fmt.Errorf("script tag contains non-text child: %#v", childN)
 			}
 		}
 
@@ -584,8 +583,18 @@ func (p *ParserGo) visitJS(state *parseGoState, n *html.Node) error {
 
 	// but then for the actual output, we append to vgout.JS, instead of parentNode
 	fmt.Fprintf(&state.buildBuf, "vgn = &vugu.VGNode{Type:vugu.VGNodeType(%d),Data:%q,Attr:%#v}\n", n.Type, n.Data, staticVGAttr(n.Attr))
-	log.Printf("TODO: instead of appending to JS we should call a method on vgout to deduplicate first")
-	fmt.Fprintf(&state.buildBuf, "vgout.JS = append(vgout.JS, vgn)\n")
+
+	// output any text children
+	if n.FirstChild != nil {
+		fmt.Fprintf(&state.buildBuf, "{\n")
+		for childN := n.FirstChild; childN != nil; childN = childN.NextSibling {
+			// NOTE: we already verified above that these are just text nodes
+			fmt.Fprintf(&state.buildBuf, "vgn.AppendChild(&vugu.VGNode{Type:vugu.VGNodeType(%d),Data:%q,Attr:%#v})\n", childN.Type, childN.Data, staticVGAttr(childN.Attr))
+		}
+		fmt.Fprintf(&state.buildBuf, "}\n")
+	}
+
+	fmt.Fprintf(&state.buildBuf, "vgout.AppendJS(vgn)\n")
 
 	// dynamic attrs
 	dynExprMap, dynExprMapKeys := dynamicVGAttrExpr(n)
@@ -629,7 +638,7 @@ func (p *ParserGo) visitCSS(state *parseGoState, n *html.Node) error {
 
 		// okay as long as only text nodes inside
 		for childN := n.FirstChild; childN != nil; childN = childN.NextSibling {
-			if childN.Type != html.ElementNode {
+			if childN.Type != html.TextNode {
 				return fmt.Errorf("style tag contains non-text child: %#v", childN)
 			}
 		}
@@ -657,8 +666,18 @@ func (p *ParserGo) visitCSS(state *parseGoState, n *html.Node) error {
 
 	// but then for the actual output, we append to vgout.CSS, instead of parentNode
 	fmt.Fprintf(&state.buildBuf, "vgn = &vugu.VGNode{Type:vugu.VGNodeType(%d),Data:%q,Attr:%#v}\n", n.Type, n.Data, staticVGAttr(n.Attr))
-	log.Printf("TODO: instead of appending to CSS we should call a method on vgout to deduplicate first")
-	fmt.Fprintf(&state.buildBuf, "vgout.CSS = append(vgout.CSS, vgn)\n")
+
+	// output any text children
+	if n.FirstChild != nil {
+		fmt.Fprintf(&state.buildBuf, "{\n")
+		for childN := n.FirstChild; childN != nil; childN = childN.NextSibling {
+			// NOTE: we already verified above that these are just text nodes
+			fmt.Fprintf(&state.buildBuf, "vgn.AppendChild(&vugu.VGNode{Type:vugu.VGNodeType(%d),Data:%q,Attr:%#v})\n", childN.Type, childN.Data, staticVGAttr(childN.Attr))
+		}
+		fmt.Fprintf(&state.buildBuf, "}\n")
+	}
+
+	fmt.Fprintf(&state.buildBuf, "vgout.AppendCSS(vgn)\n")
 
 	// dynamic attrs
 	dynExprMap, dynExprMapKeys := dynamicVGAttrExpr(n)

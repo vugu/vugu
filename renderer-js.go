@@ -254,38 +254,66 @@ func (r *JSRenderer) Render(buildResults *BuildResults) error {
 
 	state := newJsRenderState()
 
-	// CSS stuff first
-	for _, cssEl := range bo.CSS {
+	// TODO: move this next chunk out to it's own func at least
 
-		// some basic sanity checking
-		if cssEl.Type != ElementNode || !(cssEl.Data == "style" || cssEl.Data == "link") {
-			return fmt.Errorf("CSS output must be link or style tag")
-		}
+	visitCSSList := func(cssList []*VGNode) error {
+		// CSS stuff first
+		for _, cssEl := range cssList {
 
-		var textBuf bytes.Buffer
-		for childN := cssEl.FirstChild; childN != nil; childN = childN.NextSibling {
-			if childN.Type != TextNode {
-				return fmt.Errorf("CSS tag must contain only text children, found %d instead: %#v", childN.Type, childN)
+			// some basic sanity checking
+			if cssEl.Type != ElementNode || !(cssEl.Data == "style" || cssEl.Data == "link") {
+				return fmt.Errorf("CSS output must be link or style tag")
 			}
-			textBuf.WriteString(cssEl.Data)
-		}
 
-		var attrPairs []string
-		if len(cssEl.Attr) > 0 {
-			attrPairs = make([]string, 0, len(cssEl.Attr)*2)
-			for _, attr := range cssEl.Attr {
-				attrPairs = append(attrPairs, attr.Key, attr.Val)
+			var textBuf bytes.Buffer
+			for childN := cssEl.FirstChild; childN != nil; childN = childN.NextSibling {
+				if childN.Type != TextNode {
+					return fmt.Errorf("CSS tag must contain only text children, found %d instead: %#v", childN.Type, childN)
+				}
+				textBuf.WriteString(childN.Data)
+			}
+
+			var attrPairs []string
+			if len(cssEl.Attr) > 0 {
+				attrPairs = make([]string, 0, len(cssEl.Attr)*2)
+				for _, attr := range cssEl.Attr {
+					attrPairs = append(attrPairs, attr.Key, attr.Val)
+				}
+			}
+
+			err := r.instructionList.writeSetCSSTag(cssEl.Data, textBuf.Bytes(), attrPairs)
+			if err != nil {
+				return err
 			}
 		}
 
-		err := r.instructionList.writeSetCSSTag(cssEl.Data, textBuf.Bytes(), attrPairs)
+		return nil
+	}
+
+	var walkCSSBuildOut func(buildOut *BuildOut) error
+	walkCSSBuildOut = func(buildOut *BuildOut) error {
+		err := visitCSSList(buildOut.CSS)
 		if err != nil {
 			return err
 		}
-
+		for _, c := range buildOut.Components {
+			nextBuildOut := buildResults.AllOut[c]
+			if nextBuildOut == nil {
+				panic(fmt.Errorf("walkCSSBuildOut nextBuildOut was nil for %#v", c))
+			}
+			err := walkCSSBuildOut(nextBuildOut)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+	err := walkCSSBuildOut(bo)
+	if err != nil {
+		return err
 	}
 
-	err := r.instructionList.writeRemoveOtherCSSTags()
+	err = r.instructionList.writeRemoveOtherCSSTags()
 	if err != nil {
 		return err
 	}
@@ -308,94 +336,6 @@ func (r *JSRenderer) Render(buildResults *BuildResults) error {
 
 	return nil
 
-	// il := r.instructionList
-
-	// const (
-	// 	modeStart int = iota // first element
-	// 	// modeHTML                // in html tag
-	// 	modePreMount // found the tag that needs to be mounted
-	// 	modeHead     // in head tag
-	// 	// modeBodyUnmounted            // in body tag but not yet mounted
-	// 	// modeMounted                  // in the mounted tag (could be body or something else)
-	// )
-
-	// // TODO: replace these strings.ToLower(n.Data) == "tagname" with Atoms
-
-	// var visit func(n *VGNode, mode int) error
-	// visit = func(n *VGNode, mode int) error {
-
-	// 	switch mode {
-	// 	case modeStart:
-
-	// 		if n.Type != ElementNode {
-	// 			return fmt.Errorf("root of component must be element")
-	// 		}
-
-	// 		// first tag is html
-	// 		if strings.ToLower(n.Data) == "html" {
-
-	// 			// TODO: sync html tag attributes
-
-	// 			for nchild := n.FirstChild; nchild != nil; nchild = nchild.NextSibling {
-
-	// 				if strings.ToLower(nchild.Data) == "head" {
-	// 					err := visit(nchild, modeHead)
-	// 					if err != nil {
-	// 						return err
-	// 					}
-	// 					continue
-	// 				} else if strings.ToLower(nchild.Data) == "body" {
-
-	// 					continue
-	// 				}
-
-	// 				return fmt.Errorf("unexpected tag inside html %q (VGNode=%#v)", nchild.Data, nchild)
-
-	// 			}
-
-	// 			return nil
-	// 		}
-
-	// 		// else, first tag is anything else - set mode to pre mount and try again
-	// 		mode = modePreMount
-	// 		return visit(n)
-
-	// 	default:
-	// 		return fmt.Errorf("unknown mode %v", mode)
-	// 	}
-
-	// 	return nil
-	// }
-
-	// err := visit(bo.Doc)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// // startTime := time.Now()
-
-	// // for i := 0; i < 10; i++ {
-	// // il.writeClearRefmap()
-	// // il.writeSetHTMLRef(99)
-	// // il.writeSelectRef(99)
-	// // // il.writeSetAttrStr("lang", "en-gb")
-	// // il.writeSetAttrStr("whatever", "yes it is")
-	// // // }
-	// // il.writeEnd()
-	// // log.Printf("instruction write time: %v", time.Since(startTime))
-
-	// err = il.flush()
-	// if err != nil {
-	// 	return err
-	// }
-
-	// // r.window.Call("vuguRender", r.instructionTypedArray)
-	// // r.window.Call("vuguRender")
-
-	// // log.Printf("at pos 6: %#v", r.instructionBuffer[6])
-
-	// // panic(fmt.Errorf("not yet implemented"))
-	// return nil
 }
 
 // EventWait blocks until an event has occurred which causes a re-render.
