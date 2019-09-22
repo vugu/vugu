@@ -107,6 +107,11 @@ func isStaticEl(n *html.Node) bool {
 		return false
 	}
 
+	// component elements cannot be compacted
+	if strings.Contains(n.Data, ":") {
+		return false
+	}
+
 	for _, attr := range n.Attr {
 		if strings.HasPrefix(attr.Key, "vg-") { // vg- prefix means dynamic stuff
 			return false
