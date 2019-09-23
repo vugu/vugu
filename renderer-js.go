@@ -574,12 +574,12 @@ func (r *JSRenderer) handleDOMEvent() {
 	b := r.eventHandlerBuffer[4 : strlen+4]
 	// log.Printf("handleDOMEvent JSON from event buffer: %q", b)
 
-	var ee eventEnv
+	// var ee eventEnv
 	// rwmu            *sync.RWMutex
 	// requestRenderCH chan bool
 
 	var domEvent DOMEvent
-	domEvent.eventEnv = &ee
+	domEvent.eventEnv = r.eventEnv
 	domEvent.window = r.window
 
 	var eventDetail struct {
