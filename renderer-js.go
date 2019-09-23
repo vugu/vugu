@@ -115,6 +115,11 @@ type JSRenderer struct {
 	jsRenderState *jsRenderState
 }
 
+// EventEnv returns an EventEnv that can be used for synchronizing updates.
+func (r *JSRenderer) EventEnv() EventEnv {
+	return r.eventEnv
+}
+
 // Release calls release on any resources that this renderer allocated.
 func (r *JSRenderer) Release() {
 	// NOTE: seems sensible to leave this here in case we do need something to be released, better than
