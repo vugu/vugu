@@ -16,6 +16,7 @@ No node. No JS. No npm. No node_modules folder competing with your music library
 
 ## Updates ♨
 
+* 2019-09-22 Static HTML renderer (re)implemented. EventEnv bug fix and added it to to JS renderer to allow background requests at startup.  Some initial work on a router: https://github.com/vugu/vgrouter
 * 2019-09-15 Refactor changes merged into master. Includes: updated sample code, component resolution at code-generation time, type-safe component params, optional component param map, BeforeBuild lifecycle callback, modification tracking system, JS property assignment syntax, "full HTML" support, improved DOM event handling, Go 1.13 support, import deduplication, and a brand new rendering pipeline!  Initial documentation at https://github.com/vugu/vugu/wiki/Refactor-Notes---Sep-2019
 * 2019-09-08 Implemented ModTracker to keep track of changes to components and their data (this is also the beginning of Vuex-like functionality but without wrappers or events). Worked out the lifecycle of components in much more detail and work in progress on nested components implementation (component-refactor branch currently broken, but finally the core nested component functionality is going in - hopefully will finish next week).
 * 2019-09-07 Updated everything for Go 1.13, including both master and component-refactor branches, Vugu's js wrapper package, site documentation.
