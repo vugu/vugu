@@ -1,7 +1,7 @@
 # Vugu
 
+<!-- [![Travis CI](https://travis-ci.org/vugu/vugu.svg?branch=master)](https://travis-ci.org/vugu/vugu) -->
 [![Go Report Card](https://goreportcard.com/badge/github.com/vugu/vugu)](https://goreportcard.com/report/github.com/vugu/vugu)
-[![Travis CI](https://travis-ci.org/vugu/vugu.svg?branch=master)](https://travis-ci.org/vugu/vugu)
 [![GoDoc](https://godoc.org/github.com/vugu/vugu?status.svg)](https://godoc.org/github.com/vugu/vugu)
 [![stability-experimental](https://img.shields.io/badge/stability-experimental-orange.svg)](https://github.com/emersion/stability-badges#experimental)
 
@@ -62,13 +62,15 @@ Still a work in progress, but a lot of things are already functional. Some work 
 - [x] Efficiently syncs to browser DOM.
 - [x] Static HTML output (great for tests).
 - [x] DOM Events, click, etc.
-- [x] Basic data hashing to avoid unnecessary computation where possible.
+- [x] Modification tracking to avoid unnecessary computation where possible.
 - [x] Basic dev and prod server tooling, easy to get started
-- [ ] Rewrite everything so it is not so terrible internally and stablize existing features to avoid breaking things moving forward as much as possible (big task, but well in-progress!)
+- [x] Rewrite everything so it is not so terrible internally
 - [ ] URL Router
 - [ ] Server-side rendering (HTML generation works, needs URL Router to make it usable)
 - [ ] Performance optimizations
 - [ ] Go-only component events
+- [ ] Slots
+- [ ] Component library(s)
 - And much more...
 
 ## Notes
