@@ -3,12 +3,13 @@ package vugu
 import (
 	"bytes"
 	"encoding/binary"
-	"encoding/json"
 	"fmt"
 	"log"
 	"runtime/debug"
 	"strings"
 	"sync"
+
+	"github.com/vugu/vjson"
 
 	js "github.com/vugu/vugu/js"
 )
@@ -502,7 +503,7 @@ func (r *JSRenderer) visitSyncElementEtc(state *jsRenderState, bo *BuildOut, br 
 
 	// do any JS properties
 	for _, p := range n.Prop {
-		err := r.instructionList.writeSetProperty(p.Key, []byte(p.Val))
+		err := r.instructionList.writeSetProperty(p.Key, []byte(p.JSONVal))
 		if err != nil {
 			return err
 		}
@@ -588,19 +589,29 @@ func (r *JSRenderer) handleDOMEvent() {
 	domEvent.window = r.window
 
 	var eventDetail struct {
-		PositionID string `json:"position_id"`
-		EventType  string `json:"event_type"`
-		Capture    bool   `json:"capture"`
-		Passive    bool   `json:"passive"`
+		PositionID string //`json:"position_id"`
+		EventType  string //`json:"event_type"`
+		Capture    bool   //`json:"capture"`
+		Passive    bool   //`json:"passive"`
 
 		// the event object data as extracted above
-		EventSummary map[string]interface{} `json:"event_summary"`
+		EventSummary map[string]interface{} //`json:"event_summary"`
 	}
 
-	err := json.Unmarshal(b, &eventDetail)
+	edm := make(map[string]interface{}, 6)
+	// err := json.Unmarshal(b, &eventDetail)
+	err := vjson.Unmarshal(b, &edm)
 	if err != nil {
 		panic(err)
 	}
+
+	// manually extract fields
+	eventDetail.PositionID, _ = edm["position_id"].(string)
+	eventDetail.EventType, _ = edm["event_type"].(string)
+	eventDetail.Capture, _ = edm["capture"].(bool)
+	eventDetail.Passive, _ = edm["passive"].(bool)
+	eventDetail.EventSummary, _ = edm["passive"].(map[string]interface{})
+
 	domEvent.eventSummary = eventDetail.EventSummary
 
 	// log.Printf("eventDetail: %#v", eventDetail)

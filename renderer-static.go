@@ -5,8 +5,10 @@ import (
 	"io"
 	"strings"
 
-	"golang.org/x/net/html"
-	"golang.org/x/net/html/atom"
+	// "golang.org/x/net/html"
+	// "golang.org/x/net/html/atom"
+	"github.com/vugu/html"
+	"github.com/vugu/html/atom"
 )
 
 // caller should be able to just specify a directory,

@@ -1,7 +1,5 @@
 package vugu
 
-import "encoding/json"
-
 // Things to sort out:
 // * vg-if, vg-range, etc (JUST COPIED FROM ATTRS, EVALUATED LATER)
 // * :whatever syntax (ALSO JUST COPIED FROM ATTRS, EVALUATED LATER)
@@ -39,8 +37,8 @@ type VGAttribute struct {
 
 // VGProperty is a JS property to be set on a DOM element.
 type VGProperty struct {
-	Key string
-	Val json.RawMessage
+	Key     string
+	JSONVal []byte // value as JSON expression
 }
 
 // VGNode represents a node from our virtual DOM with the dynamic parts wired up into functions.

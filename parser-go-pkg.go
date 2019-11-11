@@ -14,7 +14,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cespare/xxhash"
+	"github.com/vugu/xxhash"
 )
 
 // ParserGoPkg knows how to perform source file generation in relation to a package folder.

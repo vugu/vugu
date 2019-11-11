@@ -7,7 +7,7 @@ import (
 	"strings"
 	"unsafe"
 
-	"github.com/cespare/xxhash"
+	"github.com/vugu/xxhash"
 )
 
 // ModChecker interface is implemented by types that want to implement their own modification tracking.

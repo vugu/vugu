@@ -5,7 +5,7 @@ import (
 	"encoding/binary"
 	"time"
 
-	"github.com/cespare/xxhash"
+	"github.com/vugu/xxhash"
 )
 
 // CompKey is the key used to identify and look up a component instance.

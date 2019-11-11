@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"sort"
 
-	"github.com/cespare/xxhash"
+	"github.com/vugu/xxhash"
 )
 
 // DataHasher can be implemented by types to override the hashing behavior. ComputeHash() will call DataHash()
