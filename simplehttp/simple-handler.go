@@ -44,20 +44,20 @@ import (
 	"sync"
 	"time"
 
-	"github.com/vugu/vugu"
+	"github.com/vugu/vugu/gen"
 )
 
 // SimpleHandler provides common web serving functionality useful for building Vugu sites.
 type SimpleHandler struct {
 	Dir string // project directory
 
-	EnableBuildAndServe          bool                  // enables the build-and-serve sequence for your wasm binary - useful for dev, should be off in production
-	EnableGenerate               bool                  // if true calls `go generate` (requires EnableBuildAndServe)
-	ParserGoPkgOpts              *vugu.ParserGoPkgOpts // if set enables running ParserGoPkg with these options (requires EnableBuildAndServe)
-	DisableBuildCache            bool                  // if true then rebuild every time instead of trying to cache (requires EnableBuildAndServe)
-	DisableTimestampPreservation bool                  // if true don't try to keep timestamps the same for files that are byte for byte identical (requires EnableBuildAndServe)
-	MainWasmPath                 string                // path to serve main wasm file from, in dev mod defaults to "/main.wasm" (requires EnableBuildAndServe)
-	WasmExecJsPath               string                // path to serve wasm_exec.js from after finding in the local Go installation, in dev mode defaults to "/wasm_exec.js"
+	EnableBuildAndServe          bool                 // enables the build-and-serve sequence for your wasm binary - useful for dev, should be off in production
+	EnableGenerate               bool                 // if true calls `go generate` (requires EnableBuildAndServe)
+	ParserGoPkgOpts              *gen.ParserGoPkgOpts // if set enables running ParserGoPkg with these options (requires EnableBuildAndServe)
+	DisableBuildCache            bool                 // if true then rebuild every time instead of trying to cache (requires EnableBuildAndServe)
+	DisableTimestampPreservation bool                 // if true don't try to keep timestamps the same for files that are byte for byte identical (requires EnableBuildAndServe)
+	MainWasmPath                 string               // path to serve main wasm file from, in dev mod defaults to "/main.wasm" (requires EnableBuildAndServe)
+	WasmExecJsPath               string               // path to serve wasm_exec.js from after finding in the local Go installation, in dev mode defaults to "/wasm_exec.js"
 
 	IsPage      func(r *http.Request) bool // func that returns true if PageHandler should serve the request
 	PageHandler http.Handler               // returns the HTML page
@@ -100,7 +100,7 @@ func New(dir string, dev bool) *SimpleHandler {
 
 	if dev {
 		ret.EnableBuildAndServe = true
-		ret.ParserGoPkgOpts = &vugu.ParserGoPkgOpts{}
+		ret.ParserGoPkgOpts = &gen.ParserGoPkgOpts{}
 		ret.MainWasmPath = "/main.wasm"
 		ret.WasmExecJsPath = "/wasm_exec.js"
 	}
@@ -191,7 +191,7 @@ doBuild:
 	{
 
 		if h.ParserGoPkgOpts != nil {
-			pg := vugu.NewParserGoPkg(h.Dir, h.ParserGoPkgOpts)
+			pg := gen.NewParserGoPkg(h.Dir, h.ParserGoPkgOpts)
 			err := pg.Run()
 			if err != nil {
 				msg := fmt.Sprintf("Error from ParserGoPkg: %v", err)

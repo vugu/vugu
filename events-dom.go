@@ -6,6 +6,15 @@ import (
 	"github.com/vugu/vugu/js"
 )
 
+// NewDOMEvent returns a new initialized DOMEvent.
+func NewDOMEvent(eventEnv EventEnv, eventSummary map[string]interface{}) *DOMEvent {
+	return &DOMEvent{
+		eventSummary: eventSummary,
+		eventEnv:     eventEnv,
+		window:       js.Global().Get("window"),
+	}
+}
+
 // DOMEvent is an event originated in the browser.  It wraps the JS event that comes in.
 // It is meant to be used in WebAssembly but some methods exist here so code can compile
 // server-side as well (although DOMEvents should not ever be generated server-side).
@@ -15,7 +24,7 @@ type DOMEvent struct {
 
 	eventSummary map[string]interface{}
 
-	eventEnv *eventEnv // eventEnv from the renderer
+	eventEnv EventEnv // from the renderer
 
 	window js.Value // sure, why not
 }
@@ -174,14 +183,22 @@ type EventEnv interface {
 	RUnlock() // release read lock
 }
 
-// eventEnv implements EventEnv
-type eventEnv struct {
+// NewEventEnvImpl creates and returns a new EventEnvImpl.
+func NewEventEnvImpl(rwmu *sync.RWMutex, requestRenderCH chan bool) *EventEnvImpl {
+	return &EventEnvImpl{
+		rwmu:            rwmu,
+		requestRenderCH: requestRenderCH,
+	}
+}
+
+// EventEnvImpl implements EventEnv
+type EventEnvImpl struct {
 	rwmu            *sync.RWMutex
 	requestRenderCH chan bool
 }
 
 // Lock will acquire write lock
-func (ee *eventEnv) Lock() {
+func (ee *EventEnvImpl) Lock() {
 	// if ee.rwmu == nil {
 	// 	return
 	// }
@@ -189,7 +206,7 @@ func (ee *eventEnv) Lock() {
 }
 
 // UnlockOnly will release the write lock
-func (ee *eventEnv) UnlockOnly() {
+func (ee *EventEnvImpl) UnlockOnly() {
 	// if ee.rwmu == nil {
 	// 	return
 	// }
@@ -197,7 +214,7 @@ func (ee *eventEnv) UnlockOnly() {
 }
 
 // UnlockRender will release write lock and request re-render
-func (ee *eventEnv) UnlockRender() {
+func (ee *EventEnvImpl) UnlockRender() {
 	// if ee.rwmu != nil {
 	ee.rwmu.Unlock()
 	// }
@@ -211,7 +228,7 @@ func (ee *eventEnv) UnlockRender() {
 }
 
 // RLock will acquire a read lock
-func (ee *eventEnv) RLock() {
+func (ee *EventEnvImpl) RLock() {
 	// if ee.rwmu == nil {
 	// 	return
 	// }
@@ -219,7 +236,7 @@ func (ee *eventEnv) RLock() {
 }
 
 // RUnlock will release the read lock
-func (ee *eventEnv) RUnlock() {
+func (ee *EventEnvImpl) RUnlock() {
 	// if ee.rwmu == nil {
 	// 	return
 	// }

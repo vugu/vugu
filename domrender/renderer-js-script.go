@@ -1,4 +1,4 @@
-package vugu
+package domrender
 
 // GENERATED FILE, DO NOT EDIT!  See renderer-js-script-maker.go
 

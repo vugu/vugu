@@ -1,4 +1,4 @@
-package vugu
+package gen
 
 import (
 	"bytes"
@@ -170,6 +170,7 @@ import (
 	"flag"
 
 	"github.com/vugu/vugu"
+	"github.com/vugu/vugu/domrender"
 )
 
 func main() {
@@ -187,7 +188,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	renderer, err := vugu.NewJSRenderer(*mountPoint)
+	renderer, err := domrender.NewJSRenderer(*mountPoint)
 	if err != nil {
 		log.Fatal(err)
 	}

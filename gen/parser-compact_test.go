@@ -1,4 +1,4 @@
-package vugu
+package gen
 
 import (
 	"bytes"

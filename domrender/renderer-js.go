@@ -1,4 +1,4 @@
-package vugu
+package domrender
 
 import (
 	"bytes"
@@ -10,6 +10,7 @@ import (
 	"sync"
 
 	"github.com/vugu/vjson"
+	"github.com/vugu/vugu"
 
 	js "github.com/vugu/vugu/js"
 )
@@ -75,22 +76,22 @@ func NewJSRenderer(mountPointSelector string) (*JSRenderer, error) {
 
 	ret.eventWaitCh = make(chan bool, 64)
 
-	ret.eventEnv = &eventEnv{
-		rwmu:            &ret.eventRWMU,
-		requestRenderCH: ret.eventWaitCh,
-	}
+	ret.eventEnv = vugu.NewEventEnvImpl(
+		&ret.eventRWMU,
+		ret.eventWaitCh,
+	)
 
 	return ret, nil
 }
 
 type jsRenderState struct {
 	// stores positionID to slice of DOMEventHandlerSpec
-	domHandlerMap map[string][]DOMEventHandlerSpec
+	domHandlerMap map[string][]vugu.DOMEventHandlerSpec
 }
 
 func newJsRenderState() *jsRenderState {
 	return &jsRenderState{
-		domHandlerMap: make(map[string][]DOMEventHandlerSpec, 8),
+		domHandlerMap: make(map[string][]vugu.DOMEventHandlerSpec, 8),
 	}
 }
 
@@ -100,7 +101,7 @@ type JSRenderer struct {
 
 	eventWaitCh chan bool    // events send to this and EventWait receives from it
 	eventRWMU   sync.RWMutex // make sure Render and event handling are not attempted at the same time (not totally sure if this is necessary in terms of the wasm threading model but enforce it with a rwmutex all the same)
-	eventEnv    *eventEnv    // our EventEnv implementation that exposes eventRWMU and eventWaitCh to events in a clean way
+	eventEnv    *vugu.EventEnvImpl    // our EventEnv implementation that exposes eventRWMU and eventWaitCh to events in a clean way
 
 	eventHandlerFunc   js.Func // the callback function for DOM events
 	eventHandlerBuffer []byte
@@ -117,7 +118,7 @@ type JSRenderer struct {
 }
 
 // EventEnv returns an EventEnv that can be used for synchronizing updates.
-func (r *JSRenderer) EventEnv() EventEnv {
+func (r *JSRenderer) EventEnv() vugu.EventEnv {
 	return r.eventEnv
 }
 
@@ -129,7 +130,7 @@ func (r *JSRenderer) Release() {
 }
 
 // Render implements Renderer.
-func (r *JSRenderer) Render(buildResults *BuildResults) error {
+func (r *JSRenderer) Render(buildResults *vugu.BuildResults) error {
 
 	bo := buildResults.Out
 
@@ -149,8 +150,8 @@ func (r *JSRenderer) Render(buildResults *BuildResults) error {
 		return fmt.Errorf("BuildOut.Out has bad len %d", len(bo.Out))
 	}
 
-	if bo.Out[0].Type != ElementNode {
-		return fmt.Errorf("BuildOut.Out[0].Type is (%v), not ElementNode", bo.Out[0].Type)
+	if bo.Out[0].Type != vugu.ElementNode {
+		return fmt.Errorf("BuildOut.Out[0].Type is (%v), not vugu.ElementNode", bo.Out[0].Type)
 	}
 
 	// log.Printf("BuildOut: %#v", b)
@@ -262,18 +263,18 @@ func (r *JSRenderer) Render(buildResults *BuildResults) error {
 
 	// TODO: move this next chunk out to it's own func at least
 
-	visitCSSList := func(cssList []*VGNode) error {
+	visitCSSList := func(cssList []*vugu.VGNode) error {
 		// CSS stuff first
 		for _, cssEl := range cssList {
 
 			// some basic sanity checking
-			if cssEl.Type != ElementNode || !(cssEl.Data == "style" || cssEl.Data == "link") {
+			if cssEl.Type != vugu.ElementNode || !(cssEl.Data == "style" || cssEl.Data == "link") {
 				return fmt.Errorf("CSS output must be link or style tag")
 			}
 
 			var textBuf bytes.Buffer
 			for childN := cssEl.FirstChild; childN != nil; childN = childN.NextSibling {
-				if childN.Type != TextNode {
+				if childN.Type != vugu.TextNode {
 					return fmt.Errorf("CSS tag must contain only text children, found %d instead: %#v", childN.Type, childN)
 				}
 				textBuf.WriteString(childN.Data)
@@ -296,8 +297,8 @@ func (r *JSRenderer) Render(buildResults *BuildResults) error {
 		return nil
 	}
 
-	var walkCSSBuildOut func(buildOut *BuildOut) error
-	walkCSSBuildOut = func(buildOut *BuildOut) error {
+	var walkCSSBuildOut func(buildOut *vugu.BuildOut) error
+	walkCSSBuildOut = func(buildOut *vugu.BuildOut) error {
 		err := visitCSSList(buildOut.CSS)
 		if err != nil {
 			return err
@@ -372,13 +373,13 @@ func (r *JSRenderer) EventWait() (ok bool) {
 // 	}
 // }
 
-func (r *JSRenderer) visitFirst(state *jsRenderState, bo *BuildOut, br *BuildResults, n *VGNode, positionID []byte) error {
+func (r *JSRenderer) visitFirst(state *jsRenderState, bo *vugu.BuildOut, br *vugu.BuildResults, n *vugu.VGNode, positionID []byte) error {
 
 	log.Printf("TODO: We need to go through and optimize away unneeded calls to create elements, set attributes, set event handlers, etc. for cases where they are the same per hash")
 
 	log.Printf("JSRenderer.visitFirst")
 
-	if n.Type != ElementNode {
+	if n.Type != vugu.ElementNode {
 		return fmt.Errorf("root of component must be element")
 	}
 
@@ -424,12 +425,12 @@ func (r *JSRenderer) visitFirst(state *jsRenderState, bo *BuildOut, br *BuildRes
 
 }
 
-func (r *JSRenderer) visitHead(state *jsRenderState, bo *BuildOut, br *BuildResults, n *VGNode, positionID []byte) error {
+func (r *JSRenderer) visitHead(state *jsRenderState, bo *vugu.BuildOut, br *vugu.BuildResults, n *vugu.VGNode, positionID []byte) error {
 	log.Printf("TODO: visitHead")
 	return nil
 }
 
-func (r *JSRenderer) visitBody(state *jsRenderState, bo *BuildOut, br *BuildResults, n *VGNode, positionID []byte) error {
+func (r *JSRenderer) visitBody(state *jsRenderState, bo *vugu.BuildOut, br *vugu.BuildResults, n *vugu.VGNode, positionID []byte) error {
 
 	if !(n.FirstChild != nil && n.FirstChild.NextSibling == nil) {
 		return fmt.Errorf("body tag must contain exactly one element child")
@@ -438,7 +439,7 @@ func (r *JSRenderer) visitBody(state *jsRenderState, bo *BuildOut, br *BuildResu
 	return r.visitMount(state, bo, br, n.FirstChild, positionID)
 }
 
-func (r *JSRenderer) visitMount(state *jsRenderState, bo *BuildOut, br *BuildResults, n *VGNode, positionID []byte) error {
+func (r *JSRenderer) visitMount(state *jsRenderState, bo *vugu.BuildOut, br *vugu.BuildResults, n *vugu.VGNode, positionID []byte) error {
 
 	// log.Printf("visitMount got here")
 
@@ -451,7 +452,7 @@ func (r *JSRenderer) visitMount(state *jsRenderState, bo *BuildOut, br *BuildRes
 
 }
 
-func (r *JSRenderer) visitSyncNode(state *jsRenderState, bo *BuildOut, br *BuildResults, n *VGNode, positionID []byte) error {
+func (r *JSRenderer) visitSyncNode(state *jsRenderState, bo *vugu.BuildOut, br *vugu.BuildResults, n *vugu.VGNode, positionID []byte) error {
 
 	log.Printf("visitSyncNode")
 
@@ -468,14 +469,14 @@ func (r *JSRenderer) visitSyncNode(state *jsRenderState, bo *BuildOut, br *Build
 	}
 
 	switch n.Type {
-	case ElementNode:
+	case vugu.ElementNode:
 		err = r.instructionList.writeSetElement(n.Data)
 		if err != nil {
 			return err
 		}
-	case TextNode:
+	case vugu.TextNode:
 		return r.instructionList.writeSetText(n.Data) // no children possible, just return
-	case CommentNode:
+	case vugu.CommentNode:
 		return r.instructionList.writeSetComment(n.Data) // no children possible, just return
 	default:
 		return fmt.Errorf("unknown node type %v", n.Type)
@@ -487,7 +488,7 @@ func (r *JSRenderer) visitSyncNode(state *jsRenderState, bo *BuildOut, br *Build
 }
 
 // visitSyncElementEtc syncs the rest of the stuff that only applies to elements
-func (r *JSRenderer) visitSyncElementEtc(state *jsRenderState, bo *BuildOut, br *BuildResults, n *VGNode, positionID []byte) error {
+func (r *JSRenderer) visitSyncElementEtc(state *jsRenderState, bo *vugu.BuildOut, br *vugu.BuildResults, n *vugu.VGNode, positionID []byte) error {
 
 	for _, a := range n.Attr {
 		err := r.instructionList.writeSetAttrStr(a.Key, a.Val)
@@ -564,7 +565,7 @@ func (r *JSRenderer) visitSyncElementEtc(state *jsRenderState, bo *BuildOut, br 
 }
 
 // // writeAllStaticAttrs is a helper to write all the static attrs from a VGNode
-// func (r *JSRenderer) writeAllStaticAttrs(n *VGNode) error {
+// func (r *JSRenderer) writeAllStaticAttrs(n *vugu.VGNode) error {
 // 	for _, a := range n.Attr {
 // 		err := r.instructionList.writeSetAttrStr(a.Key, a.Val)
 // 		if err != nil {
@@ -584,9 +585,6 @@ func (r *JSRenderer) handleDOMEvent() {
 	// rwmu            *sync.RWMutex
 	// requestRenderCH chan bool
 
-	var domEvent DOMEvent
-	domEvent.eventEnv = r.eventEnv
-	domEvent.window = r.window
 
 	var eventDetail struct {
 		PositionID string //`json:"position_id"`
@@ -612,7 +610,8 @@ func (r *JSRenderer) handleDOMEvent() {
 	eventDetail.Passive, _ = edm["passive"].(bool)
 	eventDetail.EventSummary, _ = edm["passive"].(map[string]interface{})
 
-	domEvent.eventSummary = eventDetail.EventSummary
+	domEvent := vugu.NewDOMEvent(r.eventEnv, eventDetail.EventSummary )
+
 
 	// log.Printf("eventDetail: %#v", eventDetail)
 
@@ -646,7 +645,7 @@ func (r *JSRenderer) handleDOMEvent() {
 	}()
 
 	handlers := r.jsRenderState.domHandlerMap[eventDetail.PositionID]
-	var f func(*DOMEvent)
+	var f func(*vugu.DOMEvent)
 	for _, h := range handlers {
 		if h.EventType == eventDetail.EventType && h.Capture == eventDetail.Capture {
 			f = h.Func
@@ -661,6 +660,6 @@ func (r *JSRenderer) handleDOMEvent() {
 	}
 
 	// invoke handler
-	f(&domEvent)
+	f(domEvent)
 
 }

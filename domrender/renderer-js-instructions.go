@@ -1,4 +1,4 @@
-package vugu
+package domrender
 
 import (
 	"encoding/binary"

@@ -1,4 +1,4 @@
-package vugu
+package gen
 
 import (
 	"go/ast"
@@ -13,18 +13,19 @@ import (
 
 	// "golang.org/x/net/html"
 	"github.com/vugu/html"
+	"github.com/vugu/vugu"
 )
 
-func attrFromHtml(attr html.Attribute) VGAttribute {
-	return VGAttribute{
+func attrFromHtml(attr html.Attribute) vugu.VGAttribute {
+	return vugu.VGAttribute{
 		Namespace: attr.Namespace,
 		Key:       attr.Key,
 		Val:       attr.Val,
 	}
 }
 
-// func attrFromHtmlx(attr htmlx.Attribute) VGAttribute {
-// 	return VGAttribute{
+// func attrFromHtmlx(attr htmlx.Attribute) vugu.VGAttribute {
+// 	return vugu.VGAttribute{
 // 		Namespace: attr.Namespace,
 // 		Key:       attr.Key,
 // 		Val:       attr.Val,
@@ -33,7 +34,7 @@ func attrFromHtml(attr html.Attribute) VGAttribute {
 
 // stuff that is common to both parsers can get moved into here
 
-func staticVGAttr(inAttr []html.Attribute) (ret []VGAttribute) {
+func staticVGAttr(inAttr []html.Attribute) (ret []vugu.VGAttribute) {
 
 	for _, a := range inAttr {
 		switch {
@@ -52,7 +53,7 @@ func staticVGAttr(inAttr []html.Attribute) (ret []VGAttribute) {
 	return ret
 }
 
-// func staticVGAttrx(inAttr []htmlx.Attribute) (ret []VGAttribute) {
+// func staticVGAttrx(inAttr []htmlx.Attribute) (ret []vugu.VGAttribute) {
 
 // 	for _, a := range inAttr {
 // 		switch {

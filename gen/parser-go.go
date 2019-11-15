@@ -1,4 +1,4 @@
-package vugu
+package gen
 
 import (
 	"bytes"
@@ -17,6 +17,7 @@ import (
 	// "golang.org/x/net/html/atom"
 	"github.com/vugu/html"
 	"github.com/vugu/html/atom"
+	"github.com/vugu/vugu"
 )
 
 // ParserGo is a template parser that emits Go source code that will construct the appropriately wired VGNodes.
@@ -893,7 +894,7 @@ func (p *ParserGo) visitNodeComponentElement(state *parseGoState, n *html.Node) 
 	// the file name, the offset into the file, all of the bytes before it, stuff like that.  Either that or we
 	// find a way to re-use the earlier value - but it will get real annoying real fast when .vugu fiiles that didn't
 	// change have .go files marked as changed just because this ID was generated differently.
-	compKeyID := MakeCompKeyIDNowRand()
+	compKeyID := vugu.MakeCompKeyIDNowRand()
 
 	fmt.Fprintf(&state.buildBuf, "{\n")
 	defer fmt.Fprintf(&state.buildBuf, "}\n")

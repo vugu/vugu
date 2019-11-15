@@ -4,27 +4,30 @@ package main
 
 import "fmt"
 import "reflect"
+import "github.com/vugu/vjson"
 import "github.com/vugu/vugu"
 import js "github.com/vugu/vugu/js"
 
 //import "log"
 
 type Root struct {
-	Something int
-	Success   bool
+	Something	int
+	Success		bool
 }
 
 func (c *Root) OnClickRun(event *vugu.DOMEvent, n int) {
 	c.Success = !c.Success
 	//log.Printf("HEY, GOT HERE!")
 }
-func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut, vgreterr error) {
+func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 
 	vgout = &vugu.BuildOut{}
 
+	var vgiterkey interface{}
+	_ = vgiterkey
 	var vgn *vugu.VGNode
 	vgn = &vugu.VGNode{Type: vugu.VGNodeType(3), Data: "span", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "class", Val: "test-span"}, vugu.VGAttribute{Namespace: "", Key: "id", Val: "test_span_id"}}}
-	vgout.Out = append(vgout.Out, vgn) // root for output
+	vgout.Out = append(vgout.Out, vgn)	// root for output
 	{
 		vgparent := vgn
 		_ = vgparent
@@ -34,8 +37,8 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut, vgreterr error) 
 		vgparent.AppendChild(vgn)
 		vgn.Attr = append(vgn.Attr, vugu.VGAttribute{Key: "data-whatever", Val: fmt.Sprint(c.Something)})
 		vgn.DOMEventHandlerSpecList = append(vgn.DOMEventHandlerSpecList, vugu.DOMEventHandlerSpec{
-			EventType: "click",
-			Func:      func(event *vugu.DOMEvent) { c.OnClickRun(event, 7) },
+			EventType:	"click",
+			Func:		func(event *vugu.DOMEvent) { c.OnClickRun(event, 7) },
 			// TODO: implement capture, etc. mostly need to decide syntax
 		})
 		{
@@ -50,8 +53,8 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut, vgreterr error) 
 		vgparent.AppendChild(vgn)
 		vgn.Attr = append(vgn.Attr, vugu.VGAttribute{Key: "data-whatever", Val: fmt.Sprint(c.Something)})
 		vgn.DOMEventHandlerSpecList = append(vgn.DOMEventHandlerSpecList, vugu.DOMEventHandlerSpec{
-			EventType: "click",
-			Func:      func(event *vugu.DOMEvent) { c.Success = !c.Success },
+			EventType:	"click",
+			Func:		func(event *vugu.DOMEvent) { c.Success = !c.Success },
 			// TODO: implement capture, etc. mostly need to decide syntax
 		})
 		{
@@ -77,16 +80,17 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut, vgreterr error) 
 		vgn = &vugu.VGNode{Type: vugu.VGNodeType(3), Data: "div", Attr: []vugu.VGAttribute(nil)}
 		vgparent.AppendChild(vgn)
 		{
-			vghtml := "Some <strong>content</strong> here"
+			vghtml := fmt.Sprint("Some <strong>content</strong> here")
 			vgn.InnerHTML = &vghtml
 		}
 		vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n"}
 		vgparent.AppendChild(vgn)
 	}
-	return vgout, nil
+	return vgout
 }
 
 // 'fix' unused imports
-var _ = fmt.Sprintf
-var _ = reflect.New
-var _ = js.ValueOf
+var _ fmt.Stringer
+var _ reflect.Type
+var _ vjson.RawMessage
+var _ js.Value
