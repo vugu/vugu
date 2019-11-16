@@ -1,7 +1,8 @@
 
 # NOTE: this is needs to be run with the parent directory as the context and paths are relative to that
 
-FROM tinygo/tinygo:0.9.0
+# FROM tinygo/tinygo:0.9.0
+FROM tinygo/tinygo-dev:latest
 
 RUN apt-get update && apt-get install -y curl git
 

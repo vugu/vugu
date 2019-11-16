@@ -4,6 +4,8 @@ set -e
 
 cd ..
 
+#docker run --rm -it -v `pwd`/tinygo-dev:/go/src/testpgm tinygotest tinygo help
+
 # build docker image with dependent packages downloaded
 docker build -t tinygotest -f tinygo-dev/Dockerfile .
 docker run --rm -it -v `pwd`/tinygo-dev:/go/src/testpgm -e "GOPATH=/go" tinygotest \
