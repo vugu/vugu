@@ -4,14 +4,15 @@ import (
 	"fmt"
 
 	"github.com/vugu/vjson"
-	_ "github.com/vugu/vugu"
+	"github.com/vugu/vugu"
 )
 
 func main() {
 
 	var r vjson.RawMessage
+	var be vugu.BuildEnv
 
 	// log.Printf("hello there!")
-	fmt.Printf("hello testpgm: %v\n", r)
+	fmt.Printf("hello testpgm: %v %v\n", r, be)
 	// println("blah blah")
 }
