@@ -5,7 +5,6 @@ import (
 	"encoding/binary"
 	"fmt"
 	"log"
-	"runtime/debug"
 	"strings"
 	"sync"
 
@@ -99,9 +98,9 @@ func newJsRenderState() *jsRenderState {
 type JSRenderer struct {
 	MountPointSelector string
 
-	eventWaitCh chan bool    // events send to this and EventWait receives from it
-	eventRWMU   sync.RWMutex // make sure Render and event handling are not attempted at the same time (not totally sure if this is necessary in terms of the wasm threading model but enforce it with a rwmutex all the same)
-	eventEnv    *vugu.EventEnvImpl    // our EventEnv implementation that exposes eventRWMU and eventWaitCh to events in a clean way
+	eventWaitCh chan bool          // events send to this and EventWait receives from it
+	eventRWMU   sync.RWMutex       // make sure Render and event handling are not attempted at the same time (not totally sure if this is necessary in terms of the wasm threading model but enforce it with a rwmutex all the same)
+	eventEnv    *vugu.EventEnvImpl // our EventEnv implementation that exposes eventRWMU and eventWaitCh to events in a clean way
 
 	eventHandlerFunc   js.Func // the callback function for DOM events
 	eventHandlerBuffer []byte
@@ -585,7 +584,6 @@ func (r *JSRenderer) handleDOMEvent() {
 	// rwmu            *sync.RWMutex
 	// requestRenderCH chan bool
 
-
 	var eventDetail struct {
 		PositionID string //`json:"position_id"`
 		EventType  string //`json:"event_type"`
@@ -610,8 +608,7 @@ func (r *JSRenderer) handleDOMEvent() {
 	eventDetail.Passive, _ = edm["passive"].(bool)
 	eventDetail.EventSummary, _ = edm["passive"].(map[string]interface{})
 
-	domEvent := vugu.NewDOMEvent(r.eventEnv, eventDetail.EventSummary )
-
+	domEvent := vugu.NewDOMEvent(r.eventEnv, eventDetail.EventSummary)
 
 	// log.Printf("eventDetail: %#v", eventDetail)
 
@@ -622,27 +619,7 @@ func (r *JSRenderer) handleDOMEvent() {
 	// TODO: give this more thought - but for now we just do a non-blocking push to the
 	// eventWaitCh, telling the render loop that a render is required, but if a bunch
 	// of them stack up we don't wait
-	defer func() {
-
-		if panicr := recover(); panicr != nil {
-			fmt.Println("handleRawDOMEvent caught panic", panicr)
-			debug.PrintStack()
-
-			// in error case send false to tell event loop to exit
-			select {
-			case r.eventWaitCh <- false:
-			default:
-			}
-			return
-
-		}
-
-		// in normal case send true to the channel to tell the event loop it should render
-		select {
-		case r.eventWaitCh <- true:
-		default:
-		}
-	}()
+	defer r.sendEventWaitCh()
 
 	handlers := r.jsRenderState.domHandlerMap[eventDetail.PositionID]
 	var f func(*vugu.DOMEvent)
