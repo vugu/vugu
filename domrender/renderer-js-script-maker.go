@@ -1,6 +1,6 @@
 // +build ignore
 
-package domrender
+package main
 
 import (
 	"bytes"

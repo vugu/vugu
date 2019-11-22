@@ -17,8 +17,3 @@ echo "Copying wasm_exec.js"
 docker run --rm -it -v `pwd`/tinygo-dev:/go/src/testpgm tinygotest /bin/bash -c "cp /usr/local/tinygo/targets/wasm_exec.js /go/src/testpgm/"
 fi
 
-#COPY /tinygo-dev/ /go/src/testpgm/
-
-#CMD ["tinygo", "build", "-o", "/out/tinygo-dev/testpgm.wasm", "-target", "wasm", "testpgm"]
-
-#/bin/bash -c "cp /usr/local/tinygo/targets/wasm_exec.js /go/src/github.com/myuser/myrepo/
