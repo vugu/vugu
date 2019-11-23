@@ -1,6 +1,7 @@
 module github.com/vugu/vugu
 
 require (
+	github.com/chromedp/chromedp v0.5.1
 	github.com/stretchr/testify v1.3.0
 	github.com/vugu/html v0.0.0-20190914200101-c62dc20b8289
 	github.com/vugu/vjson v0.0.0-20191111004939-722507e863cb
