@@ -4,7 +4,7 @@ go:
 
 os:
   - linux
-  - osx
+#  - osx
 
 dist: trusty
 sudo: false
@@ -23,4 +23,9 @@ notifications:
 
 before_install:
   - go get golang.org/x/tools/cmd/goimports && go install golang.org/x/tools/cmd/goimports
+  - docker pull vugu/wasm-test-suite:latest
+  - docker run -d -t -p 9222:9222 -p 8846:8846 --name wasm-test-suite vugu/wasm-test-suite:latest
+
+services:
+  - docker
 
