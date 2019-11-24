@@ -1,6 +1,6 @@
 language: go
 go:
-  - 1.12.x
+  - 1.13.x
 
 os:
   - linux
@@ -15,10 +15,11 @@ env:
   - GO111MODULE=on
 
 script:
-  - go test ./...
+  - cd wasm-test-suite && go test .
+#  - go test ./...
 
 notifications:
-  email: false
+  email: true
 
 before_install:
   - go get golang.org/x/tools/cmd/goimports && go install golang.org/x/tools/cmd/goimports
