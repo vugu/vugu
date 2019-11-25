@@ -774,7 +774,7 @@ func (p *ParserGo) visitNodeJustElement(state *parseGoState, n *html.Node) error
 	propExprMap, propExprMapKeys := propVGAttrExpr(n)
 	for _, k := range propExprMapKeys {
 		valExpr := propExprMap[k]
-		fmt.Fprintf(&state.buildBuf, "{b, err := vjson.Marshal(%s); if err != nil { return nil, err }; vgn.Prop = append(vgn.Prop, vugu.VGProperty{Key:%q,JSONVal:vjson.RawMessage(b)})}\n", valExpr, k)
+		fmt.Fprintf(&state.buildBuf, "{b, err := vjson.Marshal(%s); if err != nil { panic(err) }; vgn.Prop = append(vgn.Prop, vugu.VGProperty{Key:%q,JSONVal:vjson.RawMessage(b)})}\n", valExpr, k)
 	}
 
 	// vg-html

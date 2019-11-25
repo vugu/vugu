@@ -6,10 +6,12 @@ import (
 	"compress/gzip"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"html/template"
 	"io"
 	"io/ioutil"
+	"log"
 	"mime/multipart"
 	"net/http"
 	"os"
@@ -19,12 +21,20 @@ import (
 	"testing"
 	"time"
 
+	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/chromedp"
 	"github.com/stretchr/testify/assert"
 	"github.com/vugu/vugu/distutil"
 	"github.com/vugu/vugu/gen"
 	"github.com/vugu/vugu/simplehttp"
 )
+
+// TO ADD A TEST:
+// - make a folder of the same pattern test-NNN-description
+// - copy .gitignore, go.mod and create a root.vugu, plus whatever else
+// - write a TestNNNDescription method to drive it
+// - to manually view the page from a test log the URL passed to chromedp.Navigate and view it in your browser
+//   (if you suspect you are getting console errors that you can't see, this is a simple way to check)
 
 func Test001Simple(t *testing.T) {
 
@@ -36,14 +46,130 @@ func Test001Simple(t *testing.T) {
 	ctx, cancel := mustChromeCtx()
 	defer cancel()
 
-	var innerHTML string
+	var t1, t2 string
 	must(chromedp.Run(ctx,
 		chromedp.Navigate("http://localhost:8846"+pathSuffix),
-		chromedp.WaitVisible("#testing"),
-		chromedp.InnerHTML("#testing", &innerHTML),
+		// chromedp.WaitVisible("#testing"),
+		chromedp.InnerHTML("#t1", &t1), // NOTE: InnerHTML will wait until the element exists before returning
+		chromedp.InnerHTML("#t2", &t2),
 	))
 
-	assert.Equal("Testing! A1", strings.TrimSpace(innerHTML))
+	assert.Equal("t1text", strings.TrimSpace(t1))
+	assert.Equal("t2text", strings.TrimSpace(t2))
+
+}
+
+func Test002Click(t *testing.T) {
+
+	assert := assert.New(t)
+
+	dir := mustUseDir("test-002-click")
+	mustGen(dir)
+	pathSuffix := mustBuildAndLoad(dir)
+	ctx, cancel := mustChromeCtx()
+	defer cancel()
+	// log.Printf("pathSuffix = %s", pathSuffix)
+
+	var text string
+	must(chromedp.Run(ctx,
+		chromedp.Navigate("http://localhost:8846"+pathSuffix),
+		chromedp.WaitVisible("#testdiv"),
+		chromedp.WaitNotPresent("#success"),
+		chromedp.Click("#run1"),
+		chromedp.InnerHTML("#success", &text),
+		chromedp.Click("#run1"),
+		chromedp.WaitNotPresent("#success"),
+	))
+
+	assert.Equal("success", text)
+
+}
+
+func Test003Prop(t *testing.T) {
+
+	assert := assert.New(t)
+
+	dir := mustUseDir("test-003-prop")
+	mustGen(dir)
+	pathSuffix := mustBuildAndLoad(dir)
+	ctx, cancel := mustChromeCtx()
+	defer cancel()
+	// log.Printf("pathSuffix = %s", pathSuffix)
+
+	must(chromedp.Run(ctx,
+		chromedp.Navigate("http://localhost:8846"+pathSuffix),
+		chromedp.WaitVisible("#email"),
+		chromedp.SendKeys("#email", "joey@example.com"),
+		chromedp.Blur("#email"),
+		WaitInnerTextTrimEq("#emailout", "joey@example.com"),
+		chromedp.Click("#resetbtn"),
+		WaitInnerTextTrimEq("#emailout", "default@example.com"),
+	))
+
+	_ = assert
+	// assert.Equal("success", text)
+
+}
+
+func Test004Component(t *testing.T) {
+
+	assert := assert.New(t)
+
+	dir := mustUseDir("test-004-component")
+	mustGen(dir)
+	pathSuffix := mustBuildAndLoad(dir)
+	ctx, cancel := mustChromeCtx()
+	defer cancel()
+	log.Printf("pathSuffix = %s", pathSuffix)
+
+	must(chromedp.Run(ctx,
+		chromedp.Navigate("http://localhost:8846"+pathSuffix),
+		chromedp.WaitVisible("#testdiv"),
+		WaitInnerTextTrimEq("ul", "0 a line is here\n1 a line is here\n2 a line is here"),
+		chromedp.Click("#addbtn"),
+		WaitInnerTextTrimEq("ul", "0 a line is here\n1 a line is here\n2 a line is here\n3 a line is here"),
+	))
+
+	_ = assert
+
+}
+
+// WaitInnerTextTrimEq will wait for the innerText of the specified element to match a specific string after whitespace trimming.
+func WaitInnerTextTrimEq(sel, innerText string) chromedp.QueryAction {
+
+	return chromedp.Query(sel, func(s *chromedp.Selector) {
+
+		chromedp.WaitFunc(func(ctx context.Context, cur *cdp.Frame, ids ...cdp.NodeID) ([]*cdp.Node, error) {
+
+			nodes := make([]*cdp.Node, len(ids))
+			cur.RLock()
+			for i, id := range ids {
+				nodes[i] = cur.Nodes[id]
+				if nodes[i] == nil {
+					cur.RUnlock()
+					// not yet ready
+					return nil, nil
+				}
+			}
+			cur.RUnlock()
+
+			var ret string
+			err := chromedp.EvaluateAsDevTools("document.querySelector('"+sel+"').innerText", &ret).Do(ctx)
+			if err != nil {
+				return nodes, err
+			}
+			if strings.TrimSpace(ret) != innerText {
+				//log.Printf("found text: %s", ret)
+				return nodes, errors.New("unexpected value: " + ret)
+			}
+
+			// log.Printf("NodeValue: %#v", nodes[0])
+
+			// return nil, errors.New("not ready yet")
+			return nodes, nil
+		})(s)
+
+	})
 
 }
 
@@ -111,111 +237,6 @@ func mustChromeCtx() (context.Context, context.CancelFunc) {
 
 	return ctx, cancel
 }
-
-// func TestBlah(t *testing.T) {
-
-// 	debugURL := func() string {
-// 		resp, err := http.Get("http://localhost:9222/json/version")
-// 		if err != nil {
-// 			t.Fatal(err)
-// 		}
-
-// 		var result map[string]interface{}
-
-// 		if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-// 			t.Fatal(err)
-// 		}
-// 		return result["webSocketDebuggerUrl"].(string)
-// 	}()
-
-// 	t.Log(debugURL)
-
-// 	allocCtx, cancel := chromedp.NewRemoteAllocator(context.Background(), debugURL)
-// 	defer cancel()
-
-// 	ctx, cancel := chromedp.NewContext(allocCtx) //, chromedp.WithLogf(log.Printf))
-// 	defer cancel()
-// 	ctx, cancel = context.WithTimeout(ctx, 15*time.Second)
-// 	defer cancel()
-
-// 	// MouseClickNode(n *cdp.Node, opts ...MouseOption) MouseAction
-
-// 	var ss []string
-// 	var text string
-// 	err := chromedp.Run(ctx,
-// 		// chromedp.Navigate("http://127.0.0.1:19944/"),
-// 		chromedp.Navigate("https://www.google.com/"),
-// 		// chromedp.Navigate("https://www.vugu.org/"),
-// 		// chromedp.WaitVisible("#run"),
-// 		chromedp.WaitVisible("[name=q]"),
-// 		// chromedp.Click("#run"),
-// 		// chromedp.WaitVisible("#success"),
-// 		chromedp.InnerHTML("body", &text),
-// 		chromedp.Evaluate(`Object.keys(window);`, &ss),
-// 	)
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-// 	// t.Logf("text: %s", text)
-// 	t.Logf("ss: %#v", ss)
-
-// 	// MouseClickNode(n *cdp.Node, opts ...MouseOption) MouseAction
-
-// 	t.Logf("HEY!")
-// }
-
-// func TestBlah2(t *testing.T) {
-
-// 	dir, err := filepath.Abs("test-001-simple")
-// 	if err != nil {
-// 		panic(err)
-// 	}
-
-// 	distutil.Must(os.Chdir(dir))
-
-// 	// mustRmGitignoreFiles(filepath.Join(dir, ".gitignore"))
-// 	mustCleanDir(dir)
-
-// 	pp := gen.NewParserGoPkg(dir, nil)
-// 	err = pp.Run()
-// 	if err != nil {
-// 		panic(err)
-// 	}
-
-// 	fmt.Print(distutil.MustEnvExec([]string{"GOOS=js", "GOARCH=wasm"}, "go", "build", "-o", filepath.Join(dir, "main.wasm"), "."))
-
-// 	mustWriteSupportFiles(dir)
-
-// 	uploadPath := mustUploadDir(dir, "http://localhost:8846/upload")
-// 	log.Printf("uploadPath = %q", uploadPath)
-
-// }
-
-// func mustBuildAndLoadDir(dir string) string {
-
-// 	dir, err := filepath.Abs("test-001-simple")
-// 	if err != nil {
-// 		panic(err)
-// 	}
-
-// 	distutil.Must(os.Chdir(dir))
-
-// 	mustRmGitignoreFiles(filepath.Join(dir, ".gitignore"))
-
-// 	pp := gen.NewParserGoPkg(dir, nil)
-// 	err = pp.Run()
-// 	if err != nil {
-// 		panic(err)
-// 	}
-
-// 	fmt.Print(distutil.MustEnvExec([]string{"GOOS=js", "GOARCH=wasm"}, "go", "build", "-o", filepath.Join(dir, "main.wasm"), "."))
-
-// 	mustWriteSupportFiles(dir)
-
-// 	uploadPath := mustUploadDir(dir, "http://localhost:8846/upload")
-// 	log.Printf("uploadPath = %q", uploadPath)
-
-// }
 
 func must(err error) {
 	if err != nil {

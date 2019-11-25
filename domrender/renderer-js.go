@@ -606,7 +606,7 @@ func (r *JSRenderer) handleDOMEvent() {
 	eventDetail.EventType, _ = edm["event_type"].(string)
 	eventDetail.Capture, _ = edm["capture"].(bool)
 	eventDetail.Passive, _ = edm["passive"].(bool)
-	eventDetail.EventSummary, _ = edm["passive"].(map[string]interface{})
+	eventDetail.EventSummary, _ = edm["event_summary"].(map[string]interface{})
 
 	domEvent := vugu.NewDOMEvent(r.eventEnv, eventDetail.EventSummary)
 
