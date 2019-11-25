@@ -4,7 +4,6 @@ go:
 
 os:
   - linux
-#  - osx
 
 dist: trusty
 sudo: false
@@ -15,8 +14,12 @@ env:
   - GO111MODULE=on
 
 script:
-  - cd wasm-test-suite && go test .
-#  - go test ./...
+  - go test .
+  - go test ./gen
+  - go test ./domrender
+  - go test ./staticrender
+  - go test ./simplehttp
+  - go test ./wasm-test-suite
 
 notifications:
   email: true

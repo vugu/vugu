@@ -9,6 +9,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/vugu/vugu/gen"
 )
 
 func TestRendererStatic(t *testing.T) {
@@ -29,12 +31,16 @@ func TestRendererStatic(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	vuguwd, err := filepath.Abs(filepath.Join(wd, ".."))
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	// put a go.mod here that points back to the local copy of vugu
 	err = ioutil.WriteFile(filepath.Join(tmpDir, "go.mod"), []byte(fmt.Sprintf(`module test-render-static
 replace github.com/vugu/vugu => %s
 require github.com/vugu/vugu v0.0.0-00010101000000-000000000000
-`, wd)), 0644)
+`, vuguwd)), 0644)
 
 	// output some components
 
@@ -65,7 +71,7 @@ comp1 in the house
 
 	// run the vugu codegen
 
-	p := NewParserGoPkg(tmpDir, nil)
+	p := gen.NewParserGoPkg(tmpDir, nil)
 	err = p.Run()
 	if err != nil {
 		t.Fatal(err)
@@ -84,6 +90,7 @@ import (
 	"os"
 
 	"github.com/vugu/vugu"
+	"github.com/vugu/vugu/staticrender"
 )
 
 func main() {
@@ -101,7 +108,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	renderer := vugu.NewStaticRenderer(os.Stdout)
+	renderer := staticrender.NewStaticRenderer(os.Stdout)
 
 	buildResults := buildEnv.RunBuild(rootBuilder)
 

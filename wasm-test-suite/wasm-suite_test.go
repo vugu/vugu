@@ -40,7 +40,8 @@ func Test001Simple(t *testing.T) {
 
 	assert := assert.New(t)
 
-	dir := mustUseDir("test-001-simple")
+	dir, origDir := mustUseDir("test-001-simple")
+	defer os.Chdir(origDir)
 	mustGen(dir)
 	pathSuffix := mustBuildAndLoad(dir)
 	ctx, cancel := mustChromeCtx()
@@ -63,7 +64,8 @@ func Test002Click(t *testing.T) {
 
 	assert := assert.New(t)
 
-	dir := mustUseDir("test-002-click")
+	dir, origDir := mustUseDir("test-002-click")
+	defer os.Chdir(origDir)
 	mustGen(dir)
 	pathSuffix := mustBuildAndLoad(dir)
 	ctx, cancel := mustChromeCtx()
@@ -89,12 +91,13 @@ func Test003Prop(t *testing.T) {
 
 	assert := assert.New(t)
 
-	dir := mustUseDir("test-003-prop")
+	dir, origDir := mustUseDir("test-003-prop")
+	defer os.Chdir(origDir)
 	mustGen(dir)
 	pathSuffix := mustBuildAndLoad(dir)
 	ctx, cancel := mustChromeCtx()
 	defer cancel()
-	// log.Printf("pathSuffix = %s", pathSuffix)
+	log.Printf("pathSuffix = %s", pathSuffix)
 
 	must(chromedp.Run(ctx,
 		chromedp.Navigate("http://localhost:8846"+pathSuffix),
@@ -115,7 +118,8 @@ func Test004Component(t *testing.T) {
 
 	assert := assert.New(t)
 
-	dir := mustUseDir("test-004-component")
+	dir, origDir := mustUseDir("test-004-component")
+	defer os.Chdir(origDir)
 	mustGen(dir)
 	pathSuffix := mustBuildAndLoad(dir)
 	ctx, cancel := mustChromeCtx()
@@ -174,7 +178,13 @@ func WaitInnerTextTrimEq(sel, innerText string) chromedp.QueryAction {
 }
 
 // returns absdir
-func mustUseDir(reldir string) string {
+func mustUseDir(reldir string) (newdir, olddir string) {
+
+	odir, err := os.Getwd()
+	if err != nil {
+		panic(err)
+	}
+	olddir = odir
 
 	dir, err := filepath.Abs(reldir)
 	if err != nil {
@@ -183,7 +193,9 @@ func mustUseDir(reldir string) string {
 
 	must(os.Chdir(dir))
 
-	return dir
+	newdir = dir
+
+	return
 }
 
 func mustGen(absdir string) {
