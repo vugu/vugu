@@ -1014,6 +1014,7 @@ func (p *ParserGo) emitForExpr(state *parseGoState, n *html.Node) error {
 
 	fmt.Fprintf(&state.buildBuf, "for %s {\n", forx)
 	fmt.Fprintf(&state.buildBuf, "var vgiterkey interface{} = %s\n", vgiterkeyx)
+	fmt.Fprintf(&state.buildBuf, "_ = vgiterkey\n")
 
 	// handle case of ensuring the key, value we put in earlier never gets an "unused variable" error
 	if strings.HasPrefix(forx, "key, value :=") {

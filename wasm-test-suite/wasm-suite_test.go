@@ -11,7 +11,6 @@ import (
 	"html/template"
 	"io"
 	"io/ioutil"
-	"log"
 	"mime/multipart"
 	"net/http"
 	"os"
@@ -97,7 +96,7 @@ func Test003Prop(t *testing.T) {
 	pathSuffix := mustBuildAndLoad(dir)
 	ctx, cancel := mustChromeCtx()
 	defer cancel()
-	log.Printf("pathSuffix = %s", pathSuffix)
+	// log.Printf("pathSuffix = %s", pathSuffix)
 
 	must(chromedp.Run(ctx,
 		chromedp.Navigate("http://localhost:8846"+pathSuffix),
@@ -124,7 +123,7 @@ func Test004Component(t *testing.T) {
 	pathSuffix := mustBuildAndLoad(dir)
 	ctx, cancel := mustChromeCtx()
 	defer cancel()
-	log.Printf("pathSuffix = %s", pathSuffix)
+	// log.Printf("pathSuffix = %s", pathSuffix)
 
 	must(chromedp.Run(ctx,
 		chromedp.Navigate("http://localhost:8846"+pathSuffix),
@@ -132,6 +131,28 @@ func Test004Component(t *testing.T) {
 		WaitInnerTextTrimEq("ul", "0 a line is here\n1 a line is here\n2 a line is here"),
 		chromedp.Click("#addbtn"),
 		WaitInnerTextTrimEq("ul", "0 a line is here\n1 a line is here\n2 a line is here\n3 a line is here"),
+	))
+
+	_ = assert
+
+}
+
+func Test005Issue80(t *testing.T) {
+
+	assert := assert.New(t)
+
+	dir, origDir := mustUseDir("test-005-issue-80")
+	defer os.Chdir(origDir)
+	mustGen(dir)
+	pathSuffix := mustBuildAndLoad(dir)
+	ctx, cancel := mustChromeCtx()
+	defer cancel()
+	// log.Printf("pathSuffix = %s", pathSuffix)
+
+	must(chromedp.Run(ctx,
+		chromedp.Navigate("http://localhost:8846"+pathSuffix),
+		chromedp.WaitVisible("#items"),
+		WaitInnerTextTrimEq("#items", "abcd"),
 	))
 
 	_ = assert
