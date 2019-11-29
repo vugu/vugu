@@ -4,6 +4,7 @@ package vugu
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"reflect"
 	"strings"
@@ -221,7 +222,7 @@ func (mt *ModTracker) ModCheckAll(values ...interface{}) (ret bool) {
 
 			// check pointer and deref
 			if rv.Kind() != reflect.Ptr {
-				panic(fmt.Errorf("type not implemented: %T (pointer required)", v))
+				panic(errors.New("type not implemented (pointer required): " + rv.String()))
 			}
 			rvv := rv.Elem()
 
@@ -342,7 +343,7 @@ func (mt *ModTracker) ModCheckAll(values ...interface{}) (ret bool) {
 				goto handleData
 			}
 
-			panic(fmt.Errorf("type not implemented: %T", v))
+			panic(errors.New("type not implemented: " + reflect.TypeOf(v).String()))
 
 		}
 	handleData:

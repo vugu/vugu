@@ -3,8 +3,10 @@ package domrender
 import (
 	"bytes"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -53,11 +55,11 @@ func NewJSRenderer(mountPointSelector string) (*JSRenderer, error) {
 
 	ret.eventHandlerFunc = js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 		if len(args) != 1 {
-			panic(fmt.Errorf("eventHandlerFunc got arg slice not exactly 1 element in length: %#v", args))
+			panic(errorf("eventHandlerFunc got arg slice not exactly 1 element in length: %#v", args))
 		}
 		n := js.CopyBytesToGo(ret.eventHandlerBuffer, args[0])
 		if n >= len(ret.eventHandlerBuffer) {
-			panic(fmt.Errorf("event data is too large (%d bytes), cannot continue", n))
+			panic(errors.New("event data is too large, cannot continue, len: " + strconv.Itoa(n)))
 		}
 		ret.handleDOMEvent() // discard this and args, all data should be in eventHandlerBuffer; avoid using js.Value
 		return nil
@@ -138,19 +140,19 @@ func (r *JSRenderer) Render(buildResults *vugu.BuildResults) error {
 	defer r.eventRWMU.RUnlock()
 
 	if !js.Global().Truthy() {
-		return fmt.Errorf("js environment not available")
+		return errors.New("js environment not available")
 	}
 
 	if bo == nil {
-		return fmt.Errorf("BuildOut is nil")
+		return errors.New("BuildOut is nil")
 	}
 
 	if len(bo.Out) != 1 {
-		return fmt.Errorf("BuildOut.Out has bad len %d", len(bo.Out))
+		return errors.New("BuildOut.Out has bad len " + strconv.Itoa(len(bo.Out)))
 	}
 
 	if bo.Out[0].Type != vugu.ElementNode {
-		return fmt.Errorf("BuildOut.Out[0].Type is (%v), not vugu.ElementNode", bo.Out[0].Type)
+		return errors.New("BuildOut.Out[0].Type is not vugu.ElementNode: " + strconv.Itoa(int(bo.Out[0].Type)))
 	}
 
 	// log.Printf("BuildOut: %#v", b)
@@ -189,7 +191,7 @@ func (r *JSRenderer) Render(buildResults *vugu.BuildResults) error {
 	// case "html":
 	// 	mode = modeHTML
 	// case "head":
-	// 	return fmt.Errorf("BuildOut.Doc is a head element, use html instead")
+	// 	return errors.New("BuildOut.Doc is a head element, use html instead")
 	// case "body":
 	// 	mode = modeBodyUnmounted
 	// default:
@@ -268,13 +270,13 @@ func (r *JSRenderer) Render(buildResults *vugu.BuildResults) error {
 
 			// some basic sanity checking
 			if cssEl.Type != vugu.ElementNode || !(cssEl.Data == "style" || cssEl.Data == "link") {
-				return fmt.Errorf("CSS output must be link or style tag")
+				return errors.New("CSS output must be link or style tag")
 			}
 
 			var textBuf bytes.Buffer
 			for childN := cssEl.FirstChild; childN != nil; childN = childN.NextSibling {
 				if childN.Type != vugu.TextNode {
-					return fmt.Errorf("CSS tag must contain only text children, found %d instead: %#v", childN.Type, childN)
+					return errorf("CSS tag must contain only text children, found %v instead: %#v", childN.Type, childN)
 				}
 				textBuf.WriteString(childN.Data)
 			}
@@ -305,7 +307,7 @@ func (r *JSRenderer) Render(buildResults *vugu.BuildResults) error {
 		for _, c := range buildOut.Components {
 			nextBuildOut := buildResults.AllOut[c]
 			if nextBuildOut == nil {
-				panic(fmt.Errorf("walkCSSBuildOut nextBuildOut was nil for %#v", c))
+				panic(errorf("walkCSSBuildOut nextBuildOut was nil for %#v", c))
 			}
 			err := walkCSSBuildOut(nextBuildOut)
 			if err != nil {
@@ -379,7 +381,7 @@ func (r *JSRenderer) visitFirst(state *jsRenderState, bo *vugu.BuildOut, br *vug
 	log.Printf("JSRenderer.visitFirst")
 
 	if n.Type != vugu.ElementNode {
-		return fmt.Errorf("root of component must be element")
+		return errors.New("root of component must be element")
 	}
 
 	err := r.instructionList.writeClearEl()
@@ -411,7 +413,7 @@ func (r *JSRenderer) visitFirst(state *jsRenderState, bo *vugu.BuildOut, br *vug
 				}
 
 			} else {
-				return fmt.Errorf("unexpected tag inside html %q (VGNode=%#v)", nchild.Data, nchild)
+				return errorf("unexpected tag inside html %q (VGNode=%#v)", nchild.Data, nchild)
 			}
 
 		}
@@ -432,7 +434,7 @@ func (r *JSRenderer) visitHead(state *jsRenderState, bo *vugu.BuildOut, br *vugu
 func (r *JSRenderer) visitBody(state *jsRenderState, bo *vugu.BuildOut, br *vugu.BuildResults, n *vugu.VGNode, positionID []byte) error {
 
 	if !(n.FirstChild != nil && n.FirstChild.NextSibling == nil) {
-		return fmt.Errorf("body tag must contain exactly one element child")
+		return errors.New("body tag must contain exactly one element child")
 	}
 
 	return r.visitMount(state, bo, br, n.FirstChild, positionID)
@@ -461,7 +463,7 @@ func (r *JSRenderer) visitSyncNode(state *jsRenderState, bo *vugu.BuildOut, br *
 	if n.Component != nil {
 		compBuildOut := br.ResultFor(n.Component)
 		if len(compBuildOut.Out) != 1 {
-			return fmt.Errorf("component %#v expected exactly one Out element but got %d instead",
+			return errorf("component %#v expected exactly one Out element but got %d instead",
 				n.Component, len(compBuildOut.Out))
 		}
 		return r.visitSyncNode(state, compBuildOut, br, compBuildOut.Out[0], positionID)
@@ -478,7 +480,7 @@ func (r *JSRenderer) visitSyncNode(state *jsRenderState, bo *vugu.BuildOut, br *
 	case vugu.CommentNode:
 		return r.instructionList.writeSetComment(n.Data) // no children possible, just return
 	default:
-		return fmt.Errorf("unknown node type %v", n.Type)
+		return errors.New("unknown node type: " + strconv.Itoa(int(n.Type)))
 	}
 
 	// only elements have attributes, child or events
@@ -632,7 +634,7 @@ func (r *JSRenderer) handleDOMEvent() {
 
 	// make sure we found something, panic if not
 	if f == nil {
-		panic(fmt.Errorf("Unable to find event handler for positionID=%q, eventType=%q, capture=%v",
+		panic(errorf("Unable to find event handler for positionID=%q, eventType=%q, capture=%v",
 			eventDetail.PositionID, eventDetail.EventType, eventDetail.Capture))
 	}
 
