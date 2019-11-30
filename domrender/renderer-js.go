@@ -55,7 +55,7 @@ func NewJSRenderer(mountPointSelector string) (*JSRenderer, error) {
 
 	ret.eventHandlerFunc = js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 		if len(args) != 1 {
-			panic(errorf("eventHandlerFunc got arg slice not exactly 1 element in length: %#v", args))
+			panic(fmt.Errorf("eventHandlerFunc got arg slice not exactly 1 element in length: %#v", args))
 		}
 		n := js.CopyBytesToGo(ret.eventHandlerBuffer, args[0])
 		if n >= len(ret.eventHandlerBuffer) {
@@ -276,7 +276,7 @@ func (r *JSRenderer) Render(buildResults *vugu.BuildResults) error {
 			var textBuf bytes.Buffer
 			for childN := cssEl.FirstChild; childN != nil; childN = childN.NextSibling {
 				if childN.Type != vugu.TextNode {
-					return errorf("CSS tag must contain only text children, found %v instead: %#v", childN.Type, childN)
+					return fmt.Errorf("CSS tag must contain only text children, found %v instead: %#v", childN.Type, childN)
 				}
 				textBuf.WriteString(childN.Data)
 			}
@@ -307,7 +307,7 @@ func (r *JSRenderer) Render(buildResults *vugu.BuildResults) error {
 		for _, c := range buildOut.Components {
 			nextBuildOut := buildResults.AllOut[c]
 			if nextBuildOut == nil {
-				panic(errorf("walkCSSBuildOut nextBuildOut was nil for %#v", c))
+				panic(fmt.Errorf("walkCSSBuildOut nextBuildOut was nil for %#v", c))
 			}
 			err := walkCSSBuildOut(nextBuildOut)
 			if err != nil {
@@ -413,7 +413,7 @@ func (r *JSRenderer) visitFirst(state *jsRenderState, bo *vugu.BuildOut, br *vug
 				}
 
 			} else {
-				return errorf("unexpected tag inside html %q (VGNode=%#v)", nchild.Data, nchild)
+				return fmt.Errorf("unexpected tag inside html %q (VGNode=%#v)", nchild.Data, nchild)
 			}
 
 		}
@@ -463,7 +463,7 @@ func (r *JSRenderer) visitSyncNode(state *jsRenderState, bo *vugu.BuildOut, br *
 	if n.Component != nil {
 		compBuildOut := br.ResultFor(n.Component)
 		if len(compBuildOut.Out) != 1 {
-			return errorf("component %#v expected exactly one Out element but got %d instead",
+			return fmt.Errorf("component %#v expected exactly one Out element but got %d instead",
 				n.Component, len(compBuildOut.Out))
 		}
 		return r.visitSyncNode(state, compBuildOut, br, compBuildOut.Out[0], positionID)
@@ -634,7 +634,7 @@ func (r *JSRenderer) handleDOMEvent() {
 
 	// make sure we found something, panic if not
 	if f == nil {
-		panic(errorf("Unable to find event handler for positionID=%q, eventType=%q, capture=%v",
+		panic(fmt.Errorf("Unable to find event handler for positionID=%q, eventType=%q, capture=%v",
 			eventDetail.PositionID, eventDetail.EventType, eventDetail.Capture))
 	}
 

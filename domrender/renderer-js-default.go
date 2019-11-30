@@ -28,7 +28,3 @@ func (r *JSRenderer) sendEventWaitCh() {
 	default:
 	}
 }
-
-func errorf(f string, args ...interface{}) error {
-	return fmt.Errorf(f, args...)
-}

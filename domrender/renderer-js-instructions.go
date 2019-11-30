@@ -3,6 +3,7 @@ package domrender
 import (
 	"encoding/binary"
 	"errors"
+	"fmt"
 )
 
 // NOTE: I looked at using Protobuf for this, and in some ways it makes sense.  The main issue though is that it brings in
@@ -362,7 +363,7 @@ func (il *instructionList) writeSetCSSTag( /*hashCode uint64, */ elementName str
 	// log.Printf("writeSetCSSTag: elementName=%q, textContext=%q, attrPairs=%#v", elementName, textContent, attrPairs)
 
 	if len(attrPairs) > 254 {
-		return errorf("attrPairs is %d, too large, max is 254", len(attrPairs))
+		return fmt.Errorf("attrPairs is %d, too large, max is 254", len(attrPairs))
 	}
 
 	var al = 0

@@ -2,11 +2,6 @@
 
 package domrender
 
-import (
-	"errors"
-	"fmt"
-)
-
 func (r *JSRenderer) sendEventWaitCh() {
 
 	// NOTE: tinygo version omited recover and stack trace stuff for now
@@ -16,8 +11,4 @@ func (r *JSRenderer) sendEventWaitCh() {
 	case r.eventWaitCh <- true:
 	default:
 	}
-}
-
-func errorf(f string, args ...interface{}) error {
-	return errors.New(fmt.Sprintf(f, args...))
 }
