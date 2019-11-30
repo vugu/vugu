@@ -2,7 +2,7 @@ package domrender
 
 import (
 	"encoding/binary"
-	"fmt"
+	"errors"
 )
 
 // NOTE: I looked at using Protobuf for this, and in some ways it makes sense.  The main issue though is that it brings in
@@ -73,7 +73,7 @@ type instructionList struct {
 	flushBufFunc func(il *instructionList) error
 }
 
-var errDoesNotFit = fmt.Errorf("requested instruction does not fit in the buffer")
+var errDoesNotFit = errors.New("requested instruction does not fit in the buffer")
 
 func (il *instructionList) flush() error {
 	err := il.flushBufFunc(il)
@@ -362,7 +362,7 @@ func (il *instructionList) writeSetCSSTag( /*hashCode uint64, */ elementName str
 	// log.Printf("writeSetCSSTag: elementName=%q, textContext=%q, attrPairs=%#v", elementName, textContent, attrPairs)
 
 	if len(attrPairs) > 254 {
-		return fmt.Errorf("attrPairs is %d, too large, max is 254", len(attrPairs))
+		return errorf("attrPairs is %d, too large, max is 254", len(attrPairs))
 	}
 
 	var al = 0
