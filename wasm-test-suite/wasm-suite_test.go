@@ -11,6 +11,7 @@ import (
 	"html/template"
 	"io"
 	"io/ioutil"
+	"log"
 	"mime/multipart"
 	"net/http"
 	"os"
@@ -157,6 +158,49 @@ func Test005Issue80(t *testing.T) {
 
 	_ = assert
 
+}
+
+// TODO Rename it to Test006HtmlAttr ?
+func Test006Issue81(t *testing.T) {
+
+	assert := assert.New(t)
+
+	dir, origDir := mustUseDir("test-006-issue-81")
+	defer os.Chdir(origDir)
+	mustGen(dir)
+	pathSuffix := mustBuildAndLoad(dir)
+	ctx, cancel := mustChromeCtx()
+	defer cancel()
+	log.Printf("pathSuffix = %s", pathSuffix)
+
+	must(chromedp.Run(ctx,
+		chromedp.Navigate("http://localhost:8846"+pathSuffix),
+		chromedp.WaitVisible("#content"),
+		queryNode("html", func(n *cdp.Node) {
+			assert.Equal(
+				[]string{"class", "whatever", "lang", "en"},
+				n.Attributes,
+				"wrong html attributes",
+			)
+		}),
+		queryNode("head", func(n *cdp.Node) {
+			assert.Equal(
+				[]string{"class", "head-class"},
+				n.Attributes,
+				"wrong head attributes",
+			)
+		}),
+	))
+}
+
+func queryNode(ref string, assert func(n *cdp.Node)) chromedp.QueryAction {
+	return chromedp.QueryAfter(ref, func(ctx context.Context, nodes ...*cdp.Node) error {
+		if len(nodes) == 0 {
+			return fmt.Errorf("no %s element found", ref)
+		}
+		assert(nodes[0])
+		return nil
+	})
 }
 
 // WaitInnerTextTrimEq will wait for the innerText of the specified element to match a specific string after whitespace trimming.

@@ -36,6 +36,8 @@
     const opcodeRemoveOtherJSTags    = 33 // remove any JS tags that have not been written since the last call
     
     const opcodeSetProperty          = 35 // assign a JS property to the current element
+    const opcodeSelectHTML           = 36 // select html element
+    const opcodeSelectHead           = 37 // select head element
 
 
     // Decoder provides our binary decoding.
@@ -207,6 +209,18 @@
                         break;
                     }                    
             
+                    case opcodeSelectHTML: {
+                        state.el = document.querySelector("html");
+                        state.nextElMove = null;
+                        break;
+                    }
+
+                    case opcodeSelectHead: {
+                        state.el = document.querySelector("head");
+                        state.nextElMove = null;
+                        break;
+                    }
+
                     case opcodeSetAttrStr: {
                         let el = state.el;
                         if (!el) {
