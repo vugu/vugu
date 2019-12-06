@@ -430,7 +430,7 @@ func (r *JSRenderer) visitFirst(state *jsRenderState, bo *vugu.BuildOut, br *vug
 }
 
 func (r *JSRenderer) syncHtml(state *jsRenderState, n *vugu.VGNode, positionID []byte) error {
-	err := r.instructionList.writeSelectHTML()
+	err := r.instructionList.writeSelectQuery("html")
 	if err != nil {
 		return err
 	}
@@ -438,7 +438,7 @@ func (r *JSRenderer) syncHtml(state *jsRenderState, n *vugu.VGNode, positionID [
 }
 
 func (r *JSRenderer) visitHead(state *jsRenderState, bo *vugu.BuildOut, br *vugu.BuildResults, n *vugu.VGNode, positionID []byte) error {
-	err := r.instructionList.writeSelectHead()
+	err := r.instructionList.writeSelectQuery("head")
 	if err != nil {
 		return err
 	}

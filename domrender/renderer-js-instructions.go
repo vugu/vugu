@@ -51,8 +51,7 @@ const (
 	opcodeRemoveOtherJSTags  uint8 = 33 // remove any JS tags that have not been written since the last call
 
 	opcodeSetProperty uint8 = 35 // assign a JS property to the current element
-	opcodeSelectHTML  uint8 = 36 // select html element
-	opcodeSelectHead  uint8 = 37 // select head element
+	opcodeSelectQuery uint8 = 36 // select an element
 )
 
 // newInstructionList will create a new instance backed by the specified slice and with a clearBufFunc
@@ -195,21 +194,13 @@ func (il *instructionList) writeSetAttrStr(name, value string) error {
 	return nil
 }
 
-func (il *instructionList) writeSelectHTML() error {
-	err := il.checkLenAndFlush(1)
+func (il *instructionList) writeSelectQuery(selector string) error {
+	err := il.checkLenAndFlush(1 + len(selector))
 	if err != nil {
 		return err
 	}
-	il.writeValUint8(opcodeSelectHTML)
-	return nil
-}
-
-func (il *instructionList) writeSelectHead() error {
-	err := il.checkLenAndFlush(1)
-	if err != nil {
-		return err
-	}
-	il.writeValUint8(opcodeSelectHead)
+	il.writeValUint8(opcodeSelectQuery)
+	il.writeValString(selector)
 	return nil
 }
 
