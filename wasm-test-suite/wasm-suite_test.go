@@ -178,7 +178,7 @@ func Test006Issue81(t *testing.T) {
 		chromedp.WaitVisible("#content"),
 		queryNode("html", func(n *cdp.Node) {
 			assert.Equal(
-				[]string{"class", "whatever", "lang", "en"},
+				[]string{"class", "html-class", "lang", "en"},
 				n.Attributes,
 				"wrong html attributes",
 			)
@@ -188,6 +188,13 @@ func Test006Issue81(t *testing.T) {
 				[]string{"class", "head-class"},
 				n.Attributes,
 				"wrong head attributes",
+			)
+		}),
+		queryNode("body", func(n *cdp.Node) {
+			assert.Equal(
+				[]string{"class", "body-class"},
+				n.Attributes,
+				"wrong body attributes",
 			)
 		}),
 	))

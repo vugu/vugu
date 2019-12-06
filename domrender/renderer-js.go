@@ -401,7 +401,6 @@ func (r *JSRenderer) visitFirst(state *jsRenderState, bo *vugu.BuildOut, br *vug
 
 			if strings.ToLower(nchild.Data) == "head" {
 
-				// FIXME: positionID value?
 				err := r.visitHead(state, bo, br, nchild, []byte("head"))
 				if err != nil {
 					return err
@@ -409,8 +408,7 @@ func (r *JSRenderer) visitFirst(state *jsRenderState, bo *vugu.BuildOut, br *vug
 
 			} else if strings.ToLower(nchild.Data) == "body" {
 
-				// FIXME: positionID value?
-				err := r.visitBody(state, bo, br, nchild, positionID)
+				err := r.visitBody(state, bo, br, nchild, []byte("body"))
 				if err != nil {
 					return err
 				}
@@ -452,6 +450,15 @@ func (r *JSRenderer) visitHead(state *jsRenderState, bo *vugu.BuildOut, br *vugu
 }
 
 func (r *JSRenderer) visitBody(state *jsRenderState, bo *vugu.BuildOut, br *vugu.BuildResults, n *vugu.VGNode, positionID []byte) error {
+
+	err := r.instructionList.writeSelectQuery("body")
+	if err != nil {
+		return err
+	}
+	err = r.syncElement(state, n, positionID)
+	if err != nil {
+		return err
+	}
 
 	if !(n.FirstChild != nil && n.FirstChild.NextSibling == nil) {
 		return errors.New("body tag must contain exactly one element child")

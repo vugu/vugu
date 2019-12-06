@@ -1,6 +1,6 @@
-<html :lang='c.Lang()' class='whatever'>
+<html :lang='c.Lang()' class='html-class'>
   <head :class='c.HeadClass()'></head>
-  <body>
+  <body class='body-class'>
     <div>
     <p id="content">foo</p>
     </div>
