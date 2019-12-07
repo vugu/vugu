@@ -195,7 +195,7 @@ func (il *instructionList) writeSetAttrStr(name, value string) error {
 }
 
 func (il *instructionList) writeSelectQuery(selector string) error {
-	err := il.checkLenAndFlush(1 + len(selector))
+	err := il.checkLenAndFlush(5 + len(selector))
 	if err != nil {
 		return err
 	}
