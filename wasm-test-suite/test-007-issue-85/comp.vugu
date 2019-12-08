@@ -1,0 +1,7 @@
+<p vg-html='c.Key'></p>
+
+<script type='application/x-go'>
+  type Comp struct {
+    Key string `vugu:"html"`
+  }
+</script>

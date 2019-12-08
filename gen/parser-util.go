@@ -19,7 +19,7 @@ import (
 func attrFromHtml(attr html.Attribute) vugu.VGAttribute {
 	return vugu.VGAttribute{
 		Namespace: attr.Namespace,
-		Key:       attr.Key,
+		Key:       attr.OrigKey,
 		Val:       attr.Val,
 	}
 }
