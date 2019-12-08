@@ -5,6 +5,8 @@ package domrender
 import (
 	"fmt"
 	"runtime/debug"
+
+	"github.com/vugu/vugu"
 )
 
 func (r *JSRenderer) sendEventWaitCh() {
@@ -27,4 +29,15 @@ func (r *JSRenderer) sendEventWaitCh() {
 	case r.eventWaitCh <- true:
 	default:
 	}
+}
+
+// Render is a render function.
+func (r *JSRenderer) Render(buildResults *vugu.BuildResults) error {
+
+	// acquire read lock so events are not changing data while Render is in progress
+	r.eventRWMU.RLock()
+	defer r.eventRWMU.RUnlock()
+
+	err := r.render(buildResults)
+	return err
 }

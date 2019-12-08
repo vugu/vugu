@@ -5,7 +5,6 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"log"
 	"strconv"
 	"strings"
 	"sync"
@@ -131,13 +130,9 @@ func (r *JSRenderer) Release() {
 }
 
 // Render implements Renderer.
-func (r *JSRenderer) Render(buildResults *vugu.BuildResults) error {
+func (r *JSRenderer) render(buildResults *vugu.BuildResults) error {
 
 	bo := buildResults.Out
-
-	// acquire read lock so events are not changing data while Render is in progress
-	r.eventRWMU.RLock()
-	defer r.eventRWMU.RUnlock()
 
 	if !js.Global().Truthy() {
 		return errors.New("js environment not available")
@@ -238,10 +233,11 @@ func (r *JSRenderer) Render(buildResults *vugu.BuildResults) error {
 		r.jsRenderState = newJsRenderState()
 	}
 
-	log.Printf("BuildOut: %#v", bo)
+	// log.Printf("BuildOut: %#v", bo)
 
 	el := bo.Out[0]
-	log.Printf("el: %#v", el)
+	_ = el
+	// log.Printf("el: %#v", el)
 
 	// NOTE: Mount rules:
 	// <body>, <head> forbidden as top level component tag
@@ -305,7 +301,8 @@ func (r *JSRenderer) Render(buildResults *vugu.BuildResults) error {
 			return err
 		}
 		for _, c := range buildOut.Components {
-			nextBuildOut := buildResults.AllOut[c]
+			// nextBuildOut := buildResults.AllOut[c]
+			nextBuildOut := buildResults.ResultFor(c)
 			if nextBuildOut == nil {
 				panic(fmt.Errorf("walkCSSBuildOut nextBuildOut was nil for %#v", c))
 			}
@@ -332,8 +329,8 @@ func (r *JSRenderer) Render(buildResults *vugu.BuildResults) error {
 		return err
 	}
 
-	// JS stuff last
-	log.Printf("TODO: handle JS")
+	// // JS stuff last
+	// // log.Printf("TODO: handle JS")
 
 	err = r.instructionList.flush()
 	if err != nil {
@@ -376,9 +373,9 @@ func (r *JSRenderer) EventWait() (ok bool) {
 
 func (r *JSRenderer) visitFirst(state *jsRenderState, bo *vugu.BuildOut, br *vugu.BuildResults, n *vugu.VGNode, positionID []byte) error {
 
-	log.Printf("TODO: We need to go through and optimize away unneeded calls to create elements, set attributes, set event handlers, etc. for cases where they are the same per hash")
+	// log.Printf("TODO: We need to go through and optimize away unneeded calls to create elements, set attributes, set event handlers, etc. for cases where they are the same per hash")
 
-	log.Printf("JSRenderer.visitFirst")
+	// log.Printf("JSRenderer.visitFirst")
 
 	if n.Type != vugu.ElementNode {
 		return errors.New("root of component must be element")
@@ -427,7 +424,7 @@ func (r *JSRenderer) visitFirst(state *jsRenderState, bo *vugu.BuildOut, br *vug
 }
 
 func (r *JSRenderer) visitHead(state *jsRenderState, bo *vugu.BuildOut, br *vugu.BuildResults, n *vugu.VGNode, positionID []byte) error {
-	log.Printf("TODO: visitHead")
+	// log.Printf("TODO: visitHead")
 	return nil
 }
 
@@ -455,7 +452,7 @@ func (r *JSRenderer) visitMount(state *jsRenderState, bo *vugu.BuildOut, br *vug
 
 func (r *JSRenderer) visitSyncNode(state *jsRenderState, bo *vugu.BuildOut, br *vugu.BuildResults, n *vugu.VGNode, positionID []byte) error {
 
-	log.Printf("visitSyncNode")
+	// log.Printf("visitSyncNode")
 
 	var err error
 
@@ -614,15 +611,10 @@ func (r *JSRenderer) handleDOMEvent() {
 
 	// log.Printf("eventDetail: %#v", eventDetail)
 
-	// acquire exclusive lock before we actually process event
+	// it is important that we lock around accessing anything that might change (domHandlerMap)
+	// and around the invokation of the handler call itself
+
 	r.eventRWMU.Lock()
-	defer r.eventRWMU.Unlock()
-
-	// TODO: give this more thought - but for now we just do a non-blocking push to the
-	// eventWaitCh, telling the render loop that a render is required, but if a bunch
-	// of them stack up we don't wait
-	defer r.sendEventWaitCh()
-
 	handlers := r.jsRenderState.domHandlerMap[eventDetail.PositionID]
 	var f func(*vugu.DOMEvent)
 	for _, h := range handlers {
@@ -634,11 +626,25 @@ func (r *JSRenderer) handleDOMEvent() {
 
 	// make sure we found something, panic if not
 	if f == nil {
+		r.eventRWMU.Unlock()
 		panic(fmt.Errorf("Unable to find event handler for positionID=%q, eventType=%q, capture=%v",
 			eventDetail.PositionID, eventDetail.EventType, eventDetail.Capture))
 	}
 
+	// NOTE: For tinygo support we are not using defer here for now - it would probably be better to do so since
+	// the handler can panic.  However, Vugu program behavior after panicing from an event is currently
+	// undefined so whatever for now.  We'll have to make a decision later about whether or not Vugu
+	// programs should keep running after an event handler panics.  They do in JS after an exception,
+	// but... this is not JS.  Needs more thought.
+
 	// invoke handler
 	f(domEvent)
+
+	r.eventRWMU.Unlock()
+
+	// TODO: Also give this more thought: For now we just do a non-blocking push to the
+	// eventWaitCh, telling the render loop that a render is required, but if a bunch
+	// of them stack up we don't wait
+	r.sendEventWaitCh()
 
 }

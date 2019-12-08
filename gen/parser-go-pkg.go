@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"text/template"
 	"time"
 
 	"github.com/vugu/xxhash"
@@ -31,6 +32,7 @@ type ParserGoPkgOpts struct {
 	SkipRegisterComponentTypes bool // indicates func init() { vugu.RegisterComponentType(...) } code should not be emitted in each file
 	SkipGoMod                  bool // do not try and create go.mod if it doesn't exist
 	SkipMainGo                 bool // do not try and create main_wasm.go if it doesn't exist in a main package
+	TinyGo                     bool // emit code intended for TinyGo compilation
 }
 
 // NewParserGoPkg returns a new ParserGoPkg with the specified options or default if nil.  The pkgPath is required and must be an absolute path.
@@ -42,6 +44,11 @@ func NewParserGoPkg(pkgPath string, opts *ParserGoPkgOpts) *ParserGoPkg {
 		ret.opts = *opts
 	}
 	return ret
+}
+
+// Opts returns the options.
+func (p *ParserGoPkg) Opts() ParserGoPkgOpts {
+	return p.opts
 }
 
 // Run does the work and generates the appropriate .go files from .vugu files.
@@ -118,6 +125,7 @@ func (p *ParserGoPkg) Run() error {
 		pg.DataType = pg.ComponentType + "Data"
 		pg.OutDir = p.pkgPath
 		pg.OutFile = goFileName
+		pg.TinyGo = p.opts.TinyGo
 
 		// add to our list of names to check after
 		namesToCheck = append(namesToCheck, pg.ComponentType)
@@ -159,15 +167,16 @@ func (p *ParserGoPkg) Run() error {
 		if !fileExists(mainGoPath) {
 
 			// log.Printf("WRITING TO main_wasm.go STUFF")
-
-			err := ioutil.WriteFile(mainGoPath, []byte(`// +build wasm
-
+			var buf bytes.Buffer
+			t, err := template.New("_main_").Parse(`// +build wasm
+{{$opts := .Opts}}
 package main
 
 import (
-	"log"
 	"fmt"
+{{if not $opts.TinyGo}}
 	"flag"
+{{end}}
 
 	"github.com/vugu/vugu"
 	"github.com/vugu/vugu/domrender"
@@ -175,29 +184,39 @@ import (
 
 func main() {
 
+{{if $opts.TinyGo}}
+	var mountPoint *string
+	{
+		mp := "#vugu_mount_point"
+		mountPoint = &mp
+	}
+{{else}}
 	mountPoint := flag.String("mount-point", "#vugu_mount_point", "The query selector for the mount point for the root component, if it is not a full HTML component")
 	flag.Parse()
+{{end}}
 
 	fmt.Printf("Entering main(), -mount-point=%q\n", *mountPoint)
-	defer fmt.Printf("Exiting main()\n")
+	{{if not $opts.TinyGo}}defer fmt.Printf("Exiting main()\n")
+{{end}}
 
 	rootBuilder := &Root{}
 
 	buildEnv, err := vugu.NewBuildEnv()
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 
 	renderer, err := domrender.NewJSRenderer(*mountPoint)
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
-	defer renderer.Release()
+	{{if not $opts.TinyGo}}defer renderer.Release()
+{{end}}
 
 	for ok := true; ok; ok = renderer.EventWait() {
 
 		buildResults := buildEnv.RunBuild(rootBuilder)
-
+		
 		err = renderer.Render(buildResults)
 		if err != nil {
 			panic(err)
@@ -205,41 +224,16 @@ func main() {
 	}
 	
 }
-`), 0644)
+`)
+			if err != nil {
+				return err
+			}
+			err = t.Execute(&buf, p)
+			if err != nil {
+				return err
+			}
 
-			// 			err := ioutil.WriteFile(mainGoPath, []byte(`// +build wasm
-
-			// package main
-
-			// import (
-			// 	"log"
-			// 	"os"
-
-			// 	"github.com/vugu/vugu"
-			// )
-
-			// func main() {
-
-			// 	println("Entering main()")
-			// 	defer println("Exiting main()")
-
-			// 	rootInst, err := vugu.New(&Root{}, nil)
-			// 	if err != nil {
-			// 		log.Fatal(err)
-			// 	}
-
-			// 	env := vugu.NewJSEnv("#root_mount_parent", rootInst, vugu.RegisteredComponentTypes())
-			// 	env.DebugWriter = os.Stdout
-
-			// 	for ok := true; ok; ok = env.EventWait() {
-			// 		err = env.Render()
-			// 		if err != nil {
-			// 			panic(err)
-			// 		}
-			// 	}
-
-			// }
-			// `), 0644)
+			err = ioutil.WriteFile(mainGoPath, buf.Bytes(), 0644)
 			if err != nil {
 				return err
 			}

@@ -17,7 +17,7 @@ func main() {
 
 	var buf bytes.Buffer
 
-	fmt.Fprintf(&buf, "package vugu\n\n// GENERATED FILE, DO NOT EDIT!  See renderer-js-script-maker.go\n\nconst jsHelperScript = %q\n", b)
+	fmt.Fprintf(&buf, "package domrender\n\n// GENERATED FILE, DO NOT EDIT!  See renderer-js-script-maker.go\n\nconst jsHelperScript = %q\n", b)
 
 	err = ioutil.WriteFile("renderer-js-script.go", buf.Bytes(), 0644)
 	if err != nil {

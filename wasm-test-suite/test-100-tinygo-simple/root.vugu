@@ -1,0 +1,8 @@
+<html>
+    <body>
+        <div id="testing">
+            <div id="t1">t1text</div>
+            <div id="t2" vg-html='"t2text"'></div>
+        </div>
+    </body>
+</html>

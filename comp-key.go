@@ -7,12 +7,6 @@ import (
 	"github.com/vugu/xxhash"
 )
 
-// CompKey is the key used to identify and look up a component instance.
-type CompKey struct {
-	ID      uint64      // unique ID for this instance of a component, randomly generated and embeded into source code
-	IterKey interface{} // optional iteration key to distinguish the same component reference in source code but different loop iterations
-}
-
 // MakeCompKeyID forms a value for CompKey.ID from the given time the uint32 you provide for the lower 32 bits.
 func MakeCompKeyID(t time.Time, data uint32) uint64 {
 	var ret = uint64(t.Unix()) << 32
@@ -36,10 +30,6 @@ func MakeCompKeyIDNowRand() uint64 {
 		compKeyRand = rand.New(rand.NewSource(time.Now().UnixNano()))
 	}
 	var ret = uint64(time.Now().Unix()) << 32
-	// b := make([]byte, 4)
-	// rand.Read(b)
-	// ret |= uint64(binary.BigEndian.Uint32(b))
 	ret |= uint64(compKeyRand.Int63() & 0xFFFFFFFF)
-
 	return ret
 }

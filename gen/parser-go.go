@@ -30,6 +30,7 @@ type ParserGo struct {
 	OutFile       string // output file name with ".go" suffix
 
 	NoOptimizeStatic bool // set to true to disable optimization of static blocks of HTML into vg-html expressions
+	TinyGo           bool // set to true to enable TinyGo compatability changes to the generated code
 }
 
 func (p *ParserGo) gofmt(pgm string) (string, error) {
@@ -901,9 +902,9 @@ func (p *ParserGo) visitNodeComponentElement(state *parseGoState, n *html.Node) 
 
 	keyExpr := vgIfExpr(n)
 	if keyExpr != "" {
-		fmt.Fprintf(&state.buildBuf, "vgcompKey := vugu.CompKey{ID:0x%X, IterKey: %s}\n", compKeyID, keyExpr)
+		fmt.Fprintf(&state.buildBuf, "vgcompKey := vugu.MakeCompKey(0x%X, %s)\n", compKeyID, keyExpr)
 	} else {
-		fmt.Fprintf(&state.buildBuf, "vgcompKey := vugu.CompKey{ID:0x%X, IterKey: vgiterkey}\n", compKeyID)
+		fmt.Fprintf(&state.buildBuf, "vgcompKey := vugu.MakeCompKey(0x%X, vgiterkey)\n", compKeyID)
 	}
 	fmt.Fprintf(&state.buildBuf, "// ask BuildEnv for prior instance of this specific component\n")
 	fmt.Fprintf(&state.buildBuf, "vgcomp, _ := vgin.BuildEnv.CachedComponent(vgcompKey).(*%s)\n", typeExpr)

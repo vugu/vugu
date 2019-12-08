@@ -13,8 +13,9 @@ import (
 // by hand.  I hope I'm right.  -bgp
 
 // NOTE: I needed a single concise word which means, essentially "make it so".  The idea being that the element described
-// should exist and if it does not update/replace whatever is there so it is.  Unable to suitable term in the English language,
-// I've chosen the word "Picard" for this purpose.
+// should exist, and if it does not, update/replace whatever is there so it is.  Unable to find a suitable term in the
+// English language, I've chosen the word "Picard" for this purpose.  UPDATE: Alas, this didn't pan out, but it was worth
+// a try ;)
 
 const (
 	opcodeEnd uint8 = 0 // no more instructions in this buffer

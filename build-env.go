@@ -23,10 +23,10 @@ type BuildEnv struct {
 	compUsed map[CompKey]Builder
 
 	// cache of build output by component from prior build pass
-	buildCache map[interface{}]*BuildOut
+	buildCache map[buildCacheKey]*BuildOut
 
 	// new build output from this build pass (becomes buildCache next build pass)
-	buildResults map[interface{}]*BuildOut
+	buildResults map[buildCacheKey]*BuildOut
 
 	// nodePositionHashMap map[*VGNode]uint64
 
@@ -36,13 +36,14 @@ type BuildEnv struct {
 
 // BuildResults contains the BuildOut values for full tree of components built.
 type BuildResults struct {
-	Out    *BuildOut
-	AllOut map[interface{}]*BuildOut
+	Out *BuildOut
+
+	allOut map[buildCacheKey]*BuildOut
 }
 
 // ResultFor is alias for indexing into AllOut.
 func (r *BuildResults) ResultFor(component interface{}) *BuildOut {
-	return r.AllOut[component]
+	return r.allOut[makeBuildCacheKey(component)]
 }
 
 // RunBuild performs a bulid on a component, managing the lifecycles of nested components and related concerned.
@@ -67,10 +68,10 @@ func (e *BuildEnv) RunBuild(builder Builder) *BuildResults {
 	e.compCache, e.compUsed = e.compUsed, e.compCache
 
 	if e.buildCache == nil {
-		e.buildCache = make(map[interface{}]*BuildOut)
+		e.buildCache = make(map[buildCacheKey]*BuildOut)
 	}
 	if e.buildResults == nil {
-		e.buildResults = make(map[interface{}]*BuildOut)
+		e.buildResults = make(map[buildCacheKey]*BuildOut)
 	}
 
 	// clear old prior build pass's cache
@@ -84,7 +85,7 @@ func (e *BuildEnv) RunBuild(builder Builder) *BuildResults {
 	// recursively build everything
 	e.buildOne(builder)
 
-	return &BuildResults{AllOut: e.buildResults, Out: e.buildResults[builder]}
+	return &BuildResults{allOut: e.buildResults, Out: e.buildResults[makeBuildCacheKey(builder)]}
 }
 
 func (e *BuildEnv) buildOne(thisb Builder) {
@@ -100,7 +101,7 @@ func (e *BuildEnv) buildOne(thisb Builder) {
 	buildOut := thisb.Build(&buildIn)
 
 	// store in buildResults
-	e.buildResults[thisb] = buildOut
+	e.buildResults[makeBuildCacheKey(thisb)] = buildOut
 
 	for _, c := range buildOut.Components {
 		e.buildOne(c)

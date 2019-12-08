@@ -20,6 +20,7 @@ script:
   - go test ./staticrender
   - go test ./simplehttp
   - go test ./wasm-test-suite
+  - go install ./cmd/vugugen
 
 notifications:
   email: true
