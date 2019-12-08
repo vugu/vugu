@@ -389,22 +389,23 @@ func (r *JSRenderer) visitFirst(state *jsRenderState, bo *vugu.BuildOut, br *vug
 	// first tag is html
 	if strings.ToLower(n.Data) == "html" {
 
-		// TODO: sync html tag attributes
+		err := r.syncHtml(state, n, []byte("html"))
+		if err != nil {
+			return err
+		}
 
 		for nchild := n.FirstChild; nchild != nil; nchild = nchild.NextSibling {
 
 			if strings.ToLower(nchild.Data) == "head" {
 
-				// FIXME: positionID value?
-				err := r.visitHead(state, bo, br, nchild, positionID)
+				err := r.visitHead(state, bo, br, nchild, []byte("head"))
 				if err != nil {
 					return err
 				}
 
 			} else if strings.ToLower(nchild.Data) == "body" {
 
-				// FIXME: positionID value?
-				err := r.visitBody(state, bo, br, nchild, positionID)
+				err := r.visitBody(state, bo, br, nchild, []byte("body"))
 				if err != nil {
 					return err
 				}
@@ -423,12 +424,38 @@ func (r *JSRenderer) visitFirst(state *jsRenderState, bo *vugu.BuildOut, br *vug
 
 }
 
+func (r *JSRenderer) syncHtml(state *jsRenderState, n *vugu.VGNode, positionID []byte) error {
+	err := r.instructionList.writeSelectQuery("html")
+	if err != nil {
+		return err
+	}
+	return r.syncElement(state, n, positionID)
+}
+
 func (r *JSRenderer) visitHead(state *jsRenderState, bo *vugu.BuildOut, br *vugu.BuildResults, n *vugu.VGNode, positionID []byte) error {
-	// log.Printf("TODO: visitHead")
+
+	err := r.instructionList.writeSelectQuery("head")
+	if err != nil {
+		return err
+	}
+	err = r.syncElement(state, n, positionID)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
 func (r *JSRenderer) visitBody(state *jsRenderState, bo *vugu.BuildOut, br *vugu.BuildResults, n *vugu.VGNode, positionID []byte) error {
+
+	err := r.instructionList.writeSelectQuery("body")
+	if err != nil {
+		return err
+	}
+	err = r.syncElement(state, n, positionID)
+	if err != nil {
+		return err
+	}
 
 	if !(n.FirstChild != nil && n.FirstChild.NextSibling == nil) {
 		return errors.New("body tag must contain exactly one element child")
@@ -488,40 +515,7 @@ func (r *JSRenderer) visitSyncNode(state *jsRenderState, bo *vugu.BuildOut, br *
 // visitSyncElementEtc syncs the rest of the stuff that only applies to elements
 func (r *JSRenderer) visitSyncElementEtc(state *jsRenderState, bo *vugu.BuildOut, br *vugu.BuildResults, n *vugu.VGNode, positionID []byte) error {
 
-	for _, a := range n.Attr {
-		err := r.instructionList.writeSetAttrStr(a.Key, a.Val)
-		if err != nil {
-			return err
-		}
-	}
-
-	err := r.instructionList.writeRemoveOtherAttrs()
-	if err != nil {
-		return err
-	}
-
-	// do any JS properties
-	for _, p := range n.Prop {
-		err := r.instructionList.writeSetProperty(p.Key, []byte(p.JSONVal))
-		if err != nil {
-			return err
-		}
-	}
-
-	if len(n.DOMEventHandlerSpecList) > 0 {
-
-		// store in domHandlerMap
-		state.domHandlerMap[string(positionID)] = n.DOMEventHandlerSpecList
-
-		for _, hs := range n.DOMEventHandlerSpecList {
-			err := r.instructionList.writeSetEventListener(positionID, hs.EventType, hs.Capture, hs.Passive)
-			if err != nil {
-				return err
-			}
-		}
-	}
-	// always write the remove for event listeners so any previous ones are taken away
-	err = r.instructionList.writeRemoveOtherEventListeners(positionID)
+	err := r.syncElement(state, n, positionID)
 	if err != nil {
 		return err
 	}
@@ -560,6 +554,43 @@ func (r *JSRenderer) visitSyncElementEtc(state *jsRenderState, bo *vugu.BuildOut
 	}
 
 	return nil
+}
+
+func (r *JSRenderer) syncElement(state *jsRenderState, n *vugu.VGNode, positionID []byte) error {
+	for _, a := range n.Attr {
+		err := r.instructionList.writeSetAttrStr(a.Key, a.Val)
+		if err != nil {
+			return err
+		}
+	}
+
+	err := r.instructionList.writeRemoveOtherAttrs()
+	if err != nil {
+		return err
+	}
+
+	// do any JS properties
+	for _, p := range n.Prop {
+		err := r.instructionList.writeSetProperty(p.Key, []byte(p.JSONVal))
+		if err != nil {
+			return err
+		}
+	}
+
+	if len(n.DOMEventHandlerSpecList) > 0 {
+
+		// store in domHandlerMap
+		state.domHandlerMap[string(positionID)] = n.DOMEventHandlerSpecList
+
+		for _, hs := range n.DOMEventHandlerSpecList {
+			err := r.instructionList.writeSetEventListener(positionID, hs.EventType, hs.Capture, hs.Passive)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	// always write the remove for event listeners so any previous ones are taken away
+	return r.instructionList.writeRemoveOtherEventListeners(positionID)
 }
 
 // // writeAllStaticAttrs is a helper to write all the static attrs from a VGNode

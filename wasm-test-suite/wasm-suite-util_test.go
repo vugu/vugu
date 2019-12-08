@@ -28,6 +28,16 @@ import (
 	"github.com/vugu/vugu/simplehttp"
 )
 
+func queryNode(ref string, assert func(n *cdp.Node)) chromedp.QueryAction {
+	return chromedp.QueryAfter(ref, func(ctx context.Context, nodes ...*cdp.Node) error {
+		if len(nodes) == 0 {
+			return fmt.Errorf("no %s element found", ref)
+		}
+		assert(nodes[0])
+		return nil
+	})
+}
+
 // WaitInnerTextTrimEq will wait for the innerText of the specified element to match a specific string after whitespace trimming.
 func WaitInnerTextTrimEq(sel, innerText string) chromedp.QueryAction {
 

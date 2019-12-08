@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/chromedp"
 	"github.com/stretchr/testify/assert"
 )
@@ -142,6 +143,60 @@ func Test005Issue80(t *testing.T) {
 
 }
 
+// TODO Rename it to Test006HtmlAttr ?
+func Test006Issue81(t *testing.T) {
+
+	assert := assert.New(t)
+
+	dir, origDir := mustUseDir("test-006-issue-81")
+	defer os.Chdir(origDir)
+	mustGen(dir)
+	pathSuffix := mustBuildAndLoad(dir)
+	ctx, cancel := mustChromeCtx()
+	defer cancel()
+	// log.Printf("pathSuffix = %s", pathSuffix)
+
+	must(chromedp.Run(ctx,
+		chromedp.Navigate("http://localhost:8846"+pathSuffix),
+		chromedp.WaitVisible("#content"),
+		queryNode("html", func(n *cdp.Node) {
+			assert.Equal(
+				[]string{"class", "html-class", "lang", "en"},
+				n.Attributes,
+				"wrong html attributes",
+			)
+		}),
+		queryNode("head", func(n *cdp.Node) {
+			assert.Equal(
+				[]string{"class", "head-class"},
+				n.Attributes,
+				"wrong head attributes",
+			)
+		}),
+		queryNode("body", func(n *cdp.Node) {
+			assert.Equal(
+				[]string{"class", "body-class"},
+				n.Attributes,
+				"wrong body attributes",
+			)
+		}),
+	))
+}
+
+func Test007Issue85(t *testing.T) {
+	dir, origDir := mustUseDir("test-007-issue-85")
+	defer os.Chdir(origDir)
+	mustGen(dir)
+	pathSuffix := mustBuildAndLoad(dir)
+	ctx, cancel := mustChromeCtx()
+	defer cancel()
+
+	must(chromedp.Run(ctx,
+		chromedp.Navigate("http://localhost:8846"+pathSuffix),
+		chromedp.WaitVisible("#content"),
+	))
+}
+
 func Test100TinygoSimple(t *testing.T) {
 
 	// TODO: This is work in progress - it does actually compile but needs some more work to
@@ -156,7 +211,6 @@ func Test100TinygoSimple(t *testing.T) {
 
 	buildGopath := mustTGTempGopathSetup(dir, "src/tgtestpgm")
 	log.Printf("buildGopath: %s", buildGopath)
-	defer os.RemoveAll(buildGopath)
 	mustTGGoGet(buildGopath, "github.com/vugu/xxhash", "github.com/vugu/vjson")
 	mustTGGen(filepath.Join(buildGopath, "src/tgtestpgm"))
 	// pathSuffix := mustTGBuildAndLoad(filepath.Join(dir, "main.wasm"), buildGopath)
