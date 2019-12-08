@@ -11,7 +11,6 @@ import (
 	"html/template"
 	"io"
 	"io/ioutil"
-	"log"
 	"mime/multipart"
 	"net/http"
 	"os"
@@ -171,7 +170,7 @@ func Test006Issue81(t *testing.T) {
 	pathSuffix := mustBuildAndLoad(dir)
 	ctx, cancel := mustChromeCtx()
 	defer cancel()
-	log.Printf("pathSuffix = %s", pathSuffix)
+	// log.Printf("pathSuffix = %s", pathSuffix)
 
 	must(chromedp.Run(ctx,
 		chromedp.Navigate("http://localhost:8846"+pathSuffix),
@@ -197,6 +196,20 @@ func Test006Issue81(t *testing.T) {
 				"wrong body attributes",
 			)
 		}),
+	))
+}
+
+func Test007Issue85(t *testing.T) {
+	dir, origDir := mustUseDir("test-007-issue-85")
+	defer os.Chdir(origDir)
+	mustGen(dir)
+	pathSuffix := mustBuildAndLoad(dir)
+	ctx, cancel := mustChromeCtx()
+	defer cancel()
+
+	must(chromedp.Run(ctx,
+		chromedp.Navigate("http://localhost:8846"+pathSuffix),
+		chromedp.WaitVisible("#content"),
 	))
 }
 
