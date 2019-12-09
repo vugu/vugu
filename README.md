@@ -16,6 +16,7 @@ No node. No JS. No npm. No node_modules folder competing with your music library
 
 ## Updates ♨
 
+* 2019-12-08 First Vugu program successfully compiles with Tinygo.  Testing and a bit more alternate implementation is still required but at least the compilation works now.
 * 2019-11-24 WASM test suite now working in Travis CI; getting closer on TinyGo support and merged refactor into master.
 * 2019-11-10 Support for tinygo is in-progress on the tinygo branch.  No known blocking issues as yet, some minor refactor required but looks promising.
 * 2019-09-29 Router is work-in-progress.  Will use radix tree to efficiently combine common prefixes.  Struct tags will usable to two-way-bind path and query params, or it can be done manually.  Some similarities to Angular and Vue routers but will be less declarative and more functional (instead of a big tree of objects with various config, you write path handler functions to set whatever properties need to be set, establish binding, etc).  Plan is to get the bulk of this coded by next week.
