@@ -1,0 +1,21 @@
+<html>
+  <head></head>
+  <body>
+    <div id="content">
+      <button vg-for='c.Items()' :id='value' vg-html='value'
+        @click='c.Clicked = fmt.Sprintf("%d-%s", key, value)'>
+      </button>
+      <p id="clicked" vg-if='c.Clicked != ""' vg-html='c.Clicked + " clicked!"'></p>
+    </div>
+  </body>
+</html>
+
+<script type='application/x-go'>
+  type Root struct {
+    Clicked string
+  }
+
+  func (c *Root) Items() []string {
+    return []string{"a","b","c","d"}
+  }
+</script>

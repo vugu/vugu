@@ -213,6 +213,25 @@ func Test008ForI(t *testing.T) {
 	))
 }
 
+func Test008Issue89(t *testing.T) {
+	dir, origDir := mustUseDir("test-008-issue-89")
+	defer os.Chdir(origDir)
+	mustGen(dir)
+	pathSuffix := mustBuildAndLoad(dir)
+	ctx, cancel := mustChromeCtx()
+	defer cancel()
+
+	var text string
+	must(chromedp.Run(ctx,
+		chromedp.Navigate("http://localhost:8846"+pathSuffix),
+		chromedp.WaitVisible("#content"),
+		chromedp.Click("#a"),
+		chromedp.WaitVisible("#clicked"),
+		chromedp.InnerHTML("#clicked", &text),
+	))
+	assert.Equal(t, "0-a clicked!", text)
+}
+
 func Test100TinygoSimple(t *testing.T) {
 
 	// TODO: This is work in progress - it does actually compile but needs some more work to
