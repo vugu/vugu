@@ -197,6 +197,22 @@ func Test007Issue85(t *testing.T) {
 	))
 }
 
+func Test008ForI(t *testing.T) {
+	dir, origDir := mustUseDir("test-008-for-i")
+	defer os.Chdir(origDir)
+	mustGen(dir)
+	pathSuffix := mustBuildAndLoad(dir)
+	ctx, cancel := mustChromeCtx()
+	defer cancel()
+	// log.Printf("pathSuffix = %s", pathSuffix)
+
+	must(chromedp.Run(ctx,
+		chromedp.Navigate("http://localhost:8846"+pathSuffix),
+		chromedp.WaitVisible("#content"),
+		WaitInnerTextTrimEq("#content", "01234"),
+	))
+}
+
 func Test100TinygoSimple(t *testing.T) {
 
 	// TODO: This is work in progress - it does actually compile but needs some more work to

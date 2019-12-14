@@ -1,0 +1,8 @@
+<html>
+  <head></head>
+  <body>
+    <div id="content">
+      <span vg-for="i := 0; i < 5; i++" vg-html='i'></span>
+    </div>
+  </body>
+</html>

@@ -1009,7 +1009,7 @@ func (p *ParserGo) emitForExpr(state *parseGoState, n *html.Node) error {
 	// if still no vgiterkeyx use the first identifier
 	if vgiterkeyx == "" {
 		vgiterkeyx = strings.FieldsFunc(forx, func(r rune) bool {
-			return unicode.IsLetter(r) || unicode.IsDigit(r)
+			return !(unicode.IsLetter(r) || unicode.IsDigit(r))
 		})[0]
 	}
 
