@@ -139,7 +139,7 @@
 		let state = window.vuguState || {};
 		window.vuguState = state;
 
-		console.log("vuguRender called");
+		// console.log("vuguRender called");
 
         let textEncoder = new TextEncoder();
 
@@ -182,7 +182,7 @@
             
             try {
 
-                console.log("processing opcode", opcode);
+                // console.log("processing opcode", opcode);
                 // console.log("test_span_id: ", document.querySelector("#test_span_id"));
 
                 switch (opcode) {
@@ -239,11 +239,11 @@
                         // console.log("GOT HERE selector,nodeName = ", selector, nodeName);
                         // console.log("state.mountPointEl", state.mountPointEl);
                         if (state.mountPointEl) {
-                            console.log("opcodeSelectMountPoint: state.mountPointEl already exists, using it", state.mountPointEl, "parent is", state.mountPointEl.parentNode);
+                            // console.log("opcodeSelectMountPoint: state.mountPointEl already exists, using it", state.mountPointEl, "parent is", state.mountPointEl.parentNode);
                             state.el = state.mountPointEl;
                             // state.elStack.push(state.mountPointEl);
                         } else {
-                            console.log("opcodeSelectMountPoint: state.mountPointEl does not exist, using selector to find it", selector);
+                            // console.log("opcodeSelectMountPoint: state.mountPointEl does not exist, using selector to find it", selector);
                             let el = document.querySelector(selector);
                             if (!el) {
                                 throw "mount point selector not found: " + selector;
@@ -362,10 +362,10 @@
                         
                         let nodeName = decoder.readString();
 
-                        this.console.log("opcodeSetElement for ",
-                            "nodeName=", nodeName, 
-                            ", state.el=", state.el, 
-                            ", state.nextElMove=", state.nextElMove);
+                        // this.console.log("opcodeSetElement for ",
+                        //     "nodeName=", nodeName, 
+                        //     ", state.el=", state.el, 
+                        //     ", state.nextElMove=", state.nextElMove);
 
                         state.elAttrNames = {};
                         state.elEventKeys = {};
@@ -546,7 +546,7 @@
 
                     // remove all event listeners from currently selected element that were not just set
                     case opcodeRemoveOtherEventListeners: {
-                        this.console.log("opcodeRemoveOtherEventListeners");
+                        // this.console.log("opcodeRemoveOtherEventListeners");
 
                         let positionID = decoder.readString();
 
@@ -688,7 +688,7 @@
 
                         state.eventHandlerMap[positionID] = emap;
 
-                        this.console.log("opcodeSetEventListener", positionID, eventType, capture, passive);
+                        // this.console.log("opcodeSetEventListener", positionID, eventType, capture, passive);
                         break;
                     }
 
@@ -708,7 +708,7 @@
                             attrMap[key] = val;
                         }
 
-                        this.console.log("got opcodeSetCSSTag: elementName=", elementName, "textContent=", textContent, "attrMap=", attrMap)
+                        // this.console.log("got opcodeSetCSSTag: elementName=", elementName, "textContent=", textContent, "attrMap=", attrMap)
                         
                         state.elCSSTagsSet = state.elCSSTagsSet || []; // ensure state.elCSSTagsSet is set to empty array if not already set
 
@@ -751,13 +751,13 @@
                                 cTag.setAttribute(k, attrMap[k]);
                             }
                             cTag.vuguCreated = true; // so we know that we created this, as opposed to it already having been on the page
-                            this.console.log("GOT TEXTCONTENT: ", textContent);
+                            // this.console.log("GOT TEXTCONTENT: ", textContent);
                             if (textContent) {
                                 cTag.appendChild(document.createTextNode(textContent)) // set textContent if provided
                                 // cTag.innerText = textContent; // set textContent if provided
                             }
                             this.document.head.appendChild(cTag); // add to end of head
-                            this.console.log("CREATED ctag: ", cTag);
+                            // this.console.log("CREATED ctag: ", cTag);
                             state.elCSSTagsSet.push(cTag); // add to elCSSTagsSet for use in opcodeRemoveOtherCSSTags
                         } else {
                             // if we did find it, we need to push to state.elCSSTagsSet to tell opcodeRemoveOtherCSSTags not to remove it
@@ -768,7 +768,7 @@
                     }
                     case opcodeRemoveOtherCSSTags: {
 
-                        this.console.log("got opcodeRemoveOtherCSSTags");
+                        // this.console.log("got opcodeRemoveOtherCSSTags");
 
                         // any link or style tag in doc that has vuguCreated==true and is not in css tags set map gets removed
 
