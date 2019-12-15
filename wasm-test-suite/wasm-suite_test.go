@@ -220,7 +220,6 @@ func Test008Issue89(t *testing.T) {
 	pathSuffix := mustBuildAndLoad(dir)
 	ctx, cancel := mustChromeCtx()
 	defer cancel()
-	//log.Printf("pathSuffix = %s", pathSuffix)
 
 	var text string
 	must(chromedp.Run(ctx,

@@ -994,9 +994,9 @@ func (p *ParserGo) emitForExpr(state *parseGoState, n *html.Node) error {
 
 	// make it so `w` is a shorthand for `key, value := range w`
 	if !strings.Contains(forx, ":=") {
-		forx = "k, v := range " + forx
+		forx = "key, value := range " + forx
 		if vgiterkeyx == "" {
-			vgiterkeyx = "k"
+			vgiterkeyx = "key"
 		}
 	}
 
@@ -1017,11 +1017,8 @@ func (p *ParserGo) emitForExpr(state *parseGoState, n *html.Node) error {
 	fmt.Fprintf(&state.buildBuf, "var vgiterkey interface{} = %s\n", vgiterkeyx)
 	fmt.Fprintf(&state.buildBuf, "_ = vgiterkey\n")
 
-	// handle case of ensuring the key, value we put in earlier are captured for
-	// functions literals like the one used for DOM events.
-	if strings.HasPrefix(forx, "k, v :=") {
-		fmt.Fprintf(&state.buildBuf, "key, value := k, v\n")
-		// Ensure never gets an "unused variable" error
+	// handle case of ensuring the key, value we put in earlier never gets an "unused variable" error
+	if strings.HasPrefix(forx, "key, value :=") {
 		fmt.Fprintf(&state.buildBuf, "_, _ = key, value\n")
 	}
 
