@@ -2,6 +2,7 @@ package gen
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -982,7 +983,7 @@ func (p *ParserGo) emitForExpr(state *parseGoState, n *html.Node) error {
 	forx := vgForExpr(n)
 
 	if forx == "" {
-		panic("no for expression, code should not be calling emitForExpr when no vg-for is present")
+		return errors.New("no for expression, code should not be calling emitForExpr when no vg-for is present")
 	}
 
 	// cases:
