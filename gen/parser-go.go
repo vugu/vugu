@@ -986,37 +986,68 @@ func (p *ParserGo) emitForExpr(state *parseGoState, n *html.Node) error {
 		return errors.New("no for expression, code should not be calling emitForExpr when no vg-for is present")
 	}
 
-	// cases:
-	// * _, v := // replace _ with something we use for iterval
+	// cases to select vgiterkey:
+	// * check for vg-key attribute
+	// * _, v := // replace _ with vgiterkey
 	// * key, value := // unused vars, use 'key' as iter val
 	// * k, v := // detect `k` and use as iterval
 
 	vgiterkeyx := vgKeyExpr(n)
 
-	// make it so `w` is a shorthand for `key, value := range w`
+	// determine iteration variables
+	var iterkey, iterval string
 	if !strings.Contains(forx, ":=") {
+		// make it so `w` is a shorthand for `key, value := range w`
+		iterkey, iterval = "key", "value"
 		forx = "key, value := range " + forx
-		if vgiterkeyx == "" {
-			vgiterkeyx = "key"
+	} else if strings.Contains(forx, "range") {
+		// extract iteration variables
+		var (
+			itervars [2]string
+			iteridx  int
+		)
+		for _, c := range forx {
+			if c == ':' {
+				break
+			}
+			if c == ',' {
+				iteridx++
+				continue
+			}
+			if c == ' ' {
+				continue
+			}
+			itervars[iteridx] += string(c)
 		}
+
+		iterkey = itervars[0]
+		iterval = itervars[1]
+	} else {
+		//TODO deal with for i:=0;i<len(Items);i++ ...
 	}
 
 	// detect "_, k := " form combined with no vg-key specified and replace
-	if vgiterkeyx == "" && strings.HasPrefix(forx, "_") {
+	if vgiterkeyx == "" && iterkey == "_" {
+		iterkey = "vgiterkeyt"
 		forx = "vgiterkeyt " + forx[1:]
-		vgiterkeyx = "vgiterkeyt"
 	}
+
+	fmt.Printf("%q iteration vars %q, %q\n", forx, iterkey, iterval)
 
 	// if still no vgiterkeyx use the first identifier
 	if vgiterkeyx == "" {
-		vgiterkeyx = strings.FieldsFunc(forx, func(r rune) bool {
-			return !(unicode.IsLetter(r) || unicode.IsDigit(r))
-		})[0]
+		vgiterkeyx = iterkey
 	}
 
 	fmt.Fprintf(&state.buildBuf, "for %s {\n", forx)
 	fmt.Fprintf(&state.buildBuf, "var vgiterkey interface{} = %s\n", vgiterkeyx)
 	fmt.Fprintf(&state.buildBuf, "_ = vgiterkey\n")
+	if iterkey != "_" && iterkey != "vgiterkeyt" {
+		fmt.Fprintf(&state.buildBuf, "%[1]s := %[1]s\n", iterkey)
+	}
+	if iterval != "_" {
+		fmt.Fprintf(&state.buildBuf, "%[1]s := %[1]s\n", iterval)
+	}
 
 	// handle case of ensuring the key, value we put in earlier never gets an "unused variable" error
 	if strings.HasPrefix(forx, "key, value :=") {

@@ -30,6 +30,8 @@ func TestEmitForExpr(t *testing.T) {
 			expectedResult: `for key, value := range c.Items {
 var vgiterkey interface{} = key
 _ = vgiterkey
+key := key
+value := value
 _, _ = key, value
 `,
 		},
@@ -44,6 +46,8 @@ _, _ = key, value
 			expectedResult: `for key, value := range c.Items {
 var vgiterkey interface{} = 1
 _ = vgiterkey
+key := key
+value := value
 _, _ = key, value
 `,
 		},
@@ -57,6 +61,8 @@ _, _ = key, value
 			expectedResult: `for k, v := range c.Items {
 var vgiterkey interface{} = k
 _ = vgiterkey
+k := k
+v := v
 `,
 		},
 		{
@@ -69,6 +75,7 @@ _ = vgiterkey
 			expectedResult: `for vgiterkeyt , v := range c.Items {
 var vgiterkey interface{} = vgiterkeyt
 _ = vgiterkey
+v := v
 `,
 		},
 		{
@@ -82,6 +89,7 @@ _ = vgiterkey
 			expectedResult: `for _, v := range c.Items {
 var vgiterkey interface{} = 1
 _ = vgiterkey
+v := v
 `,
 		},
 		{
