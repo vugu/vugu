@@ -21,7 +21,7 @@ func TestEmitForExpr(t *testing.T) {
 			expectedError: "no for expression, code should not be calling emitForExpr when no vg-for is present",
 		},
 		{
-			name: "no iteration variables",
+			name: "no iteration vars",
 			node: &html.Node{
 				Attr: []html.Attribute{
 					{Key: "vg-for", Val: "c.Items"},
@@ -37,7 +37,7 @@ _ = value
 `,
 		},
 		{
-			name: "no iteration variables with vg-key",
+			name: "no iteration vars with vg-key",
 			node: &html.Node{
 				Attr: []html.Attribute{
 					{Key: "vg-for", Val: "c.Items"},
@@ -54,7 +54,7 @@ _ = value
 `,
 		},
 		{
-			name: "key and value variables",
+			name: "key and value vars",
 			node: &html.Node{
 				Attr: []html.Attribute{
 					{Key: "vg-for", Val: "k, v := range c.Items"},
@@ -70,7 +70,36 @@ _ = v
 `,
 		},
 		{
-			name: "only value variable",
+			name: "only key var",
+			node: &html.Node{
+				Attr: []html.Attribute{
+					{Key: "vg-for", Val: "k := range c.Items"},
+				},
+			},
+			expectedResult: `for k := range c.Items {
+var vgiterkey interface{} = k
+_ = vgiterkey
+k := k
+_ = k
+`,
+		},
+		{
+			name: "only key var with vg-key",
+			node: &html.Node{
+				Attr: []html.Attribute{
+					{Key: "vg-for", Val: "k := range c.Items"},
+					{Key: "vg-key", Val: "1"},
+				},
+			},
+			expectedResult: `for k := range c.Items {
+var vgiterkey interface{} = 1
+_ = vgiterkey
+k := k
+_ = k
+`,
+		},
+		{
+			name: "only value var",
 			node: &html.Node{
 				Attr: []html.Attribute{
 					{Key: "vg-for", Val: "_, v := range c.Items"},
@@ -84,7 +113,7 @@ _ = v
 `,
 		},
 		{
-			name: "only value variable with vg-key",
+			name: "only value var with vg-key",
 			node: &html.Node{
 				Attr: []html.Attribute{
 					{Key: "vg-for", Val: "_, v := range c.Items"},
