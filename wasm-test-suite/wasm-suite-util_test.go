@@ -67,7 +67,7 @@ func WaitInnerTextTrimEq(sel, innerText string) chromedp.QueryAction {
 				return nodes, errors.New("unexpected value: " + ret)
 			}
 
-			// log.Printf("NodeValue: %#v", nodes[0])
+			//log.Printf("NodeValue: %#v", nodes[0])
 
 			// return nil, errors.New("not ready yet")
 			return nodes, nil

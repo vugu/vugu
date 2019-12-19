@@ -2,9 +2,9 @@
   <head></head>
   <body>
     <div id="content">
-      <button vg-for='c.Items()' :id='value' vg-html='value'
+      <span vg-for='c.Items()' :id='fmt.Sprintf("id%d", key)' vg-html='fmt.Sprintf("%d-%s", key, value)'
         @click='c.Clicked = fmt.Sprintf("%d-%s", key, value)'>
-      </button>
+      </span>
       <p id="clicked" vg-if='c.Clicked != ""' vg-html='c.Clicked + " clicked!"'></p>
     </div>
   </body>
@@ -16,6 +16,6 @@
   }
 
   func (c *Root) Items() []string {
-    return []string{"a","b","c","d"}
+    return []string{"a","b","c","d","e"}
   }
 </script>
