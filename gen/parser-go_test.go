@@ -31,8 +31,9 @@ func TestEmitForExpr(t *testing.T) {
 var vgiterkey interface{} = key
 _ = vgiterkey
 key := key
+_ = key
 value := value
-_, _ = key, value
+_ = value
 `,
 		},
 		{
@@ -47,8 +48,9 @@ _, _ = key, value
 var vgiterkey interface{} = 1
 _ = vgiterkey
 key := key
+_ = key
 value := value
-_, _ = key, value
+_ = value
 `,
 		},
 		{
@@ -62,7 +64,9 @@ _, _ = key, value
 var vgiterkey interface{} = k
 _ = vgiterkey
 k := k
+_ = k
 v := v
+_ = v
 `,
 		},
 		{
@@ -76,6 +80,7 @@ v := v
 var vgiterkey interface{} = vgiterkeyt
 _ = vgiterkey
 v := v
+_ = v
 `,
 		},
 		{
@@ -90,6 +95,7 @@ v := v
 var vgiterkey interface{} = 1
 _ = vgiterkey
 v := v
+_ = v
 `,
 		},
 		{
@@ -102,6 +108,23 @@ v := v
 			expectedResult: `for i:= 0; i < 5; i++ {
 var vgiterkey interface{} = i
 _ = vgiterkey
+i := i
+_ = i
+`,
+		},
+		{
+			name: "iteration with for clause with vg-key",
+			node: &html.Node{
+				Attr: []html.Attribute{
+					{Key: "vg-for", Val: "i:= 0; i < 5; i++"},
+					{Key: "vg-key", Val: "1"},
+				},
+			},
+			expectedResult: `for i:= 0; i < 5; i++ {
+var vgiterkey interface{} = 1
+_ = vgiterkey
+i := i
+_ = i
 `,
 		},
 	}

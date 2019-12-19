@@ -1000,7 +1000,7 @@ func (p *ParserGo) emitForExpr(state *parseGoState, n *html.Node) error {
 		// make it so `w` is a shorthand for `key, value := range w`
 		iterkey, iterval = "key", "value"
 		forx = "key, value := range " + forx
-	} else if strings.Contains(forx, "range") {
+	} else {
 		// extract iteration variables
 		var (
 			itervars [2]string
@@ -1022,8 +1022,6 @@ func (p *ParserGo) emitForExpr(state *parseGoState, n *html.Node) error {
 
 		iterkey = itervars[0]
 		iterval = itervars[1]
-	} else {
-		//TODO deal with for i:=0;i<len(Items);i++ ...
 	}
 
 	// detect "_, k := " form combined with no vg-key specified and replace
@@ -1044,14 +1042,11 @@ func (p *ParserGo) emitForExpr(state *parseGoState, n *html.Node) error {
 	fmt.Fprintf(&state.buildBuf, "_ = vgiterkey\n")
 	if iterkey != "_" && iterkey != "vgiterkeyt" {
 		fmt.Fprintf(&state.buildBuf, "%[1]s := %[1]s\n", iterkey)
+		fmt.Fprintf(&state.buildBuf, "_ = %s\n", iterkey)
 	}
-	if iterval != "_" {
+	if iterval != "_" && iterval != "" {
 		fmt.Fprintf(&state.buildBuf, "%[1]s := %[1]s\n", iterval)
-	}
-
-	// handle case of ensuring the key, value we put in earlier never gets an "unused variable" error
-	if strings.HasPrefix(forx, "key, value :=") {
-		fmt.Fprintf(&state.buildBuf, "_, _ = key, value\n")
+		fmt.Fprintf(&state.buildBuf, "_ = %s\n", iterval)
 	}
 
 	return nil
