@@ -36,7 +36,7 @@ func (a attr) hasOption(o string) bool {
 func vgAttr(n *html.Node, key string) attr {
 	for _, a := range n.Attr {
 		if strings.HasPrefix(a.Key, key) {
-			return attr{a.Key, a.Val}
+			return attr{a.Key, strings.TrimSpace(a.Val)}
 		}
 	}
 	return attr{}

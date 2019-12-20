@@ -1015,7 +1015,7 @@ func (p *ParserGo) emitForExpr(state *parseGoState, n *html.Node) error {
 				iteridx++
 				continue
 			}
-			if c == ' ' {
+			if unicode.IsSpace(c) {
 				continue
 			}
 			itervars[iteridx] += string(c)

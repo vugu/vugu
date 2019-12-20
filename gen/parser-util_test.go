@@ -45,7 +45,7 @@ func TestVgAttr(t *testing.T) {
 			node: &html.Node{
 				Attr: []html.Attribute{
 					{Key: "vg-html", Val: "html"},
-					{Key: "vg-if", Val: "true"},
+					{Key: "vg-if", Val: "  true "},
 				},
 			},
 			key:         "vg-if",
