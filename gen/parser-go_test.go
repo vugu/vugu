@@ -37,6 +37,18 @@ _ = value
 `,
 		},
 		{
+			name: "no iteration vars noshadow",
+			node: &html.Node{
+				Attr: []html.Attribute{
+					{Key: "vg-for.noshadow", Val: "c.Items"},
+				},
+			},
+			expectedResult: `for key, value := range c.Items {
+var vgiterkey interface{} = key
+_ = vgiterkey
+`,
+		},
+		{
 			name: "no iteration vars with vg-key",
 			node: &html.Node{
 				Attr: []html.Attribute{
@@ -70,6 +82,18 @@ _ = v
 `,
 		},
 		{
+			name: "key and value vars noshadow",
+			node: &html.Node{
+				Attr: []html.Attribute{
+					{Key: "vg-for.noshadow", Val: "k, v := range c.Items"},
+				},
+			},
+			expectedResult: `for k, v := range c.Items {
+var vgiterkey interface{} = k
+_ = vgiterkey
+`,
+		},
+		{
 			name: "only key var",
 			node: &html.Node{
 				Attr: []html.Attribute{
@@ -81,6 +105,18 @@ var vgiterkey interface{} = k
 _ = vgiterkey
 k := k
 _ = k
+`,
+		},
+		{
+			name: "only key var noshadow",
+			node: &html.Node{
+				Attr: []html.Attribute{
+					{Key: "vg-for.noshadow", Val: "k := range c.Items"},
+				},
+			},
+			expectedResult: `for k := range c.Items {
+var vgiterkey interface{} = k
+_ = vgiterkey
 `,
 		},
 		{
@@ -113,6 +149,18 @@ _ = v
 `,
 		},
 		{
+			name: "only value var noshadow",
+			node: &html.Node{
+				Attr: []html.Attribute{
+					{Key: "vg-for.noshadow", Val: "_, v := range c.Items"},
+				},
+			},
+			expectedResult: `for vgiterkeyt , v := range c.Items {
+var vgiterkey interface{} = vgiterkeyt
+_ = vgiterkey
+`,
+		},
+		{
 			name: "only value var with vg-key",
 			node: &html.Node{
 				Attr: []html.Attribute{
@@ -139,6 +187,18 @@ var vgiterkey interface{} = i
 _ = vgiterkey
 i := i
 _ = i
+`,
+		},
+		{
+			name: "iteration with for clause noshadow",
+			node: &html.Node{
+				Attr: []html.Attribute{
+					{Key: "vg-for.noshadow", Val: "i:= 0; i < 5; i++"},
+				},
+			},
+			expectedResult: `for i:= 0; i < 5; i++ {
+var vgiterkey interface{} = i
+_ = vgiterkey
 `,
 		},
 		{

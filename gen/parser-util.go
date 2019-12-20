@@ -16,6 +16,32 @@ import (
 	"github.com/vugu/vugu"
 )
 
+type attr struct {
+	key, val string
+}
+
+func (a attr) hasOption(o string) bool {
+	opts := strings.Split(a.key, ".")
+	if len(opts) < 2 {
+		return false
+	}
+	for i := 1; i < len(opts); i++ {
+		if opts[i] == o {
+			return true
+		}
+	}
+	return false
+}
+
+func vgAttr(n *html.Node, key string) attr {
+	for _, a := range n.Attr {
+		if strings.HasPrefix(a.Key, key) {
+			return attr{a.Key, a.Val}
+		}
+	}
+	return attr{}
+}
+
 func attrFromHtml(attr html.Attribute) vugu.VGAttribute {
 	return vugu.VGAttribute{
 		Namespace: attr.Namespace,
@@ -98,21 +124,8 @@ func vgKeyExpr(n *html.Node) string {
 // 	return ""
 // }
 
-func vgForExpr(n *html.Node) string {
-	for _, a := range n.Attr {
-		if a.Key == "vg-for" {
-
-			v := strings.TrimSpace(a.Val)
-
-			// moved to ParserGo.emitForExpr
-			// if !strings.Contains(v, " ") { // make it so `w` is a shorthand for `key, value := range w`
-			// 	v = "key, value := range " + v
-			// }
-
-			return v
-		}
-	}
-	return ""
+func vgForExpr(n *html.Node) attr {
+	return vgAttr(n, "vg-for")
 }
 
 // func vgForExprx(n *htmlx.Node) string {
