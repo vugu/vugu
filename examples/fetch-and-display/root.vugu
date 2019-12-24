@@ -1,14 +1,14 @@
 <div class="demo-comp">
-    <div vg-if='data.isLoading'>Loading...</div>
-    <div vg-if='len(data.bpi.BPI) > 0'>
-        <div>Updated: <span vg-html='data.bpi.Time.Updated'></span></div>
+    <div vg-if='c.isLoading'>Loading...</div>
+    <div vg-if='len(c.bpi.BPI) > 0'>
+        <div>Updated: <span vg-html='c.bpi.Time.Updated'></span></div>
         <ul>
-            <li vg-for='data.bpi.BPI'>
+            <li vg-for='c.bpi.BPI'>
                 <span vg-html='key'></span> <span vg-html='fmt.Sprint(value.Symbol, value.RateFloat)'></span>
             </li>
         </ul>
     </div>
-    <button @click="data.HandleClick(event)">Fetch Bitcoin Price Index</button>
+    <button @click="c.HandleClick(event)">Fetch Bitcoin Price Index</button>
 </div>
 
 <script type="application/x-go">
@@ -16,7 +16,7 @@ import "encoding/json"
 import "net/http"
 import "log"
 
-type RootData struct {
+type Root struct {
     bpi bpi
     isLoading bool
 }
@@ -26,14 +26,16 @@ type bpi struct {
     BPI map[string]struct { Code string `json:"code"`; Symbol string  `json:"symbol"`; RateFloat float64 `json:"rate_float"` } `json:"bpi"`
 }
 
-func (data *RootData) HandleClick(event *vugu.DOMEvent) {
+var c Root
 
-    data.bpi = bpi{}
+func (c *Root) HandleClick(event *vugu.DOMEvent) {
+
+    c.bpi = bpi{}
 
     go func(ee vugu.EventEnv) {
 
         ee.Lock()
-        data.isLoading = true
+        c.isLoading = true
         ee.UnlockRender()
         
         res, err := http.Get("https://api.coindesk.com/v1/bpi/currentprice.json")
@@ -52,8 +54,8 @@ func (data *RootData) HandleClick(event *vugu.DOMEvent) {
 
         ee.Lock()
         defer ee.UnlockRender()
-        data.bpi = newb
-        data.isLoading = false
+        c.bpi = newb
+        c.isLoading = false
 
     }(event.EventEnv())
 }
