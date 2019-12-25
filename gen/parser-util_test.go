@@ -1,7 +1,6 @@
 package gen
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -69,11 +68,6 @@ func TestVgForExpr(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			assert := assert.New(t)
-			defer func() {
-				if r := recover(); r != nil {
-					fmt.Println("recover", r)
-				}
-			}()
 
 			attr, err := vgForExpr(tt.node)
 
