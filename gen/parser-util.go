@@ -1,6 +1,7 @@
 package gen
 
 import (
+	"fmt"
 	"go/ast"
 	"go/parser"
 	"go/printer"
@@ -15,32 +16,6 @@ import (
 	"github.com/vugu/html"
 	"github.com/vugu/vugu"
 )
-
-type attr struct {
-	key, val string
-}
-
-func (a attr) hasOption(o string) bool {
-	opts := strings.Split(a.key, ".")
-	if len(opts) < 2 {
-		return false
-	}
-	for i := 1; i < len(opts); i++ {
-		if opts[i] == o {
-			return true
-		}
-	}
-	return false
-}
-
-func vgAttr(n *html.Node, key string) attr {
-	for _, a := range n.Attr {
-		if strings.HasPrefix(a.Key, key) {
-			return attr{a.Key, strings.TrimSpace(a.Val)}
-		}
-	}
-	return attr{}
-}
 
 func attrFromHtml(attr html.Attribute) vugu.VGAttribute {
 	return vugu.VGAttribute{
@@ -124,8 +99,30 @@ func vgKeyExpr(n *html.Node) string {
 // 	return ""
 // }
 
-func vgForExpr(n *html.Node) attr {
-	return vgAttr(n, "vg-for")
+type vgForAttr struct {
+	expr     string
+	noshadow bool
+}
+
+func vgForExpr(n *html.Node) (vgForAttr, error) {
+	for _, a := range n.Attr {
+		if strings.HasPrefix(a.Key, "vg-for") {
+			v := vgForAttr{expr: strings.TrimSpace(a.Val)}
+			opts := strings.Split(a.Key, ".")
+			if len(opts) > 1 {
+				for _, opt := range opts[1:] {
+					switch opt {
+					case "noshadow":
+						v.noshadow = true
+					default:
+						return vgForAttr{}, fmt.Errorf("option %q unknown", opt)
+					}
+				}
+			}
+			return v, nil
+		}
+	}
+	return vgForAttr{}, nil
 }
 
 // func vgForExprx(n *htmlx.Node) string {

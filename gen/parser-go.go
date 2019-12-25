@@ -571,7 +571,7 @@ func (p *ParserGo) visitJS(state *parseGoState, n *html.Node) error {
 	// allow control stuff, why not
 
 	// vg-for
-	if vgForExpr(n).val != "" {
+	if v, _ := vgForExpr(n); v.expr != "" {
 		if err := p.emitForExpr(state, n); err != nil {
 			return err
 		}
@@ -654,7 +654,7 @@ func (p *ParserGo) visitCSS(state *parseGoState, n *html.Node) error {
 	// allow control stuff, why not
 
 	// vg-for
-	if vgForExpr(n).val != "" {
+	if v, _ := vgForExpr(n); v.expr != "" {
 		if err := p.emitForExpr(state, n); err != nil {
 			return err
 		}
@@ -725,7 +725,7 @@ func (p *ParserGo) visitTopNode(state *parseGoState, n *html.Node) error {
 func (p *ParserGo) visitNodeElementAndCtrl(state *parseGoState, n *html.Node) error {
 
 	// vg-for
-	if vgForExpr(n).val != "" {
+	if v, _ := vgForExpr(n); v.expr != "" {
 		if err := p.emitForExpr(state, n); err != nil {
 			return err
 		}
@@ -865,7 +865,7 @@ func (p *ParserGo) visitNodeComponentElement(state *parseGoState, n *html.Node) 
 	// components are just different so we handle all of our own vg-for vg-if and everything else
 
 	// vg-for
-	if vgForExpr(n).val != "" {
+	if v, _ := vgForExpr(n); v.expr != "" {
 		if err := p.emitForExpr(state, n); err != nil {
 			return err
 		}
@@ -980,9 +980,11 @@ func (p *ParserGo) visitNodeComponentElement(state *parseGoState, n *html.Node) 
 // NOTE: caller is responsible for emitting the closing curly bracket
 func (p *ParserGo) emitForExpr(state *parseGoState, n *html.Node) error {
 
-	forattr := vgForExpr(n)
-	forx := forattr.val
-
+	forattr, err := vgForExpr(n)
+	if err != nil {
+		return err
+	}
+	forx := forattr.expr
 	if forx == "" {
 		return errors.New("no for expression, code should not be calling emitForExpr when no vg-for is present")
 	}
@@ -1039,7 +1041,7 @@ func (p *ParserGo) emitForExpr(state *parseGoState, n *html.Node) error {
 	fmt.Fprintf(&state.buildBuf, "for %s {\n", forx)
 	fmt.Fprintf(&state.buildBuf, "var vgiterkey interface{} = %s\n", vgiterkeyx)
 	fmt.Fprintf(&state.buildBuf, "_ = vgiterkey\n")
-	if !forattr.hasOption("noshadow") {
+	if !forattr.noshadow {
 		if iterkey != "_" && iterkey != "vgiterkeyt" {
 			fmt.Fprintf(&state.buildBuf, "%[1]s := %[1]s\n", iterkey)
 			fmt.Fprintf(&state.buildBuf, "_ = %s\n", iterkey)
