@@ -222,6 +222,12 @@ func Test008For(t *testing.T) {
 			expectedText:    "0-a1-b2-c3-d4-e",
 			expectedClicked: "0-a clicked!",
 		},
+		{
+			name:            "for no iteration vars noshadow",
+			dir:             "test-008-for-keyvalue-noshadow",
+			expectedText:    "0-a1-b2-c3-d4-e",
+			expectedClicked: "4-e clicked!",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
