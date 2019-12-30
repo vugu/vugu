@@ -1,6 +1,7 @@
 package gen
 
 import (
+	"fmt"
 	"go/ast"
 	"go/parser"
 	"go/printer"
@@ -98,21 +99,30 @@ func vgKeyExpr(n *html.Node) string {
 // 	return ""
 // }
 
-func vgForExpr(n *html.Node) string {
+type vgForAttr struct {
+	expr     string
+	noshadow bool
+}
+
+func vgForExpr(n *html.Node) (vgForAttr, error) {
 	for _, a := range n.Attr {
-		if a.Key == "vg-for" {
-
-			v := strings.TrimSpace(a.Val)
-
-			// moved to ParserGo.emitForExpr
-			// if !strings.Contains(v, " ") { // make it so `w` is a shorthand for `key, value := range w`
-			// 	v = "key, value := range " + v
-			// }
-
-			return v
+		if strings.HasPrefix(a.Key, "vg-for") {
+			v := vgForAttr{expr: strings.TrimSpace(a.Val)}
+			opts := strings.Split(a.Key, ".")
+			if len(opts) > 1 {
+				for _, opt := range opts[1:] {
+					switch opt {
+					case "noshadow":
+						v.noshadow = true
+					default:
+						return vgForAttr{}, fmt.Errorf("option %q unknown", opt)
+					}
+				}
+			}
+			return v, nil
 		}
 	}
-	return ""
+	return vgForAttr{}, nil
 }
 
 // func vgForExprx(n *htmlx.Node) string {

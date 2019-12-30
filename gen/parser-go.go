@@ -2,6 +2,7 @@ package gen
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -570,7 +571,7 @@ func (p *ParserGo) visitJS(state *parseGoState, n *html.Node) error {
 	// allow control stuff, why not
 
 	// vg-for
-	if vgForExpr(n) != "" {
+	if v, _ := vgForExpr(n); v.expr != "" {
 		if err := p.emitForExpr(state, n); err != nil {
 			return err
 		}
@@ -653,7 +654,7 @@ func (p *ParserGo) visitCSS(state *parseGoState, n *html.Node) error {
 	// allow control stuff, why not
 
 	// vg-for
-	if vgForExpr(n) != "" {
+	if v, _ := vgForExpr(n); v.expr != "" {
 		if err := p.emitForExpr(state, n); err != nil {
 			return err
 		}
@@ -724,7 +725,7 @@ func (p *ParserGo) visitTopNode(state *parseGoState, n *html.Node) error {
 func (p *ParserGo) visitNodeElementAndCtrl(state *parseGoState, n *html.Node) error {
 
 	// vg-for
-	if vgForExpr(n) != "" {
+	if v, _ := vgForExpr(n); v.expr != "" {
 		if err := p.emitForExpr(state, n); err != nil {
 			return err
 		}
@@ -864,7 +865,7 @@ func (p *ParserGo) visitNodeComponentElement(state *parseGoState, n *html.Node) 
 	// components are just different so we handle all of our own vg-for vg-if and everything else
 
 	// vg-for
-	if vgForExpr(n) != "" {
+	if v, _ := vgForExpr(n); v.expr != "" {
 		if err := p.emitForExpr(state, n); err != nil {
 			return err
 		}
@@ -979,47 +980,76 @@ func (p *ParserGo) visitNodeComponentElement(state *parseGoState, n *html.Node) 
 // NOTE: caller is responsible for emitting the closing curly bracket
 func (p *ParserGo) emitForExpr(state *parseGoState, n *html.Node) error {
 
-	forx := vgForExpr(n)
-
+	forattr, err := vgForExpr(n)
+	if err != nil {
+		return err
+	}
+	forx := forattr.expr
 	if forx == "" {
-		panic("no for expression, code should not be calling emitForExpr when no vg-for is present")
+		return errors.New("no for expression, code should not be calling emitForExpr when no vg-for is present")
 	}
 
-	// cases:
-	// * _, v := // replace _ with something we use for iterval
+	// cases to select vgiterkey:
+	// * check for vg-key attribute
+	// * _, v := // replace _ with vgiterkey
 	// * key, value := // unused vars, use 'key' as iter val
 	// * k, v := // detect `k` and use as iterval
 
 	vgiterkeyx := vgKeyExpr(n)
 
-	// make it so `w` is a shorthand for `key, value := range w`
+	// determine iteration variables
+	var iterkey, iterval string
 	if !strings.Contains(forx, ":=") {
+		// make it so `w` is a shorthand for `key, value := range w`
+		iterkey, iterval = "key", "value"
 		forx = "key, value := range " + forx
-		if vgiterkeyx == "" {
-			vgiterkeyx = "key"
+	} else {
+		// extract iteration variables
+		var (
+			itervars [2]string
+			iteridx  int
+		)
+		for _, c := range forx {
+			if c == ':' {
+				break
+			}
+			if c == ',' {
+				iteridx++
+				continue
+			}
+			if unicode.IsSpace(c) {
+				continue
+			}
+			itervars[iteridx] += string(c)
 		}
+
+		iterkey = itervars[0]
+		iterval = itervars[1]
 	}
 
 	// detect "_, k := " form combined with no vg-key specified and replace
-	if vgiterkeyx == "" && strings.HasPrefix(forx, "_") {
+	if vgiterkeyx == "" && iterkey == "_" {
+		iterkey = "vgiterkeyt"
 		forx = "vgiterkeyt " + forx[1:]
-		vgiterkeyx = "vgiterkeyt"
 	}
 
 	// if still no vgiterkeyx use the first identifier
 	if vgiterkeyx == "" {
-		vgiterkeyx = strings.FieldsFunc(forx, func(r rune) bool {
-			return !(unicode.IsLetter(r) || unicode.IsDigit(r))
-		})[0]
+		vgiterkeyx = iterkey
 	}
 
 	fmt.Fprintf(&state.buildBuf, "for %s {\n", forx)
 	fmt.Fprintf(&state.buildBuf, "var vgiterkey interface{} = %s\n", vgiterkeyx)
 	fmt.Fprintf(&state.buildBuf, "_ = vgiterkey\n")
-
-	// handle case of ensuring the key, value we put in earlier never gets an "unused variable" error
-	if strings.HasPrefix(forx, "key, value :=") {
-		fmt.Fprintf(&state.buildBuf, "_, _ = key, value\n")
+	if !forattr.noshadow {
+		if iterkey != "_" && iterkey != "vgiterkeyt" {
+			fmt.Fprintf(&state.buildBuf, "%[1]s := %[1]s\n", iterkey)
+			fmt.Fprintf(&state.buildBuf, "_ = %s\n", iterkey)
+		}
+		if iterval != "_" && iterval != "" {
+			fmt.Fprintf(&state.buildBuf, "%[1]s := %[1]s\n", iterval)
+			fmt.Fprintf(&state.buildBuf, "_ = %s\n", iterval)
+		}
 	}
 
 	return nil

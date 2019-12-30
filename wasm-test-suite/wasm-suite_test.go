@@ -197,20 +197,60 @@ func Test007Issue85(t *testing.T) {
 	))
 }
 
-func Test008ForI(t *testing.T) {
-	dir, origDir := mustUseDir("test-008-for-i")
-	defer os.Chdir(origDir)
-	mustGen(dir)
-	pathSuffix := mustBuildAndLoad(dir)
-	ctx, cancel := mustChromeCtx()
-	defer cancel()
-	// log.Printf("pathSuffix = %s", pathSuffix)
+func Test008For(t *testing.T) {
+	tests := []struct {
+		name            string
+		dir             string
+		expectedText    string
+		expectedClicked string
+	}{
+		{
+			name:            "for i",
+			dir:             "test-008-for-i",
+			expectedText:    "01234",
+			expectedClicked: "0 clicked!",
+		},
+		{
+			name:            "for no iteration vars",
+			dir:             "test-008-for-keyvalue",
+			expectedText:    "0-a1-b2-c3-d4-e",
+			expectedClicked: "0-a clicked!",
+		},
+		{
+			name:            "for with iteration vars",
+			dir:             "test-008-for-kv",
+			expectedText:    "0-a1-b2-c3-d4-e",
+			expectedClicked: "0-a clicked!",
+		},
+		{
+			name:            "for no iteration vars noshadow",
+			dir:             "test-008-for-keyvalue-noshadow",
+			expectedText:    "0-a1-b2-c3-d4-e",
+			expectedClicked: "4-e clicked!",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			dir, origDir := mustUseDir(tt.dir)
+			defer os.Chdir(origDir)
+			mustGen(dir)
+			pathSuffix := mustBuildAndLoad(dir)
+			ctx, cancel := mustChromeCtx()
+			defer cancel()
+			log.Printf("pathSuffix = %s", pathSuffix)
 
-	must(chromedp.Run(ctx,
-		chromedp.Navigate("http://localhost:8846"+pathSuffix),
-		chromedp.WaitVisible("#content"),
-		WaitInnerTextTrimEq("#content", "01234"),
-	))
+			var clicked string
+			must(chromedp.Run(ctx,
+				chromedp.Navigate("http://localhost:8846"+pathSuffix),
+				chromedp.WaitVisible("#content"),
+				WaitInnerTextTrimEq("#content", tt.expectedText),
+				chromedp.Click("#id0"),
+				chromedp.WaitVisible("#clicked"),
+				chromedp.InnerHTML("#clicked", &clicked),
+			))
+			assert.Equal(t, tt.expectedClicked, clicked)
+		})
+	}
 }
 
 func Test100TinygoSimple(t *testing.T) {
