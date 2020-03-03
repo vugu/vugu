@@ -51,8 +51,9 @@ const (
 	opcodeSetJSTag           uint8 = 32 // write a JS (script) tag
 	opcodeRemoveOtherJSTags  uint8 = 33 // remove any JS tags that have not been written since the last call
 
-	opcodeSetProperty uint8 = 35 // assign a JS property to the current element
-	opcodeSelectQuery uint8 = 36 // select an element
+	opcodeSetProperty    uint8 = 35 // assign a JS property to the current element
+	opcodeSelectQuery    uint8 = 36 // select an element
+	opcodeCleanupOrphans uint8 = 37 // remove no longer referenced nodes
 )
 
 // newInstructionList will create a new instance backed by the specified slice and with a clearBufFunc
@@ -137,6 +138,18 @@ func (il *instructionList) writeClearEl() error {
 	}
 
 	il.writeValUint8(opcodeClearEl)
+
+	return nil
+}
+
+func (il *instructionList) writeCleanupOrphans() error {
+
+	err := il.checkLenAndFlush(1)
+	if err != nil {
+		return err
+	}
+
+	il.writeValUint8(opcodeCleanupOrphans)
 
 	return nil
 }

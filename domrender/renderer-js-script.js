@@ -1,4 +1,3 @@
-
 (function() {
 
 	if (window.vuguRender) { return; } // only once
@@ -37,6 +36,7 @@
     
     const opcodeSetProperty          = 35 // assign a JS property to the current element
     const opcodeSelectQuery          = 36 // select an element
+    const opcodeCleanupOrphans       = 37 // remove no longer referenced nodes
 
 
     // Decoder provides our binary decoding.
@@ -170,6 +170,10 @@
         // keeps track of attributes that are being set on the current element, so we can remove any extras
         state.elAttrNames = state.elAttrNames || {};
 
+        // keeps track of elements being traversed which are never re-used, so we can remove them
+        // once the rendering completes
+        state.unusedElements = state.unusedElements || new Set();
+
         // map of positionID -> array of listener spec and handler function, for all elements
         state.eventHandlerMap = state.eventHandlerMap || {};
     
@@ -181,7 +185,6 @@
             let opcode = decoder.readUint8();
             
             try {
-
                 // console.log("processing opcode", opcode);
                 // console.log("test_span_id: ", document.querySelector("#test_span_id"));
 
@@ -194,6 +197,15 @@
                     case opcodeClearEl: {
                         state.el = null;
                         state.nextElMove = null;
+                        break;
+                    }
+
+                    case opcodeCleanupOrphans: {
+                        // console.log("opcodeCleanupOrphans cleanup unused elements")
+                        for(var el of state.unusedElements) {
+                            el.remove();
+                        }
+
                         break;
                     }
 
@@ -232,6 +244,7 @@
                         
                         state.elAttrNames = {}; // reset attribute list
                         state.elEventKeys = {};
+                        state.unusedElements.clear();
 
                         // select mount point using selector or if it was done earlier re-use the one from before
                         let selector = decoder.readString();
@@ -268,6 +281,11 @@
 
                         state.el = el;
 
+                        let descendents = el.getElementsByTagName('*');
+                        for(i = 0; i < descendents.length; i++) {
+                            state.unusedElements.add(descendents[i]);
+                        }
+
                         state.nextElMove = null;
 
                         break;
@@ -275,7 +293,6 @@
 
                     // remove any elements for the current element that we didn't just set
                     case opcodeRemoveOtherAttrs: {
-
                         if (!state.el) {
                             throw "no element selected";
                         }
@@ -411,7 +428,11 @@
                             // throw "stopping here";
                             state.el.parentNode.replaceChild(newEl, state.el);
                             state.el = newEl;
-
+                        } else {
+                            let ok = state.unusedElements.delete(state.el);
+                            if(!ok) {
+                              throw "tried to delete an element from 'unused', but could not find it: "+state.el;
+                            }
                         }
 
                         break;

@@ -473,7 +473,12 @@ func (r *JSRenderer) visitMount(state *jsRenderState, bo *vugu.BuildOut, br *vug
 		return err
 	}
 
-	return r.visitSyncElementEtc(state, bo, br, n, positionID)
+	err = r.visitSyncElementEtc(state, bo, br, n, positionID)
+	if err != nil {
+		return err
+	}
+
+	return r.instructionList.writeCleanupOrphans()
 
 }
 
