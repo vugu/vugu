@@ -237,7 +237,7 @@ func Test008For(t *testing.T) {
 			pathSuffix := mustBuildAndLoad(dir)
 			ctx, cancel := mustChromeCtx()
 			defer cancel()
-			log.Printf("pathSuffix = %s", pathSuffix)
+			// log.Printf("pathSuffix = %s", pathSuffix)
 
 			var clicked string
 			must(chromedp.Run(ctx,
@@ -251,6 +251,30 @@ func Test008For(t *testing.T) {
 			assert.Equal(t, tt.expectedClicked, clicked)
 		})
 	}
+}
+
+func Test009TrimUnused(t *testing.T) {
+	dir, origDir := mustUseDir("test-009-trim-unused")
+	defer os.Chdir(origDir)
+	mustGen(dir)
+	pathSuffix := mustBuildAndLoad(dir)
+	ctx, cancel := mustChromeCtx()
+	defer cancel()
+
+	// log.Printf("URL: %s", "http://localhost:8846"+pathSuffix)
+
+	must(chromedp.Run(ctx,
+		chromedp.Navigate("http://localhost:8846"+pathSuffix),
+		chromedp.WaitVisible("#content"),
+		chromedp.Click("#make2"),
+		chromedp.WaitVisible("#n2of2"),
+		chromedp.Click("#make6"),
+		chromedp.WaitVisible("#n2of6"),
+		chromedp.WaitVisible("#n6of6"),
+		chromedp.Click("#make2"),
+		chromedp.WaitNotPresent("#n6of6"),
+		chromedp.WaitVisible("#n2of2"),
+	))
 }
 
 func Test100TinygoSimple(t *testing.T) {
