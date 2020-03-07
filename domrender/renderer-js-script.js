@@ -200,7 +200,7 @@
                     case opcodeSetProperty: {
                         let el = state.el;
                         if (!el) {
-                            return "opcodeSetProperty: no current reference";
+                            throw "opcodeSetProperty: no current reference";
                         }
                         let propName = decoder.readString();
                         let propValueJSON = decoder.readString();
@@ -218,7 +218,7 @@
                     case opcodeSetAttrStr: {
                         let el = state.el;
                         if (!el) {
-                            return "opcodeSetAttrStr: no current reference";
+                            throw "opcodeSetAttrStr: no current reference";
                         }
                         let attrName = decoder.readString();
                         let attrValue = decoder.readString();
@@ -303,13 +303,25 @@
                     // move node selection to parent
                     case opcodeMoveToParent: {
 
+                        // this.console.log("opcodeMoveToParent, state.nextElMove=", state.nextElMove);
+
                         // if first_child is next move then we just unset this
                         if (state.nextElMove == "first_child") {
                             state.nextElMove = null;
                         } else {
-                            // otherwise we actually move and also reset nextElMove
-                            state.el = state.el.parentNode;
+                            // otherwise we move all silbings after current one, move to parent and reset nextElMove
+                            let p = state.el.parentNode;
+                            let e = state.el;
+                            while (e.nextSibling) {
+                                p.removeChild(e.nextSibling);
+                            }
+                            
+                            state.el = p;
                             state.nextElMove = null;
+
+                            // // otherwise we actually move and also reset nextElMove
+                            // state.el = state.el.parentNode;
+                            // state.nextElMove = null;
                         }
 
                         break;
@@ -422,7 +434,7 @@
 
                         let content = decoder.readString();
 
-                        // console.log("in opcodeSetText 1");
+                        // this.console.log("opcodeSetText:", content);
 
                         // handle nextElMove cases
 
@@ -534,6 +546,7 @@
                     case opcodeSetInnerHTML: {
 
                         let html = decoder.readString();
+                        // this.console.log("opcodeSetInnerHTML:", html);
 
                         if (!state.el) { throw "opcodeSetInnerHTML must have currently selected element"; }
                         if (state.nextElMove) { throw "opcodeSetInnerHTML nextElMove must not be set"; }
