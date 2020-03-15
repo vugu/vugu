@@ -695,9 +695,16 @@
                             };    
                             emap[eventKey] = f;
 
-                            // this.console.log("addEventListener", eventType);
-                            state.el.addEventListener(eventType, f, {capture:capture, passive:passive});
+                            // remove here if we noted it as added before
+                            // NOTE: there are cases where this may have no effect, since it is possible for the
+                            // element to have be removed and recreated.
+                            state.el.removeEventListener(eventType, f, {capture:capture, passive:passive});
+
                         }
+
+                        // we always re-add the event listener, see note above
+                        //this.console.log("addEventListener", eventType);
+                        state.el.addEventListener(eventType, f, {capture:capture, passive:passive});
 
                         state.eventHandlerMap[positionID] = emap;
 
