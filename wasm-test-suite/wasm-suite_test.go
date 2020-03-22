@@ -302,6 +302,25 @@ func Test010ListenerReadd(t *testing.T) {
 	))
 }
 
+func Test011Wire(t *testing.T) {
+
+	dir, origDir := mustUseDir("test-011-wire")
+	defer os.Chdir(origDir)
+	mustGen(dir)
+	pathSuffix := mustBuildAndLoad(dir)
+	ctx, cancel := mustChromeCtx()
+	defer cancel()
+
+	log.Printf("URL: %s", "http://localhost:8846"+pathSuffix)
+
+	must(chromedp.Run(ctx,
+		chromedp.Navigate("http://localhost:8846"+pathSuffix),
+		WaitInnerTextTrimEq(".demo-comp1-c", "1"),
+		WaitInnerTextTrimEq(".demo-comp2-c", "2"),
+	))
+
+}
+
 func Test100TinygoSimple(t *testing.T) {
 
 	// TODO: This is work in progress - it does actually compile but needs some more work to

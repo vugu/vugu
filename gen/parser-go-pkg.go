@@ -35,6 +35,8 @@ type ParserGoPkgOpts struct {
 	TinyGo                     bool // emit code intended for TinyGo compilation
 }
 
+// TODO: CallVuguSetup bool // always call vuguSetup instead of trying to auto-detect it's existence
+
 // NewParserGoPkg returns a new ParserGoPkg with the specified options or default if nil.  The pkgPath is required and must be an absolute path.
 func NewParserGoPkg(pkgPath string, opts *ParserGoPkgOpts) *ParserGoPkg {
 	ret := &ParserGoPkg{
@@ -129,8 +131,9 @@ func (p *ParserGoPkg) Run() error {
 
 		// add to our list of names to check after
 		namesToCheck = append(namesToCheck, pg.ComponentType)
-		namesToCheck = append(namesToCheck, pg.ComponentType+".NewData")
+		// namesToCheck = append(namesToCheck, pg.ComponentType+".NewData")
 		namesToCheck = append(namesToCheck, pg.DataType)
+		namesToCheck = append(namesToCheck, "vuguSetup")
 
 		// read in source
 		b, err := ioutil.ReadFile(filepath.Join(p.pkgPath, fn))
@@ -169,7 +172,7 @@ func (p *ParserGoPkg) Run() error {
 			// log.Printf("WRITING TO main_wasm.go STUFF")
 			var buf bytes.Buffer
 			t, err := template.New("_main_").Parse(`// +build wasm
-{{$opts := .Opts}}
+{{$opts := .Parser.Opts}}
 package main
 
 import (
@@ -199,12 +202,16 @@ func main() {
 	{{if not $opts.TinyGo}}defer fmt.Printf("Exiting main()\n")
 {{end}}
 
-	rootBuilder := &Root{}
-
 	buildEnv, err := vugu.NewBuildEnv()
 	if err != nil {
 		panic(err)
 	}
+
+{{if (index .NamesFound "vuguSetup")}}
+	rootBuilder := vuguSetup(buildEnv)
+{{else}}
+	rootBuilder := &Root{}
+{{end}}
 
 	renderer, err := domrender.NewJSRenderer(*mountPoint)
 	if err != nil {
@@ -228,12 +235,21 @@ func main() {
 			if err != nil {
 				return err
 			}
-			err = t.Execute(&buf, p)
+			err = t.Execute(&buf, map[string]interface{}{
+				"Parser":     p,
+				"NamesFound": namesFound,
+			})
 			if err != nil {
 				return err
 			}
 
-			err = ioutil.WriteFile(mainGoPath, buf.Bytes(), 0644)
+			bufstr := buf.String()
+			bufstr, err = gofmt(bufstr)
+			if err != nil {
+				log.Printf("WARNING: gofmt on main_wasm.go failed: %v", err)
+			}
+
+			err = ioutil.WriteFile(mainGoPath, []byte(bufstr), 0644)
 			if err != nil {
 				return err
 			}
@@ -375,7 +391,6 @@ checkMore:
 
 // goPkgCheckNames parses a package dir and looks for names, returning a map of what was
 // found.  Names like "A.B" mean a method of name "B" with receiver of type "*A"
-// (so we can check for existence of a "NewData" method and whatever else)
 func goPkgCheckNames(pkgPath string, names []string) (map[string]interface{}, error) {
 
 	ret := make(map[string]interface{})
