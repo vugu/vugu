@@ -34,7 +34,7 @@ type ParserGo struct {
 	TinyGo           bool // set to true to enable TinyGo compatability changes to the generated code
 }
 
-func (p *ParserGo) gofmt(pgm string) (string, error) {
+func gofmt(pgm string) (string, error) {
 
 	// build up command to run
 	cmd := exec.Command("gofmt")
@@ -171,7 +171,7 @@ func (p *ParserGo) Parse(r io.Reader, fname string) error {
 
 	outPath := filepath.Join(p.OutDir, p.OutFile)
 
-	fo, err := p.gofmt(buf.String())
+	fo, err := gofmt(buf.String())
 	if err != nil {
 
 		// if the gofmt errors, we still attempt to write out the non-fmt'ed output to the file, to assist in debugging
@@ -901,7 +901,7 @@ func (p *ParserGo) visitNodeComponentElement(state *parseGoState, n *html.Node) 
 	fmt.Fprintf(&state.buildBuf, "{\n")
 	defer fmt.Fprintf(&state.buildBuf, "}\n")
 
-	keyExpr := vgIfExpr(n)
+	keyExpr := vgKeyExpr(n)
 	if keyExpr != "" {
 		fmt.Fprintf(&state.buildBuf, "vgcompKey := vugu.MakeCompKey(0x%X, %s)\n", compKeyID, keyExpr)
 	} else {
@@ -912,6 +912,7 @@ func (p *ParserGo) visitNodeComponentElement(state *parseGoState, n *html.Node) 
 	fmt.Fprintf(&state.buildBuf, "if vgcomp == nil {\n")
 	fmt.Fprintf(&state.buildBuf, "// create new one if needed\n")
 	fmt.Fprintf(&state.buildBuf, "vgcomp = new(%s)\n", typeExpr)
+	fmt.Fprintf(&state.buildBuf, "vgin.BuildEnv.WireComponent(vgcomp)\n")
 	fmt.Fprintf(&state.buildBuf, "}\n")
 	fmt.Fprintf(&state.buildBuf, "vgin.BuildEnv.UseComponent(vgcompKey, vgcomp) // ensure we can use this in the cache next time around\n")
 

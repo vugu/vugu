@@ -9,12 +9,16 @@ package vugu
 
 // func NewBuildEnv(root Builder) (*BuildEnv, error) {
 
+// NewBuildEnv returns a newly initialized BuildEnv.
 func NewBuildEnv() (*BuildEnv, error) {
 	return &BuildEnv{}, nil
 }
 
 // BuildEnv is the environment used when building virtual DOM.
 type BuildEnv struct {
+
+	// wireFunc is called on each componen to inject stuff
+	wireFunc func(c Builder)
 
 	// components in cache pool from prior build
 	compCache map[CompKey]Builder
@@ -132,6 +136,21 @@ func (e *BuildEnv) CachedComponent(compKey CompKey) Builder {
 func (e *BuildEnv) UseComponent(compKey CompKey, component Builder) {
 	delete(e.compCache, compKey)    // make sure it's not in the cache
 	e.compUsed[compKey] = component // make sure it is in the used
+}
+
+// SetWireFunc assigns the function to be called by WireComponent.
+// If not set then WireComponent will have no effect.
+func (e *BuildEnv) SetWireFunc(f func(component Builder)) {
+	e.wireFunc = f
+}
+
+// WireComponent calls the wire function on this component.
+// This is called during component creation and use and provides an
+// opportunity to inject things into this component.
+func (e *BuildEnv) WireComponent(component Builder) {
+	if e.wireFunc != nil {
+		e.wireFunc(component)
+	}
 }
 
 // FIXME: IMPORTANT: If we can separate the hash computation from the equal comparision, then we can use
