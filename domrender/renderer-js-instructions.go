@@ -51,8 +51,9 @@ const (
 	opcodeSetJSTag           uint8 = 32 // write a JS (script) tag
 	opcodeRemoveOtherJSTags  uint8 = 33 // remove any JS tags that have not been written since the last call
 
-	opcodeSetProperty uint8 = 35 // assign a JS property to the current element
-	opcodeSelectQuery uint8 = 36 // select an element
+	opcodeSetProperty     uint8 = 35 // assign a JS property to the current element
+	opcodeSelectQuery     uint8 = 36 // select an element
+	opcodeBufferInnerHTML uint8 = 37 // pass chunked text to set as inner html, complete with opcodeSetInnerHTML
 )
 
 // newInstructionList will create a new instance backed by the specified slice and with a clearBufFunc
@@ -106,7 +107,7 @@ func (il *instructionList) checkLenAndFlush(l int) error {
 }
 
 func (il *instructionList) checkLen(l int) error {
-	if il.pos+l >= len(il.buf)-1 {
+	if il.pos+l > len(il.buf)-1 {
 		return errDoesNotFit
 	}
 	return nil
@@ -316,17 +317,38 @@ func (il *instructionList) writeMoveToNextSibling() error {
 }
 
 func (il *instructionList) writeSetInnerHTML(html string) error {
+	// Make sure there is room to write at least one byte
+	// (1 byte for opcode, 4 bytes for string length, 1 byte of data)
+	// [This further ensures that maxLen - il.pos > 0]
+	err := il.checkLenAndFlush(6)
+	if err != nil {
+		return err
+	}
 
-	err := il.checkLenAndFlush(len(html) + 5)
+	remaining := html
+	maxLen := len(il.buf) - 6
+	for len(remaining) > maxLen-il.pos {
+		chunk := remaining[:maxLen-il.pos]
+		remaining = remaining[maxLen-il.pos:]
+		err := il.checkLenAndFlush(len(chunk) + 5)
+		if err != nil {
+			return err
+		}
+
+		il.writeValUint8(opcodeBufferInnerHTML)
+		il.writeValString(chunk)
+		il.flush()
+	}
+
+	err = il.checkLenAndFlush(len(remaining) + 5)
 	if err != nil {
 		return err
 	}
 
 	il.writeValUint8(opcodeSetInnerHTML)
-	il.writeValString(html)
+	il.writeValString(remaining)
 
 	return nil
-
 }
 
 func (il *instructionList) writeSetEventListener(positionID []byte, eventType string, capture, passive bool) error {
