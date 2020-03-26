@@ -37,7 +37,7 @@
     
     const opcodeSetProperty          = 35 // assign a JS property to the current element
     const opcodeSelectQuery          = 36 // select an element
-
+    const opcodeBufferInnerHTML      = 37 // pass chunked text to set as inner html, complete with opcodeSetInnerHTML
 
     // Decoder provides our binary decoding.
     // Using a class because that's what all the cool JS kids are doing these days.
@@ -157,6 +157,9 @@
 
         // currently selected element
         state.el = state.el || null;
+
+	// buffered innerHTML currently inflight
+	state.bufferedInnerHTML = state.bufferedInnerHTML || null;
 
         // specifies a "next" move for the current element, if used it must be followed by
         // one of opcodeSetElement, opcodeSetText, opcodeSetComment, which will create/replace/use existing
@@ -543,6 +546,12 @@
                         break;
                     }
 
+                    case opcodeBufferInnerHTML: {
+                        let htmlChunk = decoder.readString();
+                        state.bufferedInnerHTML = (state.bufferedInnerHTML || "") + htmlChunk
+			break
+                    }
+
                     case opcodeSetInnerHTML: {
 
                         let html = decoder.readString();
@@ -552,7 +561,8 @@
                         if (state.nextElMove) { throw "opcodeSetInnerHTML nextElMove must not be set"; }
                         if (state.el.nodeType != 1) { throw "opcodeSetInnerHTML currently selected element expected nodeType 1 but has: " + state.el.nodeType; }
 
-                        state.el.innerHTML = html;
+                        state.el.innerHTML = (state.bufferedInnerHTML || "") + html;
+			state.bufferedInnerHTML = null
 
                         break;
                     }
