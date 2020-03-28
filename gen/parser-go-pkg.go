@@ -207,18 +207,19 @@ func main() {
 		panic(err)
 	}
 
-{{if (index .NamesFound "vuguSetup")}}
-	rootBuilder := vuguSetup(buildEnv)
-{{else}}
-	rootBuilder := &Root{}
-{{end}}
-
 	renderer, err := domrender.NewJSRenderer(*mountPoint)
 	if err != nil {
 		panic(err)
 	}
 	{{if not $opts.TinyGo}}defer renderer.Release()
 {{end}}
+
+{{if (index .NamesFound "vuguSetup")}}
+	rootBuilder := vuguSetup(buildEnv, renderer.EventEnv())
+{{else}}
+	rootBuilder := &Root{}
+{{end}}
+
 
 	for ok := true; ok; ok = renderer.EventWait() {
 

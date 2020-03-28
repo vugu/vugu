@@ -2,7 +2,7 @@ package main
 
 import "github.com/vugu/vugu"
 
-func vuguSetup(buildEnv *vugu.BuildEnv) vugu.Builder {
+func vuguSetup(buildEnv *vugu.BuildEnv, eventEnv vugu.EventEnv) vugu.Builder {
 
 	var counter Counter
 
