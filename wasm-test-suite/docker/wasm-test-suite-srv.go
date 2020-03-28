@@ -12,6 +12,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -48,10 +49,12 @@ type TSrv struct {
 // ServeHTTP implements http.Handler
 func (s *TSrv) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
+	cleanPath := path.Clean("/" + r.URL.Path)
+
 	switch {
 
 	// accept tar.gz file upload and unpack to temp dir
-	case r.URL.Path == "/upload" && r.Method == "POST":
+	case cleanPath == "/upload" && r.Method == "POST":
 		err := r.ParseMultipartForm(50 * 1024 * 1024) // accept up to 50MB
 		if err != nil {
 			panic(err)
@@ -118,6 +121,26 @@ func (s *TSrv) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		dirPart := path.Base(path.Clean(dir))
 		fmt.Fprintf(w, `{"path":"/%s/","id":"%s"}`, dirPart, dirPart)
+		return
+
+	// For paths that don't look like directories, which do not have a file extension,
+	// we send them to /index.html.
+	// This way we can test how a program reacts to being loaded at different paths
+	// (e.g. "/[upload-dir]/whatever" will serve "/[upload-dir]/index.html",
+	// whereas "/[upload-dir]/whatever.css" will fall
+	// through to the FileServer behavior below).
+	case !strings.HasSuffix(r.URL.Path, "/") && path.Ext(cleanPath) == "" && r.Method == "GET":
+		// upload dir + /index.html
+		f, err := http.Dir(s.BaseDir).Open("/" + strings.Split(strings.TrimPrefix(cleanPath, "/"), "/")[0] + "/index.html")
+		if err != nil {
+			panic(err)
+		}
+		defer f.Close()
+		fi, err := f.Stat()
+		if err != nil {
+			panic(err)
+		}
+		http.ServeContent(w, r, "/index.html", fi.ModTime(), f)
 		return
 
 	default:
