@@ -321,6 +321,59 @@ func Test011Wire(t *testing.T) {
 
 }
 
+func Test012Router(t *testing.T) {
+
+	dir, origDir := mustUseDir("test-012-router")
+	defer os.Chdir(origDir)
+	mustGen(dir)
+	pathSuffix := mustBuildAndLoad(dir)
+	ctx, cancel := mustChromeCtx()
+	defer cancel()
+
+	log.Printf("URL: %s", "http://localhost:8846"+pathSuffix)
+
+	// rack the forward/back history stuff and replace option vs not and make sure that all works right
+	// with fragment mode and without
+	var tmpres []byte
+
+	// regular version
+	must(chromedp.Run(ctx,
+		chromedp.Navigate("http://localhost:8846"+pathSuffix),
+		chromedp.WaitVisible("#page1"),                         // make sure page1 showed initially
+		chromedp.Click("#page2_link"),                          // regular a href link
+		chromedp.WaitVisible("#page2"),                         // make sure it loads
+		chromedp.Click("#page1_button"),                        // button goes to page1 without a reload
+		chromedp.WaitVisible("#page1"),                         // make sure it renders
+		chromedp.Click("#page2_button_repl"),                   // go to page2 without adding to history
+		chromedp.WaitVisible("#page2"),                         // make sure it renders
+		chromedp.Evaluate("window.history.back()", &tmpres),    // go back one
+		chromedp.WaitVisible("#page2"),                         // should still be on page2 because of replace
+		chromedp.Evaluate("window.history.back()", &tmpres),    // go back one more
+		chromedp.WaitVisible("#page1"),                         // now should be on page1
+		chromedp.Evaluate("window.history.forward()", &tmpres), // forward one
+		chromedp.WaitVisible("#page2"),
+	))
+
+	// fragment version
+	must(chromedp.Run(ctx,
+		chromedp.Navigate("http://localhost:8846"+pathSuffix+"#/"), // the test has detection code that sees the fragment here and puts it into fragment mode
+		chromedp.WaitVisible("#page1"),                             // make sure page1 showed initially
+		chromedp.Evaluate("window.location='#/page2'", &tmpres),    // browse to page2 via fragment
+		chromedp.WaitVisible("#page2"),                             // make sure it renders
+		chromedp.Click("#page1_button"),                            // button goes to page1 without a reload
+		chromedp.WaitVisible("#page1"),                             // make sure it renders
+		chromedp.Click("#page2_button_repl"),                       // go to page2 without adding to history
+		chromedp.WaitVisible("#page2"),                             // make sure it renders
+		chromedp.Evaluate("window.history.back()", &tmpres),        // go back one
+		chromedp.WaitVisible("#page2"),                             // should still be on page2 because of replace
+		chromedp.Evaluate("window.history.back()", &tmpres),        // go back one more
+		chromedp.WaitVisible("#page1"),                             // now should be on page1
+		chromedp.Evaluate("window.history.forward()", &tmpres),     // forward one
+		chromedp.WaitVisible("#page2"),
+	))
+
+}
+
 func Test100TinygoSimple(t *testing.T) {
 
 	// TODO: This is work in progress - it does actually compile but needs some more work to
