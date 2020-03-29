@@ -90,6 +90,15 @@ func vgKeyExpr(n *html.Node) string {
 	return ""
 }
 
+func vgCompExpr(n *html.Node) string {
+	for _, a := range n.Attr {
+		if a.Key == "expr" {
+			return a.Val
+		}
+	}
+	return ""
+}
+
 // func vgIfExprx(n *htmlx.Node) string {
 // 	for _, a := range n.Attr {
 // 		if a.Key == "vg-if" {

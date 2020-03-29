@@ -829,6 +829,8 @@ func (p *ParserGo) visitDefaultByType(state *parseGoState, n *html.Node) error {
 	case n.Type == html.ElementNode:
 		if strings.Contains(n.Data, ":") {
 			err = p.visitNodeComponentElement(state, n)
+		} else if n.Data == "vg-comp" {
+			err = p.visitVGCompTag(state, n)
 		} else {
 			err = p.visitNodeElementAndCtrl(state, n)
 		}
@@ -855,6 +857,39 @@ func (p *ParserGo) visitNodeComment(state *parseGoState, n *html.Node) error {
 
 	fmt.Fprintf(&state.buildBuf, "vgn = &vugu.VGNode{Type:vugu.VGNodeType(%d),Data:%q}\n", n.Type, n.Data)
 	fmt.Fprintf(&state.buildBuf, "vgparent.AppendChild(vgn)\n")
+
+	return nil
+}
+
+// visitVGCompTag handles a vg-comp
+func (p *ParserGo) visitVGCompTag(state *parseGoState, n *html.Node) error {
+
+	// vg-for not allowed here
+
+	// vg-if is supported
+	ife := vgIfExpr(n)
+	if ife != "" {
+		fmt.Fprintf(&state.buildBuf, "if %s {\n", ife)
+		defer fmt.Fprintf(&state.buildBuf, "}\n")
+	}
+
+	// for now, nothing else supported
+
+	// must have a "expr" which gives the Go expression which will result in a component
+	expr := vgCompExpr(n)
+	if expr == "" {
+		return fmt.Errorf("vg-comp must have an `expr` attribute with a Go expression in it")
+	}
+	fmt.Fprintf(&state.buildBuf, "{\n")
+	defer fmt.Fprintf(&state.buildBuf, "}\n")
+
+	fmt.Fprintf(&state.buildBuf, "var vgcomp vugu.Builder = %s\n", expr)
+	fmt.Fprintf(&state.buildBuf, "if vgcomp != nil {\n")
+	fmt.Fprintf(&state.buildBuf, "    vgin.BuildEnv.WireComponent(vgcomp)\n")
+	fmt.Fprintf(&state.buildBuf, "    vgout.Components = append(vgout.Components, vgcomp)\n")
+	fmt.Fprintf(&state.buildBuf, "    vgn = &vugu.VGNode{Component:vgcomp}\n")
+	fmt.Fprintf(&state.buildBuf, "    vgparent.AppendChild(vgn)\n")
+	fmt.Fprintf(&state.buildBuf, "}\n")
 
 	return nil
 }
