@@ -185,3 +185,11 @@ func (v Value) String() string {
 func (v Value) InstanceOf(t Value) bool {
 	return false
 }
+
+func (v Value) IsUndefined() bool {
+	return true
+}
+
+func (v Value) IsNull() bool {
+	return false
+}

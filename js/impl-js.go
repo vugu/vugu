@@ -223,6 +223,14 @@ func (v Value) InstanceOf(t Value) bool {
 	return sjs.Value(v).InstanceOf(sjs.Value(t))
 }
 
+func (v Value) IsUndefined() bool {
+	return sjs.Value(v).IsUndefined()
+}
+
+func (v Value) IsNull() bool {
+	return sjs.Value(v).IsNull()
+}
+
 func fixArgsToSjs(args []interface{}) []interface{} {
 	for i := 0; i < len(args); i++ {
 		v := args[i]
