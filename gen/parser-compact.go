@@ -111,6 +111,9 @@ func isStaticEl(n *html.Node) bool {
 	if strings.Contains(n.Data, ":") {
 		return false
 	}
+	if n.Data == "vg-comp" {
+		return false
+	}
 
 	for _, attr := range n.Attr {
 		if strings.HasPrefix(attr.Key, "vg-") { // vg- prefix means dynamic stuff

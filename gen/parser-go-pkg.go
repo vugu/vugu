@@ -29,10 +29,9 @@ type ParserGoPkg struct {
 
 // ParserGoPkgOpts is the options for ParserGoPkg.
 type ParserGoPkgOpts struct {
-	SkipRegisterComponentTypes bool // indicates func init() { vugu.RegisterComponentType(...) } code should not be emitted in each file
-	SkipGoMod                  bool // do not try and create go.mod if it doesn't exist
-	SkipMainGo                 bool // do not try and create main_wasm.go if it doesn't exist in a main package
-	TinyGo                     bool // emit code intended for TinyGo compilation
+	SkipGoMod  bool // do not try and create go.mod if it doesn't exist
+	SkipMainGo bool // do not try and create main_wasm.go if it doesn't exist in a main package
+	TinyGo     bool // emit code intended for TinyGo compilation
 }
 
 // TODO: CallVuguSetup bool // always call vuguSetup instead of trying to auto-detect it's existence
@@ -207,7 +206,7 @@ func main() {
 		panic(err)
 	}
 
-	renderer, err := domrender.NewJSRenderer(*mountPoint)
+	renderer, err := domrender.New(*mountPoint)
 	if err != nil {
 		panic(err)
 	}

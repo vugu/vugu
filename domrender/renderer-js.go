@@ -17,10 +17,17 @@ import (
 
 //go:generate go run renderer-js-script-maker.go
 
-// NewJSRenderer will create a new JSRenderer with the speicifc mount point selector.
+// NewJSRenderer is an alias for New.
+//
+// Deprecated: Use New instead.
+func NewJSRenderer(mountPointSelector string) (*JSRenderer, error) {
+	return New(mountPointSelector)
+}
+
+// New will create a new JSRenderer with the speicifc mount point selector.
 // If an empty string is passed then the root component should include a top level <html> tag
 // and the entire page will be rendered.
-func NewJSRenderer(mountPointSelector string) (*JSRenderer, error) {
+func New(mountPointSelector string) (*JSRenderer, error) {
 
 	ret := &JSRenderer{
 		MountPointSelector: mountPointSelector,

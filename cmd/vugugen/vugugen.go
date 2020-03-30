@@ -16,7 +16,6 @@ func main() {
 	// vugugen path/to/package
 
 	var opts gen.ParserGoPkgOpts
-	flag.BoolVar(&opts.SkipRegisterComponentTypes, "skip-register", false, "Do not attempt to register component in init() method")
 	flag.BoolVar(&opts.SkipGoMod, "skip-go-mod", false, "Do not try to create go.mod as needed")
 	flag.BoolVar(&opts.SkipMainGo, "skip-main", false, "Do not try to create main.go as needed")
 	flag.BoolVar(&opts.TinyGo, "tinygo", false, "Generate code intended for compilation under Tinygo")

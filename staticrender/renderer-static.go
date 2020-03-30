@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"strings"
+	"sync"
 
 	// "golang.org/x/net/html"
 	// "golang.org/x/net/html/atom"
@@ -16,20 +17,25 @@ import (
 // or provide custom logic for how to give an exact io.Writer to write to for a given output path,
 // should be callable a bunch of times for different URLs
 
-func NewStaticRenderer(w io.Writer) *StaticRenderer {
+// New returns a new instance.  w may be nil as long as SetWriter is called with a valid value before rendering.
+func New(w io.Writer) *StaticRenderer {
 	return &StaticRenderer{
 		w: w,
 	}
 }
 
+// StaticRenderer provides rendering as static HTML to an io.Writer.
 type StaticRenderer struct {
 	w io.Writer
 }
 
+// SetWriter assigns the Writer to be used for subsequent calls to Render.
+// A Writer must be assigned before rendering (either with this method or in New).
 func (r *StaticRenderer) SetWriter(w io.Writer) {
 	r.w = w
 }
 
+// Render will perform a static render of the given BuildResults and write it to the writer assigned.
 func (r *StaticRenderer) Render(buildResults *vugu.BuildResults) error {
 
 	n, err := r.renderOne(buildResults, buildResults.Out)
@@ -56,6 +62,8 @@ func (r *StaticRenderer) renderOne(br *vugu.BuildResults, bo *vugu.BuildOut) (*h
 
 	var visit func(vgn *vugu.VGNode) (*html.Node, error)
 	visit = func(vgn *vugu.VGNode) (*html.Node, error) {
+
+		// log.Printf("vgn: %#v", vgn)
 
 		// if component then look up BuildOut for it and call renderOne again and return
 		if vgn.Component != nil {
@@ -98,9 +106,42 @@ func (r *StaticRenderer) renderOne(br *vugu.BuildResults, bo *vugu.BuildOut) (*h
 			n.AppendChild(nchild)
 		}
 
+		// special case for <head>, we need to emit the CSS here as that is separate
+		// (Vugu build output does not always have a head tag and multiple components
+		// can each emit it, so we have to keep things like CSS separate)
+		if n.Type == html.ElementNode && n.Data == "head" {
+			for _, css := range bo.CSS {
+
+				// convert each one
+				n2, err := visit(css)
+				if err != nil {
+					return nil, err
+				}
+				n.AppendChild(n2)
+			}
+		}
+
 		return n, nil
 	}
 
 	return visit(vgn)
 
 }
+
+// EventEnv returns a simple EventEnv implementation suitable for use with the static renderer.
+func (r *StaticRenderer) EventEnv() *RWMutexEventEnv {
+	return &RWMutexEventEnv{}
+}
+
+// RWMutexEventEnv implements EventEnv interface with a mutex but no render behavior.
+// (Because static rendering is driven by the caller, there is no way for dynamic logic
+// to re-render a static page, so UnlockRender is the same as UnlockOnly.)
+type RWMutexEventEnv struct {
+	sync.RWMutex
+}
+
+// UnlockOnly will release the write lock
+func (ee *RWMutexEventEnv) UnlockOnly() { ee.Unlock() }
+
+// UnlockRender is an alias for UnlockOnly.
+func (ee *RWMutexEventEnv) UnlockRender() { ee.Unlock() }
