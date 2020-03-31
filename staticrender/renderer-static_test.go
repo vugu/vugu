@@ -108,7 +108,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	renderer := staticrender.NewStaticRenderer(os.Stdout)
+	renderer := staticrender.New(os.Stdout)
 
 	buildResults := buildEnv.RunBuild(rootBuilder)
 
