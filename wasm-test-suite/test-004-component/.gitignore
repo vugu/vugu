@@ -5,3 +5,4 @@ demo-line.go
 go.sum
 wasm_exec.js
 index.html
+*_vgen.go
