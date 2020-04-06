@@ -23,12 +23,12 @@ import (
 
 // ParserGo is a template parser that emits Go source code that will construct the appropriately wired VGNodes.
 type ParserGo struct {
-	PackageName   string // name of package to use at top of files
-	StructType    string // just the struct name, no "*" (replaces ComponentType and DataType)
-	ComponentType string // just the struct name, no "*"
-	DataType      string // just the struct name, no "*"
-	OutDir        string // output dir
-	OutFile       string // output file name with ".go" suffix
+	PackageName string // name of package to use at top of files
+	StructType  string // just the struct name, no "*" (replaces ComponentType and DataType)
+	// ComponentType string // just the struct name, no "*"
+	// DataType      string // just the struct name, no "*"
+	OutDir  string // output dir
+	OutFile string // output file name with ".go" suffix
 
 	NoOptimizeStatic bool // set to true to disable optimization of static blocks of HTML into vg-html expressions
 	TinyGo           bool // set to true to enable TinyGo compatability changes to the generated code
@@ -828,6 +828,8 @@ func (p *ParserGo) visitDefaultByType(state *parseGoState, n *html.Node) error {
 		err = p.visitNodeText(state, n)
 	case n.Type == html.ElementNode:
 		if strings.Contains(n.Data, ":") {
+			// NOTE: this should check for a capital letter after the colon - this would distinguish
+			// svg:svg (valid regular HTML) from svg:Svg (a component reference)
 			err = p.visitNodeComponentElement(state, n)
 		} else if n.Data == "vg-comp" {
 			err = p.visitVGCompTag(state, n)

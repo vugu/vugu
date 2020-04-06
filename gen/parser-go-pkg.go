@@ -2,6 +2,7 @@ package gen
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"go/ast"
 	"go/parser"
@@ -29,12 +30,80 @@ type ParserGoPkg struct {
 
 // ParserGoPkgOpts is the options for ParserGoPkg.
 type ParserGoPkgOpts struct {
-	SkipGoMod  bool // do not try and create go.mod if it doesn't exist
-	SkipMainGo bool // do not try and create main_wasm.go if it doesn't exist in a main package
-	TinyGo     bool // emit code intended for TinyGo compilation
+	SkipGoMod        bool    // do not try and create go.mod if it doesn't exist
+	SkipMainGo       bool    // do not try and create main_wasm.go if it doesn't exist in a main package
+	TinyGo           bool    // emit code intended for TinyGo compilation
+	GoFileNameAppend *string // suffix to append to file names, after base name plus .go, if nil then "_vgen" is used
+	MergeSingle      bool    // merge all output files into a single one
+	MergeSingleName  string  // name of merged output file, only used if MergeSingle is true, defaults to "0_components_vgen.go"
 }
 
 // TODO: CallVuguSetup bool // always call vuguSetup instead of trying to auto-detect it's existence
+
+var errNoVuguFile = errors.New("no .vugu file(s) found")
+
+// RunRecursive will create a new ParserGoPkg and call Run on it recursively for each
+// directory under pkgPath.  The opts will be modified for subfolders to disable go.mod and main.go
+// logic.  If pkgPath does not contain a .vugu file this function will return an error.
+func RunRecursive(pkgPath string, opts *ParserGoPkgOpts) error {
+
+	if opts == nil {
+		opts = &ParserGoPkgOpts{}
+	}
+
+	dirf, err := os.Open(pkgPath)
+	if err != nil {
+		return err
+	}
+
+	fis, err := dirf.Readdir(-1)
+	if err != nil {
+		return err
+	}
+	hasVugu := false
+	var subDirList []string
+	for _, fi := range fis {
+		if fi.IsDir() && !strings.HasPrefix(fi.Name(), ".") {
+			subDirList = append(subDirList, fi.Name())
+			continue
+		}
+		if filepath.Ext(fi.Name()) == ".vugu" {
+			hasVugu = true
+		}
+	}
+	if !hasVugu {
+		return errNoVuguFile
+	}
+
+	p := NewParserGoPkg(pkgPath, opts)
+	err = p.Run()
+	if err != nil {
+		return err
+	}
+
+	for _, subDir := range subDirList {
+		subPath := filepath.Join(pkgPath, subDir)
+		opts2 := *opts
+		// sub folders should never get these behaviors
+		opts2.SkipGoMod = true
+		opts2.SkipMainGo = true
+		err := RunRecursive(subPath, &opts2)
+		if err == errNoVuguFile {
+			continue
+		}
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// Run will create a new ParserGoPkg and call Run on it.
+func Run(pkgPath string, opts *ParserGoPkgOpts) error {
+	p := NewParserGoPkg(pkgPath, opts)
+	return p.Run()
+}
 
 // NewParserGoPkg returns a new ParserGoPkg with the specified options or default if nil.  The pkgPath is required and must be an absolute path.
 func NewParserGoPkg(pkgPath string, opts *ParserGoPkgOpts) *ParserGoPkg {
@@ -111,27 +180,41 @@ func (p *ParserGoPkg) Run() error {
 
 	namesToCheck := []string{"main"}
 
+	goFnameAppend := "_vgen"
+	if p.opts.GoFileNameAppend != nil {
+		goFnameAppend = *p.opts.GoFileNameAppend
+	}
+
+	var mergeFiles []string
+
+	mergeSingleName := "0_components_vgen.go"
+	if p.opts.MergeSingleName != "" {
+		mergeSingleName = p.opts.MergeSingleName
+	}
+
 	// run ParserGo on each file to generate the .go files
 	for _, fn := range vuguFileNames {
 
 		baseFileName := strings.TrimSuffix(fn, ".vugu")
-		goFileName := baseFileName + ".go"
-		compTypeName := fnameToGoTypeName(goFileName)
+		goFileName := baseFileName + goFnameAppend + ".go"
+		compTypeName := fnameToGoTypeName(baseFileName)
+
+		mergeFiles = append(mergeFiles, goFileName)
 
 		pg := &ParserGo{}
 
 		pg.PackageName = pkgName
-		pg.ComponentType = compTypeName
+		// pg.ComponentType = compTypeName
 		pg.StructType = compTypeName
-		pg.DataType = pg.ComponentType + "Data"
+		// pg.DataType = pg.ComponentType + "Data"
 		pg.OutDir = p.pkgPath
 		pg.OutFile = goFileName
 		pg.TinyGo = p.opts.TinyGo
 
 		// add to our list of names to check after
-		namesToCheck = append(namesToCheck, pg.ComponentType)
+		namesToCheck = append(namesToCheck, pg.StructType)
 		// namesToCheck = append(namesToCheck, pg.ComponentType+".NewData")
-		namesToCheck = append(namesToCheck, pg.DataType)
+		// namesToCheck = append(namesToCheck, pg.DataType)
 		namesToCheck = append(namesToCheck, "vuguSetup")
 
 		// read in source
@@ -268,9 +351,14 @@ func main() {
 		}
 	}
 
+	// remove the merged file so it doesn't mess with detection
+	if p.opts.MergeSingle {
+		os.Remove(filepath.Join(p.pkgPath, mergeSingleName))
+	}
+
 	for _, fn := range vuguFileNames {
 
-		goFileName := strings.TrimSuffix(fn, ".vugu") + ".go"
+		goFileName := strings.TrimSuffix(fn, ".vugu") + goFnameAppend + ".go"
 		goFilePath := filepath.Join(p.pkgPath, goFileName)
 
 		err := func() error {
@@ -281,7 +369,8 @@ func main() {
 			}
 			defer f.Close()
 
-			compTypeName := fnameToGoTypeName(goFileName)
+			// TODO: would be nice to clean this up and get a better grip on how we do this filename -> struct name mapping, but this works for now
+			compTypeName := fnameToGoTypeName(strings.TrimSuffix(goFileName, goFnameAppend+".go"))
 
 			// create CompName struct if it doesn't exist in the package
 			if _, ok := namesFound[compTypeName]; !ok {
@@ -308,6 +397,22 @@ func main() {
 		}()
 		if err != nil {
 			return err
+		}
+
+	}
+
+	// if requested, do merge
+	if p.opts.MergeSingle {
+		err := mergeGoFiles(p.pkgPath, mergeSingleName, mergeFiles...)
+		if err != nil {
+			return err
+		}
+		// remove files if merge worked
+		for _, mf := range mergeFiles {
+			err := os.Remove(filepath.Join(p.pkgPath, mf))
+			if err != nil {
+				return err
+			}
 		}
 
 	}
