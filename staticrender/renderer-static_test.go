@@ -48,6 +48,9 @@ require github.com/vugu/vugu v0.0.0-00010101000000-000000000000
 <head>
 <title>testing!</title>
 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"/>
+<script>
+console.log("Some script here");
+</script>
 </head>
 <body>
 <div>
@@ -144,6 +147,12 @@ func main() {
 	}
 
 	if !strings.Contains(string(b), "<div><p>Some <strong>nested</strong> craziness</p></div>") {
+		t.Errorf("falied to find target string in output")
+	}
+	if !strings.Contains(string(b), "bootstrap.min.css") {
+		t.Errorf("falied to find target string in output")
+	}
+	if !strings.Contains(string(b), "Some script here") {
 		t.Errorf("falied to find target string in output")
 	}
 

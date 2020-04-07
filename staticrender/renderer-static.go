@@ -121,6 +121,19 @@ func (r *StaticRenderer) renderOne(br *vugu.BuildResults, bo *vugu.BuildOut) (*h
 			}
 		}
 
+		// special case to append JS to end of <body>
+		if n.Type == html.ElementNode && n.Data == "body" {
+			for _, js := range bo.JS {
+
+				// convert each one
+				n2, err := visit(js)
+				if err != nil {
+					return nil, err
+				}
+				n.AppendChild(n2)
+			}
+		}
+
 		return n, nil
 	}
 
