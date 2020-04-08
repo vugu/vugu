@@ -1,0 +1,12 @@
+<section class="section">
+    <div class="container">
+        <h1 class="title">Managed Products</h1>
+        <div id="content">
+            <a class="button is-pulled-right">Create
+                new product</a>
+            <table class="table" style="width: 100%">
+                <!-- content here -->
+            </table>
+        </div>
+    </div>
+</section>

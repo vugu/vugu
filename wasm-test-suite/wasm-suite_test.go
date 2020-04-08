@@ -374,6 +374,24 @@ func Test012Router(t *testing.T) {
 
 }
 
+func Test013Issue117(t *testing.T) {
+
+	dir, origDir := mustUseDir("test-013-issue-117")
+	defer os.Chdir(origDir)
+	mustGen(dir)
+	pathSuffix := mustBuildAndLoad(dir)
+	ctx, cancel := mustChromeCtx()
+	defer cancel()
+
+	log.Printf("URL: %s", "http://localhost:8846"+pathSuffix)
+
+	must(chromedp.Run(ctx,
+		chromedp.Navigate("http://localhost:8846"+pathSuffix),
+		chromedp.WaitVisible("#content"),
+	))
+
+}
+
 func Test100TinygoSimple(t *testing.T) {
 
 	// TODO: This is work in progress - it does actually compile but needs some more work to
