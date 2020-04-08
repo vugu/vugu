@@ -2,11 +2,21 @@
     <div class="container">
         <h1 class="title">Managed Products</h1>
         <div id="content">
-            <a class="button is-pulled-right">Create
-                new product</a>
-            <table class="table" style="width: 100%">
+            <button id="create_button" @click='c.Navigate("/create", nil)'>Create
+                new produc</button>
+            <table class="table" id="#mytable" style="width: 100%">
                 <!-- content here -->
             </table>
         </div>
     </div>
 </section>
+
+<script type="application/x-go">
+
+    import "github.com/vugu/vgrouter"
+
+    type Products struct {
+    vgrouter.NavigatorRef
+    }
+
+</script>
