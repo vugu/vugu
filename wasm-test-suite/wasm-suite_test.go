@@ -14,7 +14,7 @@ import (
 
 // TO ADD A TEST:
 // - make a folder of the same pattern test-NNN-description
-// - copy .gitignore, go.mod and create a root.vugu, plus whatever else
+// - copy .gitignore, go.mod and create a create.vugu, plus whatever else
 // - write a TestNNNDescription method to drive it
 // - to manually view the page from a test log the URL passed to chromedp.Navigate and view it in your browser
 //   (if you suspect you are getting console errors that you can't see, this is a simple way to check)
@@ -387,7 +387,10 @@ func Test013Issue117(t *testing.T) {
 
 	must(chromedp.Run(ctx,
 		chromedp.Navigate("http://localhost:8846"+pathSuffix),
-		chromedp.WaitVisible("#content"),
+		chromedp.WaitVisible("#create_button"),                         // make sure page1 showed initially
+		chromedp.Click("#create_button"),                          // regular a href link
+		chromedp.WaitVisible("#myform"),                         // make sure it loads
+		chromedp.WaitNotPresent("#mytable"),
 	))
 
 }
