@@ -387,9 +387,9 @@ func Test013Issue117(t *testing.T) {
 
 	must(chromedp.Run(ctx,
 		chromedp.Navigate("http://localhost:8846"+pathSuffix),
-		chromedp.WaitVisible("#create_button"),                         // make sure page1 showed initially
-		chromedp.Click("#create_button"),                          // regular a href link
-		chromedp.WaitVisible("#myform"),                         // make sure it loads
+		chromedp.WaitVisible("#create_button"), // make sure page1 showed initially
+		chromedp.Click("#create_button"),       // regular a href link
+		chromedp.WaitVisible("#myform"),        // make sure it loads
 		chromedp.WaitNotPresent("#mytable"),
 	))
 

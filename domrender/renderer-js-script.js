@@ -585,8 +585,8 @@
 
                         // for each one that was missing, we remove from emap and call removeEventListener
                         for (let i = 0; i < toBeRemoved.length; i++) {
-                            let f = emap[k];
                             let k = toBeRemoved[i];
+                            let f = emap[k];
                             let kparts = k.split("|");
                             state.el.removeEventListener(kparts[0], f, {capture:!!kparts[1], passive:!!kparts[2]});
                             delete emap[k];
