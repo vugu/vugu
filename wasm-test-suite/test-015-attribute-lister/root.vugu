@@ -1,0 +1,7 @@
+<html>
+<body>
+<div id="testing" :='c'>
+    <div id="functest" :='vugu.VGAttributeListerFunc(testFunc)'></div>
+</div>
+</body>
+</html>
