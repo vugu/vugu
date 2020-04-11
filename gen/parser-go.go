@@ -506,7 +506,7 @@ func (p *ParserGo) visitScriptOrStyle(state *parseGoState, n *html.Node) error {
 		}
 
 		// component js (type attr omitted okay - means it is JS)
-		if mt == "application/javascript" || mt == "" {
+		if mt == "text/javascript" || mt == "application/javascript" || mt == "" {
 			err := p.visitJS(state, n)
 			if err != nil {
 				return err
@@ -554,8 +554,8 @@ func (p *ParserGo) visitJS(state *parseGoState, n *html.Node) error {
 			if a.Key != "type" {
 				return fmt.Errorf("attribute %q not allowed on script tag that contains JS code", a.Key)
 			}
-			if a.Val != "application/javascript" {
-				return fmt.Errorf("script type %q invalid (must be application/javascript)", a.Val)
+			if a.Val != "text/javascript" && a.Val != "application/javascript" {
+				return fmt.Errorf("script type %q invalid (must be text/javascript)", a.Val)
 			}
 		}
 
