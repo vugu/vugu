@@ -277,17 +277,3 @@ func (h *WasmExecJSHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/javascript")
 	http.ServeContent(w, r, r.URL.Path, modTime, bytes.NewReader(content))
 }
-
-/*
-
-wc := devutil.NewWasmCompiler().SetDir(".")
-mux := devutil.NewMux()
-mux.Exact("/", devutil.DefaultIndex)
-mux.Exact("/main.wasm", devutil.NewMainWasmHandler(wc))
-mux.Exact("/wasm_exec.js", devutil.NewWasmExecJSHandler(wc))
-mux.Default(devutil.NewFileServer().SetDir("."))
-
-
-*/
-
-// wch := devutil.NewWasmCompilerHandler(wc)
