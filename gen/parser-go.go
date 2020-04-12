@@ -770,7 +770,7 @@ func (p *ParserGo) visitNodeJustElement(state *parseGoState, n *html.Node) error
 	dynExprMap, dynExprMapKeys := dynamicVGAttrExpr(n)
 	for _, k := range dynExprMapKeys {
 		valExpr := dynExprMap[k]
-		if k == "" {
+		if k == "" || k == "vg-attr" {
 			fmt.Fprintf(&state.buildBuf, "vgn.AddAttrList(%s)\n", valExpr)
 		} else {
 			fmt.Fprintf(&state.buildBuf, "vgn.AddAttrInterface(%q,%s)\n", k, valExpr)

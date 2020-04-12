@@ -173,7 +173,8 @@ func dynamicVGAttrExpr(n *html.Node) (ret map[string]string, retKeys []string) {
 	var da []html.Attribute
 	// get dynamic attrs first
 	for _, a := range n.Attr {
-		if strings.HasPrefix(a.OrigKey, ":") {
+		// ":" and "vg-attr" are the AttributeLister case
+		if strings.HasPrefix(a.OrigKey, ":") || a.OrigKey == "vg-attr" {
 			da = append(da, a)
 		}
 	}

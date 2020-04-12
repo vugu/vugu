@@ -469,6 +469,12 @@ func Test015AttrList(t *testing.T) {
 			assert.Contains(attributes, "data-test", "attribute is missing")
 			assert.Equal("functest", attributes["data-test"], "attribute value is invalid")
 		}),
+		queryAttributes("#functest2", func(attributes map[string]string) { // check with vg-attr syntax
+			assert.Contains(attributes, "class", "attribute is missing")
+			assert.Equal("funcwidget", attributes["class"], "attribute value is invalid")
+			assert.Contains(attributes, "data-test", "attribute is missing")
+			assert.Equal("functest", attributes["data-test"], "attribute value is invalid")
+		}),
 	))
 }
 
