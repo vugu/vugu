@@ -1,5 +1,11 @@
 package vugu
 
+import (
+	"fmt"
+	"reflect"
+	"strconv"
+)
+
 // Things to sort out:
 // * vg-if, vg-range, etc (JUST COPIED FROM ATTRS, EVALUATED LATER)
 // * :whatever syntax (ALSO JUST COPIED FROM ATTRS, EVALUATED LATER)
@@ -162,23 +168,105 @@ func (n *VGNode) RemoveChild(c *VGNode) {
 // this function to recurse indefinitely.)  Note that f may modify nodes as it
 // visits them with predictable results as long as it does not modify elements
 // higher on the tree (up, toward the parent); it is safe to modify self and children.
-func (vgn *VGNode) Walk(f func(*VGNode) error) error {
-	if vgn == nil {
+func (n *VGNode) Walk(f func(*VGNode) error) error {
+	if n == nil {
 		return nil
 	}
-	err := f(vgn)
+	err := f(n)
 	if err != nil {
 		return err
 	}
-	err = vgn.FirstChild.Walk(f)
+	err = n.FirstChild.Walk(f)
 	if err != nil {
 		return err
 	}
-	err = vgn.NextSibling.Walk(f)
+	err = n.NextSibling.Walk(f)
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+// AddAttrInterface sets an attribute based on the given interface. The followings types are supported
+// - string - value is used as attr value as it is
+// - int,float,... - the value is converted to string with strconv and used as attr value
+// - bool - treat the attribute as a flag. If false, the attribute will be ignored, if true outputs the attribute without a value
+// - fmt.Stringer - if the value implements fmt.Stringer, the returned string of StringVar() is used
+// - ptr - If the ptr is nil, the attribute will be ignored. Else, the rules above apply
+// any other type is handled via fmt.Sprintf()
+func (n *VGNode) AddAttrInterface(key string, val interface{}) {
+	// ignore nil attributes
+	if val == nil {
+		return
+	}
+
+	nattr := VGAttribute{
+		Key: key,
+	}
+
+	switch v := val.(type) {
+	case string:
+		nattr.Val = v
+	case int:
+		nattr.Val = strconv.Itoa(v)
+	case int8:
+		nattr.Val = strconv.Itoa(int(v))
+	case int16:
+		nattr.Val = strconv.Itoa(int(v))
+	case int32:
+		nattr.Val = strconv.Itoa(int(v))
+	case int64:
+		nattr.Val = strconv.FormatInt(v, 10)
+	case uint:
+		nattr.Val = strconv.FormatUint(uint64(v), 10)
+	case uint8:
+		nattr.Val = strconv.FormatUint(uint64(v), 10)
+	case uint16:
+		nattr.Val = strconv.FormatUint(uint64(v), 10)
+	case uint32:
+		nattr.Val = strconv.FormatUint(uint64(v), 10)
+	case uint64:
+		nattr.Val = strconv.FormatUint(v, 10)
+	case float32:
+		nattr.Val = strconv.FormatFloat(float64(v), 'f', 6, 32)
+	case float64:
+		nattr.Val = strconv.FormatFloat(v, 'f', 6, 64)
+	case bool:
+		if !v {
+			return
+		}
+		// FIXME: according to the HTML spec this is valid for flags, but not pretty
+		// To change this, we have to adopt the changes inside the domrender and staticrender too.
+		nattr.Val = key
+	case fmt.Stringer:
+		// we have to check that the given interface does not hide a nil ptr
+		if reflect.ValueOf(val).IsNil() {
+			return
+		}
+		nattr.Val = v.String()
+	default:
+		// check if this is a ptr
+		rv := reflect.ValueOf(val)
+		if rv.Kind() == reflect.Ptr {
+			// indirect the ptr and recurse
+			if !rv.IsZero() {
+				n.AddAttrInterface(key, reflect.Indirect(rv).Interface())
+			}
+			return
+		}
+
+		// fall back to fmt
+		nattr.Val = fmt.Sprintf("%v", val)
+	}
+
+	n.Attr = append(n.Attr, nattr)
+}
+
+// AddAttrList takes a VGAttributeLister and sets the returned attributes to the node
+func (n *VGNode) AddAttrList(lister VGAttributeLister) {
+	for _, attr := range lister.AttributeList() {
+		n.Attr = append(n.Attr, attr)
+	}
 }
 
 // // positionHash calculates a hash based on position in the tree only (specifically it does not consider element attributes),
