@@ -10,6 +10,7 @@ import (
 	"sync"
 
 	"github.com/vugu/vjson"
+
 	"github.com/vugu/vugu"
 
 	js "github.com/vugu/vugu/js"
@@ -502,7 +503,12 @@ func (r *JSRenderer) visitSyncNode(state *jsRenderState, bo *vugu.BuildOut, br *
 
 	switch n.Type {
 	case vugu.ElementNode:
-		err = r.instructionList.writeSetElement(n.Data)
+		// check if this element has a namespace set
+		if ns := namespaceToURI(n.Namespace); ns != "" {
+			err = r.instructionList.writeSetElementNS(n.Data, ns)
+		} else {
+			err = r.instructionList.writeSetElement(n.Data)
+		}
 		if err != nil {
 			return err
 		}
@@ -564,10 +570,26 @@ func (r *JSRenderer) visitSyncElementEtc(state *jsRenderState, bo *vugu.BuildOut
 }
 
 func (r *JSRenderer) syncElement(state *jsRenderState, n *vugu.VGNode, positionID []byte) error {
-	for _, a := range n.Attr {
-		err := r.instructionList.writeSetAttrStr(a.Key, a.Val)
-		if err != nil {
-			return err
+	if namespaceToURI(n.Namespace) != "" {
+		for _, a := range n.Attr {
+			ns := namespaceToURI(a.Namespace)
+			// FIXME: we skip Namespace="" && Key = "xmlns" here, because this WILL cause an js exception
+			// the correct way would be, to parse the xmlns attribute in the generator, set the namespace of the holding element
+			// and then forget about this attribute
+			if ns == "" && a.Key == "xmlns" {
+				continue
+			}
+			err := r.instructionList.writeSetAttrNSStr(ns, a.Key, a.Val)
+			if err != nil {
+				return err
+			}
+		}
+	} else {
+		for _, a := range n.Attr {
+			err := r.instructionList.writeSetAttrStr(a.Key, a.Val)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -622,13 +644,13 @@ func (r *JSRenderer) handleDOMEvent() {
 	// requestRenderCH chan bool
 
 	var eventDetail struct {
-		PositionID string //`json:"position_id"`
-		EventType  string //`json:"event_type"`
-		Capture    bool   //`json:"capture"`
-		Passive    bool   //`json:"passive"`
+		PositionID string // `json:"position_id"`
+		EventType  string // `json:"event_type"`
+		Capture    bool   // `json:"capture"`
+		Passive    bool   // `json:"passive"`
 
 		// the event object data as extracted above
-		EventSummary map[string]interface{} //`json:"event_summary"`
+		EventSummary map[string]interface{} // `json:"event_summary"`
 	}
 
 	edm := make(map[string]interface{}, 6)

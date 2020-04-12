@@ -1118,8 +1118,7 @@ func isScriptOrStyle(n *html.Node) bool {
 }
 
 func pOutputTag(state *parseGoState, n *html.Node) {
-
-	fmt.Fprintf(&state.buildBuf, "vgn = &vugu.VGNode{Type:vugu.VGNodeType(%d),Data:%q,Attr:%#v}\n", n.Type, n.Data, staticVGAttr(n.Attr))
+	fmt.Fprintf(&state.buildBuf, "vgn = &vugu.VGNode{Type:vugu.VGNodeType(%d),Namespace:%q,Data:%q,Attr:%#v}\n", n.Type, n.Namespace, n.Data, staticVGAttr(n.Attr))
 	if state.outIsSet {
 		fmt.Fprintf(&state.buildBuf, "vgparent.AppendChild(vgn)\n") // if not root, make AppendChild call
 	} else {
