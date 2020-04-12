@@ -14,14 +14,15 @@ import (
 
 	// "golang.org/x/net/html"
 	"github.com/vugu/html"
+
 	"github.com/vugu/vugu"
 )
 
 func attrFromHtml(attr html.Attribute) vugu.VGAttribute {
 	return vugu.VGAttribute{
-		Namespace: attr.Namespace,
-		Key:       attr.OrigKey,
-		Val:       attr.Val,
+		Namespace:    attr.Namespace,
+		Key:          attr.OrigKey,
+		Val:          attr.Val,
 	}
 }
 
@@ -277,11 +278,11 @@ func dedupImports(r io.Reader, w io.Writer, fname string) error {
 		return err
 	}
 
-	//ast.Print(fset, f)
-	//ast.Print(fset, f)
+	// ast.Print(fset, f)
+	// ast.Print(fset, f)
 
 	// ast.Print(fset, f.Decls)
-	//f.Decls = f.Decls[1:]
+	// f.Decls = f.Decls[1:]
 	dedupAstFileImports(f)
 	ast.SortImports(fset, f)
 

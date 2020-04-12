@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"os"
 	"path/filepath"
@@ -474,6 +475,30 @@ func Test015AttrList(t *testing.T) {
 			assert.Equal("funcwidget", attributes["class"], "attribute value is invalid")
 			assert.Contains(attributes, "data-test", "attribute is missing")
 			assert.Equal("functest", attributes["data-test"], "attribute value is invalid")
+		}),
+	))
+}
+func Test016SVG(t *testing.T) {
+
+	assert := assert.New(t)
+
+	dir, origDir := mustUseDir("test-016-svg")
+	defer os.Chdir(origDir)
+	mustGen(dir)
+	pathSuffix := mustBuildAndLoad(dir)
+	ctx, cancel := mustChromeCtx()
+	defer cancel()
+
+	log.Printf("URL: %s", "http://localhost:8846"+pathSuffix)
+
+	must(chromedp.Run(ctx,
+		chromedp.Navigate("http://localhost:8846"+pathSuffix),
+		chromedp.WaitVisible("#icon"),          // wait for the icon to show up
+		chromedp.WaitVisible("#icon polyline"), // make sure that the svg element is complete
+		chromedp.QueryAfter("#icon", func(ctx context.Context, node ...*cdp.Node) error {
+			// checking if the element is recognized as SVG by chrome should be enough
+			assert.True(node[0].IsSVG)
+			return nil
 		}),
 	))
 }
