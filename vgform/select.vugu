@@ -1,0 +1,9 @@
+<select :='c.tmpa'></select>
+
+<script type="application/x-go">
+
+type Select struct {
+    tmpa vugu.AttributeLister
+}
+
+</script>
