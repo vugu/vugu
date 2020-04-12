@@ -6,4 +6,40 @@ type Select struct {
     tmpa vugu.AttributeLister
 }
 
+/*
+Things to figure out:
+
+- `vg-ref=` We'll most likely need a way to access a DOM element directly after render.
+  (When exact 'after render' is I'm not sure yet).  One way to do this would be to have 
+  a vg-ref= attribute which tells the renderer to send this ID over to the JS side 
+  and associate the element so we can look it up later.  Then some method like 
+  `vuguRef(id) element` can exist in JS and we can use it to access the element 
+  via the `js` package.  Other solutions are possible but the requirement is the 
+  ability to get a js.Value reference to a specific element in your Vugu template.
+
+- "Slots", developers should have the ability to provide their own <option> elements inside 
+  of this component. E.g. <vgform:Select><option value="a">A</option></vgform:Select>.
+  There is a bit of info on ideas for slot here: https://github.com/vugu/vugu/wiki/Component-Related-Features-Design#slots
+  In this case there is only one "default" slot, but multiple names slots should be possible
+  and will be needed by component libraries.
+
+- "Component Events", we'll need to define what <vgform:Select @Change='...'> means.
+  I think the same convention should be used where a capital letter indicates a corresopnding 
+  Go field.  The question is what it's type should be and what should the expression
+  for '...' be above.  Another question is if there is a propagation model for these 
+  events.  Do we need the ability for these types of events to "bubble up" to parent
+  components?  If we don't need that then I think simple function fields and calls to them 
+  are fine (and I also really like that this keeps things type safe).  But if we need 
+  some bubbling system that probably won't work.
+  More info here: https://github.com/vugu/vugu/wiki/Component-Related-Features-Design#component-events
+
+Those points resolved should provide what is needed to make sophisticated forms.
+Once that is done we can look at things like automatic form validation and see if 
+there are any other features needed for that sort of thing.  (E.g. in Vuetify 
+a <v-form> is aware of all of it's nested elements and it's `valid` property 
+reflects if all of it's elements are valid.  I personally think this is way too 
+magical for Vugu but nonetheless a good and concise pattern should be found.)
+
+*/
+
 </script>
