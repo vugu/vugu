@@ -131,7 +131,7 @@ func (c *WasmCompiler) Execute() (outpath string, err error) {
 		if err != nil {
 			return "", logerr(fmt.Errorf("WasmCompiler: generate error: %w; full output:\n%s", err, b))
 		}
-		fmt.Fprintln(c.logWriter, "Successful generate")
+		fmt.Fprintln(c.logWriter, "WasmCompiler: Successful generate")
 	}
 
 	tmpf, err := ioutil.TempFile("", "WasmCompiler")
@@ -151,7 +151,7 @@ func (c *WasmCompiler) Execute() (outpath string, err error) {
 	if err != nil {
 		return "", logerr(fmt.Errorf("WasmCompiler: build error: %w; full output:\n%s", err, b))
 	}
-	fmt.Fprintln(c.logWriter, "Successful build")
+	fmt.Fprintln(c.logWriter, "WasmCompiler: Successful build")
 
 	if c.afterFunc != nil {
 		err = c.afterFunc(outpath, err)
