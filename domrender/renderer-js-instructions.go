@@ -54,6 +54,9 @@ const (
 	opcodeSetProperty     uint8 = 35 // assign a JS property to the current element
 	opcodeSelectQuery     uint8 = 36 // select an element
 	opcodeBufferInnerHTML uint8 = 37 // pass chunked text to set as inner html, complete with opcodeSetInnerHTML
+
+	opcodeSetAttrNSStr uint8 = 38 // assign attribute string to the current selected namespaced element
+	opcodeSetElementNS uint8 = 39 // assign current selected node as an element of the specified type in the specified namespace
 )
 
 // newInstructionList will create a new instance backed by the specified slice and with a clearBufFunc
@@ -196,6 +199,23 @@ func (il *instructionList) writeSetAttrStr(name, value string) error {
 	return nil
 }
 
+func (il *instructionList) writeSetAttrNSStr(namespace, name, value string) error {
+
+	size := len(namespace) + len(name) + len(value) + 9
+
+	err := il.checkLenAndFlush(size)
+	if err != nil {
+		return err
+	}
+
+	il.writeValUint8(opcodeSetAttrNSStr)
+	il.writeValString(namespace)
+	il.writeValString(name)
+	il.writeValString(value)
+
+	return nil
+}
+
 func (il *instructionList) writeSelectQuery(selector string) error {
 	err := il.checkLenAndFlush(5 + len(selector))
 	if err != nil {
@@ -259,6 +279,23 @@ func (il *instructionList) writeSetElement(nodeName string) error {
 
 	il.writeValUint8(opcodeSetElement)
 	il.writeValString(nodeName)
+
+	return nil
+
+}
+
+func (il *instructionList) writeSetElementNS(nodeName, namespace string) error {
+
+	size := len(nodeName) + len(namespace) + 9
+	err := il.checkLenAndFlush(size)
+
+	if err != nil {
+		return err
+	}
+
+	il.writeValUint8(opcodeSetElementNS)
+	il.writeValString(nodeName)
+	il.writeValString(namespace)
 
 	return nil
 

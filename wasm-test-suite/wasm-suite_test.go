@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"os"
 	"path/filepath"
@@ -393,6 +394,113 @@ func Test013Issue117(t *testing.T) {
 		chromedp.WaitNotPresent("#mytable"),
 	))
 
+}
+
+func Test014AttrIntf(t *testing.T) {
+
+	assert := assert.New(t)
+	dir, origDir := mustUseDir("test-014-attrintf")
+	defer os.Chdir(origDir)
+	mustGen(dir)
+	pathSuffix := mustBuildAndLoad(dir)
+	ctx, cancel := mustChromeCtx()
+	defer cancel()
+
+	log.Printf("URL: %s", "http://localhost:8846"+pathSuffix)
+
+	attributeEq := func(ref, val string) chromedp.QueryAction {
+		return queryAttributes(ref, func(attributes map[string]string) {
+			assert.Contains(attributes, "attr", "attribute on '%s' is missing", ref)
+			assert.Equal(val, attributes["attr"], "attribute value on '%s' is invalid", ref)
+		})
+	}
+
+	noAttribute := func(ref string) chromedp.QueryAction {
+		return queryAttributes(ref, func(attributes map[string]string) {
+			assert.NotContains(attributes, "attr", "attribute on '%s' exists, but shouldn't", ref)
+		})
+	}
+
+	must(chromedp.Run(ctx,
+		chromedp.Navigate("http://localhost:8846"+pathSuffix),
+		chromedp.WaitVisible("#testing"), // wait until render
+		attributeEq("#plain_string", "string"),
+		attributeEq("#string_var", "aString"),
+		attributeEq("#string_ptr", "aString"),
+		attributeEq("#int_var", "42"),
+		attributeEq("#int_ptr", "42"),
+		attributeEq("#true_var", "attr"),
+		noAttribute("#false_var"),
+		attributeEq("#true_ptr", "attr"),
+		noAttribute("#false_ptr"),
+		noAttribute("#string_nil_ptr"),
+		attributeEq("#stringer", "myString"),
+		noAttribute("#stringer_nil_ptr"),
+	))
+}
+
+func Test015AttrList(t *testing.T) {
+
+	assert := assert.New(t)
+	dir, origDir := mustUseDir("test-015-attribute-lister")
+	defer os.Chdir(origDir)
+	mustGen(dir)
+	pathSuffix := mustBuildAndLoad(dir)
+	ctx, cancel := mustChromeCtx()
+	defer cancel()
+
+	log.Printf("URL: %s", "http://localhost:8846"+pathSuffix)
+
+	must(chromedp.Run(ctx,
+		chromedp.Navigate("http://localhost:8846"+pathSuffix),
+		chromedp.WaitVisible("#testing"), // wait until render
+		queryAttributes("#testing", func(attributes map[string]string) {
+			assert.Contains(attributes, "class", "attribute is missing")
+			assert.Equal("widget", attributes["class"], "attribute value is invalid")
+		}),
+		queryAttributes("#testing", func(attributes map[string]string) {
+			assert.Contains(attributes, "data-test", "attribute is missing")
+			assert.Equal("test", attributes["data-test"], "attribute value is invalid")
+		}),
+		queryAttributes("#functest", func(attributes map[string]string) {
+			assert.Contains(attributes, "class", "attribute is missing")
+			assert.Equal("funcwidget", attributes["class"], "attribute value is invalid")
+		}),
+		queryAttributes("#functest", func(attributes map[string]string) {
+			assert.Contains(attributes, "data-test", "attribute is missing")
+			assert.Equal("functest", attributes["data-test"], "attribute value is invalid")
+		}),
+		queryAttributes("#functest2", func(attributes map[string]string) { // check with vg-attr syntax
+			assert.Contains(attributes, "class", "attribute is missing")
+			assert.Equal("funcwidget", attributes["class"], "attribute value is invalid")
+			assert.Contains(attributes, "data-test", "attribute is missing")
+			assert.Equal("functest", attributes["data-test"], "attribute value is invalid")
+		}),
+	))
+}
+func Test016SVG(t *testing.T) {
+
+	assert := assert.New(t)
+
+	dir, origDir := mustUseDir("test-016-svg")
+	defer os.Chdir(origDir)
+	mustGen(dir)
+	pathSuffix := mustBuildAndLoad(dir)
+	ctx, cancel := mustChromeCtx()
+	defer cancel()
+
+	log.Printf("URL: %s", "http://localhost:8846"+pathSuffix)
+
+	must(chromedp.Run(ctx,
+		chromedp.Navigate("http://localhost:8846"+pathSuffix),
+		chromedp.WaitVisible("#icon"),          // wait for the icon to show up
+		chromedp.WaitVisible("#icon polyline"), // make sure that the svg element is complete
+		chromedp.QueryAfter("#icon", func(ctx context.Context, node ...*cdp.Node) error {
+			// checking if the element is recognized as SVG by chrome should be enough
+			assert.True(node[0].IsSVG)
+			return nil
+		}),
+	))
 }
 
 func Test100TinygoSimple(t *testing.T) {

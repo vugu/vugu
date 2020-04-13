@@ -18,6 +18,7 @@ import (
 	// "golang.org/x/net/html/atom"
 	"github.com/vugu/html"
 	"github.com/vugu/html/atom"
+
 	"github.com/vugu/vugu"
 )
 
@@ -488,7 +489,7 @@ func (p *ParserGo) visitScriptOrStyle(state *parseGoState, n *html.Node) error {
 
 		ty := attrWithKey(n, "type")
 		if ty == nil {
-			//return fmt.Errorf("script tag without type attribute is not valid")
+			// return fmt.Errorf("script tag without type attribute is not valid")
 			mt = ""
 		} else {
 			// tinygo support: just split on semi, don't need to import mime package
@@ -769,7 +770,11 @@ func (p *ParserGo) visitNodeJustElement(state *parseGoState, n *html.Node) error
 	dynExprMap, dynExprMapKeys := dynamicVGAttrExpr(n)
 	for _, k := range dynExprMapKeys {
 		valExpr := dynExprMap[k]
-		fmt.Fprintf(&state.buildBuf, "vgn.Attr = append(vgn.Attr, vugu.VGAttribute{Key:%q,Val:fmt.Sprint(%s)})\n", k, valExpr)
+		if k == "" || k == "vg-attr" {
+			fmt.Fprintf(&state.buildBuf, "vgn.AddAttrList(%s)\n", valExpr)
+		} else {
+			fmt.Fprintf(&state.buildBuf, "vgn.AddAttrInterface(%q,%s)\n", k, valExpr)
+		}
 	}
 
 	// js properties
@@ -1113,8 +1118,7 @@ func isScriptOrStyle(n *html.Node) bool {
 }
 
 func pOutputTag(state *parseGoState, n *html.Node) {
-
-	fmt.Fprintf(&state.buildBuf, "vgn = &vugu.VGNode{Type:vugu.VGNodeType(%d),Data:%q,Attr:%#v}\n", n.Type, n.Data, staticVGAttr(n.Attr))
+	fmt.Fprintf(&state.buildBuf, "vgn = &vugu.VGNode{Type:vugu.VGNodeType(%d),Namespace:%q,Data:%q,Attr:%#v}\n", n.Type, n.Namespace, n.Data, staticVGAttr(n.Attr))
 	if state.outIsSet {
 		fmt.Fprintf(&state.buildBuf, "vgparent.AppendChild(vgn)\n") // if not root, make AppendChild call
 	} else {

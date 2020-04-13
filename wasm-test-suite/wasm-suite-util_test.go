@@ -23,6 +23,7 @@ import (
 
 	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/chromedp"
+
 	"github.com/vugu/vugu/distutil"
 	"github.com/vugu/vugu/gen"
 	"github.com/vugu/vugu/simplehttp"
@@ -34,6 +35,17 @@ func queryNode(ref string, assert func(n *cdp.Node)) chromedp.QueryAction {
 			return fmt.Errorf("no %s element found", ref)
 		}
 		assert(nodes[0])
+		return nil
+	})
+}
+
+func queryAttributes(ref string, assert func(attributes map[string]string)) chromedp.QueryAction {
+	return chromedp.QueryAfter(ref, func(ctx context.Context, nodes ...*cdp.Node) error {
+		attributes := make(map[string]string)
+		if err := chromedp.Attributes(ref, &attributes).Do(ctx); err != nil {
+			return err
+		}
+		assert(attributes)
 		return nil
 	})
 }
@@ -63,11 +75,11 @@ func WaitInnerTextTrimEq(sel, innerText string) chromedp.QueryAction {
 				return nodes, err
 			}
 			if strings.TrimSpace(ret) != innerText {
-				//log.Printf("found text: %s", ret)
+				// log.Printf("found text: %s", ret)
 				return nodes, errors.New("unexpected value: " + ret)
 			}
 
-			//log.Printf("NodeValue: %#v", nodes[0])
+			// log.Printf("NodeValue: %#v", nodes[0])
 
 			// return nil, errors.New("not ready yet")
 			return nodes, nil
@@ -165,7 +177,7 @@ func mustChromeCtx() (context.Context, context.CancelFunc) {
 	allocCtx, _ := chromedp.NewRemoteAllocator(context.Background(), debugURL)
 	// defer cancel()
 
-	ctx, _ := chromedp.NewContext(allocCtx) //, chromedp.WithLogf(log.Printf))
+	ctx, _ := chromedp.NewContext(allocCtx) // , chromedp.WithLogf(log.Printf))
 	// defer cancel()
 	ctx, cancel := context.WithTimeout(ctx, 15*time.Second)
 	// defer cancel()
