@@ -938,9 +938,9 @@ func (p *ParserGo) visitNodeComponentElement(state *parseGoState, n *html.Node) 
 
 	keyExpr := vgKeyExpr(n)
 	if keyExpr != "" {
-		fmt.Fprintf(&state.buildBuf, "vgcompKey := vugu.MakeCompKey(0x%X|vgin.CurrentPositionHash(), %s)\n", compKeyID, keyExpr)
+		fmt.Fprintf(&state.buildBuf, "vgcompKey := vugu.MakeCompKey(0x%X^vgin.CurrentPositionHash(), %s)\n", compKeyID, keyExpr)
 	} else {
-		fmt.Fprintf(&state.buildBuf, "vgcompKey := vugu.MakeCompKey(0x%X|vgin.CurrentPositionHash(), vgiterkey)\n", compKeyID)
+		fmt.Fprintf(&state.buildBuf, "vgcompKey := vugu.MakeCompKey(0x%X^vgin.CurrentPositionHash(), vgiterkey)\n", compKeyID)
 	}
 	fmt.Fprintf(&state.buildBuf, "// ask BuildEnv for prior instance of this specific component\n")
 	fmt.Fprintf(&state.buildBuf, "vgcomp, _ := vgin.BuildEnv.CachedComponent(vgcompKey).(*%s)\n", typeExpr)
