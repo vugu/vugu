@@ -503,6 +503,45 @@ func Test016SVG(t *testing.T) {
 	))
 }
 
+func Test017Nesting(t *testing.T) {
+
+	// assert := assert.New(t)
+
+	dir, origDir := mustUseDir("test-017-nesting")
+	defer os.Chdir(origDir)
+	mustGen(dir)
+	pathSuffix := mustBuildAndLoad(dir)
+	ctx, cancel := mustChromeCtx()
+	defer cancel()
+
+	log.Printf("URL: %s", "http://localhost:8846"+pathSuffix)
+
+	must(chromedp.Run(ctx,
+		chromedp.Navigate("http://localhost:8846"+pathSuffix),
+		chromedp.WaitVisible("#final1"), // make sure things showed up
+		chromedp.WaitVisible("#final2"), // make sure things showed up
+
+		chromedp.Click("#final1 .clicker"),            // click top one
+		chromedp.WaitVisible("#final1 .clicked-true"), // should get clicked on #1
+		chromedp.WaitNotPresent("#final1 .clicked-false"),
+		chromedp.WaitNotPresent("#final2 .clicked-true"), // but not on #2
+		chromedp.WaitVisible("#final2 .clicked-false"),
+
+		// now check the reverse
+
+		chromedp.Navigate("http://localhost:8846"+pathSuffix),
+		chromedp.WaitVisible("#final1"), // make sure things showed up
+		chromedp.WaitVisible("#final2"), // make sure things showed up
+
+		chromedp.Click("#final2 .clicker"),            // click bottom one
+		chromedp.WaitVisible("#final2 .clicked-true"), // should get clicked on #2
+		chromedp.WaitNotPresent("#final2 .clicked-false"),
+		chromedp.WaitNotPresent("#final1 .clicked-true"), // but not on #1
+		chromedp.WaitVisible("#final1 .clicked-false"),
+	))
+
+}
+
 func Test100TinygoSimple(t *testing.T) {
 
 	// TODO: This is work in progress - it does actually compile but needs some more work to

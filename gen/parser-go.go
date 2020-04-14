@@ -18,8 +18,6 @@ import (
 	// "golang.org/x/net/html/atom"
 	"github.com/vugu/html"
 	"github.com/vugu/html/atom"
-
-	"github.com/vugu/vugu"
 )
 
 // ParserGo is a template parser that emits Go source code that will construct the appropriately wired VGNodes.
@@ -933,21 +931,16 @@ func (p *ParserGo) visitNodeComponentElement(state *parseGoState, n *html.Node) 
 		typeExpr = nodeNameParts[1]
 	}
 
-	// FIXME: this really should produce the same value if run on the same file - to avoid unneeded git changes
-	// So probably instead of being random we need to use the timestamp of the input file and then hash things like
-	// the file name, the offset into the file, all of the bytes before it, stuff like that.  Either that or we
-	// find a way to re-use the earlier value - but it will get real annoying real fast when .vugu fiiles that didn't
-	// change have .go files marked as changed just because this ID was generated differently.
-	compKeyID := vugu.MakeCompKeyIDNowRand()
+	compKeyID := compHashCounted(p.StructType + "." + n.OrigData)
 
 	fmt.Fprintf(&state.buildBuf, "{\n")
 	defer fmt.Fprintf(&state.buildBuf, "}\n")
 
 	keyExpr := vgKeyExpr(n)
 	if keyExpr != "" {
-		fmt.Fprintf(&state.buildBuf, "vgcompKey := vugu.MakeCompKey(0x%X, %s)\n", compKeyID, keyExpr)
+		fmt.Fprintf(&state.buildBuf, "vgcompKey := vugu.MakeCompKey(0x%X|vgin.CurrentPositionHash(), %s)\n", compKeyID, keyExpr)
 	} else {
-		fmt.Fprintf(&state.buildBuf, "vgcompKey := vugu.MakeCompKey(0x%X, vgiterkey)\n", compKeyID)
+		fmt.Fprintf(&state.buildBuf, "vgcompKey := vugu.MakeCompKey(0x%X|vgin.CurrentPositionHash(), vgiterkey)\n", compKeyID)
 	}
 	fmt.Fprintf(&state.buildBuf, "// ask BuildEnv for prior instance of this specific component\n")
 	fmt.Fprintf(&state.buildBuf, "vgcomp, _ := vgin.BuildEnv.CachedComponent(vgcompKey).(*%s)\n", typeExpr)

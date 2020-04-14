@@ -6,7 +6,25 @@ import (
 
 // BuildIn is the input to a Build call.
 type BuildIn struct {
+
+	// the overall build environment
 	BuildEnv *BuildEnv
+
+	// a stack of position hashes, the last one can be used by a component to get a unique hash for overall position
+	PositionHashList []uint64
+}
+
+// CurrentPositionHash returns the hash value that can be used by a component to
+// mix into it's own hash values to achieve uniqueness based on overall position
+// in the output tree.  Basically you should XOR this with whatever unique reference
+// ID within the component itself used during Build.  The purpose is to ensure
+// that we use the same ID for the same component in the same position within
+// the overall tree but a different one for the same component in a different position.
+func (bi *BuildIn) CurrentPositionHash() uint64 {
+	if len(bi.PositionHashList) == 0 {
+		return 0
+	}
+	return bi.PositionHashList[len(bi.PositionHashList)-1]
 }
 
 // BuildOut is the output from a Build call.  It includes Out as the DOM elements
