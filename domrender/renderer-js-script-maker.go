@@ -20,8 +20,8 @@ func main() {
 
 	// minify the JS
 	m := minify.New()
-	m.AddFunc("application/javascript", js.Minify)
-	mr := m.Reader("application/javascript", bytes.NewReader(b))
+	m.AddFunc("text/javascript", js.Minify)
+	mr := m.Reader("text/javascript", bytes.NewReader(b))
 	b, err = ioutil.ReadAll(mr)
 	if err != nil {
 		panic(err)

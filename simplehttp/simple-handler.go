@@ -326,7 +326,7 @@ func (h *SimpleHandler) serveGoEnvWasmExecJs(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/javascript")
+	w.Header().Set("Content-Type", "text/javascript")
 	http.ServeContent(w, r, "/wasm_exec.js", h.wasmExecJsTs, bytes.NewReader(h.wasmExecJsContent))
 }
 

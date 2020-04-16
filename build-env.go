@@ -1,5 +1,12 @@
 package vugu
 
+import (
+	"encoding/binary"
+	"fmt"
+
+	"github.com/vugu/xxhash"
+)
+
 // // Env specifies the common methods for environment implementations.
 // // See JSEnv and StaticHtmlEnv for implementations.
 // type Env interface {
@@ -86,29 +93,50 @@ func (e *BuildEnv) RunBuild(builder Builder) *BuildResults {
 	// swap cache and results, so the prior results is the new cache
 	e.buildCache, e.buildResults = e.buildResults, e.buildCache
 
+	var buildIn BuildIn
+	buildIn.BuildEnv = e
+	// buildIn.PositionHashList starts empty
+
 	// recursively build everything
-	e.buildOne(builder)
+	e.buildOne(&buildIn, builder)
+
+	// sanity check
+	if len(buildIn.PositionHashList) != 0 {
+		panic(fmt.Errorf("unexpected PositionHashList len = %d", len(buildIn.PositionHashList)))
+	}
 
 	return &BuildResults{allOut: e.buildResults, Out: e.buildResults[makeBuildCacheKey(builder)]}
 }
 
-func (e *BuildEnv) buildOne(thisb Builder) {
+func (e *BuildEnv) buildOne(buildIn *BuildIn, thisb Builder) {
 
 	beforeBuilder, ok := thisb.(BeforeBuilder)
 	if ok {
 		beforeBuilder.BeforeBuild()
 	}
 
-	var buildIn BuildIn
-	buildIn.BuildEnv = e
-
-	buildOut := thisb.Build(&buildIn)
+	buildOut := thisb.Build(buildIn)
 
 	// store in buildResults
 	e.buildResults[makeBuildCacheKey(thisb)] = buildOut
 
+	if len(buildOut.Components) == 0 {
+		return
+	}
+
+	// push next position hash to the stack, remove it upon exit
+	nextPositionHash := hashVals(buildIn.CurrentPositionHash())
+	buildIn.PositionHashList = append(buildIn.PositionHashList, nextPositionHash)
+	defer func() {
+		buildIn.PositionHashList = buildIn.PositionHashList[:len(buildIn.PositionHashList)-1]
+	}()
+
 	for _, c := range buildOut.Components {
-		e.buildOne(c)
+
+		e.buildOne(buildIn, c)
+
+		// each iteration we increment the last position hash (the one we added above) by one
+		buildIn.PositionHashList[len(buildIn.PositionHashList)-1]++
 	}
 }
 
@@ -151,6 +179,18 @@ func (e *BuildEnv) WireComponent(component Builder) {
 	if e.wireFunc != nil {
 		e.wireFunc(component)
 	}
+}
+
+// hashVals performs a hash of the given values together
+func hashVals(vs ...uint64) uint64 {
+	h := xxhash.New()
+	var b [8]byte
+	for _, v := range vs {
+		binary.BigEndian.PutUint64(b[:], v)
+		h.Write(b[:])
+	}
+	return h.Sum64()
+
 }
 
 // FIXME: IMPORTANT: If we can separate the hash computation from the equal comparision, then we can use
