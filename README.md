@@ -16,6 +16,7 @@ No node. No JS. No npm. No node_modules folder competing with your music library
 
 ## Updates ♨
 
+* 2020-04-13 v0.2.3 much more flexible attribute support and SVGs now work (thanks to @tbe!); vugu-examples/simple set up, more to come; nested component rendering bug fixed (#117); tools doc page added to the site; devutil package; vgrun working
 * 2020-04-06 v0.2.0 released. vugu.org and playground ported over to it; vugugen now supports recursive and merge-single modes and output files end with _vgen.go; improved tests; various documentation updates; vgrgen route generator supports recursive and clean options
 * 2020-03-29 Vugu URL router is now functional (https://github.com/vugu/vgrouter). Features include optional fragment support, client and server-side use, two-way data binding for query and path parameters, and automatic route generation based on folder structure. The `vg-comp` tag now allows programmatic component selection. A pattern for wiring large applications with lots of components is in place and will be tested further as dev moves forward. Next steps include just a bit more dev and testing on the router and then updating vugu.org to use these new features and bring the documentation up to date.
 * 2019-12-08 First Vugu program successfully compiles with Tinygo.  Testing and a bit more alternate implementation is still required but at least the compilation works now.
