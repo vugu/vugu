@@ -346,11 +346,7 @@ func (p *ParserGo) visitHTML(state *parseGoState, n *html.Node) error {
 	// state.outIsSet = true
 
 	// dynamic attrs
-	dynExprMap, dynExprMapKeys := dynamicVGAttrExpr(n)
-	for _, k := range dynExprMapKeys {
-		valExpr := dynExprMap[k]
-		fmt.Fprintf(&state.buildBuf, "vgn.Attr = append(vgn.Attr, vugu.VGAttribute{Key:%q,Val:fmt.Sprint(%s)})\n", k, valExpr)
-	}
+	writeDynamicAttributes(state, n)
 
 	fmt.Fprintf(&state.buildBuf, "{\n")
 	fmt.Fprintf(&state.buildBuf, "vgparent := vgn; _ = vgparent\n") // vgparent set for this block to vgn
@@ -390,11 +386,7 @@ func (p *ParserGo) visitHead(state *parseGoState, n *html.Node) error {
 	// state.outIsSet = true
 
 	// dynamic attrs
-	dynExprMap, dynExprMapKeys := dynamicVGAttrExpr(n)
-	for _, k := range dynExprMapKeys {
-		valExpr := dynExprMap[k]
-		fmt.Fprintf(&state.buildBuf, "vgn.Attr = append(vgn.Attr, vugu.VGAttribute{Key:%q,Val:fmt.Sprint(%s)})\n", k, valExpr)
-	}
+	writeDynamicAttributes(state, n)
 
 	fmt.Fprintf(&state.buildBuf, "{\n")
 	fmt.Fprintf(&state.buildBuf, "vgparent := vgn; _ = vgparent\n") // vgparent set for this block to vgn
@@ -430,11 +422,7 @@ func (p *ParserGo) visitBody(state *parseGoState, n *html.Node) error {
 	// state.outIsSet = true
 
 	// dynamic attrs
-	dynExprMap, dynExprMapKeys := dynamicVGAttrExpr(n)
-	for _, k := range dynExprMapKeys {
-		valExpr := dynExprMap[k]
-		fmt.Fprintf(&state.buildBuf, "vgn.Attr = append(vgn.Attr, vugu.VGAttribute{Key:%q,Val:fmt.Sprint(%s)})\n", k, valExpr)
-	}
+	writeDynamicAttributes(state, n)
 
 	fmt.Fprintf(&state.buildBuf, "{\n")
 	fmt.Fprintf(&state.buildBuf, "vgparent := vgn; _ = vgparent\n") // vgparent set for this block to vgn
@@ -600,11 +588,7 @@ func (p *ParserGo) visitJS(state *parseGoState, n *html.Node) error {
 	fmt.Fprintf(&state.buildBuf, "vgout.AppendJS(vgn)\n")
 
 	// dynamic attrs
-	dynExprMap, dynExprMapKeys := dynamicVGAttrExpr(n)
-	for _, k := range dynExprMapKeys {
-		valExpr := dynExprMap[k]
-		fmt.Fprintf(&state.buildBuf, "vgn.Attr = append(vgn.Attr, vugu.VGAttribute{Key:%q,Val:fmt.Sprint(%s)})\n", k, valExpr)
-	}
+	writeDynamicAttributes(state, n)
 
 	return nil
 }
@@ -683,11 +667,7 @@ func (p *ParserGo) visitCSS(state *parseGoState, n *html.Node) error {
 	fmt.Fprintf(&state.buildBuf, "vgout.AppendCSS(vgn)\n")
 
 	// dynamic attrs
-	dynExprMap, dynExprMapKeys := dynamicVGAttrExpr(n)
-	for _, k := range dynExprMapKeys {
-		valExpr := dynExprMap[k]
-		fmt.Fprintf(&state.buildBuf, "vgn.Attr = append(vgn.Attr, vugu.VGAttribute{Key:%q,Val:fmt.Sprint(%s)})\n", k, valExpr)
-	}
+	writeDynamicAttributes(state, n)
 
 	return nil
 }
@@ -765,15 +745,7 @@ func (p *ParserGo) visitNodeJustElement(state *parseGoState, n *html.Node) error
 	// }
 
 	// dynamic attrs
-	dynExprMap, dynExprMapKeys := dynamicVGAttrExpr(n)
-	for _, k := range dynExprMapKeys {
-		valExpr := dynExprMap[k]
-		if k == "" || k == "vg-attr" {
-			fmt.Fprintf(&state.buildBuf, "vgn.AddAttrList(%s)\n", valExpr)
-		} else {
-			fmt.Fprintf(&state.buildBuf, "vgn.AddAttrInterface(%q,%s)\n", k, valExpr)
-		}
-	}
+	writeDynamicAttributes(state, n)
 
 	// js properties
 	propExprMap, propExprMapKeys := propVGAttrExpr(n)
@@ -1128,4 +1100,16 @@ func attrWithKey(n *html.Node, key string) *html.Attribute {
 		}
 	}
 	return nil
+}
+
+func writeDynamicAttributes(state *parseGoState, n *html.Node) {
+	dynExprMap, dynExprMapKeys := dynamicVGAttrExpr(n)
+	for _, k := range dynExprMapKeys {
+		valExpr := dynExprMap[k]
+		if k == "" || k == "vg-attr" {
+			fmt.Fprintf(&state.buildBuf, "vgn.AddAttrList(%s)\n", valExpr)
+		} else {
+			fmt.Fprintf(&state.buildBuf, "vgn.AddAttrInterface(%q,%s)\n", k, valExpr)
+		}
+	}
 }
