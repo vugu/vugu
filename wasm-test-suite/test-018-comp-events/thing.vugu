@@ -1,0 +1,21 @@
+<div>
+    <button id="the_button" @click="c.HandleButtonClick(event)">A button here</button>
+</div>
+
+<script type="application/x-go">
+
+type Thing struct {
+    Click func(ClickEvent)
+}
+
+func (c *Thing) HandleButtonClick(event *vugu.DOMEvent) {
+    if c.Click != nil {
+        c.Click(ClickEvent{DOMEvent:event})
+    }
+}
+
+type ClickEvent struct {
+    *vugu.DOMEvent
+}
+
+</script>

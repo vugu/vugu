@@ -542,6 +542,33 @@ func Test017Nesting(t *testing.T) {
 
 }
 
+func Test018CompEvents(t *testing.T) {
+
+	assert := assert.New(t)
+
+	dir, origDir := mustUseDir("test-018-comp-events")
+	defer os.Chdir(origDir)
+	mustGen(dir)
+	pathSuffix := mustBuildAndLoad(dir)
+	ctx, cancel := mustChromeCtx()
+	defer cancel()
+
+	log.Printf("URL: %s", "http://localhost:8846"+pathSuffix)
+
+	var showText string
+	must(chromedp.Run(ctx,
+		chromedp.Navigate("http://localhost:8846"+pathSuffix),
+		chromedp.WaitVisible("#top"),  // make sure things showed up
+		chromedp.Click("#the_button"), // click the button inside the component
+
+		chromedp.WaitVisible("#show_text"), // wait for it to dump event out
+		chromedp.InnerHTML("#show_text", &showText),
+	))
+	//t.Logf("showText=%s", showText)
+	assert.Contains(showText, "ClickEvent")
+
+}
+
 func Test100TinygoSimple(t *testing.T) {
 
 	// TODO: This is work in progress - it does actually compile but needs some more work to

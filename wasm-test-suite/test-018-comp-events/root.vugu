@@ -1,0 +1,15 @@
+<div id="top">
+    <main:Thing @Click='c.ShowText = fmt.Sprintf("%#v",event)'></main:Thing>
+    <div vg-if="len(c.ShowText)>0" id="show_text" vg-html="html.EscapeString(c.ShowText)"></div>
+</div>
+
+<script type="application/x-go">
+
+import "html"
+import "fmt"
+
+type Root struct {
+    ShowText string `vugu:"data"`
+}
+
+</script>
