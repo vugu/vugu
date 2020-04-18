@@ -22,13 +22,11 @@ func NewDOMEvent(eventEnv EventEnv, eventSummary map[string]interface{}) *DOMEve
 // and this struct should implement it and become unexported.  This will help make
 // DOM events and component events similar and consistent.
 type DOMEvent struct {
-	// jsEvent     js.Value
-	// jsEventThis js.Value
-
 	eventSummary map[string]interface{}
 
 	eventEnv EventEnv // from the renderer
 
+	// TODO: yeah but why? this does not need to be here
 	window js.Value // sure, why not
 }
 
