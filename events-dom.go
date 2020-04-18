@@ -21,6 +21,7 @@ func NewDOMEvent(eventEnv EventEnv, eventSummary map[string]interface{}) *DOMEve
 // FIXME: DOMEvent should be an interface (and thus get passed around without a pointer)
 // and this struct should implement it and become unexported.  This will help make
 // DOM events and component events similar and consistent.
+// It might actually makes sense to move this into the domrender package.
 type DOMEvent struct {
 	eventSummary map[string]interface{}
 

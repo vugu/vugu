@@ -48,6 +48,8 @@ type VGProperty struct {
 }
 
 // VGNode represents a node from our virtual DOM with the dynamic parts wired up into functions.
+// TODO: This and its related parts should probably move into a sub-package (vgnode?) and
+// the "VG" prefixes removed.
 type VGNode struct {
 	Parent, FirstChild, LastChild, PrevSibling, NextSibling *VGNode
 
