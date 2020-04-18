@@ -899,8 +899,10 @@ func (p *ParserGo) visitNodeComponentElement(state *parseGoState, n *html.Node) 
 
 	// x.Y or just Y depending on if in same package
 	typeExpr := strings.Join(nodeNameParts, ".")
+	pkgPrefix := nodeNameParts[0] + "." // needed so we can calc pkg name for pkg.WhateverEvent
 	if nodeNameParts[0] == p.PackageName {
 		typeExpr = nodeNameParts[1]
+		pkgPrefix = ""
 	}
 
 	compKeyID := compHashCounted(p.StructType + "." + n.OrigData)
@@ -965,14 +967,15 @@ func (p *ParserGo) visitNodeComponentElement(state *parseGoState, n *html.Node) 
 	}
 
 	// component events
+	// NOTE: We keep component events really simple and the @ is just a thin wrapper around a field assignment:
+	//     <pkg:Comp @Something="log.Println(event)"></pkg:Comp>
+	// is shorthand for:
+	//     <pkg:Comp :Something='func(event pkg.SomethingEvent) { log.Println(event) }'></pkg:Comp>
+
 	eventMap, eventKeys := vgEventExprs(n)
 	for _, k := range eventKeys {
 		expr := eventMap[k]
-		fmt.Fprintf(&state.buildBuf, "vgn.DOMEventHandlerSpecList = append(vgn.DOMEventHandlerSpecList, vugu.DOMEventHandlerSpec{\n")
-		fmt.Fprintf(&state.buildBuf, "EventType: %q,\n", k)
-		fmt.Fprintf(&state.buildBuf, "Func: func(event *vugu.DOMEvent) { %s },\n", expr)
-		fmt.Fprintf(&state.buildBuf, "// TODO: implement capture, etc. mostly need to decide syntax\n")
-		fmt.Fprintf(&state.buildBuf, "})\n")
+		fmt.Fprintf(&state.buildBuf, "vgcomp.%s = func(event %s%sEvent){%s}\n", k, pkgPrefix, k, expr)
 	}
 
 	// TODO: slots
