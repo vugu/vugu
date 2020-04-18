@@ -18,6 +18,9 @@ func NewDOMEvent(eventEnv EventEnv, eventSummary map[string]interface{}) *DOMEve
 // DOMEvent is an event originated in the browser.  It wraps the JS event that comes in.
 // It is meant to be used in WebAssembly but some methods exist here so code can compile
 // server-side as well (although DOMEvents should not ever be generated server-side).
+// FIXME: DOMEvent should be an interface (and thus get passed around without a pointer)
+// and this struct should implement it and become unexported.  This will help make
+// DOM events and component events similar and consistent.
 type DOMEvent struct {
 	// jsEvent     js.Value
 	// jsEventThis js.Value
