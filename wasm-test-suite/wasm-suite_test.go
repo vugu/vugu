@@ -22,8 +22,6 @@ import (
 
 func Test001Simple(t *testing.T) {
 
-	assert := assert.New(t)
-
 	dir, origDir := mustUseDir("test-001-simple")
 	defer os.Chdir(origDir)
 	mustGen(dir)
@@ -31,16 +29,39 @@ func Test001Simple(t *testing.T) {
 	ctx, cancel := mustChromeCtx()
 	defer cancel()
 
-	var t1, t2 string
-	must(chromedp.Run(ctx,
-		chromedp.Navigate("http://localhost:8846"+pathSuffix),
-		// chromedp.WaitVisible("#testing"),
-		chromedp.InnerHTML("#t1", &t1), // NOTE: InnerHTML will wait until the element exists before returning
-		chromedp.InnerHTML("#t2", &t2),
-	))
+	cases := []struct {
+		id       string
+		expected string
+	}{
+		{"t0", "t0text"},
+		{"t1", "t1text"},
+		{"t2", "t2text"},
+		{"t3", "&amp;amp;"},
+		{"t4", "&amp;"},
+		{"t5", "false"},
+		{"t6", "10"},
+		{"t7", "20.000000"},
+		{"t8", ""},
+		{"t9", "S-HERE:blah"},
+	}
 
-	assert.Equal("t1text", strings.TrimSpace(t1))
-	assert.Equal("t2text", strings.TrimSpace(t2))
+	tout := make([]string, len(cases))
+
+	log.Printf("URL: http://localhost:8846%s", pathSuffix)
+	actions := []chromedp.Action{chromedp.Navigate("http://localhost:8846" + pathSuffix)}
+	for i, c := range cases {
+		actions = append(actions, chromedp.InnerHTML("#"+c.id, &tout[i]))
+	}
+
+	must(chromedp.Run(ctx, actions...))
+
+	for i, c := range cases {
+		i, c := i, c
+		t.Run(c.id, func(t *testing.T) {
+			assert := assert.New(t)
+			assert.Equal(c.expected, tout[i])
+		})
+	}
 
 }
 
@@ -155,7 +176,7 @@ func Test006Issue81(t *testing.T) {
 	pathSuffix := mustBuildAndLoad(dir)
 	ctx, cancel := mustChromeCtx()
 	defer cancel()
-	// log.Printf("pathSuffix = %s", pathSuffix)
+	log.Printf("URL: %s", "http://localhost:8846"+pathSuffix)
 
 	must(chromedp.Run(ctx,
 		chromedp.Navigate("http://localhost:8846"+pathSuffix),

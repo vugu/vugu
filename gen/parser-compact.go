@@ -76,8 +76,9 @@ func compactNodeTree(rootN *html.Node) error {
 					}
 				}
 
-				// add a vg-html with the static Go string expression of the contents
-				cn.Attr = append(cn.Attr, html.Attribute{Key: "vg-html", Val: htmlGoQuoteString(htmlBuf.String())})
+				// add a vg-html with the static Go string expression of the contents casted to a vugu.HTML
+				cn.Attr = append(cn.Attr, html.Attribute{Key: "vg-html", Val: "vugu.HTML(" + htmlGoQuoteString(htmlBuf.String()) + ")"})
+				// cn.Attr = append(cn.Attr, html.Attribute{Key: "vg-html", Val: htmlGoQuoteString(htmlBuf.String())})
 
 				// remove children, since vg-html supplants them
 				cn.FirstChild = nil

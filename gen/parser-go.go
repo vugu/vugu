@@ -760,7 +760,7 @@ func (p *ParserGo) visitNodeJustElement(state *parseGoState, n *html.Node) error
 	// vg-html
 	htmlExpr := vgHTMLExpr(n)
 	if htmlExpr != "" {
-		fmt.Fprintf(&state.buildBuf, "{\nvghtml := fmt.Sprint(%s); \nvgn.InnerHTML = &vghtml\n}\n", htmlExpr)
+		fmt.Fprintf(&state.buildBuf, "vgn.SetInnerHTML(%s)\n", htmlExpr)
 	}
 
 	// DOM events

@@ -136,39 +136,21 @@ func vgForExpr(n *html.Node) (vgForAttr, error) {
 	return vgForAttr{}, nil
 }
 
-// func vgForExprx(n *htmlx.Node) string {
-// 	for _, a := range n.Attr {
-// 		if a.Key == "vg-for" {
-
-// 			v := strings.TrimSpace(a.Val)
-
-// 			if !strings.Contains(v, " ") { // make it so `w` is a shorthand for `key, value := range w`
-// 				v = "key, value := range " + v
-// 			}
-
-// 			return v
-// 		}
-// 	}
-// 	return ""
-// }
-
 func vgHTMLExpr(n *html.Node) string {
 	for _, a := range n.Attr {
+		// vg-html and vg-content are the same thing,
+		// the name vg-content was introduced to call out
+		// the difference between Vue's v-html attribute
+		// which does not perform escaping.
 		if a.Key == "vg-html" {
+			return a.Val
+		}
+		if a.Key == "vg-content" {
 			return a.Val
 		}
 	}
 	return ""
 }
-
-// func vgHTMLExprx(n *htmlx.Node) string {
-// 	for _, a := range n.Attr {
-// 		if a.Key == "vg-html" {
-// 			return a.Val
-// 		}
-// 	}
-// 	return ""
-// }
 
 // extract ":attr" stuff from a node
 func dynamicVGAttrExpr(n *html.Node) (ret map[string]string, retKeys []string) {

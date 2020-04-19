@@ -5,14 +5,13 @@
     >
     <button id="the_button" @click="c.handleButtonClick(event)">A button here</button>
     <div id="log" vg-if="len(c.Log)>0">
-        <div :id='fmt.Sprintf("log_%d",k)' vg-for='k, v := range c.Log' vg-html='html.EscapeString(v)'></div>
+        <div :id='fmt.Sprintf("log_%d",k)' vg-for='k, v := range c.Log' vg-html='v'></div>
     </div>
 </div>
 
 <script type="application/x-go">
 
 import "log"
-import "html"
 
 type Thing struct {
     Log []string `vugu:"data"`

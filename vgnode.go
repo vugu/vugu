@@ -2,6 +2,7 @@ package vugu
 
 import (
 	"fmt"
+	"html"
 	"reflect"
 	"strconv"
 
@@ -223,7 +224,7 @@ func (n *VGNode) AddAttrInterface(key string, val interface{}) {
 		nattr.Val = key
 	case fmt.Stringer:
 		// we have to check that the given interface does not hide a nil ptr
-		if reflect.ValueOf(val).IsNil() {
+		if p := reflect.ValueOf(val); p.Kind() == reflect.Ptr && p.IsNil() {
 			return
 		}
 		nattr.Val = v.String()
@@ -250,6 +251,88 @@ func (n *VGNode) AddAttrList(lister VGAttributeLister) {
 	for _, attr := range lister.AttributeList() {
 		n.Attr = append(n.Attr, attr)
 	}
+}
+
+// SetInnerHTML assigns the InnerHTML field with useful logic based on the type of input.
+// Values of string type are escaped using html.EscapeString().  Values in the
+// int or float type families or bool are converted to a string using the strconv package
+// (no escaping is required).  Nil values set InnerHTML to nil.  Non-nil pointers
+// are followed and the same rules applied.  Values implementing HTMLer will have their
+// HTML() method called and the result put into InnerHTML without escaping.
+// Values implementing fmt.Stringer have thier String() method called and the escaped result
+// used as in string above.
+//
+// All other values have undefined behavior but are currently handled by setting InnerHTML
+// to the result of: `html.EscapeString(fmt.Sprintf("%v", val))`
+func (n *VGNode) SetInnerHTML(val interface{}) {
+
+	var s string
+
+	if val == nil {
+		n.InnerHTML = nil
+		return
+	}
+
+	switch v := val.(type) {
+	case string:
+		s = html.EscapeString(v)
+	case int:
+		s = strconv.Itoa(v)
+	case int8:
+		s = strconv.Itoa(int(v))
+	case int16:
+		s = strconv.Itoa(int(v))
+	case int32:
+		s = strconv.Itoa(int(v))
+	case int64:
+		s = strconv.FormatInt(v, 10)
+	case uint:
+		s = strconv.FormatUint(uint64(v), 10)
+	case uint8:
+		s = strconv.FormatUint(uint64(v), 10)
+	case uint16:
+		s = strconv.FormatUint(uint64(v), 10)
+	case uint32:
+		s = strconv.FormatUint(uint64(v), 10)
+	case uint64:
+		s = strconv.FormatUint(v, 10)
+	case float32:
+		s = strconv.FormatFloat(float64(v), 'f', 6, 32)
+	case float64:
+		s = strconv.FormatFloat(v, 'f', 6, 64)
+	case bool:
+		// I don't see any use in making false result in no output in this case.
+		// I'm guessing if someone puts a bool in vg-content/vg-html
+		// they are expecting it to print out the text "true" or "false".
+		// It's different from AddAttrInterface but I think appropriate here.
+		s = strconv.FormatBool(v)
+
+	case HTMLer:
+		s = v.HTML()
+
+	case fmt.Stringer:
+		// we have to check that the given interface does not hide a nil ptr
+		if p := reflect.ValueOf(val); p.Kind() == reflect.Ptr && p.IsNil() {
+			n.InnerHTML = nil
+			return
+		}
+		s = html.EscapeString(v.String())
+	default:
+		// check if this is a ptr
+		rv := reflect.ValueOf(val)
+		if rv.Kind() == reflect.Ptr {
+			// indirect the ptr and recurse
+			if !rv.IsZero() {
+				n.SetInnerHTML(reflect.Indirect(rv).Interface())
+			}
+			return
+		}
+
+		// fall back to fmt
+		s = html.EscapeString(fmt.Sprintf("%v", val))
+	}
+
+	n.InnerHTML = &s
 }
 
 // JSValueHandler does something with a js.Value
