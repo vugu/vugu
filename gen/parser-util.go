@@ -20,9 +20,9 @@ import (
 
 func attrFromHtml(attr html.Attribute) vugu.VGAttribute {
 	return vugu.VGAttribute{
-		Namespace:    attr.Namespace,
-		Key:          attr.OrigKey,
-		Val:          attr.Val,
+		Namespace: attr.Namespace,
+		Key:       attr.OrigKey,
+		Val:       attr.Val,
 	}
 }
 
@@ -339,4 +339,5 @@ func dedupAstFileImports(f *ast.File) {
 
 	}
 	f.Decls = outdecls
+
 }

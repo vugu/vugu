@@ -10,7 +10,7 @@ import (
 
 func TestMerge(t *testing.T) {
 
-	debug := false
+	debug := true
 
 	type tcase struct {
 		name    string
@@ -53,19 +53,19 @@ func TestMerge(t *testing.T) {
 				"out.go": {`(?ms)import "fmt".*import "fmt"`},
 			},
 		},
-		// { // FIXME: this definitely needs to be sorted out
-		// 	name: "import-dedup-2",
-		// 	infiles: map[string]string{
-		// 		"file1.go": "package main\nimport \"fmt\"\n// main comment here\nfunc main(){}",
-		// 		"file2.go": "package main\nimport \"fmt\"\nimport \"log\"\nvar a string // a comment here\n",
-		// 	},
-		// 	out: map[string][]string{
-		// 		"out.go": {`import "fmt"`, `import "log"`},
-		// 	},
-		// 	outNot: map[string][]string{
-		// 		"out.go": {`(?ms)\}.*import "log"`},
-		// 	},
-		// },
+		{
+			name: "import-dedup-2",
+			infiles: map[string]string{
+				"file1.go": "package main\nimport \"fmt\"\n// main comment here\nfunc main(){}",
+				"file2.go": "package main\nimport \"fmt\"\nimport \"log\"\nvar a string // a comment here\n",
+			},
+			out: map[string][]string{
+				"out.go": {`import "fmt"`, `import "log"`},
+			},
+			outNot: map[string][]string{
+				"out.go": {`(?ms)\}.*import "log"`},
+			},
+		},
 	}
 
 	for _, tc := range tcList {

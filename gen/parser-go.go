@@ -971,14 +971,30 @@ func (p *ParserGo) visitNodeComponentElement(state *parseGoState, n *html.Node) 
 	//     <pkg:Comp @Something="log.Println(event)"></pkg:Comp>
 	// is shorthand for:
 	//     <pkg:Comp :Something='func(event pkg.SomethingEvent) { log.Println(event) }'></pkg:Comp>
+	//
+	// I considered using the handler interface function approach for this, but it would mean
+	// SomethingHandlerFunc would have to exist as a type, with a SomethingHandle method, which
+	// implements a SomethingHandler interface, so the type of Comp.Something could be SomethingHandler,
+	// and the emitted code could be vgcomp.Something = pkg.SomethingHandlerFunc(func...)
+	// But that's two additional types and a method for every event.  I'm very concerned that it will
+	// make component events feel crufty and arduous to implement (unless we could find a good way
+	// to automatically generate those when missing - that's a possibility - actually I think
+	// I'm going to try this, see https://github.com/vugu/vugu/issues/128).
+	// But this this way with a func you can just do
+	// type SomethingEvent struct { /* whatever relevant data */ } and then define your field on
+	// your component as Something func(SomethingEvent) - still type-safe but very straightforward.
+	// So far it seems like the best approach.
 
 	eventMap, eventKeys := vgEventExprs(n)
 	for _, k := range eventKeys {
 		expr := eventMap[k]
 		fmt.Fprintf(&state.buildBuf, "vgcomp.%s = func(event %s%sEvent){%s}\n", k, pkgPrefix, k, expr)
+		// TODO: switch to using interfaces
+		// fmt.Fprintf(&state.buildBuf, "vgcomp.%s = %s%sHandlerFunc(func(event %s%sEvent){%s})\n", k, pkgPrefix, k, pkgPrefix, k, expr)
 	}
 
 	// TODO: slots
+	// NOTE: vugugen:slot might come in really handy, have to work out the types involved
 
 	fmt.Fprintf(&state.buildBuf, "vgout.Components = append(vgout.Components, vgcomp)\n")
 	fmt.Fprintf(&state.buildBuf, "vgn = &vugu.VGNode{Component:vgcomp}\n")

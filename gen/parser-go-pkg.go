@@ -127,27 +127,6 @@ func (p *ParserGoPkg) Opts() ParserGoPkgOpts {
 // Per-file code generation is performed by ParserGo.
 func (p *ParserGoPkg) Run() error {
 
-	// vugugen path/to/package
-
-	// comp-name.vugu
-	// comp-name.go
-	// tag is "comp-name"
-	// component type is CompName
-	// component data type is CompNameData
-	// register unless disabled
-	// create CompName if it doesn't exist in the package
-	// create CompNameData if it doesn't exist in the package
-	// create CompName.NewData with defaults if it doesn't exist in the package
-
-	// how about a default main_wasm.go if one doesn't exist in the package? would be really useful!
-	// also go.mod
-
-	// flags:
-	// * component registration
-	// * skip generating go.mod
-
-	// --
-
 	// record the times of existing files, so we can restore after if the same
 	hashTimes, err := fileHashTimes(p.pkgPath)
 	if err != nil {
@@ -192,12 +171,17 @@ func (p *ParserGoPkg) Run() error {
 		mergeSingleName = p.opts.MergeSingleName
 	}
 
+	missingFmap := make(map[string]string, len(vuguFileNames))
+
 	// run ParserGo on each file to generate the .go files
 	for _, fn := range vuguFileNames {
 
 		baseFileName := strings.TrimSuffix(fn, ".vugu")
 		goFileName := baseFileName + goFnameAppend + ".go"
 		compTypeName := fnameToGoTypeName(baseFileName)
+
+		// keep track of which files to scan for missing structs
+		missingFmap[fn] = goFileName
 
 		mergeFiles = append(mergeFiles, goFileName)
 
@@ -356,54 +340,68 @@ func main() {
 		os.Remove(filepath.Join(p.pkgPath, mergeSingleName))
 	}
 
-	for _, fn := range vuguFileNames {
+	// for _, fn := range vuguFileNames {
 
-		goFileName := strings.TrimSuffix(fn, ".vugu") + goFnameAppend + ".go"
-		goFilePath := filepath.Join(p.pkgPath, goFileName)
+	// 	goFileName := strings.TrimSuffix(fn, ".vugu") + goFnameAppend + ".go"
+	// 	goFilePath := filepath.Join(p.pkgPath, goFileName)
 
-		err := func() error {
-			// get ready to append to file
-			f, err := os.OpenFile(goFilePath, os.O_WRONLY|os.O_APPEND, 0644)
-			if err != nil {
-				return err
-			}
-			defer f.Close()
+	// 	err := func() error {
+	// 		// get ready to append to file
+	// 		f, err := os.OpenFile(goFilePath, os.O_WRONLY|os.O_APPEND, 0644)
+	// 		if err != nil {
+	// 			return err
+	// 		}
+	// 		defer f.Close()
 
-			// TODO: would be nice to clean this up and get a better grip on how we do this filename -> struct name mapping, but this works for now
-			compTypeName := fnameToGoTypeName(strings.TrimSuffix(goFileName, goFnameAppend+".go"))
+	// 		// TODO: would be nice to clean this up and get a better grip on how we do this filename -> struct name mapping, but this works for now
+	// 		compTypeName := fnameToGoTypeName(strings.TrimSuffix(goFileName, goFnameAppend+".go"))
 
-			// create CompName struct if it doesn't exist in the package
-			if _, ok := namesFound[compTypeName]; !ok {
-				fmt.Fprintf(f, "\ntype %s struct {}\n", compTypeName)
-			}
+	// 		// create CompName struct if it doesn't exist in the package
+	// 		if _, ok := namesFound[compTypeName]; !ok {
+	// 			fmt.Fprintf(f, "\ntype %s struct {}\n", compTypeName)
+	// 		}
 
-			// // create CompNameData struct if it doesn't exist in the package
-			// if _, ok := namesFound[compTypeName+"Data"]; !ok {
-			// 	fmt.Fprintf(f, "\ntype %s struct {}\n", compTypeName+"Data")
-			// }
+	// 		// // create CompNameData struct if it doesn't exist in the package
+	// 		// if _, ok := namesFound[compTypeName+"Data"]; !ok {
+	// 		// 	fmt.Fprintf(f, "\ntype %s struct {}\n", compTypeName+"Data")
+	// 		// }
 
-			// create CompName.NewData with defaults if it doesn't exist in the package
-			// if _, ok := namesFound[compTypeName+".NewData"]; !ok {
-			// 	fmt.Fprintf(f, "\nfunc (ct *%s) NewData(props vugu.Props) (interface{}, error) { return &%s{}, nil }\n",
-			// 		compTypeName, compTypeName+"Data")
-			// }
+	// 		// create CompName.NewData with defaults if it doesn't exist in the package
+	// 		// if _, ok := namesFound[compTypeName+".NewData"]; !ok {
+	// 		// 	fmt.Fprintf(f, "\nfunc (ct *%s) NewData(props vugu.Props) (interface{}, error) { return &%s{}, nil }\n",
+	// 		// 		compTypeName, compTypeName+"Data")
+	// 		// }
 
-			// // register component unless disabled - nope, no more component registry
-			// if !p.opts.SkipRegisterComponentTypes && !fileHasInitFunc(goFilePath) {
-			// 	fmt.Fprintf(f, "\nfunc init() { vugu.RegisterComponentType(%q, &%s{}) }\n", strings.TrimSuffix(goFileName, ".go"), compTypeName)
-			// }
+	// 		// // register component unless disabled - nope, no more component registry
+	// 		// if !p.opts.SkipRegisterComponentTypes && !fileHasInitFunc(goFilePath) {
+	// 		// 	fmt.Fprintf(f, "\nfunc init() { vugu.RegisterComponentType(%q, &%s{}) }\n", strings.TrimSuffix(goFileName, ".go"), compTypeName)
+	// 		// }
 
-			return nil
-		}()
-		if err != nil {
-			return err
-		}
+	// 		return nil
+	// 	}()
+	// 	if err != nil {
+	// 		return err
+	// 	}
 
+	// }
+
+	// generate anything missing and process vugugen comments
+	mf := newMissingFixer(p.pkgPath, pkgName, missingFmap)
+	err = mf.run()
+	if err != nil {
+		return fmt.Errorf("missing fixer error: %w", err)
 	}
 
 	// if requested, do merge
 	if p.opts.MergeSingle {
-		err := mergeGoFiles(p.pkgPath, mergeSingleName, mergeFiles...)
+
+		// if a missing fix file was produced include it in the list to be merged
+		_, err := os.Stat(filepath.Join(p.pkgPath, "0_missing_vgen.go"))
+		if err == nil {
+			mergeFiles = append(mergeFiles, "0_missing_vgen.go")
+		}
+
+		err = mergeGoFiles(p.pkgPath, mergeSingleName, mergeFiles...)
 		if err != nil {
 			return err
 		}

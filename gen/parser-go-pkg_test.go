@@ -45,6 +45,9 @@ func TestSimpleParseGoPkgRun(t *testing.T) {
 		t.Errorf("failed to find Build method signature")
 	}
 
+	b, err = ioutil.ReadFile(filepath.Join(tmpDir, "0_missing_vgen.go"))
+	assert.NoError(err)
+
 	if !bytes.Contains(b, []byte(`type Root struct`)) {
 		t.Errorf("failed to find Root struct definition")
 	}
@@ -82,7 +85,8 @@ func TestRun(t *testing.T) {
 				"main.go":   "package main\nfunc main(){}",
 			},
 			out: map[string][]string{
-				"root_vgen.go": {`func \(c \*Root\) Build`, `type Root struct`},
+				"root_vgen.go":      {`func \(c \*Root\) Build`},
+				"0_missing_vgen.go": {`type Root struct`},
 			},
 			build: "default",
 		},
@@ -95,7 +99,8 @@ func TestRun(t *testing.T) {
 				"go.mod":    "module testcase\nreplace github.com/vugu/vugu => " + pwd + "\n",
 			},
 			out: map[string][]string{
-				"root_vgen.go": {`func \(c \*Root\) Build`, `type Root struct`},
+				"root_vgen.go":      {`func \(c \*Root\) Build`},
+				"0_missing_vgen.go": {`type Root struct`},
 			},
 			build: "wasm",
 		},
@@ -110,7 +115,8 @@ func TestRun(t *testing.T) {
 				"subdir1/example.vugu": "<div>Example Here</div>",
 			},
 			out: map[string][]string{
-				"root_vgen.go":            {`func \(c \*Root\) Build`, `type Root struct`, `root here`},
+				"root_vgen.go":            {`func \(c \*Root\) Build`, `root here`},
+				"0_missing_vgen.go":       {`type Root struct`},
 				"subdir1/example_vgen.go": {`Example Here`},
 			},
 			build: "default",
@@ -126,7 +132,9 @@ func TestRun(t *testing.T) {
 				"subdir1/example.vugu": "<div>Example Here</div>",
 			},
 			out: map[string][]string{
-				"0_components_vgen.go":         {`func \(c \*Root\) Build`, `type Root struct`, `root here`},
+				// "0_components_vgen.go":         {`func \(c \*Root\) Build`, `root here`},
+				// "0_missing_vgen.go":            {`type Root struct`},
+				"0_components_vgen.go":         {`func \(c \*Root\) Build`, `type Root struct`},
 				"subdir1/0_components_vgen.go": {`Example Here`},
 				"root.vugu":                    {`root here`}, // make sure vugu files didn't get nuked
 				"subdir1/example.vugu":         {`Example Here`},
@@ -150,7 +158,6 @@ func TestRun(t *testing.T) {
 			if debug {
 				t.Logf("Test %q using tmpDir: %s", tc.name, tmpDir)
 			} else {
-				defer os.RemoveAll(tmpDir)
 				t.Parallel()
 			}
 
@@ -216,6 +223,11 @@ func TestRun(t *testing.T) {
 
 			default:
 				t.Errorf("unknown build value %q", tc.build)
+			}
+
+			// only if everthing is golden do we remove
+			if !t.Failed() {
+				os.RemoveAll(tmpDir)
 			}
 
 		})
