@@ -5,14 +5,16 @@
 <script type="application/x-go">
 
 type Thing struct {
-    Click func(ClickEvent)
+    Click ClickHandler
 }
 
 func (c *Thing) HandleButtonClick(event *vugu.DOMEvent) {
     if c.Click != nil {
-        c.Click(ClickEvent{DOMEvent:event})
+        c.Click.ClickHandle(ClickEvent{DOMEvent:event})
     }
 }
+
+//vugugen:event Click
 
 type ClickEvent struct {
     *vugu.DOMEvent

@@ -988,9 +988,9 @@ func (p *ParserGo) visitNodeComponentElement(state *parseGoState, n *html.Node) 
 	eventMap, eventKeys := vgEventExprs(n)
 	for _, k := range eventKeys {
 		expr := eventMap[k]
-		fmt.Fprintf(&state.buildBuf, "vgcomp.%s = func(event %s%sEvent){%s}\n", k, pkgPrefix, k, expr)
-		// TODO: switch to using interfaces
-		// fmt.Fprintf(&state.buildBuf, "vgcomp.%s = %s%sHandlerFunc(func(event %s%sEvent){%s})\n", k, pkgPrefix, k, pkgPrefix, k, expr)
+		// fmt.Fprintf(&state.buildBuf, "vgcomp.%s = func(event %s%sEvent){%s}\n", k, pkgPrefix, k, expr)
+		// switched to using interfaces
+		fmt.Fprintf(&state.buildBuf, "vgcomp.%s = %s%sFunc(func(event %s%sEvent){%s})\n", k, pkgPrefix, k, pkgPrefix, k, expr)
 	}
 
 	// TODO: slots

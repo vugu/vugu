@@ -167,7 +167,7 @@ type %s struct {}
 				}
 
 				// check for NameEvent
-				decl := findTypeDecl(&fset, pkg, eventName)
+				decl := findTypeDecl(&fset, pkg, eventName+"Event")
 
 				// emit type if missing as a struct wrapper around a DOMEvent
 				if decl == nil {
