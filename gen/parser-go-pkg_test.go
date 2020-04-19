@@ -132,8 +132,6 @@ func TestRun(t *testing.T) {
 				"subdir1/example.vugu": "<div>Example Here</div>",
 			},
 			out: map[string][]string{
-				// "0_components_vgen.go":         {`func \(c \*Root\) Build`, `root here`},
-				// "0_missing_vgen.go":            {`type Root struct`},
 				"0_components_vgen.go":         {`func \(c \*Root\) Build`, `type Root struct`},
 				"subdir1/0_components_vgen.go": {`Example Here`},
 				"root.vugu":                    {`root here`}, // make sure vugu files didn't get nuked
@@ -141,6 +139,21 @@ func TestRun(t *testing.T) {
 			},
 			afterRun: func(dir string, t *testing.T) {
 				noFile(filepath.Join(dir, "subdir1/example_vgen.go"), t)
+			},
+			build: "default",
+		},
+		{
+			name:      "events",
+			opts:      ParserGoPkgOpts{},
+			recursive: false,
+			infiles: map[string]string{
+				"root.vugu": `<div>root here</div>`,
+				"go.mod":    "module testcase\nreplace github.com/vugu/vugu => " + pwd + "\n",
+				"main.go":   "package main\nfunc main(){}\n\n//vugugen:event Sample\n",
+			},
+			out: map[string][]string{
+				"root_vgen.go":      {`func \(c \*Root\) Build`},
+				"0_missing_vgen.go": {`type Root struct`, `SampleEvent`, `SampleHandler`, `SampleFunc`},
 			},
 			build: "default",
 		},

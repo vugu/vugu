@@ -239,11 +239,16 @@ func (mf *missingFixer) createOutfile() (*os.File, error) {
 
 // readVugugenComments will look in every .go file for a //vugugen: comment
 // and return a map with file name keys and a slice of the comments found as the values.
+// vugugen comment lines that are exactly identical will be deduplicated (even across files)
+// as it will never be correct to generate two of the same thing in one package
 func readVugugenComments(pkgPath string) (map[string][]string, error) {
 	fis, err := ioutil.ReadDir(pkgPath)
 	if err != nil {
 		return nil, err
 	}
+
+	foundLines := make(map[string]bool)
+
 	ret := make(map[string][]string, len(fis))
 	for _, fi := range fis {
 		if fi.IsDir() {
@@ -267,7 +272,9 @@ func readVugugenComments(pkgPath string) (map[string][]string, error) {
 		for {
 			line, err := br.ReadBytes('\n')
 			if err == io.EOF {
-				break
+				if len(line) == 0 {
+					break
+				}
 			} else if err != nil {
 				return ret, fmt.Errorf("missingFixer error while reading %s: %w", bname, err)
 			}
@@ -277,7 +284,13 @@ func readVugugenComments(pkgPath string) (map[string][]string, error) {
 			if !bytes.HasPrefix(line, pfx) {
 				continue
 			}
-			fc = append(fc, string(line))
+			// and not be a duplicate
+			lineStr := string(line)
+			if foundLines[lineStr] {
+				continue
+			}
+			foundLines[lineStr] = true
+			fc = append(fc, lineStr)
 		}
 
 		if fc != nil {

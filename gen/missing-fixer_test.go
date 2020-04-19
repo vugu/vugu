@@ -31,7 +31,7 @@ func TestMissingFixer(t *testing.T) {
 	vuguAbs, _ := filepath.Abs("..")
 
 	must(ioutil.WriteFile(filepath.Join(tmpDir, "go.mod"), []byte("module missingfixertest\n\nreplace github.com/vugu/vugu => "+vuguAbs+"\n"), 0644))
-	must(ioutil.WriteFile(filepath.Join(tmpDir, "events.go"), []byte("package main\n\n//vugugen:event Something\n//vugugen:event SomeOtherThing interface"), 0644))
+	must(ioutil.WriteFile(filepath.Join(tmpDir, "events.go"), []byte("package main\n\n//vugugen:event Something\n//vugugen:event SomeOtherThing\n//vugugen:event SomeOtherThing\n"), 0644))
 	must(ioutil.WriteFile(filepath.Join(tmpDir, "root.vugu"), []byte("<div>root</div>"), 0644))
 	must(ioutil.WriteFile(filepath.Join(tmpDir, "root_vgen.go"), []byte("package main\n\nimport \"github.com/vugu/vugu\"\n\nfunc (c *Root)Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {return nil}"), 0644))
 	// a second component that does include it's own struct definition
