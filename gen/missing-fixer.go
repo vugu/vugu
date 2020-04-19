@@ -11,6 +11,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"unicode"
 )
@@ -122,10 +123,19 @@ type %s struct {}
 		}
 	}
 
-	// for each file with vugugen comments
+	gcommentFnames := make([]string, 0, len(gcomments))
 	for fname := range gcomments {
+		gcommentFnames = append(gcommentFnames, fname)
+	}
+	sort.Strings(gcommentFnames) // try to get deterministic output
 
-		for _, c := range gcomments[fname] {
+	// for each file with vugugen comments
+	for _, fname := range gcommentFnames {
+
+		commentList := gcomments[fname]
+		sort.Strings(commentList) // try to get deterministic output
+
+		for _, c := range commentList {
 
 			c := strings.TrimSpace(c)
 			c = strings.TrimPrefix(c, "//vugugen:")

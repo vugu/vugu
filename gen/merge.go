@@ -12,6 +12,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 )
 
@@ -23,6 +24,8 @@ func mergeGoFiles(dir, out string, in ...string) error {
 	var pkgClause string
 	var importBlocks []string
 	var otherBlocks []string
+
+	sort.Strings(in) // try to get deterministic output
 
 	// read and split each go file
 	for _, fname := range in {
