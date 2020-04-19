@@ -747,6 +747,9 @@ func (p *ParserGo) visitNodeJustElement(state *parseGoState, n *html.Node) error
 	// dynamic attrs
 	writeDynamicAttributes(state, n)
 
+	// vg-js-*
+	writeJSCallbackAttributes(state, n)
+
 	// js properties
 	propExprMap, propExprMapKeys := propVGAttrExpr(n)
 	for _, k := range propExprMapKeys {
@@ -1130,5 +1133,18 @@ func writeDynamicAttributes(state *parseGoState, n *html.Node) {
 		} else {
 			fmt.Fprintf(&state.buildBuf, "vgn.AddAttrInterface(%q,%s)\n", k, valExpr)
 		}
+	}
+}
+
+// writeJSCallbackAttributes handles vg-js-create and vg-js-populate
+func writeJSCallbackAttributes(state *parseGoState, n *html.Node) {
+	m := jsCallbackVGAttrExpr(n)
+	createStmt := m["vg-js-create"]
+	if createStmt != "" {
+		fmt.Fprintf(&state.buildBuf, "vgn.JSCreateHandler = vugu.JSValueFunc(func(value js.Value) { %s })\n", createStmt)
+	}
+	populateStmt := m["vg-js-populate"]
+	if populateStmt != "" {
+		fmt.Fprintf(&state.buildBuf, "vgn.JSPopulateHandler = vugu.JSValueFunc(func(value js.Value) { %s })\n", populateStmt)
 	}
 }

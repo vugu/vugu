@@ -43,6 +43,9 @@
     const opcodeSetAttrNSStr = 38 // assign attribute string to the current selected namespaced element
     const opcodeSetElementNS = 39 // assign current selected node as an element of the specified type in the specified namespace
 
+    const opcodeCallback = 40 // issue callback, sends just callbackID
+    const opcodeCallbackLastElement = 41 // issue callback with callbackID and most recent element reference
+
     // Decoder provides our binary decoding.
     // Using a class because that's what all the cool JS kids are doing these days.
     class Decoder {
@@ -69,7 +72,15 @@
             return ret;
         }
 
-        // readString is 4 bytes length followed by utf chars
+        // readUint32 reads a 32-bit unsigned int and returns it as a regular number
+        readUint32() {
+            // getUint32 returns a regular JS number
+            var ret = this.dataView.getUint32(this.offset);
+            this.offset += 4;
+            return ret;
+        }
+
+        // readString is 4 bytes length followed by utf-8 chars
         readString() {
             var len = this.dataView.getUint32(this.offset);
             var ret = utf8decoder.decode(new DataView(this.dataView.buffer, this.dataView.byteOffset + this.offset + 4, len));
@@ -119,10 +130,18 @@
     //     state.eventHandlerFunc = eventHandlerFunc;
     // }
 
+    // function called when DOM events happen
     window.vuguSetEventHandler = function (eventHandlerFunc) {
         let state = window.vuguState || {};
         window.vuguState = state;
         state.eventHandlerFunc = eventHandlerFunc;
+    }
+
+    // function called when callback instructions are encountered
+    window.vuguSetCallbackHandler = function (callbackHandlerFunc) {
+        let state = window.vuguState || {};
+        window.vuguState = state;
+        state.callbackHandlerFunc = callbackHandlerFunc;
     }
 
     window.vuguGetRenderArray = function () {
@@ -921,6 +940,25 @@
 
                         state.elCSSTagsSet = null; // clear this out so it gets reinitialized the next time opcodeSetCSSTag or this opcode is used
 
+                        break;
+                    }
+
+                    case opcodeCallbackLastElement: {
+                        let callbackID = decoder.readUint32();
+                        let el = state.el;
+                        if (!el) {
+                            throw "opcodeCallbackLastElement: no current reference";
+                        }
+                        // this.console.log("got opcodeCallbackLastElement, ", callbackID);
+                        state.callbackHandlerFunc(callbackID, el);
+                        break;
+                    }
+
+                    case opcodeCallback: {
+                        let callbackID = decoder.readUint32();
+                        // this.console.log("got opcodeCallback, ", callbackID);
+                        // this.console.log("state.callbackHandlerFunc ", state.callbackHandlerFunc);
+                        state.callbackHandlerFunc(callbackID);
                         break;
                     }
 

@@ -40,10 +40,11 @@ func staticVGAttr(inAttr []html.Attribute) (ret []vugu.VGAttribute) {
 
 	for _, a := range inAttr {
 		switch {
-		case a.Key == "vg-if":
-		case a.Key == "vg-for":
-		case a.Key == "vg-key":
-		case a.Key == "vg-html":
+		// case a.Key == "vg-if":
+		// case a.Key == "vg-for":
+		// case a.Key == "vg-key":
+		// case a.Key == "vg-html":
+		case strings.HasPrefix(a.Key, "vg-"):
 		case strings.HasPrefix(a.Key, "."):
 		case strings.HasPrefix(a.Key, ":"):
 		case strings.HasPrefix(a.Key, "@"):
@@ -216,6 +217,19 @@ func propVGAttrExpr(n *html.Node) (ret map[string]string, retKeys []string) {
 	}
 	sort.Strings(retKeys)
 	return
+}
+
+// returns vg-js-create and vg-js-populate
+func jsCallbackVGAttrExpr(n *html.Node) (ret map[string]string) {
+	for _, attr := range n.Attr {
+		if strings.HasPrefix(attr.OrigKey, "vg-js-") {
+			if ret == nil {
+				ret = make(map[string]string, 2)
+			}
+			ret[attr.OrigKey] = attr.Val
+		}
+	}
+	return ret
 }
 
 func vgDOMEventExprs(n *html.Node) (ret map[string]string, retKeys []string) {

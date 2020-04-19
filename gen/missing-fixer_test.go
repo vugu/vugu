@@ -61,7 +61,7 @@ func TestMissingFixer(t *testing.T) {
 
 	b, err := ioutil.ReadFile(filepath.Join(tmpDir, "0_missing_vgen.go"))
 	must(err)
-	t.Logf("0_missing_vgen result:\n%s", b)
+	t.Logf("0_missing_vgen.go result:\n%s", b)
 	s := string(b)
 	checks := []string{
 		"type Root struct",

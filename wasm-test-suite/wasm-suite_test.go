@@ -569,6 +569,50 @@ func Test018CompEvents(t *testing.T) {
 
 }
 
+func Test019JSCreatePopulate(t *testing.T) {
+
+	assert := assert.New(t)
+
+	dir, origDir := mustUseDir("test-019-js-create-populate")
+	defer os.Chdir(origDir)
+	mustGen(dir)
+	pathSuffix := mustBuildAndLoad(dir)
+	ctx, cancel := mustChromeCtx()
+	defer cancel()
+
+	log.Printf("URL: %s", "http://localhost:8846"+pathSuffix)
+
+	var logText string
+	must(chromedp.Run(ctx,
+		chromedp.Navigate("http://localhost:8846"+pathSuffix),
+		chromedp.WaitVisible("#the_button"), // make sure things showed up
+		chromedp.Click("#the_button"),       // click the button
+		chromedp.WaitVisible("#log"),        // wait for the log to show up
+		chromedp.Click("#the_button"),       // click the button again
+		chromedp.WaitVisible("#log_7"),      // wait for all of the log entries to show
+		chromedp.Text(`#log`, &logText, chromedp.NodeVisible, chromedp.ByID),
+	))
+	// t.Logf("logText=%s", logText)
+	logLines := strings.Split(logText, "\n")
+
+	// vg-js-create first pass
+	assert.Equal("vg-js-create className thing", strings.TrimSpace(logLines[0]))
+	assert.Equal("vg-js-create firstElementChild <null>", strings.TrimSpace(logLines[1]))
+
+	// vg-js-populate first pass
+	assert.Equal("vg-js-populate className thing", strings.TrimSpace(logLines[2]))
+	assert.Equal("vg-js-populate firstElementChild <object>", strings.TrimSpace(logLines[3]))
+
+	// vg-js-create second pass
+	assert.Equal("vg-js-create className thing", strings.TrimSpace(logLines[4]))
+	assert.Equal("vg-js-create firstElementChild <object>", strings.TrimSpace(logLines[5]))
+
+	// vg-js-populate second pass
+	assert.Equal("vg-js-populate className thing", strings.TrimSpace(logLines[6]))
+	assert.Equal("vg-js-populate firstElementChild <object>", strings.TrimSpace(logLines[7]))
+
+}
+
 func Test100TinygoSimple(t *testing.T) {
 
 	// TODO: This is work in progress - it does actually compile but needs some more work to

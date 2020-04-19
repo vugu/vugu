@@ -57,6 +57,10 @@ const (
 
 	opcodeSetAttrNSStr uint8 = 38 // assign attribute string to the current selected namespaced element
 	opcodeSetElementNS uint8 = 39 // assign current selected node as an element of the specified type in the specified namespace
+
+	opcodeCallback            uint8 = 40 // issue callback, sends just callbackID
+	opcodeCallbackLastElement uint8 = 41 // issue callback with callbackID and most recent element reference
+
 )
 
 // newInstructionList will create a new instance backed by the specified slice and with a clearBufFunc
@@ -495,9 +499,44 @@ func (il *instructionList) writeSetProperty(key string, jsonValue []byte) error 
 	return nil
 }
 
+func (il *instructionList) writeCallback(callbackID uint32) error {
+
+	size := 5
+
+	err := il.checkLenAndFlush(size)
+	if err != nil {
+		return err
+	}
+
+	il.writeValUint8(opcodeCallback)
+	il.writeValUint32(callbackID)
+
+	return nil
+}
+
+func (il *instructionList) writeCallbackLastElement(callbackID uint32) error {
+
+	size := 5
+
+	err := il.checkLenAndFlush(size)
+	if err != nil {
+		return err
+	}
+
+	il.writeValUint8(opcodeCallbackLastElement)
+	il.writeValUint32(callbackID)
+
+	return nil
+}
+
 func (il *instructionList) writeValUint8(b uint8) {
 	il.buf[il.pos] = b
 	il.pos++
+}
+
+func (il *instructionList) writeValUint32(v uint32) {
+	binary.BigEndian.PutUint32(il.buf[il.pos:il.pos+4], v)
+	il.pos += 4
 }
 
 func (il *instructionList) writeValUint64(ref uint64) {
