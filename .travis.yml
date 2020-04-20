@@ -19,6 +19,7 @@ script:
   - go test ./domrender
   - go test ./staticrender
   - go test ./simplehttp
+  - go test ./vgform
   - go test ./wasm-test-suite
   - go install ./cmd/vugugen
 
