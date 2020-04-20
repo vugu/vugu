@@ -66,7 +66,7 @@ console.log("Some script here");
 
 	err = ioutil.WriteFile(filepath.Join(tmpDir, "comp1.vugu"), []byte(`<span>
 comp1 in the house
-<div vg-html='"<p>Some <strong>nested</strong> craziness</p>"'></div>
+<div vg-content='vugu.HTML("<p>Some <strong>nested</strong> craziness</p>")'></div>
 </span>`), 0644)
 	if err != nil {
 		t.Fatal(err)
