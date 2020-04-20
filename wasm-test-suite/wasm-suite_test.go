@@ -634,6 +634,28 @@ func Test019JSCreatePopulate(t *testing.T) {
 
 }
 
+func Test020VGForm(t *testing.T) {
+
+	// assert := assert.New(t)
+
+	dir, origDir := mustUseDir("test-020-vgform")
+	defer os.Chdir(origDir)
+	mustGen(dir)
+	pathSuffix := mustBuildAndLoad(dir)
+	ctx, cancel := mustChromeCtx()
+	defer cancel()
+
+	log.Printf("URL: %s", "http://localhost:8846"+pathSuffix)
+
+	must(chromedp.Run(ctx,
+		chromedp.Navigate("http://localhost:8846"+pathSuffix),
+		chromedp.WaitVisible("#food_group_value"), // make sure things showed up
+		chromedp.SendKeys(`#food_group`, "Butterfinger Group"),
+		WaitInnerTextTrimEq("#food_group_value", "butterfinger_group"),
+	))
+
+}
+
 func Test100TinygoSimple(t *testing.T) {
 
 	// TODO: This is work in progress - it does actually compile but needs some more work to

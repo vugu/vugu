@@ -1,0 +1,27 @@
+<div id="top">
+
+    <form>
+        <div class="form-group">
+            <label for="food_group">Select a Food Group</label>
+            <vgform:Select id="food_group" class="form-control" 
+                :Value='vgform.StringPtrDefault(&c.FoodGroup, "jungle_group")'
+                :Options='vgform.SliceOptions{"sandwich_group","cow_group","jungle_group","butterfinger_group"}.Title()'
+                ></vgform:Select>
+        </div>
+    </form>
+
+    <div>
+        Your choice: <span id="food_group_value" vg-content='c.FoodGroup'></span>
+    </div>
+
+</div>
+
+<script type="application/x-go">
+
+import "github.com/vugu/vugu/vgform"
+
+type Root struct {
+    FoodGroup string
+}
+
+</script>
