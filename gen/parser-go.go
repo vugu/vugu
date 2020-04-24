@@ -1056,6 +1056,16 @@ func (p *ParserGo) visitNodeComponentElement(state *parseGoState, n *html.Node) 
 	// TODO: slots
 	// NOTE: vugugen:slot might come in really handy, have to work out the types involved
 
+	// loop over all component children
+	// ignore whitespace
+	// first non-slot, non-ws child, assume "DefaultSlot" (or whatever name) and consume rest of children
+	// if vg-slot, then consume with specified name
+	// <vg-slot name="SomeSlot"> <!-- field name syntax
+	// <vg-slot name='SomeDynaSlot' index='"Row.FirstName"'> <!-- expression syntax, HM, NO
+	// <vg-slot index='SomeDynaSlot["Row.FirstName"]'> <!-- maybe this - still annoying that we have to limit it to a map expression, but whatever
+	// emit vgcomp.SlotName = vugu.NewBuilderFunc(func(vgin *vugu.BuildIn) (vgout *BuildOut, vgerr error) { ... })
+	// and descend into children
+
 	fmt.Fprintf(&state.buildBuf, "vgout.Components = append(vgout.Components, vgcomp)\n")
 	fmt.Fprintf(&state.buildBuf, "vgn = &vugu.VGNode{Component:vgcomp}\n")
 	fmt.Fprintf(&state.buildBuf, "vgparent.AppendChild(vgn)\n")
