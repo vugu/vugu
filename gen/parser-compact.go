@@ -27,7 +27,8 @@ func compactNodeTree(rootN *html.Node) error {
 		// certain tags we just refuse to examine at all
 		if n.Type == html.ElementNode && (n.Data == "head" ||
 			n.Data == "script" ||
-			n.Data == "style") {
+			n.Data == "style" ||
+			strings.HasPrefix(n.Data, "vg-")) {
 			return false, nil
 		}
 

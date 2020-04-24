@@ -406,6 +406,32 @@ func (r *JSRenderer) visitSyncNode(state *jsRenderState, bo *vugu.BuildOut, br *
 		return r.visitSyncNode(state, compBuildOut, br, compBuildOut.Out[0], positionID)
 	}
 
+	// check for template in which case we process the children directly and ignore n
+	if n.IsTemplate() {
+
+		// even though we're not emitting n and are skipping to the children instead,
+		// it shouldn't hurt to change the position ID as if they were children -
+		// trying this to see if we run into any issues
+		childIndex := 1
+		for nchild := n.FirstChild; nchild != nil; nchild = nchild.NextSibling {
+
+			childPositionID := append(positionID, []byte(fmt.Sprintf("_%d", childIndex))...)
+
+			err = r.visitSyncNode(state, bo, br, nchild, childPositionID)
+			if err != nil {
+				return err
+			}
+			err = r.instructionList.writeMoveToNextSibling()
+			if err != nil {
+				return err
+			}
+			childIndex++
+		}
+
+		// element is fully handled
+		return nil
+	}
+
 	switch n.Type {
 	case vugu.ElementNode:
 		// check if this element has a namespace set

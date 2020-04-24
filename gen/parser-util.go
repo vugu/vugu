@@ -56,23 +56,14 @@ func staticVGAttr(inAttr []html.Attribute) (ret []vugu.VGAttribute) {
 	return ret
 }
 
-// func staticVGAttrx(inAttr []htmlx.Attribute) (ret []vugu.VGAttribute) {
-
-// 	for _, a := range inAttr {
-// 		switch {
-// 		case a.Key == "vg-if":
-// 		case a.Key == "vg-for":
-// 		case a.Key == "vg-html":
-// 		case strings.HasPrefix(a.Key, "."):
-// 		case strings.HasPrefix(a.Key, ":"):
-// 		case strings.HasPrefix(a.Key, "@"):
-// 		default:
-// 			ret = append(ret, attrFromHtmlx(a))
-// 		}
-// 	}
-
-// 	return ret
-// }
+func vgVarExpr(n *html.Node) string {
+	for _, a := range n.Attr {
+		if a.Key == "vg-var" {
+			return a.Val
+		}
+	}
+	return ""
+}
 
 func vgIfExpr(n *html.Node) string {
 	for _, a := range n.Attr {

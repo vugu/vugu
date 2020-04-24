@@ -18,6 +18,7 @@ import (
 	// "golang.org/x/net/html/atom"
 	"github.com/vugu/html"
 	"github.com/vugu/html/atom"
+	"github.com/vugu/vugu"
 )
 
 // ParserGo is a template parser that emits Go source code that will construct the appropriately wired VGNodes.
@@ -811,6 +812,8 @@ func (p *ParserGo) visitDefaultByType(state *parseGoState, n *html.Node) error {
 			err = p.visitNodeComponentElement(state, n)
 		} else if n.Data == "vg-comp" {
 			err = p.visitVGCompTag(state, n)
+		} else if n.Data == "vg-template" {
+			err = p.visitVGTemplateTag(state, n)
 		} else {
 			err = p.visitNodeElementAndCtrl(state, n)
 		}
@@ -874,6 +877,50 @@ func (p *ParserGo) visitVGCompTag(state *parseGoState, n *html.Node) error {
 	return nil
 }
 
+// visitVGTemplateTag handles vg-template
+func (p *ParserGo) visitVGTemplateTag(state *parseGoState, n *html.Node) error {
+
+	// vg-for
+	if v, _ := vgForExpr(n); v.expr != "" {
+		if err := p.emitForExpr(state, n); err != nil {
+			return err
+		}
+		defer fmt.Fprintf(&state.buildBuf, "}\n")
+	}
+
+	// vg-if
+	ife := vgIfExpr(n)
+	if ife != "" {
+		fmt.Fprintf(&state.buildBuf, "if %s {\n", ife)
+		defer fmt.Fprintf(&state.buildBuf, "}\n")
+	}
+
+	// output a node with type Element but empty data
+	fmt.Fprintf(&state.buildBuf, "vgn = &vugu.VGNode{Type:vugu.VGNodeType(%d)} // <vg-template>\n", vugu.ElementNode)
+	fmt.Fprintf(&state.buildBuf, "vgparent.AppendChild(vgn)\n")
+
+	// and then only process children
+	if n.FirstChild != nil {
+
+		fmt.Fprintf(&state.buildBuf, "{\n")
+		fmt.Fprintf(&state.buildBuf, "vgparent := vgn; _ = vgparent\n") // vgparent set for this block to vgn
+
+		// iterate over children
+		for childN := n.FirstChild; childN != nil; childN = childN.NextSibling {
+
+			err := p.visitDefaultByType(state, childN)
+			if err != nil {
+				return err
+			}
+		}
+
+		fmt.Fprintf(&state.buildBuf, "}\n")
+
+	}
+
+	return nil
+}
+
 // visitNodeComponentElement handles an element that is a call to a component
 func (p *ParserGo) visitNodeComponentElement(state *parseGoState, n *html.Node) error {
 
@@ -927,6 +974,16 @@ func (p *ParserGo) visitNodeComponentElement(state *parseGoState, n *html.Node) 
 	fmt.Fprintf(&state.buildBuf, "vgin.BuildEnv.WireComponent(vgcomp)\n")
 	fmt.Fprintf(&state.buildBuf, "}\n")
 	fmt.Fprintf(&state.buildBuf, "vgin.BuildEnv.UseComponent(vgcompKey, vgcomp) // ensure we can use this in the cache next time around\n")
+
+	// now that we have vgcomp with the right type and a correct value, we can declare the vg-var if specified
+	if vgv := vgVarExpr(n); vgv != "" {
+		fmt.Fprintf(&state.buildBuf, "var %s = vgcomp // vg-var\n", vgv)
+
+		// NOTE: It's a bit too much to have "unused variable" errors coming from a Vugu code-generated file,
+		// too far off the beaten path of making "type-safe HTML templates with Go".  It makes sense with
+		// hand-written Go code but I don't think so here.
+		fmt.Fprintf(&state.buildBuf, "_ = %s\n", vgv) // avoid unused var error
+	}
 
 	didAttrMap := false
 

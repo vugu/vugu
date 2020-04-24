@@ -1,0 +1,9 @@
+<div>
+
+    <p>Some root stuff here</p>
+
+    <div id="tmplparent"><vg-template>simple template test</vg-template></div>
+
+    <main:MyDataTable vg-var="mydt"></main:MyDataTable>
+
+</div>

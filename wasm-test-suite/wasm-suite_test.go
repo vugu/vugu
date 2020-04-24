@@ -2,9 +2,11 @@ package main
 
 import (
 	"context"
+	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -653,6 +655,38 @@ func Test020VGForm(t *testing.T) {
 		chromedp.SendKeys(`#food_group`, "Butterfinger Group"),
 		WaitInnerTextTrimEq("#food_group_value", "butterfinger_group"),
 	))
+
+}
+
+func Test021Slots(t *testing.T) {
+
+	// assert := assert.New(t)
+
+	dir, origDir := mustUseDir("test-021-slots")
+	defer os.Chdir(origDir)
+	mustGen(dir)
+	pathSuffix := mustBuildAndLoad(dir)
+	ctx, cancel := mustChromeCtx()
+	defer cancel()
+
+	log.Printf("URL: %s", "http://localhost:8846"+pathSuffix)
+
+	var tmplparentInnerHTML string
+	must(chromedp.Run(ctx,
+		chromedp.Navigate("http://localhost:8846"+pathSuffix),
+		chromedp.WaitVisible("#tmplparent"), // make sure things showed up
+		chromedp.InnerHTML("#tmplparent", &tmplparentInnerHTML),
+	))
+
+	if tmplparentInnerHTML != "simple template test" {
+		t.Errorf("tmplparent did not have expected innerHTML, instead got: %s", tmplparentInnerHTML)
+	}
+
+	rootvgengo, err := ioutil.ReadFile(filepath.Join(dir, "root_vgen.go"))
+	must(err)
+	if !regexp.MustCompile(`var mydt `).Match(rootvgengo) {
+		t.Errorf("missing vg-var reference in root_vgen.go")
+	}
 
 }
 

@@ -7,15 +7,6 @@ import (
 	"github.com/vugu/xxhash"
 )
 
-// // Env specifies the common methods for environment implementations.
-// // See JSEnv and StaticHtmlEnv for implementations.
-// type Env interface {
-// 	RegisterComponentType(tagName string, ct ComponentType)
-// 	Render() error
-// }
-
-// func NewBuildEnv(root Builder) (*BuildEnv, error) {
-
 // NewBuildEnv returns a newly initialized BuildEnv.
 func NewBuildEnv() (*BuildEnv, error) {
 	return &BuildEnv{}, nil
@@ -38,11 +29,6 @@ type BuildEnv struct {
 
 	// new build output from this build pass (becomes buildCache next build pass)
 	buildResults map[buildCacheKey]*BuildOut
-
-	// nodePositionHashMap map[*VGNode]uint64
-
-	// root Builder // FIXME: does this even belong here?  BuildEnv keeps track of components created but why does it need a reference to the root component?
-
 }
 
 // BuildResults contains the BuildOut values for full tree of components built.
