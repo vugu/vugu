@@ -27,7 +27,7 @@ func (c *Textarea) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 	}
 	vgn.DOMEventHandlerSpecList = append(vgn.DOMEventHandlerSpecList, vugu.DOMEventHandlerSpec{
 		EventType:	"change",
-		Func:		func(event *vugu.DOMEvent) { c.handleChange(event) },
+		Func:		func(event vugu.DOMEvent) { c.handleChange(event) },
 		// TODO: implement capture, etc. mostly need to decide syntax
 	})
 	return vgout

@@ -28,7 +28,7 @@ type bpi struct {
 
 var c Root
 
-func (c *Root) HandleClick(event *vugu.DOMEvent) {
+func (c *Root) HandleClick(event vugu.DOMEvent) {
 
     c.bpi = bpi{}
 

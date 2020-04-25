@@ -771,7 +771,7 @@ func (p *ParserGo) visitNodeJustElement(state *parseGoState, n *html.Node) error
 		expr := eventMap[k]
 		fmt.Fprintf(&state.buildBuf, "vgn.DOMEventHandlerSpecList = append(vgn.DOMEventHandlerSpecList, vugu.DOMEventHandlerSpec{\n")
 		fmt.Fprintf(&state.buildBuf, "EventType: %q,\n", k)
-		fmt.Fprintf(&state.buildBuf, "Func: func(event *vugu.DOMEvent) { %s },\n", expr)
+		fmt.Fprintf(&state.buildBuf, "Func: func(event vugu.DOMEvent) { %s },\n", expr)
 		fmt.Fprintf(&state.buildBuf, "// TODO: implement capture, etc. mostly need to decide syntax\n")
 		fmt.Fprintf(&state.buildBuf, "})\n")
 	}

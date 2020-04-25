@@ -12,7 +12,7 @@ type Root struct {
     Success bool
 }
 
-func (c *Root) OnClickRun(event *vugu.DOMEvent, n int) {
+func (c *Root) OnClickRun(event vugu.DOMEvent, n int) {
     c.Success = !c.Success
     c.Something += n
 }

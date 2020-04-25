@@ -98,7 +98,7 @@ func (c *Select) handlePopulate() {
 
 }
 
-func (c *Select) handleChange(event *vugu.DOMEvent) {
+func (c *Select) handleChange(event vugu.DOMEvent) {
 
 	newVal := event.PropString("target", "value")
 	c.curVal = newVal // why not

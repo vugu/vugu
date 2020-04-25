@@ -36,7 +36,7 @@ func (c *Thing) handleJSPopulate(value js.Value) {
     c.Log = append(c.Log, fmt.Sprintf("vg-js-populate firstElementChild %v", value.Get("firstElementChild")))
 }
 
-func (c *Thing) handleButtonClick(event *vugu.DOMEvent) {
+func (c *Thing) handleButtonClick(event vugu.DOMEvent) {
 }
 
 

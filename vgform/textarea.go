@@ -8,7 +8,7 @@ type Textarea struct {
 	AttrMap vugu.AttrMap
 }
 
-func (c *Textarea) handleChange(event *vugu.DOMEvent) {
+func (c *Textarea) handleChange(event vugu.DOMEvent) {
 
 	newVal := event.PropString("target", "value")
 	// c.curVal = newVal // why not

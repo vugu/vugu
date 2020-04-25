@@ -15,7 +15,7 @@ type Root struct {
     ActiveView string `vugu:"data"`
 }
 
-func (c *Root) SwitchView(event *vugu.DOMEvent, viewname string) {
+func (c *Root) SwitchView(event vugu.DOMEvent, viewname string) {
     fmt.Println("switching to "+viewname)
     go func() {
         ee := event.EventEnv()

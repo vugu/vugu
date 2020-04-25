@@ -14,7 +14,7 @@ type Input struct {
 	AttrMap vugu.AttrMap
 }
 
-func (c *Input) handleChange(event *vugu.DOMEvent) {
+func (c *Input) handleChange(event vugu.DOMEvent) {
 
 	newVal := event.PropString("target", "value")
 	// c.curVal = newVal // why not

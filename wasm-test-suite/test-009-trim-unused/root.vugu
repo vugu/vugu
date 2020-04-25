@@ -18,7 +18,7 @@ type Root struct {
     Numbers []string `vugu:"data"`
 }
 
-func (c *Root) Make(cnt int, event *vugu.DOMEvent) {
+func (c *Root) Make(cnt int, event vugu.DOMEvent) {
         event.PreventDefault()	
 	go func() {        
 		ee := event.EventEnv()

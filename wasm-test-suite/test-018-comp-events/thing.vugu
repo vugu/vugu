@@ -8,7 +8,7 @@ type Thing struct {
     Click ClickHandler
 }
 
-func (c *Thing) HandleButtonClick(event *vugu.DOMEvent) {
+func (c *Thing) HandleButtonClick(event vugu.DOMEvent) {
     if c.Click != nil {
         c.Click.ClickHandle(ClickEvent{DOMEvent:event})
     }
@@ -17,7 +17,7 @@ func (c *Thing) HandleButtonClick(event *vugu.DOMEvent) {
 //vugugen:event Click
 
 type ClickEvent struct {
-    *vugu.DOMEvent
+    vugu.DOMEvent
 }
 
 </script>

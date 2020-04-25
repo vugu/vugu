@@ -641,7 +641,7 @@ func (r *JSRenderer) handleDOMEvent() {
 
 	r.eventRWMU.Lock()
 	handlers := r.jsRenderState.domHandlerMap[eventDetail.PositionID]
-	var f func(*vugu.DOMEvent)
+	var f func(vugu.DOMEvent)
 	for _, h := range handlers {
 		if h.EventType == eventDetail.EventType && h.Capture == eventDetail.Capture {
 			f = h.Func
