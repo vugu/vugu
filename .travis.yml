@@ -14,14 +14,17 @@ env:
   - GO111MODULE=on
 
 script:
+  - go install ./cmd/vugugen
   - go test .
-  - go test ./gen
+  - go test ./devutil
+  - go test ./distutil
   - go test ./domrender
+  - go test ./gen
+  - go test ./js
   - go test ./staticrender
   - go test ./simplehttp
   - go test ./vgform
   - go test ./wasm-test-suite
-  - go install ./cmd/vugugen
 
 notifications:
   email: true
