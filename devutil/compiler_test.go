@@ -21,7 +21,6 @@ func TestWasmCompiler(t *testing.T) {
 	wc := NewWasmCompiler().SetBuildDir(tmpDir)
 
 	must(ioutil.WriteFile(filepath.Join(tmpDir, "go.mod"), []byte(`module TestWasmCompiler
-replace github.com/vugu/vugu => ../
 `), 0644))
 
 	// just build
@@ -74,6 +73,9 @@ func main() { ioutil.WriteFile("./other.go", []byte("package main\nvar other = 1
 	t.Logf("Using temporary dir: %s", tmpDir)
 	wc = NewWasmCompiler().SetBuildDir(tmpDir)
 	var h http.Handler
+
+	must(ioutil.WriteFile(filepath.Join(tmpDir, "go.mod"), []byte(`module TestWasmCompiler
+`), 0644))
 
 	// main wasm handler without error
 	must(ioutil.WriteFile(filepath.Join(tmpDir, "main.go"), []byte(`package main
