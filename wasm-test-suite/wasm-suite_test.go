@@ -676,6 +676,8 @@ func Test021Slots(t *testing.T) {
 		chromedp.Navigate("http://localhost:8846"+pathSuffix),
 		chromedp.WaitVisible("#tmplparent"), // make sure things showed up
 		chromedp.InnerHTML("#tmplparent", &tmplparentInnerHTML),
+		WaitInnerTextTrimEq("#table2 #another_slot", "another slot"),
+		WaitInnerTextTrimEq("#table2 #mapidx_slot", "mapidx slot"),
 	))
 
 	if tmplparentInnerHTML != "simple template test" {

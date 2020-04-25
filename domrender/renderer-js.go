@@ -57,6 +57,9 @@ func New(mountPointSelector string) (*JSRenderer, error) {
 		return nil
 	})
 
+	// enable debug logging
+	// ret.instructionList.logWriter = os.Stdout
+
 	ret.eventHandlerBuffer = make([]byte, 16384)
 	// ret.eventHandlerTypedArray = js.TypedArrayOf(ret.eventHandlerBuffer)
 
@@ -406,25 +409,29 @@ func (r *JSRenderer) visitSyncNode(state *jsRenderState, bo *vugu.BuildOut, br *
 		return r.visitSyncNode(state, compBuildOut, br, compBuildOut.Out[0], positionID)
 	}
 
-	// check for template in which case we process the children directly and ignore n
+	// check for template (used by vg-template and vg-slot) in which case we process the children directly and ignore n
 	if n.IsTemplate() {
 
-		// even though we're not emitting n and are skipping to the children instead,
-		// it shouldn't hurt to change the position ID as if they were children -
-		// trying this to see if we run into any issues
 		childIndex := 1
 		for nchild := n.FirstChild; nchild != nil; nchild = nchild.NextSibling {
 
-			childPositionID := append(positionID, []byte(fmt.Sprintf("_%d", childIndex))...)
+			// use a different character here for the position to ensure it's unique
+			childPositionID := append(positionID, []byte(fmt.Sprintf("_t_%d", childIndex))...)
 
 			err = r.visitSyncNode(state, bo, br, nchild, childPositionID)
 			if err != nil {
 				return err
 			}
-			err = r.instructionList.writeMoveToNextSibling()
-			if err != nil {
-				return err
+
+			// if there are more children, advance to the next
+			if nchild.NextSibling != nil {
+				err = r.instructionList.writeMoveToNextSibling()
+				if err != nil {
+					return err
+				}
+
 			}
+
 			childIndex++
 		}
 
@@ -497,6 +504,7 @@ func (r *JSRenderer) visitSyncElementEtc(state *jsRenderState, bo *vugu.BuildOut
 			if err != nil {
 				return err
 			}
+			// log.Printf("GOT HERE X: %#v", n)
 			err = r.instructionList.writeMoveToNextSibling()
 			if err != nil {
 				return err

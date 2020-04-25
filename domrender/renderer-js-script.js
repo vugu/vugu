@@ -46,6 +46,8 @@
     const opcodeCallback = 40 // issue callback, sends just callbackID
     const opcodeCallbackLastElement = 41 // issue callback with callbackID and most recent element reference
 
+    /*DEBUG OPCODE STRINGS*/
+
     // Decoder provides our binary decoding.
     // Using a class because that's what all the cool JS kids are doing these days.
     class Decoder {
@@ -213,8 +215,7 @@
 
             try {
 
-                // console.log("processing opcode", opcode);
-                // console.log("test_span_id: ", document.querySelector("#test_span_id"));
+                /*DEBUG*/ console.log("processing opcode", opcode, "("+textOpcodes[opcode]+")");
 
                 switch (opcode) {
 
@@ -235,12 +236,14 @@
                         }
                         let propName = decoder.readString();
                         let propValueJSON = decoder.readString();
+                        /*DEBUG*/ console.log("opcodeSetProperty", propName, propValueJSON);
                         el[propName] = JSON.parse(propValueJSON);
                         break;
                     }
 
                     case opcodeSelectQuery: {
                         let selector = decoder.readString();
+                        /*DEBUG*/ console.log("opcodeSelectQuery", selector);
                         state.el = document.querySelector(selector);
                         state.nextElMove = null;
                         break;
@@ -253,6 +256,7 @@
                         }
                         let attrName = decoder.readString();
                         let attrValue = decoder.readString();
+                        /*DEBUG*/ console.log("opcodeSetAttrStr", attrName, attrValue);
                         el.setAttribute(attrName, attrValue);
                         state.elAttrNames[attrName] = true;
                         // console.log("setting attr", attrName, attrValue, el)
@@ -270,6 +274,7 @@
                         }
                         let attrName = decoder.readString();
                         let attrValue = decoder.readString();
+                        /*DEBUG*/ console.log("opcodeSetAttrNSStr", attrNamespace, attrName, attrValue);
                         el.setAttributeNS(attrNamespace, attrName, attrValue);
                         state.elAttrNames[attrName] = true;
                         // console.log("setting attr", attrName, attrValue, el)
@@ -284,6 +289,9 @@
                         // select mount point using selector or if it was done earlier re-use the one from before
                         let selector = decoder.readString();
                         let nodeName = decoder.readString();
+
+                        /*DEBUG*/ console.log("opcodeSelectMountPoint", selector, nodeName);
+
                         // console.log("GOT HERE selector,nodeName = ", selector, nodeName);
                         // console.log("state.mountPointEl", state.mountPointEl);
                         if (state.mountPointEl) {
@@ -434,10 +442,7 @@
 
                         let nodeName = decoder.readString();
 
-                        // this.console.log("opcodeSetElement for ",
-                        //     "nodeName=", nodeName, 
-                        //     ", state.el=", state.el, 
-                        //     ", state.nextElMove=", state.nextElMove);
+                        /*DEBUG*/ console.log("opcodeSetElement", nodeName);
 
                         state.elAttrNames = {};
                         state.elEventKeys = {};
@@ -494,6 +499,8 @@
                         let nodeName = decoder.readString();
                         let namespace = decoder.readString();
 
+                        /*DEBUG*/ console.log("opcodeSetElementNS", nodeName, namespace);
+
                         state.elAttrNames = {};
                         state.elEventKeys = {};
 
@@ -548,6 +555,8 @@
                     case opcodeSetText: {
 
                         let content = decoder.readString();
+
+                        /*DEBUG*/ console.log("opcodeSetText", content);
 
                         // this.console.log("opcodeSetText:", content);
 
@@ -611,6 +620,8 @@
 
                         let content = decoder.readString();
 
+                        /*DEBUG*/ console.log("opcodeSetComment", content);
+
                         // handle nextElMove cases
 
                         if (state.nextElMove == "first_child") {
@@ -667,6 +678,9 @@
                     case opcodeSetInnerHTML: {
 
                         let html = decoder.readString();
+
+                        /*DEBUG*/ console.log("opcodeSetInnerHTML", html);
+
                         // this.console.log("opcodeSetInnerHTML:", html);
 
                         if (!state.el) {
@@ -687,9 +701,10 @@
 
                     // remove all event listeners from currently selected element that were not just set
                     case opcodeRemoveOtherEventListeners: {
-                        // this.console.log("opcodeRemoveOtherEventListeners");
 
                         let positionID = decoder.readString();
+
+                        /*DEBUG*/ console.log("opcodeRemoveOtherEventListeners", positionID);
 
                         // look at all registered events for this positionID
                         let emap = state.eventHandlerMap[positionID] || {};
@@ -726,6 +741,8 @@
                         let eventType = decoder.readString();
                         let capture = decoder.readUint8();
                         let passive = decoder.readUint8();
+
+                        /*DEBUG*/ console.log("opcodeSetEventListener", positionID, eventType, capture, passive);
 
                         if (!state.el) {
                             throw "must have state.el set in order to call opcodeSetEventListener";
@@ -845,6 +862,10 @@
                         let elementName = decoder.readString();
                         let textContent = decoder.readString();
                         let attrPairsLen = decoder.readUint8();
+
+
+                        /*DEBUG*/ console.log("opcodeSetCSSTag", elementName, textContent, attrPairsLen);
+
                         if (attrPairsLen % 2 != 0) {
                             throw "attrPairsLen is odd number: " + attrPairsLen;
                         }
@@ -853,6 +874,7 @@
                         for (let i = 0; i < attrPairsLen; i += 2) {
                             let key = decoder.readString();
                             let val = decoder.readString();
+                            /*DEBUG*/ console.log("opcodeSetCSSTag attr", key, val);
                             attrMap[key] = val;
                         }
 
@@ -916,7 +938,7 @@
                     }
                     case opcodeRemoveOtherCSSTags: {
 
-                        // this.console.log("got opcodeRemoveOtherCSSTags");
+                        /*DEBUG*/ console.log("opcodeRemoveOtherCSSTags");
 
                         // any link or style tag in doc that has vuguCreated==true and is not in css tags set map gets removed
 
@@ -945,6 +967,9 @@
 
                     case opcodeCallbackLastElement: {
                         let callbackID = decoder.readUint32();
+
+                        /*DEBUG*/ console.log("opcodeCallbackLastElement", callbackID);
+
                         let el = state.el;
                         if (!el) {
                             throw "opcodeCallbackLastElement: no current reference";
@@ -956,8 +981,9 @@
 
                     case opcodeCallback: {
                         let callbackID = decoder.readUint32();
-                        // this.console.log("got opcodeCallback, ", callbackID);
-                        // this.console.log("state.callbackHandlerFunc ", state.callbackHandlerFunc);
+
+                        /*DEBUG*/ console.log("opcodeCallback", callbackID);
+
                         state.callbackHandlerFunc(callbackID);
                         break;
                     }

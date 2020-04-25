@@ -151,11 +151,22 @@ type Builder interface {
 	Build(in *BuildIn) (out *BuildOut)
 }
 
-// BuilderFunc is a Build-like function that implements Builder.
-type BuilderFunc func(in *BuildIn) (out *BuildOut)
+// builderFunc is a Build-like function that implements Builder.
+type builderFunc func(in *BuildIn) (out *BuildOut)
 
 // Build implements Builder.
-func (f BuilderFunc) Build(in *BuildIn) (out *BuildOut) { return f(in) }
+func (f builderFunc) Build(in *BuildIn) (out *BuildOut) { return f(in) }
+
+// NewBuilderFunc returns a Builder from a function that is called for Build.
+func NewBuilderFunc(f func(in *BuildIn) (out *BuildOut)) Builder {
+	// NOTE: for now, all components have to be struct pointers, so we wrap
+	// this function in a struct pointer.  Would be nice to fix this at some point.
+	return &struct {
+		Builder
+	}{
+		Builder: builderFunc(f),
+	}
+}
 
 // BeforeBuilder can be implemented by components that need a chance to compute internal values
 // after properties have been set but before Build is called.

@@ -56,6 +56,15 @@ func staticVGAttr(inAttr []html.Attribute) (ret []vugu.VGAttribute) {
 	return ret
 }
 
+func vgSlotName(n *html.Node) string {
+	for _, a := range n.Attr {
+		if a.Key == "name" {
+			return a.Val
+		}
+	}
+	return ""
+}
+
 func vgVarExpr(n *html.Node) string {
 	for _, a := range n.Attr {
 		if a.Key == "vg-var" {

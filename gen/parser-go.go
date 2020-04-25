@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sort"
 	"strings"
 	"unicode"
 
@@ -1053,10 +1054,165 @@ func (p *ParserGo) visitNodeComponentElement(state *parseGoState, n *html.Node) 
 		fmt.Fprintf(&state.buildBuf, "vgcomp.%s = %s%sFunc(func(event %s%sEvent){%s})\n", k, pkgPrefix, k, pkgPrefix, k, expr)
 	}
 
-	// TODO: slots
-	// NOTE: vugugen:slot might come in really handy, have to work out the types involved
+	// NOTE: vugugen:slot might come in really handy, have to work out the types involved - update: as it stands, this won't be needed.
 
-	// loop over all component children
+	// slots:
+
+	// scan children and see if it's default slot mode or vg-slot tags
+	foundTagSlot, foundDefSlot := false, false
+	var foundTagSlotNames []string
+	for childN := n.FirstChild; childN != nil; childN = childN.NextSibling {
+
+		// non-ws text means default slot
+		if childN.Type == html.TextNode {
+			if strings.TrimSpace(childN.Data) != "" {
+				foundDefSlot = true
+			}
+			continue
+		}
+
+		// ignore comments
+		if childN.Type == html.CommentNode {
+			continue
+		}
+
+		// should only be element at this point
+		if childN.Type != html.ElementNode {
+			return fmt.Errorf("in tag %q unexpected node found where slot expected: %#v", n.Data, childN)
+		}
+
+		if childN.Data == "vg-slot" {
+			foundTagSlot = true
+			name := strings.TrimSpace(vgSlotName(childN))
+			if name != "" {
+				foundTagSlotNames = append(foundTagSlotNames, name)
+			}
+		} else {
+			foundDefSlot = true
+		}
+	}
+
+	// now process slot(s) appropriately according to format
+	switch {
+
+	case foundTagSlot && foundDefSlot:
+		return fmt.Errorf("in tag %q found both vg-slot and other markup, only one or the other is allowed", n.Data)
+
+	case foundTagSlot:
+
+		// NOTE:
+		// <vg-slot name="X"> will assign to vgcomp.X
+		// <vg-slot name='X[Y]'> will assume X is of type map[string]Builder and create the map and then assign with X[Y] =
+
+		// find any names with map expressions and clear the maps
+		sort.Strings(foundTagSlotNames)
+		slotMapInited := make(map[string]bool)
+		for _, slotName := range foundTagSlotNames {
+			slotNameParts := strings.Split(slotName, "[") // check for map expr
+			if len(slotNameParts) > 1 {                   // if map
+				if slotMapInited[slotNameParts[0]] { // if not already initialized
+					continue
+				}
+				slotMapInited[slotNameParts[0]] = true
+
+				// if nil create map, otherwise reuse
+				fmt.Fprintf(&state.buildBuf, "if vgcomp.%s == nil {\n", slotNameParts[0])
+				fmt.Fprintf(&state.buildBuf, "    vgcomp.%s = make(map[string]vugu.Builder)\n", slotNameParts[0])
+				fmt.Fprintf(&state.buildBuf, "} else {\n")
+				fmt.Fprintf(&state.buildBuf, "    for k := range vgcomp.%s { delete(vgcomp.%s, k) }\n", slotNameParts[0], slotNameParts[0])
+				fmt.Fprintf(&state.buildBuf, "}\n")
+			}
+		}
+
+		// iterate over children
+		for childN := n.FirstChild; childN != nil; childN = childN.NextSibling {
+
+			// ignore white space and coments
+			if childN.Type == html.CommentNode ||
+				(childN.Type == html.TextNode && strings.TrimSpace(childN.Data) == "") {
+				continue
+			}
+
+			if childN.Type != html.ElementNode { // should be impossible from foundTagSlot check above, just making sure
+				panic(fmt.Errorf("unexpected non-element found where vg-slot should be: %#v", childN))
+			}
+
+			if childN.Data != "vg-slot" { // should also be imposible
+				panic(fmt.Errorf("unexpected element found where vg-slot should be: %#v", childN))
+			}
+
+			slotName := strings.TrimSpace(vgSlotName(childN))
+			if slotName == "" {
+				return fmt.Errorf("found vg-slot tag without a 'name' attribute, the name is required")
+			}
+
+			fmt.Fprintf(&state.buildBuf, "vgcomp.%s = vugu.NewBuilderFunc(func(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {\n", slotName)
+			fmt.Fprintf(&state.buildBuf, "vgn := &vugu.VGNode{Type:vugu.VGNodeType(%d)}\n", vugu.ElementNode)
+			fmt.Fprintf(&state.buildBuf, "vgout = &vugu.BuildOut{}\n")
+			fmt.Fprintf(&state.buildBuf, "vgout.Out = append(vgout.Out, vgn)\n")
+			fmt.Fprintf(&state.buildBuf, "vgparent := vgn; _ = vgparent\n")
+			fmt.Fprintf(&state.buildBuf, "\n")
+
+			// iterate over children and do the usual with each one
+			for innerChildN := childN.FirstChild; innerChildN != nil; innerChildN = innerChildN.NextSibling {
+				err := p.visitDefaultByType(state, innerChildN)
+				if err != nil {
+					return err
+				}
+			}
+
+			fmt.Fprintf(&state.buildBuf, "return\n")
+			fmt.Fprintf(&state.buildBuf, "})\n")
+
+		}
+
+	case foundDefSlot:
+		fmt.Fprintf(&state.buildBuf, "vgcomp.DefaultSlot = vugu.NewBuilderFunc(func(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {\n")
+		// vgn is the equivalent of a vg-template tag and becomes the contents of vgout.Out and the vgparent
+		fmt.Fprintf(&state.buildBuf, "vgn := &vugu.VGNode{Type:vugu.VGNodeType(%d)}\n", vugu.ElementNode)
+		fmt.Fprintf(&state.buildBuf, "vgout = &vugu.BuildOut{}\n")
+		fmt.Fprintf(&state.buildBuf, "vgout.Out = append(vgout.Out, vgn)\n")
+		fmt.Fprintf(&state.buildBuf, "vgparent := vgn; _ = vgparent\n")
+		fmt.Fprintf(&state.buildBuf, "\n")
+
+		// iterate over children and do the usual with each one
+		for childN := n.FirstChild; childN != nil; childN = childN.NextSibling {
+			err := p.visitDefaultByType(state, childN)
+			if err != nil {
+				return err
+			}
+		}
+
+		fmt.Fprintf(&state.buildBuf, "return\n")
+		fmt.Fprintf(&state.buildBuf, "})\n")
+
+	default:
+		// nothing meaningful inside this component tag
+	}
+
+	// // keep track of contents for default slot
+	// var defSlotNodes []*html.Node
+	// defSlotMode := false // start off not in default slot mode and look for <vg-slot> tags
+
+	// // loop over all component children
+	// for childN := n.FirstChild; childN != nil; childN = childN.NextSibling {
+
+	// 	if !defSlotMode {
+
+	// 		// anything not an element just add to the list for default
+	// 		if childN.Type != html.ElementNode {
+	// 			defSlotNodes = append(defSlotNodes, childN)
+	// 			continue
+	// 		}
+
+	// 		if childN.Data == "vg-slot" {
+
+	// 		}
+
+	// 	}
+
+	// }
+
 	// ignore whitespace
 	// first non-slot, non-ws child, assume "DefaultSlot" (or whatever name) and consume rest of children
 	// if vg-slot, then consume with specified name
