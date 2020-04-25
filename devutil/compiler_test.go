@@ -20,6 +20,10 @@ func TestWasmCompiler(t *testing.T) {
 
 	wc := NewWasmCompiler().SetBuildDir(tmpDir)
 
+	must(ioutil.WriteFile(filepath.Join(tmpDir, "go.mod"), []byte(`module TestWasmCompiler
+replace github.com/vugu/vugu => ../
+`), 0644))
+
 	// just build
 	must(ioutil.WriteFile(filepath.Join(tmpDir, "main.go"), []byte(`package main
 func main() {}`), 0644))
