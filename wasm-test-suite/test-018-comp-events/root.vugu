@@ -5,7 +5,6 @@
 
 <script type="application/x-go">
 
-import "html"
 import "fmt"
 
 type Root struct {
