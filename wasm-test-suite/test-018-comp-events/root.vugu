@@ -1,6 +1,6 @@
 <div id="top">
     <main:Thing @Click='c.ShowText = fmt.Sprintf("%#v",event)'></main:Thing>
-    <div vg-if="len(c.ShowText)>0" id="show_text" vg-html="html.EscapeString(c.ShowText)"></div>
+    <div vg-if="len(c.ShowText)>0" id="show_text" vg-html="c.ShowText"></div>
 </div>
 
 <script type="application/x-go">
