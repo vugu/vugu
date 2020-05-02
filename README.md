@@ -72,12 +72,12 @@ Still a work in progress, but a lot of things are already functional. Some work 
 - [x] Modification tracking to avoid unnecessary computation where possible.
 - [x] Basic dev and prod server tooling, easy to get started
 - [x] Rewrite everything so it is not so terrible internally
-- [ ] URL Router (in-progress)
+- [x] URL Router (in-progress)
 - [ ] Tinygo compilation support
 - [ ] Server-side rendering (HTML generation works, needs URL Router to make it usable)
 - [ ] Performance optimizations
-- [ ] Go-only component events
-- [ ] Slots
+- [x] Go-only component events
+- [x] Slots
 - [ ] Component library(s)
 - And much more...
 
