@@ -10,9 +10,13 @@ import (
 	"os/exec"
 	"path"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 )
+
+// DefaultTinygoDockerImage is used as the docker image for Tinygo unless overridden.
+var DefaultTinygoDockerImage = "tinygo/tinygo:0.13.1"
 
 // MustNewTinygoCompiler is like NewTinygoCompiler but panics upon error.
 func MustNewTinygoCompiler() *TinygoCompiler {
@@ -56,9 +60,11 @@ type TinygoCompiler struct {
 	buildDir          string // directory with main pkg that we are building with Tinygo
 	afterFunc         func(outpath string, err error) error
 	logWriter         io.Writer
-	dlTmpGopath       string     // temporary directory that we download dependencies into with go get
-	goGetCmdList      [][]string // `go get` commands to be run before building with Tinygo
-	tinygoDockerImage string     // docker image name to use
+	dlTmpGopath       string            // temporary directory that we download dependencies into with go get
+	goGetCmdList      [][]string        // `go get` commands to be run before building with Tinygo
+	tinygoDockerImage string            // docker image name to use
+	wasmExecJS        []byte            // contents of wasm_exec.js
+	pkgReplaceMap     map[string]string // package replacements pkgName->directory
 }
 
 // Close performs any cleanup.  For now it removes the temporary directory created by NewTinygoCompiler.
@@ -74,6 +80,21 @@ func (c *TinygoCompiler) AddGoGet(goGetCmdLine string) *TinygoCompiler {
 // AddGoGetArgs is like AddGoGet but the args are explicitly separated in a string slice.
 func (c *TinygoCompiler) AddGoGetArgs(goGetCmdParts []string) *TinygoCompiler {
 	c.goGetCmdList = append(c.goGetCmdList, goGetCmdParts)
+	return c
+}
+
+// AddPkgReplace adds a directory mapping for a package.  It provides similar functionality
+// to go.mod's replace statement, but is implemented with a docker volume mapping.
+// The dir will be run through filepath.Abs before adding it and will panic if that fails.
+func (c *TinygoCompiler) AddPkgReplace(pkgName, dir string) *TinygoCompiler {
+	if c.pkgReplaceMap == nil {
+		c.pkgReplaceMap = make(map[string]string, 2)
+	}
+	dir, err := filepath.Abs(dir)
+	if err != nil {
+		panic(err)
+	}
+	c.pkgReplaceMap[pkgName] = dir
 	return c
 }
 
@@ -220,7 +241,7 @@ func (c *TinygoCompiler) Execute() (outpath string, err error) {
 
 	tinygoDockerImage := c.tinygoDockerImage
 	if tinygoDockerImage == "" {
-		tinygoDockerImage = "tinygo/tinygo:0.13.1"
+		tinygoDockerImage = DefaultTinygoDockerImage
 	}
 
 	tmpBin := filepath.Join(c.dlTmpGopath, "bin")
@@ -237,6 +258,20 @@ func (c *TinygoCompiler) Execute() (outpath string, err error) {
 	args = append(args, "-e", "GOPATH=/root/go")
 	args = append(args, "-v", c.dlTmpGopath+":/root/go")       // map dir for dependencies
 	args = append(args, "-v", modDir+":/root/go/src/"+modName) // map dir for main module
+
+	// map any other package replacements
+	if l := len(c.pkgReplaceMap); l > 0 {
+		pkgList := make([]string, 0, l)
+		for pkgName := range c.pkgReplaceMap {
+			pkgList = append(pkgList, pkgName)
+		}
+		sort.Strings(pkgList) // prevent the command line shifting around from run to run without any reason
+		for _, pkgName := range pkgList {
+			dir := c.pkgReplaceMap[pkgName]
+			args = append(args, "-v", dir+":/root/go/src/"+pkgName)
+		}
+	}
+
 	args = append(args, tinygoDockerImage)
 	args = append(args, "tinygo", "build")
 	args = append(args, "-o", "/root/go/bin/"+filepath.Base(outpath))
@@ -281,18 +316,45 @@ func (c *TinygoCompiler) Execute() (outpath string, err error) {
 
 }
 
-// // WasmExecJS returns the contents of the wasm_exec.js file bundled with the Go compiler.
-// func (c *TinygoCompiler) WasmExecJS() (r io.Reader, err error) {
+// WasmExecJS returns the contents of the wasm_exec.js file bundled with Tinygo.
+func (c *TinygoCompiler) WasmExecJS() (r io.Reader, err error) {
 
-// 	b1, err := exec.Command("go", "env", "GOROOT").CombinedOutput()
-// 	if err != nil {
-// 		return nil, err
-// 	}
+	if c.wasmExecJS != nil {
+		return bytes.NewReader(c.wasmExecJS), nil
+	}
 
-// 	b2, err := ioutil.ReadFile(filepath.Join(strings.TrimSpace(string(b1)), "misc/wasm/wasm_exec.js"))
-// 	return bytes.NewReader(b2), err
+	tinygoDockerImage := c.tinygoDockerImage
+	if tinygoDockerImage == "" {
+		tinygoDockerImage = DefaultTinygoDockerImage
+	}
 
-// }
+	args := make([]string, 0, 20)
+	args = append(args, "run", "--rm", "-i")
+	args = append(args, tinygoDockerImage)
+	args = append(args, "/bin/bash", "-c")
+	// different locations between tinygo and tinygo-dev, check them both
+	args = append(args, `if [ -f /usr/local/tinygo/targets/wasm_exec.js ]; then cat /usr/local/tinygo/targets/wasm_exec.js; else cat /tinygo/targets/wasm_exec.js; fi`)
+
+	cmd := exec.Command("docker", args...)
+	b, err := cmd.CombinedOutput()
+	if err != nil {
+		return nil, fmt.Errorf("TinygoCompiler: wasm_exec.js error (cmd=docker %v): %w; full output:\n%s", args, err, b)
+	}
+	// fmt.Fprintf(c.logWriter, "TinygoCompiler: successful wasm_exec.js: docker %v; output: %s\n", args, b)
+
+	c.wasmExecJS = b
+
+	return bytes.NewReader(c.wasmExecJS), nil
+
+	// b1, err := exec.Command("go", "env", "GOROOT").CombinedOutput()
+	// if err != nil {
+	// 	return nil, err
+	// }
+
+	// b2, err := ioutil.ReadFile(filepath.Join(strings.TrimSpace(string(b1)), "misc/wasm/wasm_exec.js"))
+	// return bytes.NewReader(b2), err
+
+}
 
 // detectMod returns useful module information about a directory.
 // Given "/path/to/mymod/some/app", and /path/to/mymod/go.mod has

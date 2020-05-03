@@ -1,6 +1,7 @@
 package devutil
 
 import (
+	"bytes"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -44,5 +45,21 @@ func main() {
 		t.Fatalf("bad asm magic num: %X", b[:4])
 	}
 	t.Logf("output file length: %d", len(b))
+
+	r, err := tgc.WasmExecJS()
+	if err != nil {
+		t.Fatal(err)
+	}
+	b, err = ioutil.ReadAll(r)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// t.Logf("wasm_exec.js contents:\n%s", b)
+	if !bytes.Contains(b, []byte(`global.Go`)) {
+		t.Fatalf("unable to find global.Go in wasm_exec.js")
+	}
+	if !bytes.Contains(b, []byte(`TinyGo`)) {
+		t.Fatalf("unable to find TinyGo in wasm_exec.js")
+	}
 
 }

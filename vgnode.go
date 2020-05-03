@@ -264,7 +264,7 @@ func (n *VGNode) AddAttrInterface(key string, val interface{}) {
 		rv := reflect.ValueOf(val)
 		if rv.Kind() == reflect.Ptr {
 			// indirect the ptr and recurse
-			if !rv.IsZero() {
+			if !rvIsZero(rv) {
 				n.AddAttrInterface(key, reflect.Indirect(rv).Interface())
 			}
 			return
@@ -353,7 +353,7 @@ func (n *VGNode) SetInnerHTML(val interface{}) {
 		rv := reflect.ValueOf(val)
 		if rv.Kind() == reflect.Ptr {
 			// indirect the ptr and recurse
-			if !rv.IsZero() {
+			if !rvIsZero(rv) {
 				n.SetInnerHTML(reflect.Indirect(rv).Interface())
 			}
 			return
