@@ -10,13 +10,16 @@ import (
 	"os/exec"
 	"path"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/vugu/vugu/distutil"
 )
 
 // DefaultTinygoDockerImage is used as the docker image for Tinygo unless overridden.
-var DefaultTinygoDockerImage = "tinygo/tinygo:0.13.1"
+var DefaultTinygoDockerImage = "tinygo/tinygo:latest"
 
 // MustNewTinygoCompiler is like NewTinygoCompiler but panics upon error.
 func MustNewTinygoCompiler() *TinygoCompiler {
@@ -42,8 +45,9 @@ func NewTinygoCompiler() (*TinygoCompiler, error) {
 		return nil, err
 	}
 	return &TinygoCompiler{
-		logWriter:   os.Stderr,
-		dlTmpGopath: tmpDirAbs,
+		logWriter:         os.Stderr,
+		dlTmpGopath:       tmpDirAbs,
+		tinygoDockerImage: DefaultTinygoDockerImage,
 	}, nil
 }
 
@@ -62,14 +66,21 @@ type TinygoCompiler struct {
 	logWriter         io.Writer
 	dlTmpGopath       string            // temporary directory that we download dependencies into with go get
 	goGetCmdList      [][]string        // `go get` commands to be run before building with Tinygo
-	tinygoDockerImage string            // docker image name to use
+	tinygoDockerImage string            // docker image name to use, if empty then it is run directly
 	wasmExecJS        []byte            // contents of wasm_exec.js
 	pkgReplaceMap     map[string]string // package replacements pkgName->directory
+	tinygoArgs        []string          // additional arguments to pass to the tinygo build cmd
 }
 
 // Close performs any cleanup.  For now it removes the temporary directory created by NewTinygoCompiler.
 func (c *TinygoCompiler) Close() error {
 	return os.RemoveAll(c.dlTmpGopath)
+}
+
+// SetTinygoArgs sets arguments to be passed to tinygo, e.g. -no-debug
+func (c *TinygoCompiler) SetTinygoArgs(tinygoArgs ...string) *TinygoCompiler {
+	c.tinygoArgs = tinygoArgs
+	return c
 }
 
 // AddGoGet adds a go get command to the list of dependencies.  Arguments are separated by whitespace.
@@ -165,6 +176,21 @@ func (c *TinygoCompiler) SetAfterFunc(f func(outpath string, err error) error) *
 	return c
 }
 
+// NoDocker is an alias for SetTinygoDockerImage("") and will result in the tinygo
+// executable being run on the local system instead of via docker image.
+func (c *TinygoCompiler) NoDocker() *TinygoCompiler {
+	return c.SetTinygoDockerImage("")
+}
+
+// SetTinygoDockerImage will specify the docker image to use when invoking Tinygo.
+// The default value is the value of when NewTinygoCompiler was called.
+// If you specify an empty string then the "tinygo" command will be run directly
+// on the local system.
+func (c *TinygoCompiler) SetTinygoDockerImage(img string) *TinygoCompiler {
+	c.tinygoDockerImage = img
+	return c
+}
+
 // Execute runs the generate command (if any) and then invokes the Tinygo compiler
 // and produces a wasm executable (or an error).
 // The value of outpath is the absolute path to the output file on disk.
@@ -232,18 +258,6 @@ func (c *TinygoCompiler) Execute() (outpath string, err error) {
 		return "", logerr(fmt.Errorf("TinygoCompiler: %w", err))
 	}
 
-	// run tinygo
-	// example: docker run --rm -eGOPATH=/root/go
-	// -v`pwd`/tmp1:/root/go
-	// -v`pwd`:/root/go/src/example.com/tgtest1
-	// tinygo/tinygo:0.13.1 tinygo build -o /root/go/src/example.com/tgtest1/out.wasm
-	// -target=wasm example.com/tgtest1/testapp
-
-	tinygoDockerImage := c.tinygoDockerImage
-	if tinygoDockerImage == "" {
-		tinygoDockerImage = DefaultTinygoDockerImage
-	}
-
 	tmpBin := filepath.Join(c.dlTmpGopath, "bin")
 	os.Mkdir(tmpBin, 0755) // create $GOPATH/bin if not there already
 	tgWasmOutF, err := ioutil.TempFile(tmpBin, "tgwasmout")
@@ -253,66 +267,115 @@ func (c *TinygoCompiler) Execute() (outpath string, err error) {
 	tgWasmOutF.Close()
 	outpath = tgWasmOutF.Name()
 
-	args := make([]string, 0, 20)
-	args = append(args, "run", "--rm")
-	args = append(args, "-e", "GOPATH=/root/go")
-	args = append(args, "-v", c.dlTmpGopath+":/root/go")       // map dir for dependencies
-	args = append(args, "-v", modDir+":/root/go/src/"+modName) // map dir for main module
-
 	// map any other package replacements
+	var pkgReplaceList []string
 	if l := len(c.pkgReplaceMap); l > 0 {
-		pkgList := make([]string, 0, l)
+		pkgReplaceList = make([]string, 0, l)
 		for pkgName := range c.pkgReplaceMap {
-			pkgList = append(pkgList, pkgName)
+			pkgReplaceList = append(pkgReplaceList, pkgName)
 		}
-		sort.Strings(pkgList) // prevent the command line shifting around from run to run without any reason
-		for _, pkgName := range pkgList {
+		sort.Strings(pkgReplaceList) // prevent the command line shifting around from run to run without any reason
+	}
+
+	tinygoDockerImage := c.tinygoDockerImage
+	if tinygoDockerImage == "" {
+
+		// run tinygo directly on local system, first we must build the appropriate folder structure
+
+		// make a new directory
+		tgTmpGopath, err2 := ioutil.TempDir("", "vugu-tinygo-")
+		if err2 != nil {
+			return "", err2
+		}
+		defer func() {
+			if err == nil { // if build was successful, remove temporary directory, otherwise we leave it for debugging
+				os.RemoveAll(tgTmpGopath)
+			}
+		}()
+
+		// copy everything into it, so we have one nice folder structure to give to Tinygo
+		allFiles := regexp.MustCompile(`.*`)
+		// downloaded dependencies
+		err = distutil.CopyDirFiltered(c.dlTmpGopath, tgTmpGopath, allFiles)
+		if err != nil {
+			return "", fmt.Errorf("error while copying dependencies: %w", err)
+		}
+
+		// replacement dirs
+		for _, pkgName := range pkgReplaceList {
+			dir := c.pkgReplaceMap[pkgName]
+			err = distutil.CopyDirFiltered(dir,
+				filepath.Join(tgTmpGopath, "src", pkgName),
+				allFiles)
+			if err != nil {
+				return "", fmt.Errorf("error while copying replacement dir %q: %w", dir, err)
+			}
+		}
+
+		// main project source
+		err = distutil.CopyDirFiltered(modDir,
+			filepath.Join(tgTmpGopath, "src", modName),
+			allFiles)
+		if err != nil {
+			return "", fmt.Errorf("error while copying build dir %q: %w", modDir, err)
+		}
+
+		// now we can execute tinygo
+		args := make([]string, 0, 20)
+		args = append(args, "build")
+		args = append(args, "-o", outpath)
+		args = append(args, "-target=wasm")
+		args = append(args, c.tinygoArgs...)
+		args = append(args, path.Join(modName, dirSuffix))
+		cmd := exec.Command("tinygo", args...)
+		cmd.Dir = tgTmpGopath
+		cmd.Env = os.Environ()
+		cmd.Env = append(cmd.Env, "GOPATH="+tgTmpGopath)
+		cmd.Env = append(cmd.Env, "GO111MODULE=off")
+		b, err := cmd.CombinedOutput()
+		if err != nil {
+			return "", logerr(fmt.Errorf("TinygoCompiler: build error (cmd=tinygo %v): %w; full output:\n%s", args, err, b))
+		}
+		fmt.Fprintf(c.logWriter, "TinygoCompiler: successful build: tinygo %v; output: %s\n", args, b)
+
+	} else {
+
+		// run tinygo via docker
+		// example: docker run --rm -eGOPATH=/root/go
+		// -v`pwd`/tmp1:/root/go
+		// -v`pwd`:/root/go/src/example.com/tgtest1
+		// tinygo/tinygo:0.13.1 tinygo build -o /root/go/src/example.com/tgtest1/out.wasm
+		// -target=wasm example.com/tgtest1/testapp
+
+		args := make([]string, 0, 20)
+		args = append(args, "run", "--rm")
+		args = append(args, "-e", "GOPATH=/root/go")
+		args = append(args, "-v", c.dlTmpGopath+":/root/go")       // map dir for dependencies
+		args = append(args, "-v", modDir+":/root/go/src/"+modName) // map dir for main module
+
+		// map any other package replacements
+		for _, pkgName := range pkgReplaceList {
 			dir := c.pkgReplaceMap[pkgName]
 			args = append(args, "-v", dir+":/root/go/src/"+pkgName)
 		}
-	}
 
-	args = append(args, tinygoDockerImage)
-	args = append(args, "tinygo", "build")
-	args = append(args, "-o", "/root/go/bin/"+filepath.Base(outpath))
-	args = append(args, "-target=wasm")
-	args = append(args, path.Join(modName, dirSuffix))
+		args = append(args, tinygoDockerImage)
+		args = append(args, "tinygo", "build")
+		args = append(args, "-o", "/root/go/bin/"+filepath.Base(outpath))
+		args = append(args, "-target=wasm")
+		args = append(args, c.tinygoArgs...)
+		args = append(args, path.Join(modName, dirSuffix))
 
-	cmd := exec.Command("docker", args...)
-	b, err := cmd.CombinedOutput()
-	if err != nil {
-		return "", logerr(fmt.Errorf("TinygoCompiler: build error (cmd=docker %v): %w; full output:\n%s", args, err, b))
+		cmd := exec.Command("docker", args...)
+		b, err := cmd.CombinedOutput()
+		if err != nil {
+			return "", logerr(fmt.Errorf("TinygoCompiler: build error (cmd=docker %v): %w; full output:\n%s", args, err, b))
+		}
+		fmt.Fprintf(c.logWriter, "TinygoCompiler: successful build: docker %v; output: %s\n", args, b)
+
 	}
-	fmt.Fprintf(c.logWriter, "TinygoCompiler: successful build: docker %v; output: %s\n", args, b)
 
 	return outpath, nil
-
-	// c.buildDir
-
-	// tmpf, err := ioutil.TempFile("", "TinygoCompiler")
-	// if err != nil {
-	// 	return "", logerr(fmt.Errorf("TinygoCompiler: error creating temporary file: %w", err))
-	// }
-
-	// outpath = tmpf.Name()
-
-	// err = tmpf.Close()
-	// if err != nil {
-	// 	return outpath, logerr(fmt.Errorf("TinygoCompiler: error closing temporary file: %w", err))
-	// }
-
-	// cmd := c.buildCmdFunc(outpath)
-	// b, err := cmd.CombinedOutput()
-	// if err != nil {
-	// 	return "", logerr(fmt.Errorf("TinygoCompiler: build error: %w; full output:\n%s", err, b))
-	// }
-	// fmt.Fprintln(c.logWriter, "TinygoCompiler: Successful build")
-
-	// if c.afterFunc != nil {
-	// 	err = c.afterFunc(outpath, err)
-	// }
-
-	// return outpath, logerr(err)
 
 }
 
@@ -324,9 +387,29 @@ func (c *TinygoCompiler) WasmExecJS() (r io.Reader, err error) {
 	}
 
 	tinygoDockerImage := c.tinygoDockerImage
+
+	// direct way, not via docker
 	if tinygoDockerImage == "" {
-		tinygoDockerImage = DefaultTinygoDockerImage
+
+		cmd := exec.Command("tinygo", "env", "TINYGOROOT")
+		resb, err := cmd.CombinedOutput()
+		if err != nil {
+			return nil, fmt.Errorf("TinygoCompiler: WasmExecJS error getting TINYGOROOT: %w; full output:\n%s", err, resb)
+		}
+
+		wasmExecJSPath := filepath.Join(strings.TrimSpace(string(resb)), "targets/wasm_exec.js")
+		b, err := ioutil.ReadFile(wasmExecJSPath)
+		if err != nil {
+			return nil, fmt.Errorf("TinygoCompiler: WasmExecJS error reading %q: %w", wasmExecJSPath, err)
+		}
+
+		c.wasmExecJS = b
+
+		return bytes.NewReader(c.wasmExecJS), nil
+
 	}
+
+	// via docker
 
 	args := make([]string, 0, 20)
 	args = append(args, "run", "--rm", "-i")
@@ -345,14 +428,6 @@ func (c *TinygoCompiler) WasmExecJS() (r io.Reader, err error) {
 	c.wasmExecJS = b
 
 	return bytes.NewReader(c.wasmExecJS), nil
-
-	// b1, err := exec.Command("go", "env", "GOROOT").CombinedOutput()
-	// if err != nil {
-	// 	return nil, err
-	// }
-
-	// b2, err := ioutil.ReadFile(filepath.Join(strings.TrimSpace(string(b1)), "misc/wasm/wasm_exec.js"))
-	// return bytes.NewReader(b2), err
 
 }
 
