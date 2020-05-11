@@ -6,7 +6,7 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/stretchr/testify v1.4.0
 	github.com/vugu/html v0.0.0-20190914200101-c62dc20b8289
-	github.com/vugu/vjson v0.0.0-20191111004939-722507e863cb
+	github.com/vugu/vjson v0.0.0-20200505061711-f9cbed27d3d9
 	github.com/vugu/xxhash v0.0.0-20191111030615-ed24d0179019
 	golang.org/x/text v0.3.0
 )
