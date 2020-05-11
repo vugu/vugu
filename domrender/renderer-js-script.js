@@ -760,6 +760,8 @@
                         if (!f) {
                             f = function (event) {
 
+                                /*DEBUG*/ console.log("event listener called with event", event);
+
                                 // set the active event, so the Go code and call back in and examine it if needed
                                 state.activeEvent = event;
 
@@ -833,7 +835,8 @@
                                 // and keep track of the target element, also consider grabbing
                                 // the value or relevant properties as appropriate for form things
 
-                                state.eventHandlerFunc.call(null, eventBuffer); // call with null this avoid unnecessary js.Value reference
+                                /*DEBUG*/ console.log("event handler calling state.eventHandlerFunc", eventBuffer);
+                                state.eventHandlerFunc.call(null, eventBuffer); // call with null this avoids unnecessary js.Value reference
 
                                 // unset the active event
                                 state.activeEvent = null;
