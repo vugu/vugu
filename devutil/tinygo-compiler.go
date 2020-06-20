@@ -19,7 +19,7 @@ import (
 )
 
 // DefaultTinygoDockerImage is used as the docker image for Tinygo unless overridden.
-var DefaultTinygoDockerImage = "tinygo/tinygo:latest"
+var DefaultTinygoDockerImage = "vugu/tinygo-dev:latest" // this is temporary until we can smooth things out with tinygo/tinygo:latest
 
 // MustNewTinygoCompiler is like NewTinygoCompiler but panics upon error.
 func MustNewTinygoCompiler() *TinygoCompiler {
