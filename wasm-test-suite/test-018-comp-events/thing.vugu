@@ -20,4 +20,8 @@ type ClickEvent struct {
     vugu.DOMEvent
 }
 
+func (e ClickEvent) String() string {
+    return "This is the ClickEvent"
+}
+
 </script>

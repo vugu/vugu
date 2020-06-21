@@ -24,6 +24,7 @@ import (
 	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/chromedp"
 
+	"github.com/vugu/vugu/devutil"
 	"github.com/vugu/vugu/distutil"
 	"github.com/vugu/vugu/gen"
 	"github.com/vugu/vugu/simplehttp"
@@ -112,6 +113,7 @@ func mustUseDir(reldir string) (newdir, olddir string) {
 
 func mustGen(absdir string) {
 
+	os.Remove(filepath.Join(absdir, "main_wasm.go")) // ensure it gets re-generated
 	pp := gen.NewParserGoPkg(absdir, nil)
 	err := pp.Run()
 	if err != nil {
@@ -122,6 +124,7 @@ func mustGen(absdir string) {
 
 func mustTGGen(absdir string) {
 
+	os.Remove(filepath.Join(absdir, "main_wasm.go")) // ensure it gets re-generated
 	pp := gen.NewParserGoPkg(absdir, &gen.ParserGoPkgOpts{TinyGo: true})
 	err := pp.Run()
 	if err != nil {
@@ -130,12 +133,17 @@ func mustTGGen(absdir string) {
 
 }
 
+func mustGenBuildAndLoad(absdir string) string {
+	mustGen(absdir)
+	return mustBuildAndLoad(absdir)
+}
+
 // returns path suffix
 func mustBuildAndLoad(absdir string) string {
 
 	fmt.Print(distutil.MustEnvExec([]string{"GOOS=js", "GOARCH=wasm"}, "go", "build", "-o", filepath.Join(absdir, "main.wasm"), "."))
 
-	mustWriteSupportFiles(absdir)
+	mustWriteSupportFiles(absdir, true)
 
 	uploadPath := mustUploadDir(absdir, "http://localhost:8846/upload")
 	// log.Printf("uploadPath = %q", uploadPath)
@@ -210,8 +218,10 @@ func mustCleanDir(dir string) {
 }
 
 // mustWriteSupportFiles will write index.html and wasm_exec.js to a directory
-func mustWriteSupportFiles(dir string) {
-	distutil.MustCopyFile(distutil.MustWasmExecJsPath(), filepath.Join(dir, "wasm_exec.js"))
+func mustWriteSupportFiles(dir string, doWasmExec bool) {
+	if doWasmExec {
+		distutil.MustCopyFile(distutil.MustWasmExecJsPath(), filepath.Join(dir, "wasm_exec.js"))
+	}
 	// distutil.MustCopyFile(distutil.(), filepath.Join(dir, "wasm_exec.js"))
 	// log.Println(simplehttp.DefaultPageTemplateSource)
 
@@ -457,7 +467,7 @@ func mustTGBuildAndLoad(absdir, buildGopath string) string {
 		"-v", buildGopath + "/src:/go/src", // map src from buildGopath
 		"-v", absdir + ":/out", // map original dir as /out so it can just write the .wasm file
 		"-e", "GOPATH=/go", // set GOPATH so it picks up buildGopath/src
-		"tinygo/tinygo-dev:latest",                                                // use latest dev (for now)
+		"vugu/tinygo-dev:latest",                                                  // use latest dev (for now)
 		"tinygo", "build", "-o", "/out/main.wasm", "-target", "wasm", "tgtestpgm", // tinygo command line
 	}
 
@@ -478,6 +488,42 @@ func mustTGBuildAndLoad(absdir, buildGopath string) string {
 
 	uploadPath := mustUploadDir(absdir, "http://localhost:8846/upload")
 	// log.Printf("uploadPath = %q", uploadPath)
+
+	return uploadPath
+}
+
+func mustTGGenBuildAndLoad(absdir string, goGetList []string) string {
+
+	mustTGGen(absdir)
+
+	wc := devutil.MustNewTinygoCompiler().SetDir(absdir)
+	defer wc.Close()
+
+	goGetList = append(goGetList, "github.com/vugu/vugu", "github.com/vugu/vjson")
+
+	wc.AddGoGet("go get -u -x " + strings.Join(goGetList, " ")) // third party packages must have `go get` run on them for tinygo to compile (for now)
+
+	outfile, err := wc.Execute()
+	if err != nil {
+		panic(err)
+	}
+	defer os.Remove(outfile)
+
+	must(distutil.CopyFile(outfile, filepath.Join(absdir, "main.wasm")))
+
+	wasmExecJSR, err := wc.WasmExecJS()
+	must(err)
+	wasmExecJSB, err := ioutil.ReadAll(wasmExecJSR)
+	must(err)
+	// log.Printf("HERE absdir=%q", absdir)
+	// log.Printf("HERE2 wasm_exec.js=%q", wasmExecJSB[:2000])
+	wasmExecJSPath := filepath.Join(absdir, "wasm_exec.js")
+	// log.Printf("HERE3: %q", wasmExecJSPath)
+	must(ioutil.WriteFile(wasmExecJSPath, wasmExecJSB, 0644))
+
+	mustWriteSupportFiles(absdir, false)
+
+	uploadPath := mustUploadDir(absdir, "http://localhost:8846/upload")
 
 	return uploadPath
 }

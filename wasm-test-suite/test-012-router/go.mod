@@ -8,6 +8,6 @@ replace github.com/vugu/vugu => ../..
 
 require (
 	github.com/vugu/vgrouter v0.0.0-20200329225024-3b01bdbe25fa
-	github.com/vugu/vjson v0.0.0-20191111004939-722507e863cb
+	github.com/vugu/vjson v0.0.0-20200505061711-f9cbed27d3d9
 	github.com/vugu/vugu v0.1.0
 )
