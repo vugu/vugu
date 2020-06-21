@@ -52,7 +52,7 @@ func NewTinygoCompiler() (*TinygoCompiler, error) {
 }
 
 // TinygoCompiler provides a convenient way to build a program via Tinygo into Wasm.
-// This implementation uses Docker to download and run Tinygo, and provides methods
+// This implementation by default uses Docker to download and run Tinygo, and provides methods
 // to handle mapping local directories into the Tinygo docker filesystem and for
 // making other dependencies available by calling `go get` on them.  This approach
 // might change once Tinygo has module support, but for now the idea is it
