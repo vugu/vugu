@@ -16,6 +16,7 @@ No node. No JS. No npm. No node_modules folder competing with your music library
 
 ## Updates ♨
 
+* 2020-06-21 v0.3.2 Vugu+TinyGo is now functional; test suite updated so most tests are run with both default Go and TinyGo compilation; docs updated; Vugu+TinyGo example works https://github.com/vugu-examples/tinygo
 * 2020-04-26 v0.3.0 Slots are now implemented. Plus vg-js-create/vg-js-populate, vg-template, vg-var; vgform package has initial prototype for form inputs; docs written for these features plus for router and wiring (several pages added to vugu.org plus other individual sections). There are two small but breaking changes with this release: vg-html now escapes markup by default and vugu.DOMEvent was changed from a struct to an interface.  For the earlier vg-html behavior use `vg-html='vugu.HTML("...")'` (see https://www.vugu.org/doc/files/markup#vg-content) and existing DOMEvent code should fix by simply removing the pointer i.e. change `event *vugu.DOMEvent` to `event vugu.DOMEvent` - and also make sure to `go get -u github.com/vugu/vugu/cmd/vugugen` again.  I generally try to avoid these sorts of breaking changes but it's better to do them sooner rather than later.
 * 2020-04-13 v0.2.3 much more flexible attribute support and SVGs now work (thanks to @tbe!); vugu-examples/simple set up, more to come; nested component rendering bug fixed (#117); tools doc page added to the site; devutil package; vgrun working
 * 2020-04-06 v0.2.0 released. vugu.org and playground ported over to it; vugugen now supports recursive and merge-single modes and output files end with _vgen.go; improved tests; various documentation updates; vgrgen route generator supports recursive and clean options
@@ -73,12 +74,12 @@ Still a work in progress, but a lot of things are already functional. Some work 
 - [x] Basic dev and prod server tooling, easy to get started
 - [x] Rewrite everything so it is not so terrible internally
 - [x] URL Router (in-progress)
-- [ ] Tinygo compilation support
-- [ ] Server-side rendering (HTML generation works, needs URL Router to make it usable)
-- [ ] Performance optimizations
+- [x] Tinygo compilation support
+- [x] Server-side rendering (works, needs more documentation and examples)
 - [x] Go-only component events
 - [x] Slots
 - [ ] Component library(s)
+- [ ] Performance optimizations
 - And much more...
 
 ## Notes
