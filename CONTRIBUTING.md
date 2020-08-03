@@ -7,7 +7,21 @@ And please follow the code of conduct outlined below during all interactions.
 
 To work on a copy of Vugu, the easiest way is to use the `replace` module directive as described in https://github.com/golang/go/wiki/Modules#when-should-i-use-the-replace-directive
 
-This way your forked or local copy of Vugu can correspond to the import path `github.com/vugu/vugu`.
+This way your forked or local copy of Vugu can correspond to the import path `github.com/vugu/vugu`.  Example:
+
+```bash
+git checkout https://github.com/vugu/vugu # or, your forked copy
+```
+
+And now you can reference it from another project:
+
+some-other-project/go.mod:
+```
+module some-other-project
+
+// point vugu imports at your local copy instead of public download
+replace github.com/vugu/vugu => ../vugu
+```
 
 ## Vugu Project Layout
 
