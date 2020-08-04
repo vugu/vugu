@@ -32,7 +32,7 @@ Some important subdirectories in the Vugu project are:
 * `domrender` has the client-side code which synchronizes Vugu's virtual DOM tree with the browser's DOM.
 * `gen` has code generaiton logic used to convert .vugu files into .go source code.  Most of the implementation of `vugugen` is available here.
 * `js` has a wrapper around `syscall/js` which delegates to the default implementation in WebAssembly but in other environments allows compilation and functionality gracefully degrades.  Useful for writing code that needs to compile both in and outside Wasm environments without having to maintain two separate implementations via build tags just to include one reference to e.g. js.Value.
-* The following folders are becoming deprecated and should be used with caution: `simplehttp` is an earlier attempt at development tooling use `devutil` instead.  `tinygo-dev` will be removed, the working parts have moved into `devutil`.
+* The following folders are being deprecated and should be used with caution: `simplehttp` is an earlier attempt at development tooling use `devutil` instead.  `tinygo-dev` will be removed, the working parts have moved into `devutil`.
 * `wasm-test-suite` contains a test suite using Headless Chrome, see Running Tests below.
 
 ## Running Tests
@@ -43,7 +43,7 @@ This requires Docker to be installed properly and the test suite expects to be a
 
 ## Vugu Documentation
 
-Documention for Vugu, other than GoDoc (https://pkg.go.dev/github.com/vugu/vugu), lives on https://vugu.org.  The source for it is at https://github.com/vugu/vugu-site and you can submit PRs to that repository to propose changes.  For small improvements and errata it is fine to just submit a PR.  For more significant changes or if it seems like discussion is require, please make a GitHub issue first.
+Documention for Vugu, other than GoDoc (https://pkg.go.dev/github.com/vugu/vugu), lives on https://vugu.org.  The source for it is at https://github.com/vugu/vugu-site and you can submit PRs to that repository to propose changes.  For small improvements and errata it is fine to just submit a PR.  For more significant changes or if a discussion is required, please create a GitHub issue first
 
 ## Submitting Pull Requests
 
