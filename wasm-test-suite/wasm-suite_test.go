@@ -812,3 +812,40 @@ func Test021Slots(t *testing.T) {
 	t.Run("tinygo", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, nil)) })
 
 }
+
+func Test022EventListener(t *testing.T) {
+
+	dir, origDir := mustUseDir("test-022-event-listener")
+	defer os.Chdir(origDir)
+
+	tf := func(t *testing.T, pathSuffix string) {
+
+		assert := assert.New(t)
+
+		ctx, cancel := mustChromeCtx()
+		defer cancel()
+		// log.Printf("pathSuffix = %s", pathSuffix)
+
+		var text string
+		must(chromedp.Run(ctx,
+			chromedp.Navigate("http://localhost:8846"+pathSuffix),
+			chromedp.WaitVisible("#top"),
+			chromedp.Click("#switch"),
+			chromedp.WaitVisible("#noclick"),
+			chromedp.Click("#noclick"),
+			chromedp.Click("#switch"),
+			chromedp.WaitNotPresent("#noclick"),
+			chromedp.Click("#click"),
+			chromedp.Click("#switch"),
+			chromedp.WaitVisible("#text"),
+			chromedp.InnerHTML("#text", &text),
+		))
+
+		assert.Equal("click", text)
+
+	}
+
+	t.Run("go", func(t *testing.T) { tf(t, mustGenBuildAndLoad(dir)) })
+	t.Run("tinygo", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, nil)) })
+
+}
