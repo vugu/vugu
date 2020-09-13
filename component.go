@@ -168,8 +168,7 @@ func NewBuilderFunc(f func(in *BuildIn) (out *BuildOut)) Builder {
 	}
 }
 
-// BeforeBuilder can be implemented by components that need a chance to compute internal values
-// after properties have been set but before Build is called.
+// BeforeBuilder is deprecated.  It is replaced by the Compute lifecycle callback.
 type BeforeBuilder interface {
 	BeforeBuild()
 }
