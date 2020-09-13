@@ -131,6 +131,14 @@ type JSRenderer struct {
 	window js.Value
 
 	jsRenderState *jsRenderState
+
+	// manages the Rendered lifecycle callback stuff
+	lifecycleStateMap map[interface{}]lifecycleState
+	lifecyclePassNum  uint8
+}
+
+type lifecycleState struct {
+	passNum uint8
 }
 
 // EventEnv returns an EventEnv that can be used for synchronizing updates.
@@ -145,7 +153,6 @@ func (r *JSRenderer) Release() {
 	// r.instructionTypedArray.Release()
 }
 
-// Render implements Renderer.
 func (r *JSRenderer) render(buildResults *vugu.BuildResults) error {
 
 	bo := buildResults.Out
@@ -253,6 +260,35 @@ func (r *JSRenderer) render(buildResults *vugu.BuildResults) error {
 	err = r.instructionList.flush()
 	if err != nil {
 		return err
+	}
+
+	// handle Rendered lifecycle callback
+	if r.lifecycleStateMap == nil {
+		r.lifecycleStateMap = make(map[interface{}]lifecycleState, len(bo.Components))
+	}
+	r.lifecyclePassNum++
+
+	var rctx renderedCtx
+
+	for _, c := range bo.Components {
+
+		rctx = renderedCtx{eventEnv: r.eventEnv}
+
+		st, ok := r.lifecycleStateMap[c]
+		rctx.first = !ok
+		st.passNum = r.lifecyclePassNum
+
+		invokeRendered(c, &rctx)
+
+		r.lifecycleStateMap[c] = st
+
+	}
+
+	// now purge from lifecycleStateMap anything not touched in this pass
+	for k, st := range r.lifecycleStateMap {
+		if st.passNum != r.lifecyclePassNum {
+			delete(r.lifecycleStateMap, k)
+		}
 	}
 
 	return nil

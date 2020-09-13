@@ -268,17 +268,17 @@ func main() {
 	{{if not $opts.TinyGo}}defer fmt.Printf("Exiting main()\n")
 {{end}}
 
-	buildEnv, err := vugu.NewBuildEnv()
-	if err != nil {
-		panic(err)
-	}
-
 	renderer, err := domrender.New(*mountPoint)
 	if err != nil {
 		panic(err)
 	}
 	{{if not $opts.TinyGo}}defer renderer.Release()
 {{end}}
+
+	buildEnv, err := vugu.NewBuildEnv(renderer.EventEnv())
+	if err != nil {
+		panic(err)
+	}
 
 {{if (index .NamesFound "vuguSetup")}}
 	rootBuilder := vuguSetup(buildEnv, renderer.EventEnv())

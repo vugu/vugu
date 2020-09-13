@@ -8,8 +8,16 @@ import (
 )
 
 // NewBuildEnv returns a newly initialized BuildEnv.
-func NewBuildEnv() (*BuildEnv, error) {
-	return &BuildEnv{}, nil
+// The eventEnv is used to implement lifecycle callbacks on components,
+// it's a vararg for now in order to avoid breaking earlier code but
+// it should be provided in all new code written.
+func NewBuildEnv(eventEnv ...EventEnv) (*BuildEnv, error) {
+	// TODO: remove the ... and make it required and check for nil
+	ret := &BuildEnv{}
+	for _, ee := range eventEnv {
+		ret.eventEnv = ee
+	}
+	return ret, nil
 }
 
 // BuildEnv is the environment used when building virtual DOM.
@@ -29,6 +37,15 @@ type BuildEnv struct {
 
 	// new build output from this build pass (becomes buildCache next build pass)
 	buildResults map[buildCacheKey]*BuildOut
+
+	// lifecycle callbacks need this and it needs to match what the renderer has
+	eventEnv EventEnv
+
+	// track lifecycle callbacks
+	compStateMap map[Builder]compState
+
+	// used to determine "seen in this pass"
+	passNum uint8
 }
 
 // BuildResults contains the BuildOut values for full tree of components built.
@@ -79,6 +96,12 @@ func (e *BuildEnv) RunBuild(builder Builder) *BuildResults {
 	// swap cache and results, so the prior results is the new cache
 	e.buildCache, e.buildResults = e.buildResults, e.buildCache
 
+	e.passNum++
+
+	if e.compStateMap == nil {
+		e.compStateMap = make(map[Builder]compState)
+	}
+
 	var buildIn BuildIn
 	buildIn.BuildEnv = e
 	// buildIn.PositionHashList starts empty
@@ -91,14 +114,31 @@ func (e *BuildEnv) RunBuild(builder Builder) *BuildResults {
 		panic(fmt.Errorf("unexpected PositionHashList len = %d", len(buildIn.PositionHashList)))
 	}
 
+	// remove and invoke destroy on anything where passNum doesn't match
+	for k, st := range e.compStateMap {
+		if st.passNum != e.passNum {
+			invokeDestroy(k, e.eventEnv)
+			delete(e.compStateMap, k)
+		}
+	}
+
 	return &BuildResults{allOut: e.buildResults, Out: e.buildResults[makeBuildCacheKey(builder)]}
 }
 
 func (e *BuildEnv) buildOne(buildIn *BuildIn, thisb Builder) {
 
+	st, ok := e.compStateMap[thisb]
+	if !ok {
+		invokeInit(thisb, e.eventEnv)
+	}
+	st.passNum = e.passNum
+	e.compStateMap[thisb] = st
+
 	beforeBuilder, ok := thisb.(BeforeBuilder)
 	if ok {
 		beforeBuilder.BeforeBuild()
+	} else {
+		invokeCompute(thisb, e.eventEnv)
 	}
 
 	buildOut := thisb.Build(buildIn)
@@ -177,6 +217,11 @@ func hashVals(vs ...uint64) uint64 {
 	}
 	return h.Sum64()
 
+}
+
+type compState struct {
+	passNum uint8
+	// TODO: flags?
 }
 
 // FIXME: IMPORTANT: If we can separate the hash computation from the equal comparision, then we can use

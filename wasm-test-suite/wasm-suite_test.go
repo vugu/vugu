@@ -17,7 +17,7 @@ import (
 
 // TO ADD A TEST:
 // - make a folder of the same pattern test-NNN-description
-// - copy .gitignore, go.mod and create a create.vugu, plus whatever else
+// - copy .gitignore, go.mod and create a root.vugu, plus whatever else
 // - write a TestNNNDescription method to drive it
 // - to manually view the page from a test log the URL passed to chromedp.Navigate and view it in your browser
 //   (if you suspect you are getting console errors that you can't see, this is a simple way to check)
@@ -847,5 +847,64 @@ func Test022EventListener(t *testing.T) {
 
 	t.Run("go", func(t *testing.T) { tf(t, mustGenBuildAndLoad(dir)) })
 	t.Run("tinygo", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, nil)) })
+
+}
+
+func Test023LifecycleCallbacks(t *testing.T) {
+
+	dir, origDir := mustUseDir("test-023-lifecycle-callbacks")
+	defer os.Chdir(origDir)
+
+	tf := func(t *testing.T, pathSuffix string) {
+
+		assert := assert.New(t)
+		_ = assert
+
+		ctx, cancel := mustChromeCtx()
+		defer cancel()
+		log.Printf("URL: %s", "http://localhost:8846"+pathSuffix)
+
+		var logTextContent string
+		must(chromedp.Run(ctx,
+			chromedp.Navigate("http://localhost:8846"+pathSuffix),
+			chromedp.WaitVisible("#top"),
+			chromedp.Click("#togglec1"),
+			chromedp.WaitNotPresent("#c1"),
+			chromedp.Click("#togglec2"),
+			chromedp.WaitNotPresent("#c2"),
+			chromedp.Click("#refresh"),
+			chromedp.Click("#togglec1"),
+			chromedp.WaitVisible("#c1"),
+			chromedp.Click("#togglec2"),
+			chromedp.WaitVisible("#c2"),
+			chromedp.Evaluate("window.logTextContent", &logTextContent),
+		))
+
+		assert.Equal(logTextContent, `got C1.Init(ctx)
+got C1.Compute(ctx)
+got C2.Init()
+got C2.Compute()
+got C1.Rendered(ctx)[first=true]
+got C2.Rendered()
+got C2.Compute()
+got C1.Destroy(ctx)
+got C2.Rendered()
+got C2.Destroy()
+got C1.Init(ctx)
+got C1.Compute(ctx)
+got C1.Rendered(ctx)[first=true]
+got C1.Compute(ctx)
+got C2.Init()
+got C2.Compute()
+got C1.Rendered(ctx)[first=false]
+got C2.Rendered()
+`)
+		// log.Printf("logTextContext: %s", logTextContent)
+
+	}
+
+	t.Run("go", func(t *testing.T) { tf(t, mustGenBuildAndLoad(dir)) })
+	// FIXME: once tinygo module stuff is sorted out try this again
+	// t.Run("tinygo", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, nil)) })
 
 }
