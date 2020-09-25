@@ -65,7 +65,7 @@ Still a work in progress, but a lot of things are already functional. Some work 
 
 - [x] Single-file components (looks similar to .vue); .vugu -> .go code generation.
 - [x] Includes CSS in components.
-- [x] Basic flow control with vg-if, vg-for and output with vg-html.
+- [x] Basic flow control with vg-if, vg-for and output with vg-content.
 - [x] Dynamic attributes with `<tag :prop='expr'>`.
 - [x] Nested components with dynamic properties
 - [x] Efficiently syncs to browser DOM.
