@@ -1,9 +1,9 @@
 # Vugu
 
 [![Travis CI](https://travis-ci.org/vugu/vugu.svg?branch=master)](https://travis-ci.org/vugu/vugu)
-[![Go Report Card](https://goreportcard.com/badge/github.com/vugu/vugu)](https://goreportcard.com/report/github.com/vugu/vugu)
 [![GoDoc](https://godoc.org/github.com/vugu/vugu?status.svg)](https://godoc.org/github.com/vugu/vugu)
 [![stability-experimental](https://img.shields.io/badge/stability-experimental-orange.svg)](https://github.com/emersion/stability-badges#experimental)
+<!-- [![Go Report Card](https://goreportcard.com/badge/github.com/vugu/vugu)](https://goreportcard.com/report/github.com/vugu/vugu) -->
 
 Vugu is an experimental library for web UIs written in Go and targeting webassembly.  Guide and docs at https://www.vugu.org.
 Godoc at https://godoc.org/github.com/vugu/vugu.
