@@ -79,7 +79,7 @@ Still a work in progress, but a lot of things are already functional. Some work 
 - [x] Server-side rendering (works, needs more documentation and examples)
 - [x] Go-only component events
 - [x] Slots
-- [ ] Component library(s)
+- [ ] Component library(s) (wip!)
 - [ ] Performance optimizations
 - And much more...
 
