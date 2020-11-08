@@ -16,6 +16,7 @@ No node. No JS. No npm. No node_modules folder competing with your music library
 
 ## Updates ♨
 
+* 2020-11-08 Work in progress on a UI component library, the current concept is strongly influenced by both Bootstrap and Material Design.  Some specific components, code and documentation will follow soonest.
 * 2020-09-13 v0.3.3 Lifecycle callbacks implemented (Init, Compute, Rendered, Destroy) plus documentation https://vugu.org/doc/components#lifecycle
 * 2020-06-21 v0.3.2 Vugu+TinyGo is now functional; test suite updated so most tests are run with both default Go and TinyGo compilation; docs updated; Vugu+TinyGo example works https://github.com/vugu-examples/tinygo
 * 2020-04-26 v0.3.0 Slots are now implemented. Plus vg-js-create/vg-js-populate, vg-template, vg-var; vgform package has initial prototype for form inputs; docs written for these features plus for router and wiring (several pages added to vugu.org plus other individual sections). There are two small but breaking changes with this release: vg-html now escapes markup by default and vugu.DOMEvent was changed from a struct to an interface.  For the earlier vg-html behavior use `vg-html='vugu.HTML("...")'` (see https://www.vugu.org/doc/files/markup#vg-content) and existing DOMEvent code should fix by simply removing the pointer i.e. change `event *vugu.DOMEvent` to `event vugu.DOMEvent` - and also make sure to `go get -u github.com/vugu/vugu/cmd/vugugen` again.  I generally try to avoid these sorts of breaking changes but it's better to do them sooner rather than later.
