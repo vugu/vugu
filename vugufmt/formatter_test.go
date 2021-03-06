@@ -88,11 +88,13 @@ func TestUncompilableGo(t *testing.T) {
 		assert.NoError(t, err, f)
 		// get a handle on the file
 		testFile, err := ioutil.ReadFile(absPath)
-		testFileString := string(testFile)
 		assert.NoError(t, err, f)
+		testFileString := string(testFile)
 		// run gofmt on it
 		var buf bytes.Buffer
-		ferr := formatter.FormatHTML("oknow", strings.NewReader(testFileString), &buf)
+		err = formatter.FormatHTML("oknow", strings.NewReader(testFileString), &buf)
+		ferr, ok := err.(*FmtError)
+		assert.True(t, ok)
 		assert.NotNil(t, ferr, f)
 		// confirm the offset is correct!
 		assert.Equal(t, 46, ferr.Line, f)

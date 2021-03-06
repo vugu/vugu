@@ -296,7 +296,7 @@ func (mt *ModTracker) ModCheckAll(values ...interface{}) (ret bool) {
 				// just use bool(true) as the data value for a struct - this way it will always be modified the first time,
 				// but every subsequent check will solely depend on the checks on it's fields
 				oldval, ok := oldres.data.(bool)
-				mod = !ok || oldval != true
+				mod = !ok || !oldval
 				newdata = true
 
 				rvvt := rvv.Type()
