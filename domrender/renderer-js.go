@@ -60,12 +60,15 @@ func New(mountPointSelector string) (*JSRenderer, error) {
 	// enable debug logging
 	// ret.instructionList.logWriter = os.Stdout
 
-	ret.eventHandlerBuffer = make([]byte, 16384)
+	ret.eventHandlerBuffer = nil
 	// ret.eventHandlerTypedArray = js.TypedArrayOf(ret.eventHandlerBuffer)
 
 	ret.eventHandlerFunc = js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 		if len(args) != 1 {
 			panic(fmt.Errorf("eventHandlerFunc got arg slice not exactly 1 element in length: %#v", args))
+		}
+		if ret.eventHandlerBuffer == nil {
+			panic(fmt.Errorf("eventHandlerBuffer cannot be nil "))
 		}
 		n := js.CopyBytesToGo(ret.eventHandlerBuffer, args[0])
 		if n >= len(ret.eventHandlerBuffer) {
@@ -76,6 +79,18 @@ func New(mountPointSelector string) (*JSRenderer, error) {
 		// return jsEnv.handleRawDOMEvent(this, args)
 	})
 
+	ret.allocateEventBuffer = js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+		if len(args) != 1 {
+			panic(fmt.Errorf("allocateEventBuffer got arg slice not exactly 1 element in length: %#v", args))
+		}
+		bufferSize := args[0]
+
+		//log.Printf("allocated %vkb",bufferSize.Int()/1024)
+
+		ret.eventHandlerBuffer = make([]byte, bufferSize.Int())
+		return nil
+	})
+
 	// wire up the event handler func and the array that we used to communicate with instead of js.Value
 	// ret.window.Call("vuguSetEventHandlerAndBuffer", ret.eventHandlerFunc, ret.eventHandlerTypedArray)
 
@@ -84,6 +99,8 @@ func New(mountPointSelector string) (*JSRenderer, error) {
 
 	// wire up the event handler func
 	ret.window.Call("vuguSetEventHandler", ret.eventHandlerFunc)
+
+	ret.window.Call("vuguSetEventBufferAllocator", ret.allocateEventBuffer)
 
 	// log.Printf("ret.window: %#v", ret.window)
 	// log.Printf("eval: %#v", ret.window.Get("eval"))
@@ -120,8 +137,9 @@ type JSRenderer struct {
 	eventRWMU   sync.RWMutex       // make sure Render and event handling are not attempted at the same time (not totally sure if this is necessary in terms of the wasm threading model but enforce it with a rwmutex all the same)
 	eventEnv    *vugu.EventEnvImpl // our EventEnv implementation that exposes eventRWMU and eventWaitCh to events in a clean way
 
-	eventHandlerFunc   js.Func // the callback function for DOM events
-	eventHandlerBuffer []byte
+	eventHandlerFunc    js.Func // the callback function for DOM events
+	eventHandlerBuffer  []byte
+	allocateEventBuffer js.Func
 	// eventHandlerTypedArray js.TypedArray
 
 	instructionBuffer   []byte   // our local instruction buffer

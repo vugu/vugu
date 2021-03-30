@@ -139,6 +139,12 @@
         state.eventHandlerFunc = eventHandlerFunc;
     }
 
+    window.vuguSetEventBufferAllocator = function (allocateEventBuffer) {
+        let state = window.vuguState || {};
+        window.vuguState = state;
+        state.allocateEventBuffer = allocateEventBuffer;
+    }
+
     // function called when callback instructions are encountered
     window.vuguSetCallbackHandler = function (callbackHandlerFunc) {
         let state = window.vuguState || {};
@@ -805,24 +811,42 @@
 
                                 // console.log(state.eventBuffer);
 
-                                // make sure eventBuffer and eventBufferView are setup
-                                let eventBuffer = state.eventBuffer;
-                                if (!eventBuffer) {
-                                    // FIXME: not yet sure how to handle different lengths here,
-                                    // but for now this needs to be at least one byte shorter 
-                                    // than Go's buffer
-                                    eventBuffer = new Uint8Array(16383);
-                                    state.eventBuffer = eventBuffer;
-                                    state.eventBufferView = new DataView(eventBuffer.buffer, eventBuffer.byteOffset, eventBuffer.byteLength);
-                                }
-
                                 // write JSON to state.eventBuffer with uint32 length prefix
 
                                 let encodeResultBuffer = textEncoder.encode(fullJSON);
+
+                                const dataSize = encodeResultBuffer.byteLength - encodeResultBuffer.byteOffset
+                                // we need to allocate more bytes for storing data size in the beginning of the buffer
+                                const requiredBufferSize = dataSize + 4
+
+                                const computeEventBufferSize = (requiredBufferSize) => {
+                                    const sixteen_kb = 16384
+                                    const actualRequired = requiredBufferSize + 1
+                                    const remainder = actualRequired % sixteen_kb
+
+                                    // but for now this needs to be at least one byte shorter
+                                    // than Go's buffer
+                                    if (remainder === 0) {
+                                        return actualRequired - 1
+                                    }
+
+                                    return actualRequired + (sixteen_kb - remainder) - 1
+                                }
+
+                                // before eventHandlerFunc is called make sure eventBuffer and eventBufferView are setup,
+                                // and allocateEventBuffer is called
+                                let eventBuffer = state.eventBuffer;
+                                if (!eventBuffer || eventBuffer.length < requiredBufferSize) {
+                                    const eventBufferSize = computeEventBufferSize(requiredBufferSize)
+                                    eventBuffer = new Uint8Array(eventBufferSize);
+                                    state.eventBuffer = eventBuffer;
+                                    state.eventBufferView = new DataView(eventBuffer.buffer, eventBuffer.byteOffset, eventBuffer.byteLength);
+                                    state.allocateEventBuffer(eventBufferSize+1)
+                                }
                                 //console.log("encodeResult", encodeResult);
                                 state.eventBuffer.set(encodeResultBuffer, 4); // copy encoded string to event buffer
                                 // now write length using DataView as uint32
-                                state.eventBufferView.setUint32(0, encodeResultBuffer.byteLength - encodeResultBuffer.byteOffset);
+                                state.eventBufferView.setUint32(0, dataSize);
 
                                 // let result = textEncoder.encodeInto(fullJSON, state.eventBuffer);
                                 // let eventBufferDataView = new DataView(state.eventBuffer.buffer, state.eventBuffer.byteOffset, state.eventBuffer.byteLength);
@@ -896,7 +920,7 @@
                             break;
                         }
 
-                        // TODO: 
+                        // TODO:
                         // * find all tags that have the same element type (link or style)
                         // * for each one for style use textContent as key, for link use url
                         // * see if matching tag already exists
