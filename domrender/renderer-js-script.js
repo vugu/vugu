@@ -139,12 +139,6 @@
         state.eventHandlerFunc = eventHandlerFunc;
     }
 
-    window.vuguSetEventBufferAllocator = function (allocateEventBuffer) {
-        let state = window.vuguState || {};
-        window.vuguState = state;
-        state.allocateEventBuffer = allocateEventBuffer;
-    }
-
     // function called when callback instructions are encountered
     window.vuguSetCallbackHandler = function (callbackHandlerFunc) {
         let state = window.vuguState || {};
@@ -841,7 +835,6 @@
                                     eventBuffer = new Uint8Array(eventBufferSize);
                                     state.eventBuffer = eventBuffer;
                                     state.eventBufferView = new DataView(eventBuffer.buffer, eventBuffer.byteOffset, eventBuffer.byteLength);
-                                    state.allocateEventBuffer(eventBufferSize+1)
                                 }
                                 //console.log("encodeResult", encodeResult);
                                 state.eventBuffer.set(encodeResultBuffer, 4); // copy encoded string to event buffer
