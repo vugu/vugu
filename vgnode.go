@@ -279,9 +279,7 @@ func (n *VGNode) AddAttrInterface(key string, val interface{}) {
 
 // AddAttrList takes a VGAttributeLister and sets the returned attributes to the node
 func (n *VGNode) AddAttrList(lister VGAttributeLister) {
-	for _, attr := range lister.AttributeList() {
-		n.Attr = append(n.Attr, attr)
-	}
+	n.Attr = append(n.Attr, lister.AttributeList()...)
 }
 
 // SetInnerHTML assigns the InnerHTML field with useful logic based on the type of input.

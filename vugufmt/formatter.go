@@ -108,7 +108,7 @@ loop:
 				if len(ts) == 0 {
 					return nil
 				}
-				tagNames := make([]string, len(ts), len(ts))
+				tagNames := make([]string, len(ts))
 				for i, t := range ts {
 					tagNames[i] = t.Data
 				}
