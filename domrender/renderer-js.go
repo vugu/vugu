@@ -67,6 +67,11 @@ func New(mountPointSelector string) (*JSRenderer, error) {
 		if len(args) != 1 {
 			panic(fmt.Errorf("eventHandlerFunc got arg slice not exactly 1 element in length: %#v", args))
 		}
+		bufferLength := args[0].Length()
+		if cap(ret.eventHandlerBuffer) < bufferLength+1 {
+			ret.eventHandlerBuffer = make([]byte, bufferLength+1)
+		}
+		//log.Println(cap(ret.eventHandlerBuffer))
 		n := js.CopyBytesToGo(ret.eventHandlerBuffer, args[0])
 		if n >= len(ret.eventHandlerBuffer) {
 			panic(errors.New("event data is too large, cannot continue, len: " + strconv.Itoa(n)))

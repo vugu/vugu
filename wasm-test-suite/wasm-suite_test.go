@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"github.com/chromedp/chromedp/kb"
 	"io/ioutil"
 	"log"
 	"os"
@@ -9,6 +10,7 @@ import (
 	"regexp"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/chromedp"
@@ -907,4 +909,27 @@ got C2.Rendered()
 	// FIXME: once tinygo module stuff is sorted out try this again
 	// t.Run("tinygo", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, nil)) })
 
+}
+
+func Test024EventBufferSize(t *testing.T) {
+
+	dir, origDir := mustUseDir("test-024-event-buffer-size")
+	defer os.Chdir(origDir)
+
+	tf := func(t *testing.T, pathSuffix string) {
+
+		ctx, cancel := mustChromeCtx()
+		ctx, cancel = context.WithTimeout(ctx, 60*time.Second)
+		defer cancel()
+		var val string
+		must(chromedp.Run(ctx,
+			chromedp.Navigate("http://localhost:8846"+pathSuffix),
+			chromedp.WaitVisible("#top"),
+			// trigger the change event
+			chromedp.SendKeys("select", kb.ArrowDown+kb.ArrowDown),
+			chromedp.Value(`select`, &val),
+		))
+		log.Println(val)
+	}
+	t.Run("go", func(t *testing.T) { tf(t, mustGenBuildAndLoad(dir)) })
 }
