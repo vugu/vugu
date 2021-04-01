@@ -5,6 +5,7 @@ require (
 	github.com/chromedp/chromedp v0.5.1
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/stretchr/testify v1.4.0
+	github.com/tdewolff/minify/v2 v2.9.15 // indirect
 	github.com/vugu/html v0.0.0-20190914200101-c62dc20b8289
 	github.com/vugu/vjson v0.0.0-20200505061711-f9cbed27d3d9
 	github.com/vugu/xxhash v0.0.0-20191111030615-ed24d0179019
