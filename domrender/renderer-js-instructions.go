@@ -129,6 +129,17 @@ func (il *instructionList) checkLenAndFlush(l int) error {
 	return err
 }
 
+func computeRequiredSize(requiredSize int) int {
+	const kb int = 16384
+	remainder := requiredSize % kb
+	if remainder == 0 {
+		return requiredSize
+	}
+
+	return requiredSize + (kb - remainder)
+
+}
+
 func (il *instructionList) checkLen(l int) error {
 	if il.pos+l > len(il.buf)-1 {
 		return errDoesNotFit
