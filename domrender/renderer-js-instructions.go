@@ -123,6 +123,13 @@ func (il *instructionList) checkLenAndFlush(l int) error {
 				return err
 			}
 			err = il.checkLen(l)
+			if err == errDoesNotFit {
+				size := computeRequiredSize(il.pos + l)
+				buf := make([]byte, size)
+				copy(buf, il.buf)
+				il.buf = buf
+				err = il.checkLen(l)
+			}
 		}
 	}
 
