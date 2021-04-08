@@ -44,7 +44,7 @@ func New(mountPointSelector string) (*JSRenderer, error) {
 	ret.instructionBufferJS = ret.window.Call("vuguGetRenderArray")
 
 	ret.instructionList = newInstructionList(ret.instructionBuffer, func(il *instructionList) error {
-		log.Println("string", string(il.buf))
+
 		// call vuguRender to have the instructions processed in JS
 		if il.pos > cap(ret.instructionBuffer) {
 			size := computeRequiredSize(il.pos)
@@ -60,8 +60,6 @@ func New(mountPointSelector string) (*JSRenderer, error) {
 
 		// then call vuguRender
 		ret.window.Call("vuguRender" /*, ret.instructionBufferJS*/)
-		log.Println("vugurender")
-		log.Println("string-after", string(il.buf))
 
 		return nil
 	})
