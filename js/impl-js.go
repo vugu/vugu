@@ -54,7 +54,7 @@ func FuncOf(fn func(Value, []Value) interface{}) Func {
 		for i := range args {
 			args2[i] = Value(args[i])
 		}
-		return fn(Value(this), args2)
+		return fixArgToSjs(fn(Value(this), args2))
 	}
 
 	f := sjs.FuncOf(fn2)
