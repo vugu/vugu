@@ -117,6 +117,7 @@ type Wrapper interface {
 
 // Value placeholder for syscall/js
 type Value struct {
+	_    [0]func() // uncomparable; to make == not compile
 	stub uint64
 }
 
