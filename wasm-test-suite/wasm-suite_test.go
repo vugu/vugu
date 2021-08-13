@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"github.com/chromedp/chromedp/kb"
 	"io/ioutil"
 	"log"
 	"os"
@@ -14,6 +13,7 @@ import (
 
 	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/chromedp"
+	"github.com/chromedp/chromedp/kb"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -932,4 +932,35 @@ func Test024EventBufferSize(t *testing.T) {
 		log.Println(val)
 	}
 	t.Run("go", func(t *testing.T) { tf(t, mustGenBuildAndLoad(dir)) })
+}
+
+func Test025JSValueOf(t *testing.T) {
+
+	dir, origDir := mustUseDir("test-025-js-value-of")
+	defer os.Chdir(origDir)
+
+	tf := func(t *testing.T, pathSuffix string) {
+
+		assert := assert.New(t)
+
+		ctx, cancel := mustChromeCtx()
+		defer cancel()
+
+		imgURL, imgURLOk := "", false
+
+		must(chromedp.Run(ctx,
+			chromedp.Navigate("http://localhost:8846"+pathSuffix),
+			chromedp.WaitVisible("#success-img"),
+			chromedp.AttributeValue("#success-img", "src", &imgURL, &imgURLOk),
+		))
+
+		// Checking the resulting url. It may not be that important for this test, just in case.
+		assert.Equal("data:image/bmp;base64,Qk32AAAAAAAAADYAAAAoAAAABwAAAAgAAAABABgAAAAAAMAAAAAAAAAAAAAAAAAAAAAAAAAAboqiRFhpEh4kGEJNHSVOFxpFEBkbAAAAxJuCuJqCboOfPY6qVXXAPk2RDBcZAAAAjYF3bEsqqrjJf4eembDERFJUGy49AAAAUnSRAQAAi4SBu87vNk5oCAoKMUthAAAAXoCdGy4/Y2l0i6nMITlRKj1MLkddAAAATW6IGS5DV2F5NE54HDVLQl13JThHAAAAOVNpECIvT1hrGS5PIjlOK0JXIDI/AAAAITpKCh0sBhEaDBoiI0BVGi08GCYwAAAA", imgURL)
+
+	}
+
+	t.Run("go", func(t *testing.T) { tf(t, mustGenBuildAndLoad(dir)) })
+	// BUG: Test 025 times out with tinygo
+	//t.Run("tinygo", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, nil)) })
+
 }

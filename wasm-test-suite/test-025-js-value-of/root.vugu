@@ -1,0 +1,9 @@
+<div>
+	<main:Test></main:Test>
+</div>
+
+<script type="application/x-go">
+
+	type Root struct{}
+
+</script>
