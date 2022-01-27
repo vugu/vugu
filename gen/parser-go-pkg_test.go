@@ -205,6 +205,13 @@ func TestRun(t *testing.T) {
 
 			tstWriteFiles(tmpDir, tc.bfiles)
 
+			cmd := exec.Command("go", "mod", "tidy")
+			cmd.Dir = tmpDir
+			b, err := cmd.CombinedOutput()
+			if err != nil {
+				t.Fatalf("go mod tidy error: %s; OUTPUT:\n%s", err, b)
+			}
+
 			switch tc.build {
 
 			case "wasm":

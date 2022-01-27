@@ -141,6 +141,7 @@ func mustGenBuildAndLoad(absdir string) string {
 // returns path suffix
 func mustBuildAndLoad(absdir string) string {
 
+	fmt.Print(distutil.MustEnvExec([]string{"GOOS=js", "GOARCH=wasm"}, "go", "mod", "tidy"))
 	fmt.Print(distutil.MustEnvExec([]string{"GOOS=js", "GOARCH=wasm"}, "go", "build", "-o", filepath.Join(absdir, "main.wasm"), "."))
 
 	mustWriteSupportFiles(absdir, true)
@@ -187,7 +188,7 @@ func mustChromeCtx() (context.Context, context.CancelFunc) {
 
 	ctx, _ := chromedp.NewContext(allocCtx) // , chromedp.WithLogf(log.Printf))
 	// defer cancel()
-	ctx, cancel := context.WithTimeout(ctx, 15*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 60*time.Second)
 	// defer cancel()
 
 	return ctx, cancel
