@@ -1,5 +1,3 @@
-// +build !tinygo
-
 package vugu
 
 type buildCacheKey interface{}

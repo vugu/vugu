@@ -263,13 +263,15 @@ func (n *VGNode) AddAttrInterface(key string, val interface{}) {
 		// check if this is a ptr
 		rv := reflect.ValueOf(val)
 		if rv.Kind() == reflect.Ptr {
+			if rv.IsNil() {
+				return
+			}
 			// indirect the ptr and recurse
 			if !rvIsZero(rv) {
 				n.AddAttrInterface(key, reflect.Indirect(rv).Interface())
 			}
 			return
 		}
-
 		// fall back to fmt
 		nattr.Val = fmt.Sprintf("%v", val)
 	}
@@ -349,10 +351,16 @@ func (n *VGNode) SetInnerHTML(val interface{}) {
 	default:
 		// check if this is a ptr
 		rv := reflect.ValueOf(val)
+
 		if rv.Kind() == reflect.Ptr {
-			// indirect the ptr and recurse
+			if rv.IsNil() {
+				return
+			}
 			if !rvIsZero(rv) {
-				n.SetInnerHTML(reflect.Indirect(rv).Interface())
+				indirected := reflect.Indirect(rv)
+				if !indirected.IsNil() {
+					n.SetInnerHTML(indirected.Interface())
+				}
 			}
 			return
 		}

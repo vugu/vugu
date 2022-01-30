@@ -500,10 +500,6 @@ func mustTGGenBuildAndLoad(absdir string, goGetList []string) string {
 	wc := devutil.MustNewTinygoCompiler().SetDir(absdir)
 	defer wc.Close()
 
-	goGetList = append(goGetList, "github.com/vugu/vugu", "github.com/vugu/vjson")
-
-	wc.AddGoGet("go get -u -x " + strings.Join(goGetList, " ")) // third party packages must have `go get` run on them for tinygo to compile (for now)
-
 	outfile, err := wc.Execute()
 	if err != nil {
 		panic(err)
