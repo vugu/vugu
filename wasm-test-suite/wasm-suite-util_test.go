@@ -493,12 +493,16 @@ func mustTGBuildAndLoad(absdir, buildGopath string) string {
 	return uploadPath
 }
 
-func mustTGGenBuildAndLoad(absdir string, goGetList []string) string {
+func mustTGGenBuildAndLoad(absdir string, useDocker bool) string {
 
 	mustTGGen(absdir)
 
 	wc := devutil.MustNewTinygoCompiler().SetDir(absdir)
 	defer wc.Close()
+
+	if !useDocker {
+		wc = wc.NoDocker()
+	}
 
 	outfile, err := wc.Execute()
 	if err != nil {
@@ -512,10 +516,7 @@ func mustTGGenBuildAndLoad(absdir string, goGetList []string) string {
 	must(err)
 	wasmExecJSB, err := ioutil.ReadAll(wasmExecJSR)
 	must(err)
-	// log.Printf("HERE absdir=%q", absdir)
-	// log.Printf("HERE2 wasm_exec.js=%q", wasmExecJSB[:2000])
 	wasmExecJSPath := filepath.Join(absdir, "wasm_exec.js")
-	// log.Printf("HERE3: %q", wasmExecJSPath)
 	must(ioutil.WriteFile(wasmExecJSPath, wasmExecJSB, 0644))
 
 	mustWriteSupportFiles(absdir, false)
