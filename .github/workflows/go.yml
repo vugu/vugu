@@ -39,4 +39,4 @@ jobs:
     - run: go test ./staticrender
     - run: go test ./simplehttp
     - run: go test ./vgform
-    - run: go test ./wasm-test-suite
+    - run: go test -timeout=20m ./wasm-test-suite
