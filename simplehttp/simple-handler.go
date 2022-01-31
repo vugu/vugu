@@ -210,8 +210,6 @@ doBuild:
 		os.Remove(f.Name())
 		defer os.Remove(f.Name())
 
-		var cmd *exec.Cmd
-
 		startTime := time.Now()
 		if h.EnableGenerate {
 			cmd := exec.Command("go", "generate", ".")
@@ -229,11 +227,18 @@ doBuild:
 
 		// GOOS=js GOARCH=wasm go build -o main.wasm .
 		startTime = time.Now()
-		cmd = exec.Command("go", "build", "-o", fpath, ".")
-		cmd.Dir = h.Dir
-		cmd.Env = append(cmd.Env, os.Environ()...)
-		cmd.Env = append(cmd.Env, "GOOS=js", "GOARCH=wasm")
-		b, err := cmd.CombinedOutput()
+		runCommand := func(args ...string) ([]byte, error) {
+			cmd := exec.Command(args[0], args[1:]...)
+			cmd.Dir = h.Dir
+			cmd.Env = append(cmd.Env, os.Environ()...)
+			cmd.Env = append(cmd.Env, "GOOS=js", "GOARCH=wasm")
+			b, err := cmd.CombinedOutput()
+			return b, err
+		}
+		b, err := runCommand("go", "mod", "tidy")
+		if err == nil {
+			b, err = runCommand("go", "build", "-o", fpath, ".")
+		}
 		w.Header().Set("X-Go-Build-Duration", time.Since(startTime).String())
 		if err != nil {
 			msg := fmt.Sprintf("Error from compile: %v (out path=%q); Output:\n%s", err, fpath, b)

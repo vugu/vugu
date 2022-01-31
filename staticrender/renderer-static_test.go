@@ -170,9 +170,15 @@ func main() {
 			tstWriteFiles(tmpDir, tc.bfiles)
 
 			// build executable for this platform
-			cmd := exec.Command("go", "build", "-o", "main.out", ".")
+			cmd := exec.Command("go", "mod", "tidy")
 			cmd.Dir = tmpDir
 			b, err := cmd.CombinedOutput()
+			if err != nil {
+				t.Fatalf("build error: %s; OUTPUT:\n%s", err, b)
+			}
+			cmd = exec.Command("go", "build", "-o", "main.out", ".")
+			cmd.Dir = tmpDir
+			b, err = cmd.CombinedOutput()
 			if err != nil {
 				t.Fatalf("build error: %s; OUTPUT:\n%s", err, b)
 			}

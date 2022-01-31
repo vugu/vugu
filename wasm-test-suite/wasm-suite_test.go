@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"github.com/chromedp/chromedp/kb"
 	"io/ioutil"
 	"log"
 	"os"
@@ -11,6 +10,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/chromedp/chromedp/kb"
 
 	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/chromedp"

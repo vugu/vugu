@@ -98,7 +98,10 @@ func TestMissingFixer(t *testing.T) {
 	// if the above worked, try compiling it
 	must(ioutil.WriteFile(filepath.Join(tmpDir, "main.go"), []byte("package main\n\nfunc main(){}\n"), 0644))
 
-	cmd := exec.Command("go", "build", "-o", "a.out", ".")
+	cmd := exec.Command("go", "mod", "tidy")
+	cmd.Dir = tmpDir
+	cmd.CombinedOutput()
+	cmd = exec.Command("go", "build", "-o", "a.out", ".")
 	cmd.Dir = tmpDir
 	b, err = cmd.CombinedOutput()
 	if err != nil {
