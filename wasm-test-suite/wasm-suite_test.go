@@ -11,10 +11,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/chromedp/chromedp/kb"
-
 	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/chromedp"
+	"github.com/chromedp/chromedp/kb"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -72,8 +71,8 @@ func Test001Simple(t *testing.T) {
 	}
 
 	t.Run("go", func(t *testing.T) { tf(t, mustGenBuildAndLoad(dir)) })
-	t.Run("tinygo", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, false)) })
-	t.Run("tinygo", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, true)) })
+	t.Run("tinygo/NoDocker", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, false)) })
+	t.Run("tinygo/Docker", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, true)) })
 
 }
 
@@ -106,8 +105,8 @@ func Test002Click(t *testing.T) {
 	}
 
 	t.Run("go", func(t *testing.T) { tf(t, mustGenBuildAndLoad(dir)) })
-	t.Run("tinygo", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, false)) })
-	t.Run("tinygo", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, true)) })
+	t.Run("tinygo/NoDocker", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, false)) })
+	t.Run("tinygo/Docker", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, true)) })
 
 }
 
@@ -135,9 +134,8 @@ func Test003Prop(t *testing.T) {
 	}
 
 	t.Run("go", func(t *testing.T) { tf(t, mustGenBuildAndLoad(dir)) })
-	t.Run("tinygo", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, false)) })
-	t.Run("tinygo", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, true)) })
-
+	t.Run("tinygo/NoDocker", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, false)) })
+	t.Run("tinygo/Docker", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, true)) })
 }
 
 func Test004Component(t *testing.T) {
@@ -162,9 +160,8 @@ func Test004Component(t *testing.T) {
 	}
 
 	t.Run("go", func(t *testing.T) { tf(t, mustGenBuildAndLoad(dir)) })
-	t.Run("tinygo", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, false)) })
-	t.Run("tinygo", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, true)) })
-
+	t.Run("tinygo/NoDocker", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, false)) })
+	t.Run("tinygo/Docker", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, true)) })
 }
 
 func Test005Issue80(t *testing.T) {
@@ -187,9 +184,8 @@ func Test005Issue80(t *testing.T) {
 	}
 
 	t.Run("go", func(t *testing.T) { tf(t, mustGenBuildAndLoad(dir)) })
-	t.Run("tinygo", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, false)) })
-	t.Run("tinygo", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, true)) })
-
+	t.Run("tinygo/NoDocker", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, false)) })
+	t.Run("tinygo/Docker", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, true)) })
 }
 
 // TODO Rename it to Test006HtmlAttr ?
@@ -235,9 +231,8 @@ func Test006Issue81(t *testing.T) {
 	}
 
 	t.Run("go", func(t *testing.T) { tf(t, mustGenBuildAndLoad(dir)) })
-	t.Run("tinygo", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, false)) })
-	t.Run("tinygo", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, true)) })
-
+	t.Run("tinygo/NoDocker", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, false)) })
+	t.Run("tinygo/Docker", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, true)) })
 }
 
 func Test007Issue85(t *testing.T) {
@@ -257,9 +252,8 @@ func Test007Issue85(t *testing.T) {
 	}
 
 	t.Run("go", func(t *testing.T) { tf(t, mustGenBuildAndLoad(dir)) })
-	t.Run("tinygo", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, false)) })
-	t.Run("tinygo", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, true)) })
-
+	t.Run("tinygo/NoDocker", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, false)) })
+	t.Run("tinygo/Docker", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, true)) })
 }
 
 func Test008For(t *testing.T) {
@@ -320,9 +314,8 @@ func Test008For(t *testing.T) {
 			}
 
 			t.Run("go", func(t *testing.T) { tf(t, mustGenBuildAndLoad(dir)) })
-			t.Run("tinygo", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, false)) })
-			t.Run("tinygo", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, true)) })
-
+			t.Run("tinygo/NoDocker", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, false)) })
+			t.Run("tinygo/Docker", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, true)) })
 		})
 	}
 }
@@ -354,9 +347,8 @@ func Test009TrimUnused(t *testing.T) {
 	}
 
 	t.Run("go", func(t *testing.T) { tf(t, mustGenBuildAndLoad(dir)) })
-	t.Run("tinygo", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, false)) })
-	t.Run("tinygo", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, true)) })
-
+	t.Run("tinygo/NoDocker", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, false)) })
+	t.Run("tinygo/Docker", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, true)) })
 }
 
 func Test010ListenerReadd(t *testing.T) {
@@ -387,8 +379,8 @@ func Test010ListenerReadd(t *testing.T) {
 	}
 
 	t.Run("go", func(t *testing.T) { tf(t, mustGenBuildAndLoad(dir)) })
-	t.Run("tinygo", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, false)) })
-	t.Run("tinygo", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, true)) })
+	t.Run("tinygo/NoDocker", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, false)) })
+	t.Run("tinygo/Docker", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, true)) })
 
 }
 
@@ -413,9 +405,8 @@ func Test011Wire(t *testing.T) {
 	}
 
 	t.Run("go", func(t *testing.T) { tf(t, mustGenBuildAndLoad(dir)) })
-	t.Run("tinygo", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, false)) })
-	t.Run("tinygo", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, true)) })
-
+	t.Run("tinygo/NoDocker", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, false)) })
+	t.Run("tinygo/Docker", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, true)) })
 }
 
 func Test012Router(t *testing.T) {
@@ -473,8 +464,8 @@ func Test012Router(t *testing.T) {
 	}
 
 	t.Run("go", func(t *testing.T) { tf(t, mustGenBuildAndLoad(dir)) })
-	t.Run("tinygo", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, false)) })
-	t.Run("tinygo", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, true)) })
+	t.Run("tinygo/NoDocker", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, false)) })
+	t.Run("tinygo/Docker", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, true)) })
 }
 
 func Test013Issue117(t *testing.T) {
@@ -500,8 +491,8 @@ func Test013Issue117(t *testing.T) {
 	}
 
 	t.Run("go", func(t *testing.T) { tf(t, mustGenBuildAndLoad(dir)) })
-	t.Run("tinygo", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, false)) })
-	t.Run("tinygo", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, true)) })
+	t.Run("tinygo/NoDocker", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, false)) })
+	t.Run("tinygo/Docker", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, true)) })
 }
 
 func Test014AttrIntf(t *testing.T) {
@@ -551,8 +542,8 @@ func Test014AttrIntf(t *testing.T) {
 	}
 
 	t.Run("go", func(t *testing.T) { tf(t, mustGenBuildAndLoad(dir)) })
-	t.Run("tinygo", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, false)) })
-	t.Run("tinygo", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, true)) })
+	t.Run("tinygo/NoDocker", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, false)) })
+	t.Run("tinygo/Docker", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, true)) })
 
 }
 
@@ -599,8 +590,8 @@ func Test015AttrList(t *testing.T) {
 	}
 
 	t.Run("go", func(t *testing.T) { tf(t, mustGenBuildAndLoad(dir)) })
-	t.Run("tinygo", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, false)) })
-	t.Run("tinygo", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, true)) })
+	t.Run("tinygo/NoDocker", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, false)) })
+	t.Run("tinygo/Docker", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, true)) })
 
 }
 
@@ -630,8 +621,8 @@ func Test016SVG(t *testing.T) {
 	}
 
 	t.Run("go", func(t *testing.T) { tf(t, mustGenBuildAndLoad(dir)) })
-	t.Run("tinygo", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, false)) })
-	t.Run("tinygo", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, true)) })
+	t.Run("tinygo/NoDocker", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, false)) })
+	t.Run("tinygo/Docker", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, true)) })
 
 }
 
@@ -674,8 +665,8 @@ func Test017Nesting(t *testing.T) {
 	}
 
 	t.Run("go", func(t *testing.T) { tf(t, mustGenBuildAndLoad(dir)) })
-	t.Run("tinygo", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, false)) })
-	t.Run("tinygo", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, true)) })
+	t.Run("tinygo/NoDocker", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, false)) })
+	t.Run("tinygo/Docker", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, true)) })
 
 }
 
@@ -708,8 +699,8 @@ func Test018CompEvents(t *testing.T) {
 	}
 
 	t.Run("go", func(t *testing.T) { tf(t, mustGenBuildAndLoad(dir)) })
-	t.Run("tinygo", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, false)) })
-	t.Run("tinygo", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, true)) })
+	t.Run("tinygo/NoDocker", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, false)) })
+	t.Run("tinygo/Docker", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, true)) })
 
 }
 
@@ -785,8 +776,8 @@ func Test020VGForm(t *testing.T) {
 	}
 
 	t.Run("go", func(t *testing.T) { tf(t, mustGenBuildAndLoad(dir)) })
-	t.Run("tinygo", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, false)) })
-	t.Run("tinygo", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, true)) })
+	t.Run("tinygo/NoDocker", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, false)) })
+	t.Run("tinygo/Docker", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, true)) })
 }
 
 func Test021Slots(t *testing.T) {
@@ -823,8 +814,8 @@ func Test021Slots(t *testing.T) {
 	}
 
 	t.Run("go", func(t *testing.T) { tf(t, mustGenBuildAndLoad(dir)) })
-	t.Run("tinygo", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, false)) })
-	t.Run("tinygo", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, true)) })
+	t.Run("tinygo/NoDocker", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, false)) })
+	t.Run("tinygo/Docker", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, true)) })
 
 }
 
@@ -861,9 +852,8 @@ func Test022EventListener(t *testing.T) {
 	}
 
 	t.Run("go", func(t *testing.T) { tf(t, mustGenBuildAndLoad(dir)) })
-	t.Run("tinygo", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, false)) })
-	t.Run("tinygo", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, true)) })
-
+	t.Run("tinygo/NoDocker", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, false)) })
+	t.Run("tinygo/Docker", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, true)) })
 }
 
 func Test023LifecycleCallbacks(t *testing.T) {
@@ -920,8 +910,8 @@ got C2.Rendered()
 	}
 
 	t.Run("go", func(t *testing.T) { tf(t, mustGenBuildAndLoad(dir)) })
-	t.Run("tinygo", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, false)) })
-	t.Run("tinygo", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, true)) })
+	t.Run("tinygo/NoDocker", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, false)) })
+	t.Run("tinygo/Docker", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, true)) })
 }
 
 func Test024EventBufferSize(t *testing.T) {
