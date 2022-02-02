@@ -768,11 +768,14 @@
                                 let eventObj = {};
                                 // console.log(event);
                                 for (let i in event) {
-                                    let itype = typeof (event[i]);
-                                    // copy primitive values directly
-                                    if ((itype == "boolean" || itype == "number" || itype == "string") && true/*event.hasOwnProperty(i)*/) {
-                                        eventObj[i] = event[i];
-                                    }
+                                    try {
+                                        // accessing `selectionDirection`, `selectionStart`, or `selectionEnd` throws in WebKit-based browsers.
+                                        let itype = typeof (event[i]);
+                                        // copy primitive values directly
+                                        if (itype == "boolean" || itype == "number" || itype == "string") {
+                                            eventObj[i] = event[i];
+                                        }
+                                    } catch {}
                                 }
 
                                 // also do the same for anything in "target"
@@ -780,10 +783,12 @@
                                     eventObj.target = {};
                                     let et = event.target;
                                     for (let i in et) {
-                                        let itype = typeof (et[i]);
-                                        if ((itype == "boolean" || itype == "number" || itype == "string") && true/*et.hasOwnProperty(i)*/) {
-                                            eventObj.target[i] = et[i];
-                                        }
+                                        try {
+                                            let itype = typeof (et[i]);
+                                            if (itype == "boolean" || itype == "number" || itype == "string") {
+                                                eventObj.target[i] = et[i];
+                                            }
+                                        } catch {}
                                     }
                                 }
 
