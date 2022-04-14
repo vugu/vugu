@@ -60,6 +60,14 @@ func (r *BuildResults) ResultFor(component interface{}) *BuildOut {
 	return r.allOut[makeBuildCacheKey(component)]
 }
 
+func (r *BuildResults) AllOut() []*BuildOut {
+	res := make([]*BuildOut, 0, len(r.allOut))
+	for _, c := range r.allOut {
+		res = append(res, c)
+	}
+	return res
+}
+
 // RunBuild performs a bulid on a component, managing the lifecycles of nested components and related concerned.
 // In the map that is output, m[builder] will give the BuildOut for the component in question.  Child components
 // can likewise be indexed using the component (which should be a struct pointer) as the key.
