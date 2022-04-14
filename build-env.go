@@ -60,6 +60,7 @@ func (r *BuildResults) ResultFor(component interface{}) *BuildOut {
 	return r.allOut[makeBuildCacheKey(component)]
 }
 
+// Slice of all rendered components for 'Rendered' lifecycle callbacks.
 func (r *BuildResults) AllOut() []*BuildOut {
 	res := make([]*BuildOut, 0, len(r.allOut))
 	for _, c := range r.allOut {
