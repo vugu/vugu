@@ -191,7 +191,7 @@ func (il *instructionList) writeSetAttrNSStr(namespace, name, value string) erro
 
 	il.logf("writeSetAttrNSStr[%d](ns=%q, name=%q, value=%q)", opcodeSetAttrNSStr, namespace, name, value)
 
-	size := len(namespace) + len(name) + len(value) + 9
+	size := len(namespace) + len(name) + len(value) + 13
 
 	err := il.checkLenAndFlush(size)
 	if err != nil {
