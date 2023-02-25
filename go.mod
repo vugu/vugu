@@ -8,7 +8,7 @@ require (
 	github.com/vugu/html v0.0.0-20190914200101-c62dc20b8289
 	github.com/vugu/vjson v0.0.0-20200505061711-f9cbed27d3d9
 	github.com/vugu/xxhash v0.0.0-20191111030615-ed24d0179019
-	golang.org/x/sys v0.0.0-20200724161237-0e2f3a69832c // indirect
+	golang.org/x/sys v0.1.0 // indirect
 	golang.org/x/text v0.3.0
 )
 
