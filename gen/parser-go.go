@@ -70,10 +70,10 @@ func gofmt(pgm string) (string, error) {
 
 	// wait until gofmt is done
 	if err := cmd.Wait(); err != nil {
-		return pgm, fmt.Errorf("go fmt error %v; full output: %s", err, string(fmtOutput.Bytes()))
+		return pgm, fmt.Errorf("go fmt error %v; full output: %s", err, fmtOutput.String())
 	}
 
-	return string(fmtOutput.Bytes()), nil
+	return fmtOutput.String(), nil
 }
 
 // Parse is an experiment...
