@@ -1,0 +1,30 @@
+<div id="test-div">
+	<div id="source-div">data:image/bmp;base64,Qk32AAAAAAAAADYAAAAoAAAABwAAAAgAAAABABgAAAAAAMAAAAAAAAAAAAAAAAAAAAAAAAAAboqiRFhpEh4kGEJNHSVOFxpFEBkbAAAAxJuCuJqCboOfPY6qVXXAPk2RDBcZAAAAjYF3bEsqqrjJf4eembDERFJUGy49AAAAUnSRAQAAi4SBu87vNk5oCAoKMUthAAAAXoCdGy4/Y2l0i6nMITlRKj1MLkddAAAATW6IGS5DV2F5NE54HDVLQl13JThHAAAAOVNpECIvT1hrGS5PIjlOK0JXIDI/AAAAITpKCh0sBhEaDBoiI0BVGi08GCYwAAAA</div>
+</div>
+
+<script type="application/x-go">
+
+	import (
+		"github.com/vugu/vugu"
+	)
+
+	type Test struct{}
+
+	func (c *Test) Rendered(ctx vugu.RenderedCtx) {
+		document := js.Global().Get("document")
+		testDiv := document.Call("getElementById", "test-div")
+		sourceDiv := document.Call("getElementById", "source-div")
+
+		// Get text content of source element as a js.Value object.
+		someText := sourceDiv.Get("innerText")
+
+		// Do something with the text object.
+		img := document.Call("createElement", "img")
+		img.Set("src", someText) // This would panic if vugu/js passes its js.Value directly to syscall/js without converting it. (Panic: ValueOf: invalid value)
+
+		// Insert image into DOM just because, and to give the test something to check for.
+		testDiv.Call("appendChild", img)
+		img.Set("id", "success-img")
+	}
+
+</script>

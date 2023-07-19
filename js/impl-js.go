@@ -54,7 +54,7 @@ func FuncOf(fn func(Value, []Value) interface{}) Func {
 		for i := range args {
 			args2[i] = Value(args[i])
 		}
-		return fn(Value(this), args2)
+		return fixArgToSjs(fn(Value(this), args2))
 	}
 
 	f := sjs.FuncOf(fn2)
@@ -109,7 +109,7 @@ func Global() Value {
 
 // ValueOf alias to syscall/js
 func ValueOf(x interface{}) Value {
-	return Value(sjs.ValueOf(x))
+	return Value(sjs.ValueOf(fixArgToSjs(x)))
 }
 
 // CopyBytesToGo alias to syscall/js
@@ -172,7 +172,7 @@ func (v Value) Get(p string) Value {
 }
 
 func (v Value) Set(p string, x interface{}) {
-	sjs.Value(v).Set(p, x)
+	sjs.Value(v).Set(p, fixArgToSjs(x))
 }
 
 func (v Value) Index(i int) Value {
@@ -180,7 +180,7 @@ func (v Value) Index(i int) Value {
 }
 
 func (v Value) SetIndex(i int, x interface{}) {
-	sjs.Value(v).SetIndex(i, x)
+	sjs.Value(v).SetIndex(i, fixArgToSjs(x))
 }
 
 func (v Value) Length() int {
@@ -229,6 +229,19 @@ func (v Value) IsUndefined() bool {
 
 func (v Value) IsNull() bool {
 	return sjs.Value(v).IsNull()
+}
+
+// fixArgToSjs converts any Value to sjs.Value.
+// This prevents "ValueOf: invalid value" panics.
+func fixArgToSjs(arg interface{}) interface{} {
+	if val, ok := arg.(Value); ok {
+		return sjs.Value(val)
+	}
+	if f, ok := arg.(Func); ok {
+		arg = f.f
+	}
+
+	return arg
 }
 
 func fixArgsToSjs(args []interface{}) []interface{} {
