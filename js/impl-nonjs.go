@@ -117,6 +117,7 @@ type Wrapper interface {
 
 // Value placeholder for syscall/js
 type Value struct {
+	_    [0]func() // uncomparable; to make == not compile
 	stub uint64
 }
 
@@ -135,6 +136,10 @@ func (v Value) Get(p string) Value {
 }
 
 func (v Value) Set(p string, x interface{}) {
+	panic(errNotImpl)
+}
+
+func (v Value) Delete(p string) {
 	panic(errNotImpl)
 }
 
@@ -182,6 +187,10 @@ func (v Value) String() string {
 	return ""
 }
 
+func (v Value) Equal(w Value) bool {
+	return false
+}
+
 func (v Value) InstanceOf(t Value) bool {
 	return false
 }
@@ -191,5 +200,9 @@ func (v Value) IsUndefined() bool {
 }
 
 func (v Value) IsNull() bool {
+	return false
+}
+
+func (v Value) IsNaN() bool {
 	return false
 }

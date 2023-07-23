@@ -175,6 +175,10 @@ func (v Value) Set(p string, x interface{}) {
 	sjs.Value(v).Set(p, x)
 }
 
+func (v Value) Delete(p string) {
+	sjs.Value(v).Delete(p)
+}
+
 func (v Value) Index(i int) Value {
 	return Value(sjs.Value(v).Index(i))
 }
@@ -219,6 +223,10 @@ func (v Value) String() string {
 	return sjs.Value(v).String()
 }
 
+func (v Value) Equal(w Value) bool {
+	return sjs.Value(v).Equal(sjs.Value(w))
+}
+
 func (v Value) InstanceOf(t Value) bool {
 	return sjs.Value(v).InstanceOf(sjs.Value(t))
 }
@@ -229,6 +237,10 @@ func (v Value) IsUndefined() bool {
 
 func (v Value) IsNull() bool {
 	return sjs.Value(v).IsNull()
+}
+
+func (v Value) IsNaN() bool {
+	return sjs.Value(v).IsNaN()
 }
 
 func fixArgsToSjs(args []interface{}) []interface{} {
