@@ -15,7 +15,6 @@ import (
 	"mime/multipart"
 	"net/http"
 	"os"
-	"path"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -266,14 +265,20 @@ func mustUploadDir(dir, endpoint string) string {
 
 		absPath, err := filepath.Abs(fpath)
 		if err != nil {
-			panic(err)
+			return err
 		}
 
-		relPath := path.Clean("/" + strings.TrimPrefix(absPath, absDir))
+		relPath, err := filepath.Rel(absDir, absPath)
+		if err != nil {
+			return err
+		}
 
 		// log.Printf("path = %q, fi.Name = %q", path, fi.Name())
 		hdr, err := tar.FileInfoHeader(fi, "")
-		hdr.Name = relPath
+		if err != nil {
+			return err
+		}
+		hdr.Name = filepath.ToSlash(relPath)
 		// hdr = tar.Header{
 		// 	Name: fi.Name(),
 		// 	Mode: 0644,
