@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go: [ '1.16.12', '1.17.6' ]
+        go: [ '1.16.12', '1.17.6', '1.21.3' ]
     env:
       GO111MODULE: "on"
     steps:
