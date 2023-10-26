@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"path/filepath"
 	"strings"
 	"unicode"
@@ -223,7 +222,7 @@ func (f *Formatter) Diff(filename string, input io.Reader, output io.Writer) (bo
 	}
 
 	var resBuff bytes.Buffer
-	src, err := ioutil.ReadAll(input)
+	src, err := io.ReadAll(input)
 	if err != nil {
 		return false, err
 	}

@@ -2,7 +2,6 @@ package gen
 
 import (
 	"bytes"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -16,17 +15,17 @@ func TestSimpleParseGoPkgRun(t *testing.T) {
 
 	assert := assert.New(t)
 
-	tmpDir, err := ioutil.TempDir("", "TestParseGoPkgRun")
+	tmpDir, err := os.MkdirTemp("", "TestParseGoPkgRun")
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer os.RemoveAll(tmpDir)
 
-	// 	assert.NoError(ioutil.WriteFile(filepath.Join(tmpDir, "go.mod"), []byte(`
+	// 	assert.NoError(os.WriteFile(filepath.Join(tmpDir, "go.mod"), []byte(`
 	// module main
 	// `), 0644))
 
-	assert.NoError(ioutil.WriteFile(filepath.Join(tmpDir, "root.vugu"), []byte(`
+	assert.NoError(os.WriteFile(filepath.Join(tmpDir, "root.vugu"), []byte(`
 <div id="root_comp">
 	<h1>Hello!</h1>
 </div>
@@ -36,7 +35,7 @@ func TestSimpleParseGoPkgRun(t *testing.T) {
 
 	assert.NoError(p.Run())
 
-	b, err := ioutil.ReadFile(filepath.Join(tmpDir, "root_vgen.go"))
+	b, err := os.ReadFile(filepath.Join(tmpDir, "root_vgen.go"))
 	assert.NoError(err)
 	// t.Logf("OUT FILE root_vgen.go: %s", b)
 	// log.Printf("OUT FILE root_vgen.go: %s", b)
@@ -45,7 +44,7 @@ func TestSimpleParseGoPkgRun(t *testing.T) {
 		t.Errorf("failed to find Build method signature")
 	}
 
-	b, err = ioutil.ReadFile(filepath.Join(tmpDir, "0_missing_vgen.go"))
+	b, err = os.ReadFile(filepath.Join(tmpDir, "0_missing_vgen.go"))
 	assert.NoError(err)
 
 	if !bytes.Contains(b, []byte(`type Root struct`)) {
@@ -163,7 +162,7 @@ func TestRun(t *testing.T) {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 
-			tmpDir, err := ioutil.TempDir("", "TestRun")
+			tmpDir, err := os.MkdirTemp("", "TestRun")
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -186,7 +185,7 @@ func TestRun(t *testing.T) {
 			}
 
 			for fname, patterns := range tc.out {
-				b, err := ioutil.ReadFile(filepath.Join(tmpDir, fname))
+				b, err := os.ReadFile(filepath.Join(tmpDir, fname))
 				if err != nil {
 					t.Errorf("failed to read file %q after Run: %v", fname, err)
 					continue
@@ -267,7 +266,7 @@ func tstWriteFiles(dir string, m map[string]string) {
 	for name, contents := range m {
 		p := filepath.Join(dir, name)
 		os.MkdirAll(filepath.Dir(p), 0755)
-		err := ioutil.WriteFile(p, []byte(contents), 0644)
+		err := os.WriteFile(p, []byte(contents), 0644)
 		if err != nil {
 			panic(err)
 		}

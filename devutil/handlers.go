@@ -3,7 +3,6 @@ package devutil
 import (
 	"bytes"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -106,7 +105,7 @@ func (h *WasmExecJSHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		b, err := ioutil.ReadAll(rd)
+		b, err := io.ReadAll(rd)
 		if err != nil {
 			log.Printf("error reading wasm_exec.js: %v", err)
 			http.Error(w, "error reading wasm_exec.js: "+err.Error(), 500)

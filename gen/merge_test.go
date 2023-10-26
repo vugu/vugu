@@ -1,7 +1,6 @@
 package gen
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -72,7 +71,7 @@ func TestMerge(t *testing.T) {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 
-			tmpDir, err := ioutil.TempDir("", "TestMerge")
+			tmpDir, err := os.MkdirTemp("", "TestMerge")
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -97,7 +96,7 @@ func TestMerge(t *testing.T) {
 			}
 
 			for fname, patterns := range tc.out {
-				b, err := ioutil.ReadFile(filepath.Join(tmpDir, fname))
+				b, err := os.ReadFile(filepath.Join(tmpDir, fname))
 				if err != nil {
 					t.Errorf("failed to read file %q after Run: %v", fname, err)
 					continue
@@ -111,7 +110,7 @@ func TestMerge(t *testing.T) {
 			}
 
 			for fname, patterns := range tc.outNot {
-				b, err := ioutil.ReadFile(filepath.Join(tmpDir, fname))
+				b, err := os.ReadFile(filepath.Join(tmpDir, fname))
 				if err != nil {
 					t.Errorf("failed to read file %q after Run: %v", fname, err)
 					continue
@@ -125,7 +124,7 @@ func TestMerge(t *testing.T) {
 			}
 
 			if debug {
-				outb, _ := ioutil.ReadFile(filepath.Join(tmpDir, "out.go"))
+				outb, _ := os.ReadFile(filepath.Join(tmpDir, "out.go"))
 				t.Logf("OUTPUT:\n%s", outb)
 			}
 

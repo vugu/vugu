@@ -1,3 +1,4 @@
+//go:build ignore
 // +build ignore
 
 package main
@@ -9,7 +10,6 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"strings"
 
@@ -83,7 +83,7 @@ func main() {
 	m := minify.New()
 	m.AddFunc("text/javascript", js.Minify)
 	mr := m.Reader("text/javascript", bytes.NewReader(b))
-	b, err = ioutil.ReadAll(mr)
+	b, err = io.ReadAll(mr)
 	if err != nil {
 		panic(err)
 	}
@@ -92,7 +92,7 @@ func main() {
 
 	fmt.Fprintf(&buf, "package domrender\n\n// GENERATED FILE, DO NOT EDIT!  See renderer-js-script-maker.go\n\nconst jsHelperScript = %q\n", b)
 
-	err = ioutil.WriteFile("renderer-js-script.go", buf.Bytes(), 0644)
+	err = os.WriteFile("renderer-js-script.go", buf.Bytes(), 0644)
 	if err != nil {
 		panic(err)
 	}

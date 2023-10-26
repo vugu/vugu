@@ -236,7 +236,7 @@ loop:
 // 	var buf bytes.Buffer
 // 	printer.Fprint(&buf, fset, fout)
 
-// 	return ioutil.WriteFile(filepath.Join(dir, out), buf.Bytes(), 0644)
+// 	return os.WriteFile(filepath.Join(dir, out), buf.Bytes(), 0644)
 // }
 
 // func moveImportsToTop(f *ast.File) {
