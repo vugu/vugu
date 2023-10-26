@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -12,6 +11,7 @@ import (
 	"time"
 
 	"github.com/chromedp/cdproto/cdp"
+	"github.com/chromedp/cdproto/runtime"
 	"github.com/chromedp/chromedp"
 	"github.com/chromedp/chromedp/kb"
 	"github.com/stretchr/testify/assert"
@@ -611,7 +611,7 @@ func Test016SVG(t *testing.T) {
 			chromedp.Navigate("http://localhost:8846"+pathSuffix),
 			chromedp.WaitVisible("#icon"),          // wait for the icon to show up
 			chromedp.WaitVisible("#icon polyline"), // make sure that the svg element is complete
-			chromedp.QueryAfter("#icon", func(ctx context.Context, node ...*cdp.Node) error {
+			chromedp.QueryAfter("#icon", func(ctx context.Context, r runtime.ExecutionContextID, node ...*cdp.Node) error {
 				// checking if the element is recognized as SVG by chrome should be enough
 				assert.True(node[0].IsSVG)
 				return nil
@@ -805,7 +805,7 @@ func Test021Slots(t *testing.T) {
 			t.Errorf("tmplparent did not have expected innerHTML, instead got: %s", tmplparentInnerHTML)
 		}
 
-		rootvgengo, err := ioutil.ReadFile(filepath.Join(dir, "root_vgen.go"))
+		rootvgengo, err := os.ReadFile(filepath.Join(dir, "root_vgen.go"))
 		must(err)
 		if !regexp.MustCompile(`var mydt `).Match(rootvgengo) {
 			t.Errorf("missing vg-var reference in root_vgen.go")
