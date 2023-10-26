@@ -749,7 +749,7 @@ func Test019JSCreatePopulate(t *testing.T) {
 	}
 
 	t.Run("go", func(t *testing.T) { tf(t, mustGenBuildAndLoad(dir)) })
-	// FIXME: this fails with tinygo 0.22.0 in the UI with: syscall/js.finalizeRef not implemented; panic: JavaScript error: unreachable;
+	// FIXME: this fails with tinygo 0.30.0 in the UI with: syscall/js.finalizeRef not implemented; panic: JavaScript error: unreachable;
 	// t.Run("tinygo", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, nil)) })
 
 }
