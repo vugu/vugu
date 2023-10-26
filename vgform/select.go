@@ -72,6 +72,7 @@ func (c *Select) optText(k string) string {
 	return c.Options.TextMap(k)
 }
 
+//nolint:golint,unused
 func (c *Select) handlePopulate() {
 
 	// var buf bytes.Buffer
@@ -95,7 +96,6 @@ func (c *Select) handlePopulate() {
 	// }
 
 	// c.el.Set("selectedIndex", idx)
-
 }
 
 func (c *Select) handleChange(event vugu.DOMEvent) {

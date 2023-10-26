@@ -262,11 +262,13 @@ func noFile(p string, t *testing.T) {
 }
 
 func tstWriteFiles(dir string, m map[string]string) {
-
 	for name, contents := range m {
 		p := filepath.Join(dir, name)
-		os.MkdirAll(filepath.Dir(p), 0755)
-		err := os.WriteFile(p, []byte(contents), 0644)
+		err := os.MkdirAll(filepath.Dir(p), 0755)
+		if err != nil {
+			panic(err)
+		}
+		err = os.WriteFile(p, []byte(contents), 0644)
 		if err != nil {
 			panic(err)
 		}

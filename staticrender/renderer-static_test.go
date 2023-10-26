@@ -206,7 +206,7 @@ func main() {
 
 			// only if everthing is golden do we remove
 			if !t.Failed() {
-				os.RemoveAll(tmpDir)
+				_ = os.RemoveAll(tmpDir)
 			} else {
 				// and if not then dump the output that was produced
 				t.Logf("FULL OUTPUT:\n%s", b)
@@ -218,11 +218,13 @@ func main() {
 }
 
 func tstWriteFiles(dir string, m map[string]string) {
-
 	for name, contents := range m {
 		p := filepath.Join(dir, name)
-		os.MkdirAll(filepath.Dir(p), 0755)
-		err := os.WriteFile(p, []byte(contents), 0644)
+		err := os.MkdirAll(filepath.Dir(p), 0755)
+		if err != nil {
+			panic(err)
+		}
+		err = os.WriteFile(p, []byte(contents), 0644)
 		if err != nil {
 			panic(err)
 		}

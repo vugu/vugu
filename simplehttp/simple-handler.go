@@ -303,7 +303,6 @@ serveBuiltFile:
 		log.Print(err)
 	}
 	return
-
 }
 
 func (h *SimpleHandler) serveGoEnvWasmExecJs(w http.ResponseWriter, r *http.Request) {

@@ -166,7 +166,6 @@ func mustBuildAndLoad(absdir string) string {
 // }
 
 func mustChromeCtx() (context.Context, context.CancelFunc) {
-
 	debugURL := func() string {
 		resp, err := http.Get("http://localhost:9222/json/version")
 		if err != nil {
@@ -200,6 +199,7 @@ func must(err error) {
 	}
 }
 
+//nolint:golint,unused
 func mustCleanDir(dir string) {
 	must(os.Chdir(dir))
 	b, err := os.ReadFile(".gitignore")
@@ -215,7 +215,6 @@ func mustCleanDir(dir string) {
 		// log.Printf("removing: %s", s)
 		os.Remove(s)
 	}
-
 }
 
 // mustWriteSupportFiles will write index.html and wasm_exec.js to a directory
@@ -234,15 +233,16 @@ func mustWriteSupportFiles(dir string, doWasmExec bool) {
 	outf, err := os.OpenFile(filepath.Join(dir, "index.html"), os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
 	distutil.Must(err)
 	defer outf.Close()
-	template.Must(template.New("_page_").Parse(simplehttp.DefaultPageTemplateSource)).Execute(&buf, map[string]interface{}{"Request": req})
+	err = template.Must(template.New("_page_").Parse(simplehttp.DefaultPageTemplateSource)).Execute(&buf, map[string]interface{}{"Request": req})
+	distutil.Must(err)
 	// HACK: fix wasm_exec.js path, unti we can come up with a better way to do this
-	outf.Write(
+	_, err = outf.Write(
 		bytes.Replace(
 			bytes.Replace(buf.Bytes(), []byte(`"/wasm_exec.js"`), []byte(`"wasm_exec.js"`), 1),
 			[]byte("/main.wasm"), []byte("main.wasm"), 1,
 		),
 	)
-
+	distutil.Must(err)
 }
 
 // mustUploadDir tar+gz's the given directory and posts that file to the specified endpoint,
@@ -360,6 +360,8 @@ func mustUploadDir(dir, endpoint string) string {
 // mustTGTempGopathSetup makes a temp dir and recursively copies from testPjtDir into
 // filepath.Join(tmpDir, outRelPath) and returns the temp dir, which can be used
 // as the GOPATH for a tinygo build
+//
+//nolint:golint,unused
 func mustTGTempGopathSetup(testPjtDir, outRelPath string) string {
 	// buildGopath := mustTGTempGopathSetup(dir, "src/main")
 
@@ -436,6 +438,8 @@ func mustTGTempGopathSetup(testPjtDir, outRelPath string) string {
 
 // mustTGGoGet runs `go get` on the packages you give it with GO111MODULE=off and GOPATH set to the path you give.
 // This can be used to
+//
+//nolint:golint,unused
 func mustTGGoGet(buildGopath string, pkgNames ...string) {
 	// mustTGGoGet(buildGopath, "github.com/vugu/xxhash", "github.com/vugu/vjson")
 
@@ -455,6 +459,8 @@ func mustTGGoGet(buildGopath string, pkgNames ...string) {
 
 // mustTGBuildAndLoad does a build and load - absdir is the original program path (the "test-NNN-desc" folder),
 // and buildGopath is the temp dir where everything was copied in order to make non-module version that tinygo can compile
+//
+//nolint:golint,unused
 func mustTGBuildAndLoad(absdir, buildGopath string) string {
 	// pathSuffix := mustTGBuildAndLoad(dir, buildGopath)
 
@@ -497,7 +503,6 @@ func mustTGBuildAndLoad(absdir, buildGopath string) string {
 }
 
 func mustTGGenBuildAndLoad(absdir string, useDocker bool) string {
-
 	mustTGGen(absdir)
 
 	wc := devutil.MustNewTinygoCompiler().SetDir(absdir)

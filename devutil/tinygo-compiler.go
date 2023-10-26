@@ -44,10 +44,11 @@ type TinygoCompiler struct {
 	dockerBuildCmdFunc func(outpath string) *exec.Cmd
 	afterFunc          func(outpath string, err error) error
 	logWriter          io.Writer
-	dlTmpGopath        string   // temporary directory that we download dependencies into with go get
-	tinygoDockerImage  string   // docker image name to use, if empty then it is run directly
-	wasmExecJS         []byte   // contents of wasm_exec.js
-	tinygoArgs         []string // additional arguments to pass to the tinygo build cmd
+	//nolint:golint,unused
+	dlTmpGopath       string   // temporary directory that we download dependencies into with go get
+	tinygoDockerImage string   // docker image name to use, if empty then it is run directly
+	wasmExecJS        []byte   // contents of wasm_exec.js
+	tinygoArgs        []string // additional arguments to pass to the tinygo build cmd
 }
 
 // Close performs any cleanup.  For now it removes the temporary directory created by NewTinygoCompiler.
@@ -104,7 +105,7 @@ func (c *TinygoCompiler) SetBuildDir(dir string) *TinygoCompiler {
 		// -target=wasm .
 
 		args := make([]string, 0, 20)
-		args = append(args, "run", "--rm")
+		args = append(args, "docker", "run", "--rm")
 		args = append(args, "-v", "/:/src") // map dir for dependencies
 		args = append(args, "-e", "HOME=/tmp")
 		args = append(args, fmt.Sprintf("--user=%d", os.Getuid()))
@@ -117,7 +118,7 @@ func (c *TinygoCompiler) SetBuildDir(dir string) *TinygoCompiler {
 		args = append(args, c.tinygoArgs...)
 		args = append(args, ".")
 
-		return exec.Command("docker", args...)
+		return exec.Command("sudo", args...)
 	})
 }
 
@@ -282,13 +283,13 @@ func (c *TinygoCompiler) WasmExecJS() (r io.Reader, err error) {
 	// via docker
 
 	args := make([]string, 0, 20)
-	args = append(args, "run", "--rm", "-i")
+	args = append(args, "docker", "run", "--rm", "-i")
 	args = append(args, tinygoDockerImage)
 	args = append(args, "/bin/bash", "-c")
 	// different locations between tinygo and tinygo-dev, check them both
 	args = append(args, "cat `tinygo env TINYGOROOT`/targets/wasm_exec.js")
 
-	cmd := exec.Command("docker", args...)
+	cmd := exec.Command("sudo", args...)
 	b, err := cmd.CombinedOutput()
 	if err != nil {
 		return nil, fmt.Errorf("TinygoCompiler: wasm_exec.js error (cmd=docker %v): %w; full output:\n%s", args, err, b)

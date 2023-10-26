@@ -20,7 +20,8 @@ func TestFileServer(t *testing.T) {
 	fs := NewFileServer().SetDir(tmpDir)
 
 	// redirect /dir to /dir/
-	os.Mkdir(filepath.Join(tmpDir, "dir"), 0755)
+	err = os.Mkdir(filepath.Join(tmpDir, "dir"), 0755)
+	must(err)
 	wr := httptest.NewRecorder()
 	r, _ := http.NewRequest("GET", "/dir", nil)
 	fs.ServeHTTP(wr, r)
@@ -91,7 +92,7 @@ func TestFileServer(t *testing.T) {
 	// custom not found
 	fs.SetNotFoundHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(403)
-		w.Write([]byte("some other response here"))
+		_, _ = w.Write([]byte("some other response here"))
 	}))
 	wr = httptest.NewRecorder()
 	r, _ = http.NewRequest("GET", "/ainthere", nil)

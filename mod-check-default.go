@@ -1,3 +1,4 @@
+//go:build !tinygo
 // +build !tinygo
 
 package vugu
@@ -47,6 +48,7 @@ func (mt *ModTracker) TrackNext() {
 
 }
 
+//nolint:golint,unused
 func (mt *ModTracker) dump() []byte {
 	var buf bytes.Buffer
 	fmt.Fprintf(&buf, "-- cur (len=%d): --\n", len(mt.cur))
@@ -228,7 +230,6 @@ func (mt *ModTracker) ModCheckAll(values ...interface{}) (ret bool) {
 
 			// slice and array are treated the same
 			if rvv.Kind() == reflect.Slice || rvv.Kind() == reflect.Array {
-
 				l := rvv.Len()
 
 				// for slices and arrays we compute the hash of the raw contents,
@@ -240,7 +241,7 @@ func (mt *ModTracker) ModCheckAll(values ...interface{}) (ret bool) {
 				if l > 0 {
 					// use the unsafe package to make a byte slice corresponding to the raw slice contents
 					var bs []byte
-					bsh := (*reflect.SliceHeader)(unsafe.Pointer(&bs))
+					bsh := (*reflect.SliceHeader)(unsafe.Pointer(&bs)) //nolint
 
 					el0 := rvv.Index(0)
 					el0t = el0.Type()
@@ -250,7 +251,10 @@ func (mt *ModTracker) ModCheckAll(values ...interface{}) (ret bool) {
 					bsh.Cap = bsh.Len
 
 					// hash it
-					ha.Write(bs)
+					_, err := ha.Write(bs)
+					if err != nil {
+						panic(err)
+					}
 				}
 
 				hashval := ha.Sum64()

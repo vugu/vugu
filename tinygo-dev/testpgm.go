@@ -10,13 +10,15 @@ import (
 
 func main() {
 
-	var r vjson.RawMessage
-	var be vugu.BuildEnv
-
-	var jr domrender.JSRenderer
+	var (
+		r  vjson.RawMessage
+		be vugu.BuildEnv
+		jr domrender.JSRenderer
+	)
+	// use of jr need to be to investigate
 
 	// log.Printf("hello there!")
-	fmt.Printf("hello testpgm: %v %v %v\n", r, be, jr)
-	fmt.Printf("hello testpgm: %v\n", jr)
+	fmt.Printf("hello testpgm: %v %v %v\n", r, be, jr) //nolint
+	fmt.Printf("hello testpgm: %v\n", jr)              //nolint
 	// println("blah blah")
 }

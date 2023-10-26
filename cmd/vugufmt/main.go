@@ -60,7 +60,10 @@ func vugufmtMain() {
 }
 
 func walkDir(path string) {
-	filepath.Walk(path, visitFile)
+	err := filepath.Walk(path, visitFile)
+	if err != nil {
+		report(err)
+	}
 }
 
 func visitFile(path string, f os.FileInfo, err error) error {
@@ -135,7 +138,7 @@ func processFile(filename string, in io.Reader, out io.Writer) error {
 			}
 			err = os.WriteFile(filename, res, perm)
 			if err != nil {
-				os.Rename(bakname, filename)
+				err = os.Rename(bakname, filename)
 				return err
 			}
 			err = os.Remove(bakname)
@@ -145,6 +148,9 @@ func processFile(filename string, in io.Reader, out io.Writer) error {
 		} else {
 			// just write to stdout
 			_, err = out.Write(res)
+			if err != nil {
+				return err
+			}
 		}
 	} else {
 		different, err := formatter.Diff(filename, bytes.NewReader(src), &resBuff)
@@ -156,7 +162,10 @@ func processFile(filename string, in io.Reader, out io.Writer) error {
 				fmt.Fprintln(out, filename)
 			}
 		} else if *doDiff {
-			out.Write(resBuff.Bytes())
+			_, err := out.Write(resBuff.Bytes())
+			if err != nil {
+				return err
+			}
 		}
 	}
 

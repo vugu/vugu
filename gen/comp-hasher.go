@@ -23,10 +23,15 @@ func compHashCounted(s string) uint64 {
 	compHashMU.Unlock()
 
 	h := xxhash.New()
-	h.WriteString(s)
+	_, err := h.WriteString(s)
+	if err != nil {
+		panic(err)
+	}
 	var b [8]byte
 	binary.BigEndian.PutUint64(b[:], uint64(c))
-	h.Write(b[:])
+	_, err = h.Write(b[:])
+	if err != nil {
+		panic(err)
+	}
 	return h.Sum64()
-
 }

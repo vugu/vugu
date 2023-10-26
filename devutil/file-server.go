@@ -159,7 +159,6 @@ func (fs *FileServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if d.IsDir() {
-
 		url := r.URL.Path
 		// redirect if the directory name doesn't end in a slash
 		if url == "" || url[len(url)-1] != '/' {
@@ -174,7 +173,6 @@ func (fs *FileServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			defer ff.Close()
 			dd, err := ff.Stat()
 			if err == nil {
-				name = index
 				d = dd
 				f = ff
 			}
