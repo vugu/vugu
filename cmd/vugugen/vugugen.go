@@ -11,7 +11,6 @@ import (
 
 // we basically just wrap ParserGoPKg
 func main() {
-
 	// vugugen path/to/package
 
 	var opts gen.ParserGoPkgOpts
@@ -47,7 +46,5 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-
 	}
-
 }

@@ -46,7 +46,6 @@ func (cm *callbackManager) doneRender() {
 // sets the create and populate handlers and returns a callbackID for each,
 // if no instruction is needed for something then 0 will be returned for its ID
 func (cm *callbackManager) addCreateAndPopulateHandlers(create, populate vugu.JSValueHandler) (uint32, uint32) {
-
 	if create == nil && populate == nil {
 		return 0, 0
 	}
@@ -72,13 +71,11 @@ func (cm *callbackManager) addCreateAndPopulateHandlers(create, populate vugu.JS
 			createID: cid,
 		}
 	}
-
 	return cid, pid
 }
 
 // callback is call when we get a callback from the render script
 func (cm *callbackManager) callback(this js.Value, args []js.Value) interface{} {
-
 	if len(args) < 1 {
 		panic(fmt.Errorf("no args passed to callbackManager.callback"))
 	}
@@ -122,6 +119,5 @@ func (cm *callbackManager) callback(this js.Value, args []js.Value) interface{} 
 		panic(fmt.Errorf("unknown callback type %#v", cbInfo.typ))
 
 	}
-
 	return nil
 }

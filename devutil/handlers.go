@@ -87,7 +87,6 @@ func NewWasmExecJSHandler(wc WasmExecJSer) *WasmExecJSHandler {
 
 // ServeHTTP implements http.Handler.
 func (h *WasmExecJSHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-
 	h.rwmu.RLock()
 	content := h.content
 	modTime := h.modTime

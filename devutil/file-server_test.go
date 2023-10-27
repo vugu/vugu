@@ -11,7 +11,6 @@ import (
 )
 
 func TestFileServer(t *testing.T) {
-
 	tmpDir, err := os.MkdirTemp("", "TestFileServer")
 	must(err)
 	defer os.RemoveAll(tmpDir)

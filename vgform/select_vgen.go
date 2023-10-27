@@ -158,7 +158,6 @@ and it puts them in there, just sorted alphabetically -->
 */
 
 func (c *Select) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
-
 	vgout = &vugu.BuildOut{}
 
 	var vgiterkey interface{}

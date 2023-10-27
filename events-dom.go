@@ -95,7 +95,6 @@ var _ DOMEvent = &domEvent{} // assert domEvent implements DOMEvent
 // except that Prop helps with some edge cases and if a value is missing
 // of the wrong type, nil will be returned, instead of panicing.
 func (e *domEvent) Prop(keys ...string) interface{} {
-
 	var ret interface{}
 	ret = e.eventSummary
 
@@ -111,7 +110,6 @@ func (e *domEvent) Prop(keys ...string) interface{} {
 		ret = m[key]
 
 	}
-
 	return ret
 }
 

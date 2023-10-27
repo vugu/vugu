@@ -168,7 +168,6 @@ func processFile(filename string, in io.Reader, out io.Writer) error {
 			}
 		}
 	}
-
 	return nil
 }
 
@@ -178,7 +177,6 @@ const chmodSupported = runtime.GOOS != "windows"
 // with <number randomly chosen such that the file name is unique. backupFile returns
 // the chosen file name.
 func backupFile(filename string, data []byte, perm os.FileMode) (string, error) {
-
 	// create backup file
 	f, err := os.CreateTemp(filepath.Dir(filename), filepath.Base(filename))
 	if err != nil {

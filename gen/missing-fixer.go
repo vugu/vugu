@@ -35,7 +35,6 @@ func newMissingFixer(pkgPath, pkgName string, vuguComps map[string]string) *miss
 
 // run does work for this one package
 func (mf *missingFixer) run() error {
-
 	// remove the output file if it doesn't exist,
 	// and then below we re-create it if it turns out
 	// we need it
@@ -102,7 +101,6 @@ type %s struct {}
 `, compTypeName, compTypeName)
 
 		// log.Printf("aaa compTypeName=%s, compTypeDecl=%v", compTypeName, compTypeDecl)
-
 	}
 
 	// scan all .go files for known vugugen comments
@@ -130,7 +128,6 @@ type %s struct {}
 
 	// for each file with vugugen comments
 	for _, fname := range gcommentFnames {
-
 		commentList := gcomments[fname]
 		sort.Strings(commentList) // try to get deterministic output
 
@@ -396,6 +393,5 @@ func findFileBuildMethodType(file *ast.File) string {
 		// whose name is the component type we're after
 		return xident.Name
 	}
-
 	return ""
 }

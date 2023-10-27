@@ -8,7 +8,6 @@ import (
 )
 
 func TestMux(t *testing.T) {
-
 	tmpFile, err := os.CreateTemp("", "TestMux")
 	must(err)
 	defer tmpFile.Close()
@@ -59,5 +58,4 @@ func TestMux(t *testing.T) {
 	r, _ = http.NewRequest("GET", "/aintthere.css", nil)
 	m.ServeHTTP(wr, r)
 	checkBody(t, r, wr.Result(), "default overridden")
-
 }

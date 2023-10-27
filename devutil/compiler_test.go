@@ -12,7 +12,6 @@ import (
 )
 
 func TestWasmCompiler(t *testing.T) {
-
 	tmpDir, err := os.MkdirTemp("", "TestWasmCompiler")
 	must(err)
 	defer os.RemoveAll(tmpDir)
@@ -148,7 +147,6 @@ func main() { not valid go code }`), 0644))
 	if !bytes.Contains(b, []byte("The Go Authors")) {
 		t.Errorf("unexpected js result: %s", b)
 	}
-
 }
 
 func must(err error) {

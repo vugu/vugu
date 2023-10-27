@@ -8,7 +8,6 @@ import (
 )
 
 func TestCompKey(t *testing.T) {
-
 	assert := assert.New(t)
 
 	id := MakeCompKeyIDNowRand()
@@ -32,5 +31,4 @@ func TestCompKey(t *testing.T) {
 	assert.False(m[CompKey{ID: ck1.ID, IterKey: int(122)}])
 	assert.False(m[CompKey{ID: ck1.ID, IterKey: uint(123)}])
 	assert.True(m[CompKey{ID: ck1.ID, IterKey: int(123)}])
-
 }

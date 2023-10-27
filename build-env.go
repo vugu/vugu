@@ -65,7 +65,6 @@ func (r *BuildResults) ResultFor(component interface{}) *BuildOut {
 // can likewise be indexed using the component (which should be a struct pointer) as the key.
 // Callers should not modify the return value as it is reused by subsequent calls.
 func (e *BuildEnv) RunBuild(builder Builder) *BuildResults {
-
 	if e.compCache == nil {
 		e.compCache = make(map[CompKey]Builder)
 	}
@@ -126,7 +125,6 @@ func (e *BuildEnv) RunBuild(builder Builder) *BuildResults {
 }
 
 func (e *BuildEnv) buildOne(buildIn *BuildIn, thisb Builder) {
-
 	st, ok := e.compStateMap[thisb]
 	if !ok {
 		invokeInit(thisb, e.eventEnv)
@@ -219,7 +217,6 @@ func hashVals(vs ...uint64) uint64 {
 		}
 	}
 	return h.Sum64()
-
 }
 
 type compState struct {

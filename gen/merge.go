@@ -20,7 +20,6 @@ import (
 // I probably just am missing something with how to use it properly.  Regardless, doing this
 // the hacky way should serve us just as well for now.
 func mergeGoFiles(dir, out string, in ...string) error {
-
 	var pkgClause string
 	var importBlocks []string
 	var otherBlocks []string
@@ -82,11 +81,9 @@ func mergeGoFiles(dir, out string, in ...string) error {
 		return err
 	}
 	return nil
-
 }
 
 func readAndSplitGoFile(fpath string) (pkgPart, importPart, rest string, reterr error) {
-
 	// NOTE: this is not perfect, it's only meant to be good enough to correctly parse the files
 	// we generate, not any general .go file
 	// (it does not understand multi-line comments, for example)
@@ -192,9 +189,7 @@ loop:
 
 		default:
 		}
-
 		panic("unreachable")
-
 	}
 
 	pkgPart = pkgBuf.String()
@@ -267,7 +262,6 @@ loop:
 // 		odecl = append(odecl, decl)
 // 		continue
 // 	}
-
 // 	// new decl list imports plus everything else
 // 	f.Decls = append(idecl, odecl...)
 // }

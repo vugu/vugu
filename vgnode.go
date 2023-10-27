@@ -296,7 +296,6 @@ func (n *VGNode) AddAttrList(lister VGAttributeLister) {
 // All other values have undefined behavior but are currently handled by setting InnerHTML
 // to the result of: `html.EscapeString(fmt.Sprintf("%v", val))`
 func (n *VGNode) SetInnerHTML(val interface{}) {
-
 	var s string
 
 	if val == nil {
@@ -368,7 +367,6 @@ func (n *VGNode) SetInnerHTML(val interface{}) {
 		// fall back to fmt
 		s = html.EscapeString(fmt.Sprintf("%v", val))
 	}
-
 	n.InnerHTML = &s
 }
 

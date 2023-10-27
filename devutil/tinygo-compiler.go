@@ -188,7 +188,6 @@ func (c *TinygoCompiler) SetTinygoDockerImage(img string) *TinygoCompiler {
 // If an error occurs during any of the steps it will be returned with (possibly multi-line)
 // descriptive output in it's error message, as produced by the underlying tool.
 func (c *TinygoCompiler) Execute() (outpath string, err error) {
-
 	logerr := func(e error) error {
 		if e == nil {
 			return nil
@@ -247,13 +246,11 @@ func (c *TinygoCompiler) Execute() (outpath string, err error) {
 		}
 		fmt.Fprintf(c.logWriter, "TinygoCompiler: successful build. Output: %s\n", b)
 	}
-
 	return outpath, nil
 }
 
 // WasmExecJS returns the contents of the wasm_exec.js file bundled with Tinygo.
 func (c *TinygoCompiler) WasmExecJS() (r io.Reader, err error) {
-
 	if c.wasmExecJS != nil {
 		return bytes.NewReader(c.wasmExecJS), nil
 	}
@@ -276,7 +273,6 @@ func (c *TinygoCompiler) WasmExecJS() (r io.Reader, err error) {
 		}
 
 		c.wasmExecJS = b
-
 		return bytes.NewReader(c.wasmExecJS), nil
 	}
 
@@ -297,7 +293,5 @@ func (c *TinygoCompiler) WasmExecJS() (r io.Reader, err error) {
 	// fmt.Fprintf(c.logWriter, "TinygoCompiler: successful wasm_exec.js: docker %v; output: %s\n", args, b)
 
 	c.wasmExecJS = b
-
 	return bytes.NewReader(c.wasmExecJS), nil
-
 }

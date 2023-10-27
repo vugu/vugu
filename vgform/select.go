@@ -47,7 +47,6 @@ type Select struct {
 }
 
 func (c *Select) buildKeys() []string {
-
 	// if c.el.IsUndefined() {
 	// 	panic(errors.New("Select should have c.el set"))
 	// }
@@ -74,7 +73,6 @@ func (c *Select) optText(k string) string {
 
 //nolint:golint,unused
 func (c *Select) handlePopulate() {
-
 	// var buf bytes.Buffer
 	// buf.Grow(len(`<option value=""></option>`) * len(c.keys) * 2)
 	// for _, k := range c.keys {
@@ -99,7 +97,6 @@ func (c *Select) handlePopulate() {
 }
 
 func (c *Select) handleChange(event vugu.DOMEvent) {
-
 	newVal := event.PropString("target", "value")
 	c.curVal = newVal // why not
 	c.Value.SetStringValue(newVal)

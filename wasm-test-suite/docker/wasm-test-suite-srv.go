@@ -16,7 +16,6 @@ import (
 )
 
 func main() {
-
 	httpListen := flag.String("http-listen", "127.0.0.1:8846", "HTTP host:port to listen on")
 	flag.Parse()
 
@@ -37,7 +36,6 @@ func main() {
 	}
 	log.Printf("HTTP server listening at %q", *httpListen)
 	log.Fatal(s.ListenAndServe())
-
 }
 
 // TSrv is our test server.
@@ -114,7 +112,6 @@ func (s *TSrv) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				}
 
 			}()
-
 		}
 
 		w.Header().Set("Content-Type", "application/json")
@@ -143,11 +140,9 @@ func (s *TSrv) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 
 	default:
-
 	}
 
 	// fall through to static file server on BaseDir
 	http.FileServer(http.Dir(s.BaseDir)).ServeHTTP(w, r)
 	return
-
 }

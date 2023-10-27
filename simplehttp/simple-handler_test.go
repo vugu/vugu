@@ -12,7 +12,6 @@ import (
 )
 
 func TestSimpleHandlerDev(t *testing.T) {
-
 	assert := assert.New(t)
 
 	tmpDir, err := os.MkdirTemp("", "TestSimpleHandler")
@@ -47,11 +46,9 @@ replace github.com/vugu/vugu => `+vugudir+`
 	assert.Contains(mustGetPage(srv.URL+"/wasm_exec.js"), "global.Go")      // Go WASM support js file
 	assert.Contains(mustGetPage(srv.URL+"/does-not-exist.js"), "not found") // other misc not found file
 	assert.Contains(mustGetPage(srv.URL+"/main.wasm"), "\x00asm")           // WASM binary should have marker
-
 }
 
 func TestSimpleHandlerProd(t *testing.T) {
-
 	assert := assert.New(t)
 
 	tmpDir, err := os.MkdirTemp("", "TestSimpleHandler")
@@ -86,7 +83,6 @@ replace github.com/vugu/vugu => `+vugudir+`
 	assert.Contains(mustGetPage(srv.URL+"/wasm_exec.js"), "not found")      // Go WASM support js file
 	assert.Contains(mustGetPage(srv.URL+"/does-not-exist.js"), "not found") // other misc not found file
 	assert.Contains(mustGetPage(srv.URL+"/main.wasm"), "not found")         // WASM binary should have marker
-
 }
 
 func mustGetPage(u string) string {

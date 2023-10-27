@@ -12,7 +12,6 @@ import (
 )
 
 func TestCompactNodeTree(t *testing.T) {
-
 	assert := assert.New(t)
 
 	var in = `<html>
@@ -61,5 +60,4 @@ func TestCompactNodeTree(t *testing.T) {
 
 	// assert.NoError(html.Render(&buf, p.FirstChild))
 	// log.Printf("OUT:\n%s", buf.String())
-
 }

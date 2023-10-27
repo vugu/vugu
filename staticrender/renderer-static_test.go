@@ -11,7 +11,6 @@ import (
 )
 
 func TestRendererStaticTable(t *testing.T) {
-
 	debug := false
 
 	vuguDir, err := filepath.Abs("..")
@@ -214,7 +213,6 @@ func main() {
 
 		})
 	}
-
 }
 
 func tstWriteFiles(dir string, m map[string]string) {
@@ -229,7 +227,6 @@ func tstWriteFiles(dir string, m map[string]string) {
 			panic(err)
 		}
 	}
-
 }
 
 // NOTE: this was moved into the table test above
@@ -375,5 +372,4 @@ func tstWriteFiles(dir string, m map[string]string) {
 // 	if !strings.Contains(string(b), "Some script here") {
 // 		t.Errorf("falied to find target string in output")
 // 	}
-
 // }

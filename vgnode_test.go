@@ -29,7 +29,6 @@ func BenchmarkAlloc(b *testing.B) {
 var vgnodePool = sync.Pool{New: func() interface{} { return &VGNode{} }}
 
 func BenchmarkPool(b *testing.B) {
-
 	objlist := make([]*VGNode, 0, 10)
 
 	b.ResetTimer()
@@ -47,7 +46,6 @@ func BenchmarkPool(b *testing.B) {
 			objlist = objlist[:0]
 		}
 	}
-
 }
 
 // func TestFuncPtr(t *testing.T) {

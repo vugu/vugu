@@ -8,7 +8,6 @@ import (
 )
 
 func TestMerge(t *testing.T) {
-
 	debug := true
 
 	type tcase struct {
@@ -127,8 +126,6 @@ func TestMerge(t *testing.T) {
 				outb, _ := os.ReadFile(filepath.Join(tmpDir, "out.go"))
 				t.Logf("OUTPUT:\n%s", outb)
 			}
-
 		})
 	}
-
 }

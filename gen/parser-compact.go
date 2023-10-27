@@ -18,7 +18,6 @@ import (
 // Any modern browser's native HTML parser is always going to be a lot faster than
 // we can achieve calling back and forth from wasm for each element.
 func compactNodeTree(rootN *html.Node) error {
-
 	// do not collapse html, body or head, and nothing inside head
 
 	var visit func(n *html.Node) (canCompact bool, err error)
@@ -86,7 +85,6 @@ func compactNodeTree(rootN *html.Node) error {
 				cn.LastChild = nil
 
 			}
-
 			return false, nil
 		}
 
@@ -104,7 +102,6 @@ func compactNodeTree(rootN *html.Node) error {
 }
 
 func isStaticEl(n *html.Node) bool {
-
 	if n.Type != html.ElementNode { // must be element
 		return false
 	}
@@ -131,13 +128,11 @@ func isStaticEl(n *html.Node) bool {
 
 	// if it passes above, should be fine to compact
 	return true
-
 }
 
 // htmlGoQuoteString is similar to printf'ing with %q but converts common things that require html escaping to
 // backslashes instead for improved clarity
 func htmlGoQuoteString(s string) string {
-
 	var buf bytes.Buffer
 
 	for _, c := range fmt.Sprintf("%q", s) {
@@ -151,6 +146,5 @@ func htmlGoQuoteString(s string) string {
 		}
 
 	}
-
 	return buf.String()
 }

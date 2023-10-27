@@ -36,7 +36,6 @@ func MustCopyDirFiltered(srcDir, dstDir string, fileInclPattern *regexp.Regexp) 
 // the function returns immediately.  Conversely when the copy succeeds the modification
 // time is set to that of the source.
 func CopyDirFiltered(srcDir, dstDir string, fileInclPattern *regexp.Regexp) error {
-
 	if fileInclPattern == nil {
 		fileInclPattern = DefaultFileInclPattern
 	}
@@ -117,7 +116,6 @@ func CopyDirFiltered(srcDir, dstDir string, fileInclPattern *regexp.Regexp) erro
 		return nil
 	}
 	return copydir(srcDir, dstDir)
-
 }
 
 // MustCopyFile is like CopyFile but panics on error.
@@ -130,7 +128,6 @@ func MustCopyFile(src, dst string) {
 // the function returns immediately.  Conversely when the copy succeeds the modification
 // time is set to that of the source.
 func CopyFile(src, dst string) error {
-
 	src, err := filepath.Abs(src)
 	if err != nil {
 		return err

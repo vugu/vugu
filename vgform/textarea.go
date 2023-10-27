@@ -9,9 +9,7 @@ type Textarea struct {
 }
 
 func (c *Textarea) handleChange(event vugu.DOMEvent) {
-
 	newVal := event.PropString("target", "value")
 	// c.curVal = newVal // why not
 	c.Value.SetStringValue(newVal)
-
 }

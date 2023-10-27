@@ -7,7 +7,6 @@ import (
 )
 
 func (r *JSRenderer) sendEventWaitCh() {
-
 	if panicr := recover(); panicr != nil {
 		fmt.Println("handleRawDOMEvent caught panic", panicr)
 		//		debug.PrintStack()
@@ -30,7 +29,6 @@ func (r *JSRenderer) sendEventWaitCh() {
 
 // Render is a render function.
 func (r *JSRenderer) Render(buildResults *vugu.BuildResults) error {
-
 	// acquire read lock so events are not changing data while Render is in progress
 	r.eventRWMU.RLock()
 	defer r.eventRWMU.RUnlock()

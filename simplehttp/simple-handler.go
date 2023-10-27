@@ -107,7 +107,6 @@ func New(dir string, dev bool) *SimpleHandler {
 
 // ServeHTTP implements http.Handler.
 func (h *SimpleHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-
 	// by default we tell browsers to always check back with us for content, even in production;
 	// we allow disabling by the caller just setting another value first; otherwise too much
 	// headache caused by pages that won't reload and we still reduce a lot of bandwidth usage with
@@ -137,9 +136,7 @@ func (h *SimpleHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *SimpleHandler) buildAndServe(w http.ResponseWriter, r *http.Request) {
-
 	// EnableGenerate      bool                  // if true calls `go generate` (requires EnableBuildAndServe)
-
 	// main.wasm and build process, first check if it's needed
 
 	h.mu.RLock()
@@ -182,11 +179,8 @@ func (h *SimpleHandler) buildAndServe(w http.ResponseWriter, r *http.Request) {
 	// FIXME: might be useful to make it so only one thread rebuilds at a time and they both use the result
 
 doBuild:
-
 	// log.Printf("GOT HERE")
-
 	{
-
 		if h.ParserGoPkgOpts != nil {
 			pg := gen.NewParserGoPkg(h.Dir, h.ParserGoPkgOpts)
 			err := pg.Run()
@@ -280,11 +274,9 @@ doBuild:
 		h.lastBuildTime = lastBuildTime
 		h.lastBuildContentGZ = lastBuildContentGZ
 		h.mu.Unlock()
-
 	}
 
 serveBuiltFile:
-
 	w.Header().Set("Content-Type", "application/wasm")
 	// w.Header().Set("Last-Modified", lastBuildTime.Format(http.TimeFormat)) // handled by http.ServeContent
 
@@ -306,7 +298,6 @@ serveBuiltFile:
 }
 
 func (h *SimpleHandler) serveGoEnvWasmExecJs(w http.ResponseWriter, r *http.Request) {
-
 	b, err := exec.Command("go", "env", "GOROOT").CombinedOutput()
 	if err != nil {
 		http.Error(w, "failed to run `go env GOROOT`: "+err.Error(), 500)
@@ -339,7 +330,6 @@ func (h *SimpleHandler) serveGoEnvWasmExecJs(w http.ResponseWriter, r *http.Requ
 // Be sure to include a trailing "$" if you are checking for file extensions, so it
 // only matches the end of the path, e.g. "[.](css|js)$"
 func FilteredFileServer(pattern *regexp.Regexp, fs http.FileSystem) http.Handler {
-
 	if pattern == nil {
 		panic(fmt.Errorf("pattern is nil"))
 	}
@@ -368,7 +358,6 @@ func FilteredFileServer(pattern *regexp.Regexp, fs http.FileSystem) http.Handler
 		fserver.ServeHTTP(w, r)
 
 	})
-
 	return ret
 }
 
@@ -448,7 +437,6 @@ var DefaultTemplateDataFunc = func(r *http.Request) interface{} {
 
 // ServeHTTP implements http.Handler
 func (h *PageHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-
 	tmplData := h.TemplateDataFunc(r)
 	if tmplData == nil {
 		http.NotFound(w, r)
@@ -459,13 +447,11 @@ func (h *PageHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("Error during simplehttp.PageHandler.Template.Execute: %v", err)
 	}
-
 }
 
 // dirTimestamp finds the most recent time stamp associated with files in a folder
 // TODO: we should look into file watcher stuff, better performance for large trees
 func dirTimestamp(dir string) (ts time.Time, reterr error) {
-
 	dirf, err := os.Open(dir)
 	if err != nil {
 		return ts, err
@@ -501,6 +487,5 @@ func dirTimestamp(dir string) (ts time.Time, reterr error) {
 			ts = mt
 		}
 	}
-
 	return
 }

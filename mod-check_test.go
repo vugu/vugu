@@ -8,7 +8,6 @@ import (
 )
 
 func TestModCheckerWidget(t *testing.T) {
-
 	// try a more complex but realistic example
 
 	assert := assert.New(t)
@@ -180,7 +179,6 @@ func TestModCheckerWidget(t *testing.T) {
 
 	mt.TrackNext()
 	assert.False(mt.ModCheckAll(&wplist))
-
 }
 
 func TestModCheckerStruct(t *testing.T) {
@@ -214,7 +212,6 @@ func TestModCheckerStruct(t *testing.T) {
 }
 
 func TestModCheckerSliceArray(t *testing.T) {
-
 	assert := assert.New(t)
 	mt := NewModTracker()
 
@@ -255,11 +252,9 @@ func TestModCheckerSliceArray(t *testing.T) {
 
 	mt.TrackNext()
 	assert.False(mt.ModCheckAll(&s1))
-
 }
 
 func TestModCheckerStrings(t *testing.T) {
-
 	assert := assert.New(t)
 
 	var mt ModTracker
@@ -320,7 +315,6 @@ func TestModCheckerStrings(t *testing.T) {
 	assert.False(mt.ModCheckAll(&b))
 	s = "testing"
 	assert.False(mt.ModCheckAll(&s))
-
 }
 
 func TestModCheckerBool(t *testing.T) {
@@ -348,11 +342,9 @@ func TestModCheckerBool(t *testing.T) {
 	check(&v2, true, true)
 	check(&v2, false, true)
 	check(&v2, false, false)
-
 }
 
 func TestModCheckerInt(t *testing.T) {
-
 	mt := NewModTracker()
 
 	var v1, v2 int
@@ -376,11 +368,9 @@ func TestModCheckerInt(t *testing.T) {
 	check(&v2, 2, true)
 	check(&v2, 1, true)
 	check(&v2, 1, false)
-
 }
 
 func TestModCheckerInt8(t *testing.T) {
-
 	mt := NewModTracker()
 
 	var v1, v2 int8
@@ -404,11 +394,9 @@ func TestModCheckerInt8(t *testing.T) {
 	check(&v2, 2, true)
 	check(&v2, 1, true)
 	check(&v2, 1, false)
-
 }
 
 func TestModCheckerInt16(t *testing.T) {
-
 	mt := NewModTracker()
 
 	var v1, v2 int16
@@ -432,11 +420,9 @@ func TestModCheckerInt16(t *testing.T) {
 	check(&v2, 2, true)
 	check(&v2, 1, true)
 	check(&v2, 1, false)
-
 }
 
 func TestModCheckerInt32(t *testing.T) {
-
 	mt := NewModTracker()
 
 	var v1, v2 int32
@@ -460,11 +446,9 @@ func TestModCheckerInt32(t *testing.T) {
 	check(&v2, 2, true)
 	check(&v2, 1, true)
 	check(&v2, 1, false)
-
 }
 
 func TestModCheckerInt64(t *testing.T) {
-
 	mt := NewModTracker()
 
 	var v1, v2 int64
@@ -488,11 +472,9 @@ func TestModCheckerInt64(t *testing.T) {
 	check(&v2, 2, true)
 	check(&v2, 1, true)
 	check(&v2, 1, false)
-
 }
 
 func TestModCheckerUint(t *testing.T) {
-
 	mt := NewModTracker()
 
 	var v1, v2 uint
@@ -516,11 +498,9 @@ func TestModCheckerUint(t *testing.T) {
 	check(&v2, 2, true)
 	check(&v2, 1, true)
 	check(&v2, 1, false)
-
 }
 
 func TestModCheckerUint8(t *testing.T) {
-
 	mt := NewModTracker()
 
 	var v1, v2 uint8
@@ -544,11 +524,9 @@ func TestModCheckerUint8(t *testing.T) {
 	check(&v2, 2, true)
 	check(&v2, 1, true)
 	check(&v2, 1, false)
-
 }
 
 func TestModCheckerUint16(t *testing.T) {
-
 	mt := NewModTracker()
 
 	var v1, v2 uint16
@@ -572,11 +550,9 @@ func TestModCheckerUint16(t *testing.T) {
 	check(&v2, 2, true)
 	check(&v2, 1, true)
 	check(&v2, 1, false)
-
 }
 
 func TestModCheckerUint32(t *testing.T) {
-
 	mt := NewModTracker()
 
 	var v1, v2 uint32
@@ -600,11 +576,9 @@ func TestModCheckerUint32(t *testing.T) {
 	check(&v2, 2, true)
 	check(&v2, 1, true)
 	check(&v2, 1, false)
-
 }
 
 func TestModCheckerUint64(t *testing.T) {
-
 	mt := NewModTracker()
 
 	var v1, v2 uint64
@@ -628,5 +602,4 @@ func TestModCheckerUint64(t *testing.T) {
 	check(&v2, 2, true)
 	check(&v2, 1, true)
 	check(&v2, 1, false)
-
 }

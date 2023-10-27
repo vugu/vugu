@@ -84,9 +84,7 @@ func (mt *ModTracker) dump() []byte {
 // Other weird and wonderful things like channels and funcs are not supported.
 // Passing an unsupported type will result in a panic.
 func (mt *ModTracker) ModCheckAll(values ...interface{}) (ret bool) {
-
 	for _, v := range values {
-
 		// check if we've already done a mod check on v
 		curres, ok := mt.cur[v]
 		if ok {
@@ -284,14 +282,12 @@ func (mt *ModTracker) ModCheckAll(values ...interface{}) (ret bool) {
 				// never get an unmodified response
 
 				for i := 0; i < l; i++ {
-
 					// get pointer to the individual element and recurse into it
 					elv := rvv.Index(i).Addr().Interface()
 					mod = mt.ModCheckAll(elv) || mod
 				}
 
 				goto handleData
-
 			}
 
 			// for structs we iterate over the fields looked for tagged ones
@@ -314,7 +310,6 @@ func (mt *ModTracker) ModCheckAll(values ...interface{}) (ret bool) {
 					mod = mt.ModCheckAll(
 						rvv.Field(i).Addr().Interface(),
 					) || mod
-
 				}
 
 				goto handleData
@@ -346,14 +341,11 @@ func (mt *ModTracker) ModCheckAll(values ...interface{}) (ret bool) {
 
 				goto handleData
 			}
-
 			panic(errors.New("type not implemented: " + reflect.TypeOf(v).String()))
-
 		}
 	handleData:
 		mt.cur[v] = mtResult{modified: mod, data: newdata}
 		ret = ret || mod
-
 	}
 
 	return ret

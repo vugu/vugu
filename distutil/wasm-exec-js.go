@@ -11,7 +11,6 @@ import (
 // WasmExecJsPath find wasm_exec.js in the local Go distribution and return it's path.
 // Return error if not found.
 func WasmExecJsPath() (string, error) {
-
 	b, err := exec.Command("go", "env", "GOROOT").CombinedOutput()
 	if err != nil {
 		return "", err

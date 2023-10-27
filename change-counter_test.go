@@ -8,7 +8,6 @@ import (
 )
 
 func TestModCheckerChangeCounter(t *testing.T) {
-
 	assert := assert.New(t)
 
 	var wl WidgetList
@@ -61,7 +60,6 @@ func TestModCheckerChangeCounter(t *testing.T) {
 	changed = mc.ModCheckAll(&wl)
 	assert.False(changed)
 	log.Printf("changed(6) = %v", changed)
-
 }
 
 type Widget struct {

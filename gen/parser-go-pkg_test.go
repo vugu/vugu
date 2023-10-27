@@ -12,7 +12,6 @@ import (
 )
 
 func TestSimpleParseGoPkgRun(t *testing.T) {
-
 	assert := assert.New(t)
 
 	tmpDir, err := os.MkdirTemp("", "TestParseGoPkgRun")
@@ -50,11 +49,9 @@ func TestSimpleParseGoPkgRun(t *testing.T) {
 	if !bytes.Contains(b, []byte(`type Root struct`)) {
 		t.Errorf("failed to find Root struct definition")
 	}
-
 }
 
 func TestRun(t *testing.T) {
-
 	debug := false
 
 	pwd, err := filepath.Abs("..")
@@ -251,7 +248,6 @@ func TestRun(t *testing.T) {
 
 		})
 	}
-
 }
 
 func noFile(p string, t *testing.T) {

@@ -45,7 +45,6 @@ var errNoVuguFile = errors.New("no .vugu file(s) found")
 // directory under pkgPath.  The opts will be modified for subfolders to disable go.mod and main.go
 // logic.  If pkgPath does not contain a .vugu file this function will return an error.
 func RunRecursive(pkgPath string, opts *ParserGoPkgOpts) error {
-
 	if opts == nil {
 		opts = &ParserGoPkgOpts{}
 	}
@@ -94,7 +93,6 @@ func RunRecursive(pkgPath string, opts *ParserGoPkgOpts) error {
 			return err
 		}
 	}
-
 	return nil
 }
 
@@ -125,7 +123,6 @@ func (p *ParserGoPkg) Opts() ParserGoPkgOpts {
 // if package already has file with package name something other than main).
 // Per-file code generation is performed by ParserGo.
 func (p *ParserGoPkg) Run() error {
-
 	// record the times of existing files, so we can restore after if the same
 	hashTimes, err := fileHashTimes(p.pkgPath)
 	if err != nil {
@@ -211,7 +208,6 @@ func (p *ParserGoPkg) Run() error {
 		if err != nil {
 			return fmt.Errorf("error parsing %q: %v", fn, err)
 		}
-
 	}
 
 	// after the code generation is done, check the package for the various names in question to see
@@ -251,7 +247,6 @@ import (
 )
 
 func main() {
-
 {{if $opts.TinyGo}}
 	var mountPoint *string
 	{
@@ -285,9 +280,7 @@ func main() {
 	rootBuilder := &Root{}
 {{end}}
 
-
 	for ok := true; ok; ok = renderer.EventWait() {
-
 		buildResults := buildEnv.RunBuild(rootBuilder)
 		
 		err = renderer.Render(buildResults)
@@ -295,7 +288,6 @@ func main() {
 			panic(err)
 		}
 	}
-	
 }
 `)
 			if err != nil {
@@ -319,9 +311,7 @@ func main() {
 			if err != nil {
 				return err
 			}
-
 		}
-
 	}
 
 	// write go.mod if it doesn't exist and not disabled - actually this really only makes sense for main,
@@ -381,7 +371,6 @@ func main() {
 	// 	if err != nil {
 	// 		return err
 	// 	}
-
 	// }
 
 	// generate anything missing and process vugugen comments
@@ -393,7 +382,6 @@ func main() {
 
 	// if requested, do merge
 	if p.opts.MergeSingle {
-
 		// if a missing fix file was produced include it in the list to be merged
 		_, err := os.Stat(filepath.Join(p.pkgPath, "0_missing_vgen.go"))
 		if err == nil {
@@ -411,16 +399,13 @@ func main() {
 				return err
 			}
 		}
-
 	}
 
 	err = restoreFileHashTimes(p.pkgPath, hashTimes)
 	if err != nil {
 		return err
 	}
-
 	return nil
-
 }
 
 //nolint:golint,unused
@@ -452,7 +437,6 @@ func fnameToGoTypeName(s string) string {
 }
 
 func goGuessPkgName(pkgPath string) (ret string) {
-
 	// defer func() { log.Printf("goGuessPkgName returning %q", ret) }()
 
 	// see if the package already has a name and use it if so
@@ -473,7 +457,6 @@ func goGuessPkgName(pkgPath string) (ret string) {
 	}
 
 checkMore:
-
 	// check for a root.vugu file, in which case we assume "main"
 	_, err = os.Stat(filepath.Join(pkgPath, "root.vugu"))
 	if err == nil {
@@ -485,17 +468,13 @@ checkMore:
 	if regexp.MustCompile(`^[a-z0-9]+$`).MatchString(dirBase) {
 		return dirBase
 	}
-
 	// ...unless it makes no sense in which case we use "main"
-
 	return "main"
-
 }
 
 // goPkgCheckNames parses a package dir and looks for names, returning a map of what was
 // found.  Names like "A.B" mean a method of name "B" with receiver of type "*A"
 func goPkgCheckNames(pkgPath string, names []string) (map[string]interface{}, error) {
-
 	ret := make(map[string]interface{})
 
 	fset := token.NewFileSet()
@@ -552,7 +531,6 @@ func goPkgCheckNames(pkgPath string, names []string) (map[string]interface{}, er
 						// 		}
 						// 	}
 						// }
-
 					}
 				} else {
 					continue // don't care methods with no receiver - found them already above as single (no period) names
@@ -573,12 +551,10 @@ func goPkgCheckNames(pkgPath string, names []string) (map[string]interface{}, er
 		}
 	}
 	// log.Printf("Objects: %#v", pkg.Scope.Objects)
-
 	return ret, nil
 }
 
 func nameParts(n string) (recv, method string) {
-
 	ret := strings.SplitN(n, ".", 2)
 	if len(ret) < 2 {
 		method = n
@@ -591,7 +567,6 @@ func nameParts(n string) (recv, method string) {
 
 // fileHashTimes will scan a directory and return a map of hashes and corresponding mod times
 func fileHashTimes(dir string) (map[uint64]time.Time, error) {
-
 	ret := make(map[uint64]time.Time)
 
 	f, err := os.Open(dir)
@@ -620,7 +595,6 @@ func fileHashTimes(dir string) (map[uint64]time.Time, error) {
 		}
 		ret[h.Sum64()] = fi.ModTime()
 	}
-
 	return ret, nil
 }
 
@@ -631,7 +605,6 @@ func fileHashTimes(dir string) (map[uint64]time.Time, error) {
 // workable for now - it's important for the developer experince we don't do unnecessary builds
 // in cases where things don't change
 func restoreFileHashTimes(dir string, hashTimes map[uint64]time.Time) error {
-
 	f, err := os.Open(dir)
 	if err != nil {
 		return err
@@ -664,6 +637,5 @@ func restoreFileHashTimes(dir string, hashTimes map[uint64]time.Time) error {
 			}
 		}
 	}
-
 	return nil
 }

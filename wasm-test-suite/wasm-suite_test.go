@@ -113,7 +113,6 @@ func Test002Click(t *testing.T) {
 	t.Run("go", func(t *testing.T) { tf(t, mustGenBuildAndLoad(dir)) })
 	t.Run("tinygo/NoDocker", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, false)) })
 	t.Run("tinygo/Docker", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, true)) })
-
 }
 
 func Test003Prop(t *testing.T) {
@@ -245,7 +244,6 @@ func Test006Issue81(t *testing.T) {
 				)
 			}),
 		))
-
 	}
 
 	t.Run("go", func(t *testing.T) { tf(t, mustGenBuildAndLoad(dir)) })
@@ -414,7 +412,6 @@ func Test010ListenerReadd(t *testing.T) {
 	t.Run("go", func(t *testing.T) { tf(t, mustGenBuildAndLoad(dir)) })
 	t.Run("tinygo/NoDocker", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, false)) })
 	t.Run("tinygo/Docker", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, true)) })
-
 }
 
 func Test011Wire(t *testing.T) {
@@ -671,7 +668,6 @@ func Test016SVG(t *testing.T) {
 	t.Run("go", func(t *testing.T) { tf(t, mustGenBuildAndLoad(dir)) })
 	t.Run("tinygo/NoDocker", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, false)) })
 	t.Run("tinygo/Docker", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, true)) })
-
 }
 
 func Test017Nesting(t *testing.T) {
@@ -805,7 +801,6 @@ func Test019JSCreatePopulate(t *testing.T) {
 	t.Run("go", func(t *testing.T) { tf(t, mustGenBuildAndLoad(dir)) })
 	// FIXME: this fails with tinygo 0.30.0 in the UI with: syscall/js.finalizeRef not implemented; panic: JavaScript error: unreachable;
 	// t.Run("tinygo", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, nil)) })
-
 }
 
 func Test020VGForm(t *testing.T) {

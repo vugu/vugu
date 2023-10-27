@@ -63,7 +63,6 @@ func (fs *FileServer) SetNotFoundHandler(h http.Handler) *FileServer {
 }
 
 func (fs *FileServer) serveNotFound(w http.ResponseWriter, r *http.Request) {
-
 	// notFoundHandler takes precedence
 	if fs.notFoundHandler != nil {
 		fs.notFoundHandler.ServeHTTP(w, r)
@@ -94,7 +93,6 @@ defNotFound:
 
 // ServeHTTP implements http.Handler with the appropriate behavior.
 func (fs *FileServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-
 	// NOTE: much of this borrowed and adapted from https://golang.org/src/net/http/fs.go
 
 	upath := r.URL.Path

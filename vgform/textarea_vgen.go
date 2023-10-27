@@ -9,7 +9,6 @@ import "github.com/vugu/vugu"
 import js "github.com/vugu/vugu/js"
 
 func (c *Textarea) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
-
 	vgout = &vugu.BuildOut{}
 
 	var vgiterkey interface{}

@@ -10,7 +10,6 @@ import (
 )
 
 func TestMissingFixer(t *testing.T) {
-
 	// NOTE: for more complex testing, see TestRun which is easier to add more general cases to.
 
 	tmpDir, err := os.MkdirTemp("", "TestMissingFixer")
@@ -117,5 +116,4 @@ func TestMissingFixer(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
 }

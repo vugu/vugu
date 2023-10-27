@@ -63,7 +63,6 @@ const (
 
 	opcodeCallback            uint8 = 40 // issue callback, sends just callbackID
 	opcodeCallbackLastElement uint8 = 41 // issue callback with callbackID and most recent element reference
-
 )
 
 // newInstructionList will create a new instance backed by the specified slice and with a clearBufFunc

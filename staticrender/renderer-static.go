@@ -37,7 +37,6 @@ func (r *StaticRenderer) SetWriter(w io.Writer) {
 
 // Render will perform a static render of the given BuildResults and write it to the writer assigned.
 func (r *StaticRenderer) Render(buildResults *vugu.BuildResults) error {
-
 	n, err := r.renderOne(buildResults, buildResults.Out)
 	if err != nil {
 		return err
@@ -49,11 +48,9 @@ func (r *StaticRenderer) Render(buildResults *vugu.BuildResults) error {
 	}
 
 	return nil
-
 }
 
 func (r *StaticRenderer) renderOne(br *vugu.BuildResults, bo *vugu.BuildOut) (*html.Node, error) {
-
 	if len(bo.Out) != 1 {
 		return nil, fmt.Errorf("BuildOut must contain exactly one element in Out")
 	}

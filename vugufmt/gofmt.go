@@ -11,7 +11,6 @@ import (
 // Set simplifyAST to true to simplify the AST. This is false
 // by default for gofmt, and is the same as passing in -s for it.
 func UseGoFmt(simplifyAST bool) func(*Formatter) {
-
 	return func(f *Formatter) {
 		f.ScriptFormatters["application/x-go"] = func(input []byte) ([]byte, *FmtError) {
 			return runGoFmt(input, simplifyAST)

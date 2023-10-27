@@ -159,7 +159,6 @@ func (r *JSRenderer) Release() {
 }
 
 func (r *JSRenderer) render(buildResults *vugu.BuildResults) error {
-
 	bo := buildResults.Out
 
 	if !js.Global().Truthy() {
@@ -297,7 +296,6 @@ func (r *JSRenderer) render(buildResults *vugu.BuildResults) error {
 	}
 
 	return nil
-
 }
 
 // EventWait blocks until an event has occurred which causes a re-render.
@@ -316,7 +314,6 @@ func (r *JSRenderer) EventWait() (ok bool) {
 
 	ok = <-r.eventWaitCh
 	return
-
 }
 
 // var window js.Value
@@ -329,7 +326,6 @@ func (r *JSRenderer) EventWait() (ok bool) {
 // }
 
 func (r *JSRenderer) visitFirst(state *jsRenderState, bo *vugu.BuildOut, br *vugu.BuildResults, n *vugu.VGNode, positionID []byte) error {
-
 	// log.Printf("TODO: We need to go through and optimize away unneeded calls to create elements, set attributes, set event handlers, etc. for cases where they are the same per hash")
 
 	// log.Printf("JSRenderer.visitFirst")
@@ -372,13 +368,11 @@ func (r *JSRenderer) visitFirst(state *jsRenderState, bo *vugu.BuildOut, br *vug
 			}
 
 		}
-
 		return nil
 	}
 
 	// else, first tag is anything else - try again as the element to be mounted
 	return r.visitMount(state, bo, br, n, positionID)
-
 }
 
 func (r *JSRenderer) syncHtml(state *jsRenderState, n *vugu.VGNode, positionID []byte) error {
@@ -431,11 +425,9 @@ func (r *JSRenderer) visitMount(state *jsRenderState, bo *vugu.BuildOut, br *vug
 	}
 
 	return r.visitSyncElementEtc(state, bo, br, n, positionID)
-
 }
 
 func (r *JSRenderer) visitSyncNode(state *jsRenderState, bo *vugu.BuildOut, br *vugu.BuildResults, n *vugu.VGNode, positionID []byte) error {
-
 	// log.Printf("visitSyncNode")
 
 	var err error
@@ -472,7 +464,6 @@ func (r *JSRenderer) visitSyncNode(state *jsRenderState, bo *vugu.BuildOut, br *
 				}
 
 			}
-
 			childIndex++
 		}
 
@@ -501,12 +492,10 @@ func (r *JSRenderer) visitSyncNode(state *jsRenderState, bo *vugu.BuildOut, br *
 
 	// only elements have attributes, child or events
 	return r.visitSyncElementEtc(state, bo, br, n, positionID)
-
 }
 
 // visitSyncElementEtc syncs the rest of the stuff that only applies to elements
 func (r *JSRenderer) visitSyncElementEtc(state *jsRenderState, bo *vugu.BuildOut, br *vugu.BuildResults, n *vugu.VGNode, positionID []byte) error {
-
 	err := r.syncElement(state, n, positionID)
 	if err != nil {
 		return err
@@ -567,7 +556,6 @@ func (r *JSRenderer) visitSyncElementEtc(state *jsRenderState, bo *vugu.BuildOut
 			return err
 		}
 	}
-
 	return nil
 }
 
@@ -640,7 +628,6 @@ func (r *JSRenderer) handleCallback(this js.Value, args []js.Value) interface{} 
 }
 
 func (r *JSRenderer) handleDOMEvent() {
-
 	strlen := binary.BigEndian.Uint32(r.eventHandlerBuffer[:4])
 	b := r.eventHandlerBuffer[4 : strlen+4]
 	// log.Printf("handleDOMEvent JSON from event buffer: %q", b)
@@ -712,5 +699,4 @@ func (r *JSRenderer) handleDOMEvent() {
 	// eventWaitCh, telling the render loop that a render is required, but if a bunch
 	// of them stack up we don't wait
 	r.sendEventWaitCh()
-
 }

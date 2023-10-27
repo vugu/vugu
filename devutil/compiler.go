@@ -100,7 +100,6 @@ func (c *WasmCompiler) SetAfterFunc(f func(outpath string, err error) error) *Wa
 // If an error occurs during any of the steps it will be returned with (possibly multi-line)
 // descriptive output in it's error message, as produced by the underlying tool.
 func (c *WasmCompiler) Execute() (outpath string, err error) {
-
 	logerr := func(e error) error {
 		if e == nil {
 			return nil
@@ -151,9 +150,7 @@ func (c *WasmCompiler) Execute() (outpath string, err error) {
 	if c.afterFunc != nil {
 		err = c.afterFunc(outpath, err)
 	}
-
 	return outpath, logerr(err)
-
 }
 
 // WasmExecJS returns the contents of the wasm_exec.js file bundled with the Go compiler.
@@ -166,5 +163,4 @@ func (c *WasmCompiler) WasmExecJS() (r io.Reader, err error) {
 
 	b2, err := os.ReadFile(filepath.Join(strings.TrimSpace(string(b1)), "misc/wasm/wasm_exec.js"))
 	return bytes.NewReader(b2), err
-
 }

@@ -75,7 +75,6 @@ func (m *Mux) Default(h http.Handler) *Mux {
 
 // ServeHTTP implements http.Handler.
 func (m *Mux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-
 	for _, rt := range m.routeList {
 		if rt.rm.RequestMatch(r) {
 			rt.h.ServeHTTP(w, r)
@@ -87,6 +86,5 @@ func (m *Mux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		m.defaultHandler.ServeHTTP(w, r)
 		return
 	}
-
 	http.NotFound(w, r)
 }

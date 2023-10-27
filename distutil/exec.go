@@ -17,7 +17,6 @@ func Must(err error) {
 
 // MustEnvExec is like MustExec but also sets specific environment variables.
 func MustEnvExec(env2 []string, name string, arg ...string) string {
-
 	env := os.Environ()
 
 	b, err := exec.Command("go", "env", "GOPATH").CombinedOutput()

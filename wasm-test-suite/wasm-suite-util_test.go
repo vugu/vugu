@@ -85,14 +85,11 @@ func WaitInnerTextTrimEq(sel, innerText string) chromedp.QueryAction {
 			// return nil, errors.New("not ready yet")
 			return nodes, nil
 		})(s)
-
 	})
-
 }
 
 // returns absdir
 func mustUseDir(reldir string) (newdir, olddir string) {
-
 	odir, err := os.Getwd()
 	if err != nil {
 		panic(err)
@@ -112,25 +109,21 @@ func mustUseDir(reldir string) (newdir, olddir string) {
 }
 
 func mustGen(absdir string) {
-
 	os.Remove(filepath.Join(absdir, "main_wasm.go")) // ensure it gets re-generated
 	pp := gen.NewParserGoPkg(absdir, nil)
 	err := pp.Run()
 	if err != nil {
 		panic(err)
 	}
-
 }
 
 func mustTGGen(absdir string) {
-
 	os.Remove(filepath.Join(absdir, "main_wasm.go")) // ensure it gets re-generated
 	pp := gen.NewParserGoPkg(absdir, &gen.ParserGoPkgOpts{TinyGo: true})
 	err := pp.Run()
 	if err != nil {
 		panic(err)
 	}
-
 }
 
 func mustGenBuildAndLoad(absdir string) string {
@@ -140,7 +133,6 @@ func mustGenBuildAndLoad(absdir string) string {
 
 // returns path suffix
 func mustBuildAndLoad(absdir string) string {
-
 	fmt.Print(distutil.MustEnvExec([]string{"GOOS=js", "GOARCH=wasm"}, "go", "mod", "tidy"))
 	fmt.Print(distutil.MustEnvExec([]string{"GOOS=js", "GOARCH=wasm"}, "go", "build", "-o", filepath.Join(absdir, "main.wasm"), "."))
 

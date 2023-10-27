@@ -7,7 +7,6 @@ import (
 )
 
 func TestBuildEnvCachedComponent(t *testing.T) {
-
 	assert := assert.New(t)
 
 	be, err := NewBuildEnv()
@@ -47,9 +46,7 @@ func TestBuildEnvCachedComponent(t *testing.T) {
 	assert.Equal(b1, be.compCache[MakeCompKey(1, 1)])
 
 	// TODO: but not in the used (not used for this pass)
-
 	// TODO: now try to use it and make sure we can only get it once
-
 }
 
 type rootb1 struct{}

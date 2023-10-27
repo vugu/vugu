@@ -10,7 +10,6 @@ import (
 )
 
 func TestTinygoCompiler(t *testing.T) {
-
 	tmpDir, err := os.MkdirTemp("", "TestTinygoCompiler")
 	if err != nil {
 		t.Fatal(err)
@@ -65,7 +64,6 @@ func main() {
 	if !bytes.Contains(b, []byte(`TinyGo`)) {
 		t.Fatalf("unable to find TinyGo in wasm_exec.js")
 	}
-
 }
 
 func goModTidy(dir string) {
