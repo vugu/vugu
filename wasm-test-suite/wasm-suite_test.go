@@ -167,7 +167,6 @@ func Test004Component(t *testing.T) {
 			chromedp.Click("#addbtn"),
 			WaitInnerTextTrimEq("ul", "0 a line is here\n1 a line is here\n2 a line is here\n3 a line is here"),
 		))
-
 	}
 
 	t.Run("go", func(t *testing.T) { tf(t, mustGenBuildAndLoad(dir)) })
@@ -194,7 +193,6 @@ func Test005Issue80(t *testing.T) {
 			chromedp.WaitVisible("#items"),
 			WaitInnerTextTrimEq("#items", "abcd"),
 		))
-
 	}
 
 	t.Run("go", func(t *testing.T) { tf(t, mustGenBuildAndLoad(dir)) })
@@ -268,7 +266,6 @@ func Test007Issue85(t *testing.T) {
 			chromedp.Navigate("http://localhost:8846"+pathSuffix),
 			chromedp.WaitVisible("#content"),
 		))
-
 	}
 
 	t.Run("go", func(t *testing.T) { tf(t, mustGenBuildAndLoad(dir)) })
@@ -370,7 +367,6 @@ func Test009TrimUnused(t *testing.T) {
 			chromedp.WaitNotPresent("#n6of6"),
 			chromedp.WaitVisible("#n2of2"),
 		))
-
 	}
 
 	t.Run("go", func(t *testing.T) { tf(t, mustGenBuildAndLoad(dir)) })
@@ -406,7 +402,6 @@ func Test010ListenerReadd(t *testing.T) {
 			chromedp.Click("#switch_btn"),
 			chromedp.WaitVisible("#view1"),
 		))
-
 	}
 
 	t.Run("go", func(t *testing.T) { tf(t, mustGenBuildAndLoad(dir)) })
@@ -434,7 +429,6 @@ func Test011Wire(t *testing.T) {
 			WaitInnerTextTrimEq(".demo-comp1-c", "1"),
 			WaitInnerTextTrimEq(".demo-comp2-c", "2"),
 		))
-
 	}
 
 	t.Run("go", func(t *testing.T) { tf(t, mustGenBuildAndLoad(dir)) })
@@ -744,7 +738,6 @@ func Test018CompEvents(t *testing.T) {
 		))
 		//t.Logf("showText=%s", showText)
 		assert.Contains(showText, "ClickEvent")
-
 	}
 
 	t.Run("go", func(t *testing.T) { tf(t, mustGenBuildAndLoad(dir)) })
@@ -869,7 +862,6 @@ func Test021Slots(t *testing.T) {
 	t.Run("go", func(t *testing.T) { tf(t, mustGenBuildAndLoad(dir)) })
 	t.Run("tinygo/NoDocker", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, false)) })
 	t.Run("tinygo/Docker", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, true)) })
-
 }
 
 func Test022EventListener(t *testing.T) {
@@ -972,7 +964,6 @@ got C2.Rendered()
 }
 
 func Test024EventBufferSize(t *testing.T) {
-
 	dir, origDir := mustUseDir("test-024-event-buffer-size")
 	defer func() {
 		err := os.Chdir(origDir)

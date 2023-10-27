@@ -53,7 +53,6 @@ func queryAttributes(ref string, assert func(attributes map[string]string)) chro
 
 // WaitInnerTextTrimEq will wait for the innerText of the specified element to match a specific string after whitespace trimming.
 func WaitInnerTextTrimEq(sel, innerText string) chromedp.QueryAction {
-
 	return chromedp.Query(sel, func(s *chromedp.Selector) {
 
 		chromedp.WaitFunc(func(ctx context.Context, cur *cdp.Frame, id runtime.ExecutionContextID, ids ...cdp.NodeID) ([]*cdp.Node, error) {
@@ -240,7 +239,6 @@ func mustWriteSupportFiles(dir string, doWasmExec bool) {
 // mustUploadDir tar+gz's the given directory and posts that file to the specified endpoint,
 // returning the path of where to access the files
 func mustUploadDir(dir, endpoint string) string {
-
 	var buf bytes.Buffer
 	gw := gzip.NewWriter(&buf)
 	tw := tar.NewWriter(gw)
