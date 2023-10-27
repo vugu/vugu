@@ -103,3 +103,7 @@ via `go generate`. There are many small decisions in Vugu which follow this phil
 just use the existing mechanism instead of inventing anew.  And keep doing that until there's proof that something
 else is really needed.  So far it's been working well.  And it allows Vugu to focus on the specific things it 
 brings to the table.
+
+## Examples
+
+Examples implementations can be found into [examples repositories](https://github.com/orgs/vugu-examples/repositories)
