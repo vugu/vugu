@@ -168,7 +168,6 @@ func (p *ParserGo) Parse(r io.Reader, fname string) error {
 
 	fo, err := gofmt(buf.String())
 	if err != nil {
-
 		// if the gofmt errors, we still attempt to write out the non-fmt'ed output to the file, to assist in debugging
 		_ = os.WriteFile(outPath, buf.Bytes(), 0644)
 
@@ -184,6 +183,38 @@ func (p *ParserGo) Parse(r io.Reader, fname string) error {
 
 	// write to final output file
 	err = os.WriteFile(outPath, dedupedBuf.Bytes(), 0644)
+	if err != nil {
+		return err
+	}
+	err = removeRedundantDefinitions(outPath)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func removeRedundantDefinitions(fileName string) error {
+	type stringReplace struct {
+		old, new string
+	}
+	r := []stringReplace{
+		{
+			old: "vugu.VGAttribute{vugu.VGAttribute",
+			new: "vugu.VGAttribute{",
+		},
+	}
+
+	content, err := os.ReadFile(fileName)
+	if err != nil {
+		return err
+	}
+
+	var newContents string
+	for _, v := range r {
+		newContents = strings.Replace(string(content), v.old, v.new, -1)
+	}
+
+	err = os.WriteFile(fileName, []byte(newContents), 0644)
 	if err != nil {
 		return err
 	}
@@ -740,13 +771,11 @@ func (p *ParserGo) visitNodeJustElement(state *parseGoState, n *html.Node) error
 	}
 
 	if n.FirstChild != nil {
-
 		fmt.Fprintf(&state.buildBuf, "{\n")
 		fmt.Fprintf(&state.buildBuf, "vgparent := vgn; _ = vgparent\n") // vgparent set for this block to vgn
 
 		// iterate over children
 		for childN := n.FirstChild; childN != nil; childN = childN.NextSibling {
-
 			err := p.visitDefaultByType(state, childN)
 			if err != nil {
 				return err
@@ -754,7 +783,6 @@ func (p *ParserGo) visitNodeJustElement(state *parseGoState, n *html.Node) error
 		}
 
 		fmt.Fprintf(&state.buildBuf, "}\n")
-
 	}
 	return nil
 }
@@ -1286,7 +1314,6 @@ func pOutputTag(state *parseGoState, n *html.Node) {
 		fmt.Fprintf(&state.buildBuf, "vgout.Out = append(vgout.Out, vgn) // root for output\n") // for first element we need to assign as Doc on BuildOut
 		state.outIsSet = true
 	}
-
 }
 
 func attrWithKey(n *html.Node, key string) *html.Attribute {

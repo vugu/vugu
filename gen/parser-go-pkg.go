@@ -171,7 +171,6 @@ func (p *ParserGoPkg) Run() error {
 
 	// run ParserGo on each file to generate the .go files
 	for _, fn := range vuguFileNames {
-
 		baseFileName := strings.TrimSuffix(fn, ".vugu")
 		goFileName := baseFileName + goFnameAppend + ".go"
 		compTypeName := fnameToGoTypeName(baseFileName)
@@ -219,7 +218,6 @@ func (p *ParserGoPkg) Run() error {
 
 	// if main package, generate main_wasm.go with default stuff if no main func in the package and no main_wasm.go
 	if (!p.opts.SkipMainGo) && pkgName == "main" {
-
 		mainGoPath := filepath.Join(p.pkgPath, "main_wasm.go")
 		// log.Printf("namesFound: %#v", namesFound)
 		// log.Printf("maingo found: %v", fileExists(mainGoPath))
@@ -229,7 +227,6 @@ func (p *ParserGoPkg) Run() error {
 		// it's picking up the main_wasm.go in server.go (even though it's excluded via build tag).  This
 		// needs some more thought but for now this will work for the common cases.
 		if !fileExists(mainGoPath) {
-
 			// log.Printf("WRITING TO main_wasm.go STUFF")
 			var buf bytes.Buffer
 			t, err := template.New("_main_").Parse(`// +build wasm
@@ -511,7 +508,6 @@ func goPkgCheckNames(pkgPath string, names []string) (map[string]interface{}, er
 		// }
 		for _, d := range file.Decls {
 			if fd, ok := d.(*ast.FuncDecl); ok {
-
 				var drecv, dmethod string
 				if fd.Recv != nil {
 					for _, f := range fd.Recv.List {

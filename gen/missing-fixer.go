@@ -214,11 +214,8 @@ var _ %sHandler = %sFunc(nil)
 			default:
 				return fmt.Errorf("error parsing %s vugugen comment with unknown type %q", fname, c)
 			}
-
 		}
-
 	}
-
 	return nil
 }
 
@@ -302,7 +299,6 @@ func readVugugenComments(pkgPath string) (map[string][]string, error) {
 		if fc != nil {
 			ret[bname] = fc
 		}
-
 	}
 	return ret, nil
 }
@@ -324,7 +320,6 @@ func fileInPackage(pkg *ast.Package, fileName string) *ast.File {
 func findTypeDecl(fset *token.FileSet, pkg *ast.Package, typeName string) ast.Decl {
 	for _, file := range pkg.Files {
 		for _, decl := range file.Decls {
-
 			// ast.Print(fset, decl)
 
 			// looking for genDecl
@@ -356,7 +351,6 @@ func findTypeDecl(fset *token.FileSet, pkg *ast.Package, typeName string) ast.De
 			if spec.Name.Name == typeName {
 				return genDecl
 			}
-
 		}
 	}
 	return nil
@@ -364,7 +358,6 @@ func findTypeDecl(fset *token.FileSet, pkg *ast.Package, typeName string) ast.De
 
 // findFileBuildMethodType will return "Comp" given `func (c *Root) Comp` exists in the file.
 func findFileBuildMethodType(file *ast.File) string {
-
 	for _, decl := range file.Decls {
 		// only care about a function declaration
 		funcDecl, ok := decl.(*ast.FuncDecl)
