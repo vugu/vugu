@@ -7,7 +7,7 @@ go env -w GOFLAGS="-buildvcs=false"
 CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o wasm-test-suite-srv .
 
 # Docker build and tag image
-sudo docker build -t vugu/wasm-test-suite:latest .
+docker build -t vugu/wasm-test-suite:latest .
 
-echo "Run with:sudo docker run -ti --rm -p 9222:9222 -p 8846:8846 vugu/wasm-test-suite:latest"
+echo "Run with:docker run -ti --rm -p 9222:9222 -p 8846:8846 vugu/wasm-test-suite:latest"
 echo "To push to DockerHub, run 'docker login' and then 'docker push vugu/wasm-test-suite:latest'"
