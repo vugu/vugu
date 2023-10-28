@@ -43,7 +43,7 @@ replace github.com/vugu/vugu => `+vugudir+`
 	assert.Contains(mustGetPage(srv.URL+"/"), "<body")                      // index page
 	assert.Contains(mustGetPage(srv.URL+"/other-page"), "<body")            // other HTML page
 	assert.Contains(mustGetPage(srv.URL+"/test.js"), "// test.js here")     // static file
-	assert.Contains(mustGetPage(srv.URL+"/wasm_exec.js"), "global.Go")      // Go WASM support js file
+	assert.Contains(mustGetPage(srv.URL+"/wasm_exec.js"), "globalThis.Go")  // Go WASM support js file
 	assert.Contains(mustGetPage(srv.URL+"/does-not-exist.js"), "not found") // other misc not found file
 	assert.Contains(mustGetPage(srv.URL+"/main.wasm"), "\x00asm")           // WASM binary should have marker
 }
