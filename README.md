@@ -107,3 +107,8 @@ brings to the table.
 ## Examples
 
 Examples implementations can be found into [examples repositories](https://github.com/orgs/vugu-examples/repositories)
+
+## VSCode plugin
+
+As most of your code will be in `.vugu` files, you will need to install [vscode-vugu](https://marketplace.visualstudio.com/items?itemName=binhonglee.vscode-vugu)
+Credits goes to @binhonglee.
