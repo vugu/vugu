@@ -25,7 +25,6 @@ jobs:
     - name: before_install from Travis
       run: go get golang.org/x/tools/cmd/goimports && go install golang.org/x/tools/cmd/goimports
     - run: go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
-    - run: go env -w GOFLAGS="-buildvcs=false"
     - name: Execute golang-ci
       run: golangci-lint run
     - run: cd wasm-test-suite/docker && ./make-docker.sh

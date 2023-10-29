@@ -3,7 +3,6 @@
 set -e
 
 # Go build for linux
-go env -w GOFLAGS="-buildvcs=false"
 CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o wasm-test-suite-srv .
 
 # Docker build and tag image
