@@ -1,3 +1,4 @@
+//go:build !tinygo
 // +build !tinygo
 
 package vugu
@@ -47,6 +48,7 @@ func (mt *ModTracker) TrackNext() {
 
 }
 
+//nolint:golint,unused
 func (mt *ModTracker) dump() []byte {
 	var buf bytes.Buffer
 	fmt.Fprintf(&buf, "-- cur (len=%d): --\n", len(mt.cur))
@@ -250,7 +252,10 @@ func (mt *ModTracker) ModCheckAll(values ...interface{}) (ret bool) {
 					bsh.Cap = bsh.Len
 
 					// hash it
-					ha.Write(bs)
+					_, err := ha.Write(bs)
+					if err != nil {
+						panic(err)
+					}
 				}
 
 				hashval := ha.Sum64()

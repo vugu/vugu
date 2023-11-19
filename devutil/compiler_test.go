@@ -37,9 +37,10 @@ func main() {}`), 0644))
 	}
 
 	// build with error
-	ioutil.WriteFile(filepath.Join(tmpDir, "main.go"), []byte(`package main
-func main() { not valid go code }`), 0644)
-	outpath, err = wc.Execute()
+	err = os.WriteFile(filepath.Join(tmpDir, "main.go"), []byte(`package main
+	func main() { not valid go code }`), 0644)
+	must(err)
+	_, err = wc.Execute()
 	if err == nil {
 		t.Fatal("should have gotten error here but didn't")
 	}
@@ -98,7 +99,7 @@ func main() {}`), 0644))
 	}
 	b, err := ioutil.ReadAll(res.Body)
 	must(err)
-	if bytes.Compare(b[:4], []byte("\x00asm")) != 0 {
+	if !bytes.Equal(b[:4], []byte("\x00asm")) {
 		t.Errorf("got back bytes that do not look like a wasm file: %X (len=%d, cap=%d)", b[:4], len(b), cap(b))
 	}
 

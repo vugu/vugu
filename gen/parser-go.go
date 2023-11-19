@@ -176,7 +176,7 @@ func (p *ParserGo) Parse(r io.Reader, fname string) error {
 	if err != nil {
 
 		// if the gofmt errors, we still attempt to write out the non-fmt'ed output to the file, to assist in debugging
-		ioutil.WriteFile(outPath, buf.Bytes(), 0644)
+		_ = ioutil.WriteFile(outPath, buf.Bytes(), 0644)
 
 		return err
 	}
@@ -197,6 +197,7 @@ func (p *ParserGo) Parse(r io.Reader, fname string) error {
 	return nil
 }
 
+//nolint:golint,unused
 type codeChunk struct {
 	Line   int
 	Column int
