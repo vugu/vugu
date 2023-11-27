@@ -9,4 +9,7 @@ require (
 	github.com/vugu/vugu v0.0.0-00010101000000-000000000000
 )
 
-require github.com/vugu/xxhash v0.0.0-20191111030615-ed24d0179019 // indirect
+require (
+	github.com/vugu/xxhash v0.0.0-20191111030615-ed24d0179019 // indirect
+	golang.org/x/text v0.14.0 // indirect
+)
