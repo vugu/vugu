@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"html/template"
 	"io"
-	"io/ioutil"
 	"log"
 	"mime/multipart"
 	"net/http"
@@ -204,7 +203,7 @@ func must(err error) {
 //nolint:golint,unused
 func mustCleanDir(dir string) {
 	must(os.Chdir(dir))
-	b, err := ioutil.ReadFile(".gitignore")
+	b, err := os.ReadFile(".gitignore")
 	if err != nil {
 		panic(err)
 	}
@@ -373,7 +372,7 @@ func mustTGTempGopathSetup(testPjtDir, outRelPath string) string {
 		panic(err)
 	}
 
-	name, err := ioutil.TempDir(tmpParent, "tggopath")
+	name, err := os.MkdirTemp(tmpParent, "tggopath")
 	if err != nil {
 		panic(err)
 	}
@@ -386,7 +385,7 @@ func mustTGTempGopathSetup(testPjtDir, outRelPath string) string {
 	srcDir := filepath.Join(testPjtDir, "../..")
 	dstDir := filepath.Join(name, "src/github.com/vugu/vugu")
 	must(os.MkdirAll(dstDir, 0755))
-	fis, err := ioutil.ReadDir(srcDir)
+	fis, err := os.ReadDir(srcDir)
 	must(err)
 	for _, fi := range fis {
 		if fi.IsDir() {
@@ -526,10 +525,10 @@ func mustTGGenBuildAndLoad(absdir string, useDocker bool) string {
 
 	wasmExecJSR, err := wc.WasmExecJS()
 	must(err)
-	wasmExecJSB, err := ioutil.ReadAll(wasmExecJSR)
+	wasmExecJSB, err := io.ReadAll(wasmExecJSR)
 	must(err)
 	wasmExecJSPath := filepath.Join(absdir, "wasm_exec.js")
-	must(ioutil.WriteFile(wasmExecJSPath, wasmExecJSB, 0644))
+	must(os.WriteFile(wasmExecJSPath, wasmExecJSB, 0644))
 
 	mustWriteSupportFiles(absdir, false)
 

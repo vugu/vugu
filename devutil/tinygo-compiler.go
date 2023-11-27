@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -67,7 +66,7 @@ func (c *TinygoCompiler) SetTinygoArgs(tinygoArgs ...string) *TinygoCompiler {
 // The default from NewCompiler is os.Stderr
 func (c *TinygoCompiler) SetLogWriter(w io.Writer) *TinygoCompiler {
 	if w == nil {
-		w = ioutil.Discard
+		w = io.Discard
 	}
 	c.logWriter = w
 	return c
@@ -218,7 +217,7 @@ func (c *TinygoCompiler) Execute() (outpath string, err error) {
 		fmt.Fprintln(c.logWriter, "TinygoCompiler: Successful generate")
 	}
 
-	tmpf, err := ioutil.TempFile("", "WasmCompiler")
+	tmpf, err := os.CreateTemp("", "WasmCompiler")
 	if err != nil {
 		return "", logerr(fmt.Errorf("WasmCompiler: error creating temporary file: %w", err))
 	}
@@ -271,7 +270,7 @@ func (c *TinygoCompiler) WasmExecJS() (r io.Reader, err error) {
 		}
 
 		wasmExecJSPath := filepath.Join(strings.TrimSpace(string(resb)), "targets/wasm_exec.js")
-		b, err := ioutil.ReadFile(wasmExecJSPath)
+		b, err := os.ReadFile(wasmExecJSPath)
 		if err != nil {
 			return nil, fmt.Errorf("TinygoCompiler: WasmExecJS error reading %q: %w", wasmExecJSPath, err)
 		}

@@ -5,7 +5,6 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -111,7 +110,7 @@ func processFile(filename string, in io.Reader, out io.Writer) error {
 		perm = fi.Mode().Perm()
 	}
 
-	src, err := ioutil.ReadAll(in)
+	src, err := io.ReadAll(in)
 	if err != nil {
 		return err
 	}
@@ -137,7 +136,7 @@ func processFile(filename string, in io.Reader, out io.Writer) error {
 			if err != nil {
 				return err
 			}
-			err = ioutil.WriteFile(filename, res, perm)
+			err = os.WriteFile(filename, res, perm)
 			if err != nil {
 				err = os.Rename(bakname, filename)
 				return err
@@ -181,7 +180,7 @@ const chmodSupported = runtime.GOOS != "windows"
 func backupFile(filename string, data []byte, perm os.FileMode) (string, error) {
 
 	// create backup file
-	f, err := ioutil.TempFile(filepath.Dir(filename), filepath.Base(filename))
+	f, err := os.CreateTemp(filepath.Dir(filename), filepath.Base(filename))
 	if err != nil {
 		return "", err
 	}

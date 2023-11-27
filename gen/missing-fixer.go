@@ -8,7 +8,6 @@ import (
 	"go/parser"
 	"go/token"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sort"
@@ -252,7 +251,7 @@ func (mf *missingFixer) createOutfile() (*os.File, error) {
 // vugugen comment lines that are exactly identical will be deduplicated (even across files)
 // as it will never be correct to generate two of the same thing in one package
 func readVugugenComments(pkgPath string) (map[string][]string, error) {
-	fis, err := ioutil.ReadDir(pkgPath)
+	fis, err := os.ReadDir(pkgPath)
 	if err != nil {
 		return nil, err
 	}

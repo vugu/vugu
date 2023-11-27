@@ -1,7 +1,6 @@
 package devutil
 
 import (
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -10,7 +9,7 @@ import (
 
 func TestMux(t *testing.T) {
 
-	tmpFile, err := ioutil.TempFile("", "TestMux")
+	tmpFile, err := os.CreateTemp("", "TestMux")
 	must(err)
 	_, _ = tmpFile.Write([]byte("<html><body>contents of temp file</body></html>"))
 	tmpFile.Close()

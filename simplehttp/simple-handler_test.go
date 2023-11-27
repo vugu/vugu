@@ -1,7 +1,7 @@
 package simplehttp
 
 import (
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -15,7 +15,7 @@ func TestSimpleHandlerDev(t *testing.T) {
 
 	assert := assert.New(t)
 
-	tmpDir, err := ioutil.TempDir("", "TestSimpleHandler")
+	tmpDir, err := os.MkdirTemp("", "TestSimpleHandler")
 	assert.NoError(err)
 	// log.Printf("tmpDir = %q", tmpDir)
 	defer os.RemoveAll(tmpDir)
@@ -24,16 +24,16 @@ func TestSimpleHandlerDev(t *testing.T) {
 	vugudir, _ := filepath.Abs(filepath.Join(wd, ".."))
 
 	// write a go.mod that points vugu module to use our local path instead of pulling from github
-	assert.NoError(ioutil.WriteFile(filepath.Join(tmpDir, "go.mod"), []byte(`
+	assert.NoError(os.WriteFile(filepath.Join(tmpDir, "go.mod"), []byte(`
 module example.com/test
 replace github.com/vugu/vugu => `+vugudir+`
 	`), 0644))
 
-	assert.NoError(ioutil.WriteFile(filepath.Join(tmpDir, "root.vugu"), []byte(`
+	assert.NoError(os.WriteFile(filepath.Join(tmpDir, "root.vugu"), []byte(`
 <div>I Am Root</div>
 `), 0644))
 
-	assert.NoError(ioutil.WriteFile(filepath.Join(tmpDir, "test.js"), []byte(`
+	assert.NoError(os.WriteFile(filepath.Join(tmpDir, "test.js"), []byte(`
 // test.js here
 `), 0644))
 
@@ -54,7 +54,7 @@ func TestSimpleHandlerProd(t *testing.T) {
 
 	assert := assert.New(t)
 
-	tmpDir, err := ioutil.TempDir("", "TestSimpleHandler")
+	tmpDir, err := os.MkdirTemp("", "TestSimpleHandler")
 	assert.NoError(err)
 	// log.Printf("tmpDir = %q", tmpDir)
 	defer os.RemoveAll(tmpDir)
@@ -63,16 +63,16 @@ func TestSimpleHandlerProd(t *testing.T) {
 	vugudir, _ := filepath.Abs(filepath.Join(wd, ".."))
 
 	// write a go.mod that points vugu module to use our local path instead of pulling from github
-	assert.NoError(ioutil.WriteFile(filepath.Join(tmpDir, "go.mod"), []byte(`
+	assert.NoError(os.WriteFile(filepath.Join(tmpDir, "go.mod"), []byte(`
 module example.com/test
 replace github.com/vugu/vugu => `+vugudir+`
 	`), 0644))
 
-	assert.NoError(ioutil.WriteFile(filepath.Join(tmpDir, "root.vugu"), []byte(`
+	assert.NoError(os.WriteFile(filepath.Join(tmpDir, "root.vugu"), []byte(`
 <div>I Am Root</div>
 `), 0644))
 
-	assert.NoError(ioutil.WriteFile(filepath.Join(tmpDir, "test.js"), []byte(`
+	assert.NoError(os.WriteFile(filepath.Join(tmpDir, "test.js"), []byte(`
 // test.js here
 `), 0644))
 
@@ -95,7 +95,7 @@ func mustGetPage(u string) string {
 		panic(err)
 	}
 	defer res.Body.Close()
-	b, err := ioutil.ReadAll(res.Body)
+	b, err := io.ReadAll(res.Body)
 	if err != nil {
 		panic(err)
 	}

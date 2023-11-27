@@ -7,7 +7,6 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -202,7 +201,7 @@ func (p *ParserGoPkg) Run() error {
 		namesToCheck = append(namesToCheck, "vuguSetup")
 
 		// read in source
-		b, err := ioutil.ReadFile(filepath.Join(p.pkgPath, fn))
+		b, err := os.ReadFile(filepath.Join(p.pkgPath, fn))
 		if err != nil {
 			return err
 		}
@@ -316,7 +315,7 @@ func main() {
 				log.Printf("WARNING: gofmt on main_wasm.go failed: %v", err)
 			}
 
-			err = ioutil.WriteFile(mainGoPath, []byte(bufstr), 0644)
+			err = os.WriteFile(mainGoPath, []byte(bufstr), 0644)
 			if err != nil {
 				return err
 			}
@@ -329,7 +328,7 @@ func main() {
 	// otherwise we really don't know what the right module name is
 	goModPath := filepath.Join(p.pkgPath, "go.mod")
 	if pkgName == "main" && !p.opts.SkipGoMod && !fileExists(goModPath) {
-		err := ioutil.WriteFile(goModPath, []byte(`module `+pkgName+"\n"), 0644)
+		err := os.WriteFile(goModPath, []byte(`module `+pkgName+"\n"), 0644)
 		if err != nil {
 			return err
 		}
@@ -426,7 +425,7 @@ func main() {
 
 //nolint:golint,unused
 func fileHasInitFunc(p string) bool {
-	b, err := ioutil.ReadFile(p)
+	b, err := os.ReadFile(p)
 	if err != nil {
 		return false
 	}
@@ -611,7 +610,7 @@ func fileHashTimes(dir string) (map[uint64]time.Time, error) {
 		}
 		h := xxhash.New()
 		fmt.Fprint(h, fi.Name()) // hash the name too so we don't confuse different files with the same contents
-		b, err := ioutil.ReadFile(filepath.Join(dir, fi.Name()))
+		b, err := os.ReadFile(filepath.Join(dir, fi.Name()))
 		if err != nil {
 			return nil, err
 		}
@@ -650,7 +649,7 @@ func restoreFileHashTimes(dir string, hashTimes map[uint64]time.Time) error {
 		fiPath := filepath.Join(dir, fi.Name())
 		h := xxhash.New()
 		fmt.Fprint(h, fi.Name()) // hash the name too so we don't confuse different files with the same contents
-		b, err := ioutil.ReadFile(fiPath)
+		b, err := os.ReadFile(fiPath)
 		if err != nil {
 			return err
 		}

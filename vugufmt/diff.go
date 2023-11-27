@@ -9,7 +9,6 @@ package vugufmt
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -17,7 +16,7 @@ import (
 )
 
 func writeTempFile(dir, prefix string, data []byte) (string, error) {
-	file, err := ioutil.TempFile(dir, prefix)
+	file, err := os.CreateTemp(dir, prefix)
 	if err != nil {
 		return "", err
 	}

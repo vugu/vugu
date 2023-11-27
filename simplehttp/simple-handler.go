@@ -30,7 +30,6 @@ import (
 	"fmt"
 	"html/template"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -199,7 +198,7 @@ doBuild:
 			}
 		}
 
-		f, err := ioutil.TempFile("", "main_wasm_")
+		f, err := os.CreateTemp("", "main_wasm_")
 		if err != nil {
 			panic(err)
 		}
@@ -314,7 +313,7 @@ func (h *SimpleHandler) serveGoEnvWasmExecJs(w http.ResponseWriter, r *http.Requ
 	}
 
 	h.wasmExecJsOnce.Do(func() {
-		h.wasmExecJsContent, err = ioutil.ReadFile(filepath.Join(strings.TrimSpace(string(b)), "misc/wasm/wasm_exec.js"))
+		h.wasmExecJsContent, err = os.ReadFile(filepath.Join(strings.TrimSpace(string(b)), "misc/wasm/wasm_exec.js"))
 		if err != nil {
 			http.Error(w, "failed to run `go env GOROOT`: "+err.Error(), 500)
 			return
