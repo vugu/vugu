@@ -12,7 +12,7 @@ jobs:
     strategy:
       matrix:
         go:
-        - '1.17.6'
+        - '1.21.4'
     env:
       GO111MODULE: "on"
     steps:
