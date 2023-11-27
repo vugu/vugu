@@ -13,7 +13,7 @@ import (
 )
 
 // DefaultTinygoDockerImage is used as the docker image for Tinygo unless overridden.
-var DefaultTinygoDockerImage = "tinygo/tinygo:0.22.0"
+var DefaultTinygoDockerImage = "tinygo/tinygo:0.30.0"
 
 // MustNewTinygoCompiler is like NewTinygoCompiler but panics upon error.
 func MustNewTinygoCompiler() *TinygoCompiler {
@@ -102,7 +102,7 @@ func (c *TinygoCompiler) SetBuildDir(dir string) *TinygoCompiler {
 		// example: docker run --rm \
 		// -v /:/src \
 		// -w /src/`pwd` \
-		// tinygo/tinygo:0.22.0 tinygo build -o /root/go/src/example.com/tgtest1/out.wasm \
+		// tinygo/tinygo:0.30.0 tinygo build -o /root/go/src/example.com/tgtest1/out.wasm \
 		// -target=wasm .
 
 		args := make([]string, 0, 20)
