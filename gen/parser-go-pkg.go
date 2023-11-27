@@ -424,6 +424,7 @@ func main() {
 
 }
 
+//nolint:golint,unused
 func fileHasInitFunc(p string) bool {
 	b, err := ioutil.ReadFile(p)
 	if err != nil {
@@ -614,7 +615,10 @@ func fileHashTimes(dir string) (map[uint64]time.Time, error) {
 		if err != nil {
 			return nil, err
 		}
-		h.Write(b)
+		_, err = h.Write(b)
+		if err != nil {
+			return nil, err
+		}
 		ret[h.Sum64()] = fi.ModTime()
 	}
 
@@ -650,7 +654,10 @@ func restoreFileHashTimes(dir string, hashTimes map[uint64]time.Time) error {
 		if err != nil {
 			return err
 		}
-		h.Write(b)
+		_, err = h.Write(b)
+		if err != nil {
+			return err
+		}
 		if t, ok := hashTimes[h.Sum64()]; ok {
 			err := os.Chtimes(fiPath, time.Now(), t)
 			if err != nil {

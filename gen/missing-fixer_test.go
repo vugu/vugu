@@ -100,7 +100,11 @@ func TestMissingFixer(t *testing.T) {
 
 	cmd := exec.Command("go", "mod", "tidy")
 	cmd.Dir = tmpDir
-	cmd.CombinedOutput()
+	_, err = cmd.CombinedOutput()
+	if err != nil {
+		t.Logf("build output: %s", b)
+		t.Fatal(err)
+	}
 	cmd = exec.Command("go", "build", "-o", "a.out", ".")
 	cmd.Dir = tmpDir
 	b, err = cmd.CombinedOutput()
@@ -114,5 +118,4 @@ func TestMissingFixer(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
 }

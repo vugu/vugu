@@ -24,6 +24,9 @@ jobs:
 
     - name: before_install from Travis
       run: go get golang.org/x/tools/cmd/goimports && go install golang.org/x/tools/cmd/goimports
+    - run: go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+    - name: Execute golangci-lint
+      run: golangci-lint run
     - run: docker pull vugu/wasm-test-suite:latest
     - run: docker run -d -t -p 9222:9222 -p 8846:8846 --name wasm-test-suite vugu/wasm-test-suite:latest
     - run: wget -O /tmp/tinygo.deb https://github.com/tinygo-org/tinygo/releases/download/v0.22.0/tinygo_0.22.0_amd64.deb ; sudo dpkg -i /tmp/tinygo.deb

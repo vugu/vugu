@@ -213,7 +213,10 @@ func hashVals(vs ...uint64) uint64 {
 	var b [8]byte
 	for _, v := range vs {
 		binary.BigEndian.PutUint64(b[:], v)
-		h.Write(b[:])
+		_, err := h.Write(b[:])
+		if err != nil {
+			panic(err)
+		}
 	}
 	return h.Sum64()
 

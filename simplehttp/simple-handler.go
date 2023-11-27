@@ -7,7 +7,6 @@ in one place.   If you require more functionality than simplehttp provides, near
 it does is available in the github.com/vugu/vugu package and you can construct what you
 need from its parts.  That said, simplehttp should make it easy to start:
 
-
 	// dev flag enables most common development features
 	// including rebuild your .wasm upon page reload
 	dev := true
@@ -22,7 +21,6 @@ After creation, some flags are available for tuning, e.g.:
 Since it's just a regular http.Handler, starting a webserver is as simple as:
 
 	log.Fatal(http.ListenAndServe("127.0.0.1:5678", h))
-
 */
 package simplehttp
 
@@ -305,8 +303,6 @@ serveBuiltFile:
 	if err != nil {
 		log.Print(err)
 	}
-	return
-
 }
 
 func (h *SimpleHandler) serveGoEnvWasmExecJs(w http.ResponseWriter, r *http.Request) {

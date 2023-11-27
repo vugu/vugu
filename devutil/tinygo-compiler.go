@@ -45,10 +45,11 @@ type TinygoCompiler struct {
 	dockerBuildCmdFunc func(outpath string) *exec.Cmd
 	afterFunc          func(outpath string, err error) error
 	logWriter          io.Writer
-	dlTmpGopath        string   // temporary directory that we download dependencies into with go get
-	tinygoDockerImage  string   // docker image name to use, if empty then it is run directly
-	wasmExecJS         []byte   // contents of wasm_exec.js
-	tinygoArgs         []string // additional arguments to pass to the tinygo build cmd
+	//nolint:golint,unused
+	dlTmpGopath       string   // temporary directory that we download dependencies into with go get
+	tinygoDockerImage string   // docker image name to use, if empty then it is run directly
+	wasmExecJS        []byte   // contents of wasm_exec.js
+	tinygoArgs        []string // additional arguments to pass to the tinygo build cmd
 }
 
 // Close performs any cleanup.  For now it removes the temporary directory created by NewTinygoCompiler.
