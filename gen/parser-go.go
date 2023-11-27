@@ -448,7 +448,7 @@ func (p *ParserGo) visitBody(state *parseGoState, n *html.Node) error {
 		}
 
 		if foundMountEl {
-			return fmt.Errorf("element %q found after we already have a mount element", childN.Data)
+			return fmt.Errorf("element %q found after we already have a mount element, you might have to wrap all your body content into a div", childN.Data)
 		}
 		foundMountEl = true
 
