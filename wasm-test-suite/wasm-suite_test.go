@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/chromedp/cdproto/cdp"
+	"github.com/chromedp/cdproto/runtime"
 	"github.com/chromedp/chromedp"
 	"github.com/chromedp/chromedp/kb"
 	"github.com/stretchr/testify/assert"
@@ -691,7 +692,7 @@ func Test016SVG(t *testing.T) {
 			chromedp.Navigate("http://localhost:8846"+pathSuffix),
 			chromedp.WaitVisible("#icon"),          // wait for the icon to show up
 			chromedp.WaitVisible("#icon polyline"), // make sure that the svg element is complete
-			chromedp.QueryAfter("#icon", func(ctx context.Context, node ...*cdp.Node) error {
+			chromedp.QueryAfter("#icon", func(ctx context.Context, r runtime.ExecutionContextID, node ...*cdp.Node) error {
 				// checking if the element is recognized as SVG by chrome should be enough
 				assert.True(node[0].IsSVG)
 				return nil

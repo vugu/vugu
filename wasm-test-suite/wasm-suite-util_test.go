@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/chromedp/cdproto/cdp"
+	"github.com/chromedp/cdproto/runtime"
 	"github.com/chromedp/chromedp"
 
 	"github.com/vugu/vugu/devutil"
@@ -31,7 +32,7 @@ import (
 )
 
 func queryNode(ref string, assert func(n *cdp.Node)) chromedp.QueryAction {
-	return chromedp.QueryAfter(ref, func(ctx context.Context, nodes ...*cdp.Node) error {
+	return chromedp.QueryAfter(ref, func(ctx context.Context, id runtime.ExecutionContextID, nodes ...*cdp.Node) error {
 		if len(nodes) == 0 {
 			return fmt.Errorf("no %s element found", ref)
 		}
@@ -41,7 +42,7 @@ func queryNode(ref string, assert func(n *cdp.Node)) chromedp.QueryAction {
 }
 
 func queryAttributes(ref string, assert func(attributes map[string]string)) chromedp.QueryAction {
-	return chromedp.QueryAfter(ref, func(ctx context.Context, nodes ...*cdp.Node) error {
+	return chromedp.QueryAfter(ref, func(ctx context.Context, id runtime.ExecutionContextID, nodes ...*cdp.Node) error {
 		attributes := make(map[string]string)
 		if err := chromedp.Attributes(ref, &attributes).Do(ctx); err != nil {
 			return err
@@ -56,7 +57,7 @@ func WaitInnerTextTrimEq(sel, innerText string) chromedp.QueryAction {
 
 	return chromedp.Query(sel, func(s *chromedp.Selector) {
 
-		chromedp.WaitFunc(func(ctx context.Context, cur *cdp.Frame, ids ...cdp.NodeID) ([]*cdp.Node, error) {
+		chromedp.WaitFunc(func(ctx context.Context, cur *cdp.Frame, id runtime.ExecutionContextID, ids ...cdp.NodeID) ([]*cdp.Node, error) {
 
 			nodes := make([]*cdp.Node, len(ids))
 			cur.RLock()
