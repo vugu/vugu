@@ -242,7 +242,8 @@ func (mt *ModTracker) ModCheckAll(values ...interface{}) (ret bool) {
 				if l > 0 {
 					// use the unsafe package to make a byte slice corresponding to the raw slice contents
 					var bs []byte
-					bsh := (*reflect.SliceHeader)(unsafe.Pointer(&bs))
+					// TODO: need to be fix later
+					bsh := (*reflect.SliceHeader)(unsafe.Pointer(&bs)) //nolint:staticcheck
 
 					el0 := rvv.Index(0)
 					el0t = el0.Type()

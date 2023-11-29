@@ -11,7 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go: [ '1.16.12', '1.17.6' ]
+        go:
+        - '1.21.4'
     env:
       GO111MODULE: "on"
     steps:
@@ -27,9 +28,9 @@ jobs:
     - run: wget -O /tmp/golangci-lint.deb https://github.com/golangci/golangci-lint/releases/download/v1.55.2/golangci-lint-1.55.2-linux-amd64.deb ; sudo dpkg -i /tmp/golangci-lint.deb
     - name: Execute golangci-lint
       run: golangci-lint run
-    - run: docker pull vugu/wasm-test-suite:latest
+    - run: cd wasm-test-suite/docker && ./make-docker.sh
     - run: docker run -d -t -p 9222:9222 -p 8846:8846 --name wasm-test-suite vugu/wasm-test-suite:latest
-    - run: wget -O /tmp/tinygo.deb https://github.com/tinygo-org/tinygo/releases/download/v0.22.0/tinygo_0.22.0_amd64.deb ; sudo dpkg -i /tmp/tinygo.deb
+    - run: wget -O /tmp/tinygo.deb https://github.com/tinygo-org/tinygo/releases/download/v0.30.0/tinygo_0.30.0_amd64.deb ; sudo dpkg -i /tmp/tinygo.deb
 
     - name: Main script
       run: go install ./cmd/vugugen

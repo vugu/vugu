@@ -2,7 +2,7 @@ package devutil
 
 import (
 	"bytes"
-	"io/ioutil"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -11,17 +11,17 @@ import (
 
 func TestTinygoCompiler(t *testing.T) {
 
-	tmpDir, err := ioutil.TempDir("", "TestTinygoCompiler")
+	tmpDir, err := os.MkdirTemp("", "TestTinygoCompiler")
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer os.RemoveAll(tmpDir)
 
-	must(ioutil.WriteFile(filepath.Join(tmpDir, "go.mod"), []byte(`module example.org/testtgc
+	must(os.WriteFile(filepath.Join(tmpDir, "go.mod"), []byte(`module example.org/testtgc
 
 require github.com/vugu/html v0.0.0-20190914200101-c62dc20b8289 // indirect
 `), 0644))
-	must(ioutil.WriteFile(filepath.Join(tmpDir, "main.go"), []byte(`package main 
+	must(os.WriteFile(filepath.Join(tmpDir, "main.go"), []byte(`package main 
 
 import "fmt"
 import "github.com/vugu/html"
@@ -41,7 +41,7 @@ func main() {
 		t.Fatal(err)
 	}
 	defer os.Remove(outpath)
-	b, err := ioutil.ReadFile(outpath)
+	b, err := os.ReadFile(outpath)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -54,7 +54,7 @@ func main() {
 	if err != nil {
 		t.Fatal(err)
 	}
-	b, err = ioutil.ReadAll(r)
+	b, err = io.ReadAll(r)
 	if err != nil {
 		t.Fatal(err)
 	}

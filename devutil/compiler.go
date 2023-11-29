@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -34,7 +33,7 @@ type WasmCompiler struct {
 // The default from NewWasmCompiler is os.Stderr
 func (c *WasmCompiler) SetLogWriter(w io.Writer) *WasmCompiler {
 	if w == nil {
-		w = ioutil.Discard
+		w = io.Discard
 	}
 	c.logWriter = w
 	return c
@@ -130,7 +129,7 @@ func (c *WasmCompiler) Execute() (outpath string, err error) {
 		fmt.Fprintln(c.logWriter, "WasmCompiler: Successful generate")
 	}
 
-	tmpf, err := ioutil.TempFile("", "WasmCompiler")
+	tmpf, err := os.CreateTemp("", "WasmCompiler")
 	if err != nil {
 		return "", logerr(fmt.Errorf("WasmCompiler: error creating temporary file: %w", err))
 	}
@@ -165,7 +164,7 @@ func (c *WasmCompiler) WasmExecJS() (r io.Reader, err error) {
 		return nil, err
 	}
 
-	b2, err := ioutil.ReadFile(filepath.Join(strings.TrimSpace(string(b1)), "misc/wasm/wasm_exec.js"))
+	b2, err := os.ReadFile(filepath.Join(strings.TrimSpace(string(b1)), "misc/wasm/wasm_exec.js"))
 	return bytes.NewReader(b2), err
 
 }

@@ -2,7 +2,6 @@ package devutil
 
 import (
 	"bytes"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"net/http/httputil"
@@ -13,7 +12,7 @@ import (
 
 func TestFileServer(t *testing.T) {
 
-	tmpDir, err := ioutil.TempDir("", "TestFileServer")
+	tmpDir, err := os.MkdirTemp("", "TestFileServer")
 	must(err)
 	defer os.RemoveAll(tmpDir)
 	t.Logf("Using temporary dir: %s", tmpDir)
@@ -36,7 +35,7 @@ func TestFileServer(t *testing.T) {
 	checkStatus(t, r, wr.Result(), 404)
 
 	// serve index.html from /dir/
-	must(ioutil.WriteFile(filepath.Join(tmpDir, "dir/index.html"), []byte(`<html><body>index page here</body></html>`), 0644))
+	must(os.WriteFile(filepath.Join(tmpDir, "dir/index.html"), []byte(`<html><body>index page here</body></html>`), 0644))
 	wr = httptest.NewRecorder()
 	r, _ = http.NewRequest("GET", "/dir/", nil)
 	fs.ServeHTTP(wr, r)
@@ -45,7 +44,7 @@ func TestFileServer(t *testing.T) {
 
 	// listing for /dir/
 	os.Remove(filepath.Join(tmpDir, "dir/index.html"))
-	must(ioutil.WriteFile(filepath.Join(tmpDir, "dir/blerg.html"), []byte(`<html><body>blerg page here</body></html>`), 0644))
+	must(os.WriteFile(filepath.Join(tmpDir, "dir/blerg.html"), []byte(`<html><body>blerg page here</body></html>`), 0644))
 	fs.SetListings(true)
 	wr = httptest.NewRecorder()
 	r, _ = http.NewRequest("GET", "/dir/", nil)
@@ -57,7 +56,7 @@ func TestFileServer(t *testing.T) {
 	fs.SetListings(false)
 
 	// /a.html should serve a.html
-	must(ioutil.WriteFile(filepath.Join(tmpDir, "a.html"), []byte(`<html><body>a page here</body></html>`), 0644))
+	must(os.WriteFile(filepath.Join(tmpDir, "a.html"), []byte(`<html><body>a page here</body></html>`), 0644))
 	wr = httptest.NewRecorder()
 	r, _ = http.NewRequest("GET", "/a.html", nil)
 	fs.ServeHTTP(wr, r)
@@ -74,7 +73,7 @@ func TestFileServer(t *testing.T) {
 	checkHeader(t, r, wr.Result(), "Content-Type", "text/html; charset=utf-8")
 
 	// not found should serve 404.html if present
-	must(ioutil.WriteFile(filepath.Join(tmpDir, "404.html"), []byte(`<html><body>custom not found page here</body></html>`), 0644))
+	must(os.WriteFile(filepath.Join(tmpDir, "404.html"), []byte(`<html><body>custom not found page here</body></html>`), 0644))
 	wr = httptest.NewRecorder()
 	r, _ = http.NewRequest("GET", "/ainthere", nil)
 	fs.ServeHTTP(wr, r)
