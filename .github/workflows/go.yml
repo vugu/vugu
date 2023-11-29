@@ -24,7 +24,7 @@ jobs:
 
     - name: before_install from Travis
       run: go get golang.org/x/tools/cmd/goimports && go install golang.org/x/tools/cmd/goimports
-    - run: go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+    - run: wget -O /tmp/golangci-lint.deb https://github.com/golangci/golangci-lint/releases/download/v1.55.2/golangci-lint-1.55.2-linux-amd64.deb ; sudo dpkg -i /tmp/golangci-lint.deb
     - name: Execute golangci-lint
       run: golangci-lint run
     - run: docker pull vugu/wasm-test-suite:latest
