@@ -192,7 +192,38 @@ func (p *ParserGo) Parse(r io.Reader, fname string) error {
 	if err != nil {
 		return err
 	}
+	err = removeRedundantDefinitions(outPath)
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
+func removeRedundantDefinitions(fileName string) error {
+	type definitions struct {
+		old, new string
+	}
+	r := []definitions{
+		{
+			old: "vugu.VGAttribute{vugu.VGAttribute",
+			new: "vugu.VGAttribute{",
+		},
+	}
+
+	content, err := os.ReadFile(fileName)
+	if err != nil {
+		return err
+	}
+
+	var newContents string
+	for _, v := range r {
+		newContents = strings.Replace(string(content), v.old, v.new, -1)
+	}
+
+	err = os.WriteFile(fileName, []byte(newContents), 0644)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
