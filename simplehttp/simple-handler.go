@@ -7,7 +7,6 @@ in one place.   If you require more functionality than simplehttp provides, near
 it does is available in the github.com/vugu/vugu package and you can construct what you
 need from its parts.  That said, simplehttp should make it easy to start:
 
-
 	// dev flag enables most common development features
 	// including rebuild your .wasm upon page reload
 	dev := true
@@ -22,7 +21,6 @@ After creation, some flags are available for tuning, e.g.:
 Since it's just a regular http.Handler, starting a webserver is as simple as:
 
 	log.Fatal(http.ListenAndServe("127.0.0.1:5678", h))
-
 */
 package simplehttp
 
@@ -32,7 +30,6 @@ import (
 	"fmt"
 	"html/template"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -201,7 +198,7 @@ doBuild:
 			}
 		}
 
-		f, err := ioutil.TempFile("", "main_wasm_")
+		f, err := os.CreateTemp("", "main_wasm_")
 		if err != nil {
 			panic(err)
 		}
@@ -305,8 +302,6 @@ serveBuiltFile:
 	if err != nil {
 		log.Print(err)
 	}
-	return
-
 }
 
 func (h *SimpleHandler) serveGoEnvWasmExecJs(w http.ResponseWriter, r *http.Request) {
@@ -318,7 +313,7 @@ func (h *SimpleHandler) serveGoEnvWasmExecJs(w http.ResponseWriter, r *http.Requ
 	}
 
 	h.wasmExecJsOnce.Do(func() {
-		h.wasmExecJsContent, err = ioutil.ReadFile(filepath.Join(strings.TrimSpace(string(b)), "misc/wasm/wasm_exec.js"))
+		h.wasmExecJsContent, err = os.ReadFile(filepath.Join(strings.TrimSpace(string(b)), "misc/wasm/wasm_exec.js"))
 		if err != nil {
 			http.Error(w, "failed to run `go env GOROOT`: "+err.Error(), 500)
 			return

@@ -1,7 +1,6 @@
 language: go
 go:
-  - 1.14.x
-  - 1.15.x
+  - 1.21.x
 
 os:
   - linux
@@ -32,7 +31,7 @@ notifications:
 
 before_install:
   - go get golang.org/x/tools/cmd/goimports && go install golang.org/x/tools/cmd/goimports
-  - docker pull vugu/wasm-test-suite:latest
+  - cd wasm-test-suite/docker && ./make-docker.sh
   - docker run -d -t -p 9222:9222 -p 8846:8846 --name wasm-test-suite vugu/wasm-test-suite:latest
 
 services:

@@ -6,7 +6,6 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -21,7 +20,7 @@ func main() {
 	httpListen := flag.String("http-listen", "127.0.0.1:8846", "HTTP host:port to listen on")
 	flag.Parse()
 
-	dirName, err := ioutil.TempDir("", "wasm-test-suite")
+	dirName, err := os.MkdirTemp("", "wasm-test-suite")
 	if err != nil {
 		panic(err)
 	}
@@ -67,7 +66,7 @@ func (s *TSrv) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		defer file.Close()
 		log.Printf("Got upload of %q (size=%d)", header.Filename, header.Size)
 
-		dir, err := ioutil.TempDir(s.BaseDir, "fs")
+		dir, err := os.MkdirTemp(s.BaseDir, "fs")
 		if err != nil {
 			panic(err)
 		}

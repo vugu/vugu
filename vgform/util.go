@@ -3,6 +3,9 @@ package vgform
 import (
 	"sort"
 	"strings"
+
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 // KeyLister provides a list keys as a string slice.
@@ -32,7 +35,8 @@ func (f TextMapperFunc) TextMap(key string) string { return f(key) }
 
 // SimpleTitle implements TextMapper by replacing '-' and '_' with a space and calling strings.Title.
 var SimpleTitle = TextMapperFunc(func(key string) string {
-	return strings.Title(strings.NewReplacer("-", " ", "_", " ").Replace(key))
+	c := cases.Title(language.Und)
+	return c.String(strings.NewReplacer("-", " ", "_", " ").Replace(key))
 })
 
 // Options is an interface with KeyList and TextMap.

@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -82,7 +81,7 @@ func (p *ParserGo) Parse(r io.Reader, fname string) error {
 
 	state := &parseGoState{}
 
-	inRaw, err := ioutil.ReadAll(r)
+	inRaw, err := io.ReadAll(r)
 	if err != nil {
 		return err
 	}
@@ -176,7 +175,7 @@ func (p *ParserGo) Parse(r io.Reader, fname string) error {
 	if err != nil {
 
 		// if the gofmt errors, we still attempt to write out the non-fmt'ed output to the file, to assist in debugging
-		ioutil.WriteFile(outPath, buf.Bytes(), 0644)
+		_ = os.WriteFile(outPath, buf.Bytes(), 0644)
 
 		return err
 	}
@@ -189,7 +188,7 @@ func (p *ParserGo) Parse(r io.Reader, fname string) error {
 	}
 
 	// write to final output file
-	err = ioutil.WriteFile(outPath, dedupedBuf.Bytes(), 0644)
+	err = os.WriteFile(outPath, dedupedBuf.Bytes(), 0644)
 	if err != nil {
 		return err
 	}
@@ -228,6 +227,7 @@ func removeRedundantDefinitions(fileName string) error {
 	return nil
 }
 
+//nolint:golint,unused
 type codeChunk struct {
 	Line   int
 	Column int
@@ -478,7 +478,7 @@ func (p *ParserGo) visitBody(state *parseGoState, n *html.Node) error {
 		}
 
 		if foundMountEl {
-			return fmt.Errorf("element %q found after we already have a mount element", childN.Data)
+			return fmt.Errorf("element %q found after we already have a mount element, you might have to wrap all your body content into a div", childN.Data)
 		}
 		foundMountEl = true
 

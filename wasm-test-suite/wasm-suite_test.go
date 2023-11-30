@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -12,6 +11,7 @@ import (
 	"time"
 
 	"github.com/chromedp/cdproto/cdp"
+	"github.com/chromedp/cdproto/runtime"
 	"github.com/chromedp/chromedp"
 	"github.com/chromedp/chromedp/kb"
 	"github.com/stretchr/testify/assert"
@@ -27,7 +27,12 @@ import (
 func Test001Simple(t *testing.T) {
 
 	dir, origDir := mustUseDir("test-001-simple")
-	defer os.Chdir(origDir)
+	defer func() {
+		err := os.Chdir(origDir)
+		if err != nil {
+			t.Fatalf("Fail to chdir %s", origDir)
+		}
+	}()
 
 	tf := func(t *testing.T, pathSuffix string) {
 
@@ -79,7 +84,12 @@ func Test001Simple(t *testing.T) {
 func Test002Click(t *testing.T) {
 
 	dir, origDir := mustUseDir("test-002-click")
-	defer os.Chdir(origDir)
+	defer func() {
+		err := os.Chdir(origDir)
+		if err != nil {
+			t.Fatalf("Fail to chdir %s", origDir)
+		}
+	}()
 
 	tf := func(t *testing.T, pathSuffix string) {
 
@@ -113,7 +123,12 @@ func Test002Click(t *testing.T) {
 func Test003Prop(t *testing.T) {
 
 	dir, origDir := mustUseDir("test-003-prop")
-	defer os.Chdir(origDir)
+	defer func() {
+		err := os.Chdir(origDir)
+		if err != nil {
+			t.Fatalf("Fail to chdir %s", origDir)
+		}
+	}()
 
 	tf := func(t *testing.T, pathSuffix string) {
 
@@ -141,7 +156,12 @@ func Test003Prop(t *testing.T) {
 func Test004Component(t *testing.T) {
 
 	dir, origDir := mustUseDir("test-004-component")
-	defer os.Chdir(origDir)
+	defer func() {
+		err := os.Chdir(origDir)
+		if err != nil {
+			t.Fatalf("Fail to chdir %s", origDir)
+		}
+	}()
 
 	tf := func(t *testing.T, pathSuffix string) {
 
@@ -167,7 +187,12 @@ func Test004Component(t *testing.T) {
 func Test005Issue80(t *testing.T) {
 
 	dir, origDir := mustUseDir("test-005-issue-80")
-	defer os.Chdir(origDir)
+	defer func() {
+		err := os.Chdir(origDir)
+		if err != nil {
+			t.Fatalf("Fail to chdir %s", origDir)
+		}
+	}()
 
 	tf := func(t *testing.T, pathSuffix string) {
 
@@ -192,7 +217,12 @@ func Test005Issue80(t *testing.T) {
 func Test006Issue81(t *testing.T) {
 
 	dir, origDir := mustUseDir("test-006-issue-81")
-	defer os.Chdir(origDir)
+	defer func() {
+		err := os.Chdir(origDir)
+		if err != nil {
+			t.Fatalf("Fail to chdir %s", origDir)
+		}
+	}()
 
 	tf := func(t *testing.T, pathSuffix string) {
 
@@ -237,7 +267,12 @@ func Test006Issue81(t *testing.T) {
 
 func Test007Issue85(t *testing.T) {
 	dir, origDir := mustUseDir("test-007-issue-85")
-	defer os.Chdir(origDir)
+	defer func() {
+		err := os.Chdir(origDir)
+		if err != nil {
+			t.Fatalf("Fail to chdir %s", origDir)
+		}
+	}()
 
 	tf := func(t *testing.T, pathSuffix string) {
 
@@ -292,7 +327,12 @@ func Test008For(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			dir, origDir := mustUseDir(tt.dir)
-			defer os.Chdir(origDir)
+			defer func() {
+				err := os.Chdir(origDir)
+				if err != nil {
+					t.Fatalf("Fail to chdir %s", origDir)
+				}
+			}()
 
 			tf := func(t *testing.T, pathSuffix string) {
 
@@ -322,7 +362,12 @@ func Test008For(t *testing.T) {
 
 func Test009TrimUnused(t *testing.T) {
 	dir, origDir := mustUseDir("test-009-trim-unused")
-	defer os.Chdir(origDir)
+	defer func() {
+		err := os.Chdir(origDir)
+		if err != nil {
+			t.Fatalf("Fail to chdir %s", origDir)
+		}
+	}()
 
 	tf := func(t *testing.T, pathSuffix string) {
 
@@ -353,7 +398,12 @@ func Test009TrimUnused(t *testing.T) {
 
 func Test010ListenerReadd(t *testing.T) {
 	dir, origDir := mustUseDir("test-010-listener-readd")
-	defer os.Chdir(origDir)
+	defer func() {
+		err := os.Chdir(origDir)
+		if err != nil {
+			t.Fatalf("Fail to chdir %s", origDir)
+		}
+	}()
 
 	tf := func(t *testing.T, pathSuffix string) {
 
@@ -387,7 +437,12 @@ func Test010ListenerReadd(t *testing.T) {
 func Test011Wire(t *testing.T) {
 
 	dir, origDir := mustUseDir("test-011-wire")
-	defer os.Chdir(origDir)
+	defer func() {
+		err := os.Chdir(origDir)
+		if err != nil {
+			t.Fatalf("Fail to chdir %s", origDir)
+		}
+	}()
 
 	tf := func(t *testing.T, pathSuffix string) {
 
@@ -412,7 +467,12 @@ func Test011Wire(t *testing.T) {
 func Test012Router(t *testing.T) {
 
 	dir, origDir := mustUseDir("test-012-router")
-	defer os.Chdir(origDir)
+	defer func() {
+		err := os.Chdir(origDir)
+		if err != nil {
+			t.Fatalf("Fail to chdir %s", origDir)
+		}
+	}()
 
 	tf := func(t *testing.T, pathSuffix string) {
 
@@ -471,7 +531,12 @@ func Test012Router(t *testing.T) {
 func Test013Issue117(t *testing.T) {
 
 	dir, origDir := mustUseDir("test-013-issue-117")
-	defer os.Chdir(origDir)
+	defer func() {
+		err := os.Chdir(origDir)
+		if err != nil {
+			t.Fatalf("Fail to chdir %s", origDir)
+		}
+	}()
 
 	tf := func(t *testing.T, pathSuffix string) {
 
@@ -498,7 +563,12 @@ func Test013Issue117(t *testing.T) {
 func Test014AttrIntf(t *testing.T) {
 
 	dir, origDir := mustUseDir("test-014-attrintf")
-	defer os.Chdir(origDir)
+	defer func() {
+		err := os.Chdir(origDir)
+		if err != nil {
+			t.Fatalf("Fail to chdir %s", origDir)
+		}
+	}()
 
 	tf := func(t *testing.T, pathSuffix string) {
 
@@ -550,7 +620,12 @@ func Test014AttrIntf(t *testing.T) {
 func Test015AttrList(t *testing.T) {
 
 	dir, origDir := mustUseDir("test-015-attribute-lister")
-	defer os.Chdir(origDir)
+	defer func() {
+		err := os.Chdir(origDir)
+		if err != nil {
+			t.Fatalf("Fail to chdir %s", origDir)
+		}
+	}()
 
 	tf := func(t *testing.T, pathSuffix string) {
 		assert := assert.New(t)
@@ -598,7 +673,12 @@ func Test015AttrList(t *testing.T) {
 func Test016SVG(t *testing.T) {
 
 	dir, origDir := mustUseDir("test-016-svg")
-	defer os.Chdir(origDir)
+	defer func() {
+		err := os.Chdir(origDir)
+		if err != nil {
+			t.Fatalf("Fail to chdir %s", origDir)
+		}
+	}()
 
 	tf := func(t *testing.T, pathSuffix string) {
 		assert := assert.New(t)
@@ -611,7 +691,7 @@ func Test016SVG(t *testing.T) {
 			chromedp.Navigate("http://localhost:8846"+pathSuffix),
 			chromedp.WaitVisible("#icon"),          // wait for the icon to show up
 			chromedp.WaitVisible("#icon polyline"), // make sure that the svg element is complete
-			chromedp.QueryAfter("#icon", func(ctx context.Context, node ...*cdp.Node) error {
+			chromedp.QueryAfter("#icon", func(ctx context.Context, r runtime.ExecutionContextID, node ...*cdp.Node) error {
 				// checking if the element is recognized as SVG by chrome should be enough
 				assert.True(node[0].IsSVG)
 				return nil
@@ -629,7 +709,12 @@ func Test016SVG(t *testing.T) {
 func Test017Nesting(t *testing.T) {
 
 	dir, origDir := mustUseDir("test-017-nesting")
-	defer os.Chdir(origDir)
+	defer func() {
+		err := os.Chdir(origDir)
+		if err != nil {
+			t.Fatalf("Fail to chdir %s", origDir)
+		}
+	}()
 
 	tf := func(t *testing.T, pathSuffix string) {
 
@@ -673,7 +758,12 @@ func Test017Nesting(t *testing.T) {
 func Test018CompEvents(t *testing.T) {
 
 	dir, origDir := mustUseDir("test-018-comp-events")
-	defer os.Chdir(origDir)
+	defer func() {
+		err := os.Chdir(origDir)
+		if err != nil {
+			t.Fatalf("Fail to chdir %s", origDir)
+		}
+	}()
 
 	tf := func(t *testing.T, pathSuffix string) {
 
@@ -707,7 +797,12 @@ func Test018CompEvents(t *testing.T) {
 func Test019JSCreatePopulate(t *testing.T) {
 
 	dir, origDir := mustUseDir("test-019-js-create-populate")
-	defer os.Chdir(origDir)
+	defer func() {
+		err := os.Chdir(origDir)
+		if err != nil {
+			t.Fatalf("Fail to chdir %s", origDir)
+		}
+	}()
 
 	tf := func(t *testing.T, pathSuffix string) {
 
@@ -757,7 +852,12 @@ func Test019JSCreatePopulate(t *testing.T) {
 func Test020VGForm(t *testing.T) {
 
 	dir, origDir := mustUseDir("test-020-vgform")
-	defer os.Chdir(origDir)
+	defer func() {
+		err := os.Chdir(origDir)
+		if err != nil {
+			t.Fatalf("Fail to chdir %s", origDir)
+		}
+	}()
 
 	tf := func(t *testing.T, pathSuffix string) {
 
@@ -783,7 +883,12 @@ func Test020VGForm(t *testing.T) {
 func Test021Slots(t *testing.T) {
 
 	dir, origDir := mustUseDir("test-021-slots")
-	defer os.Chdir(origDir)
+	defer func() {
+		err := os.Chdir(origDir)
+		if err != nil {
+			t.Fatalf("Fail to chdir %s", origDir)
+		}
+	}()
 
 	tf := func(t *testing.T, pathSuffix string) {
 
@@ -805,7 +910,7 @@ func Test021Slots(t *testing.T) {
 			t.Errorf("tmplparent did not have expected innerHTML, instead got: %s", tmplparentInnerHTML)
 		}
 
-		rootvgengo, err := ioutil.ReadFile(filepath.Join(dir, "root_vgen.go"))
+		rootvgengo, err := os.ReadFile(filepath.Join(dir, "root_vgen.go"))
 		must(err)
 		if !regexp.MustCompile(`var mydt `).Match(rootvgengo) {
 			t.Errorf("missing vg-var reference in root_vgen.go")
@@ -822,7 +927,12 @@ func Test021Slots(t *testing.T) {
 func Test022EventListener(t *testing.T) {
 
 	dir, origDir := mustUseDir("test-022-event-listener")
-	defer os.Chdir(origDir)
+	defer func() {
+		err := os.Chdir(origDir)
+		if err != nil {
+			t.Fatalf("Fail to chdir %s", origDir)
+		}
+	}()
 
 	tf := func(t *testing.T, pathSuffix string) {
 
@@ -859,7 +969,12 @@ func Test022EventListener(t *testing.T) {
 func Test023LifecycleCallbacks(t *testing.T) {
 
 	dir, origDir := mustUseDir("test-023-lifecycle-callbacks")
-	defer os.Chdir(origDir)
+	defer func() {
+		err := os.Chdir(origDir)
+		if err != nil {
+			t.Fatalf("Fail to chdir %s", origDir)
+		}
+	}()
 
 	tf := func(t *testing.T, pathSuffix string) {
 
@@ -917,12 +1032,18 @@ got C2.Rendered()
 func Test024EventBufferSize(t *testing.T) {
 
 	dir, origDir := mustUseDir("test-024-event-buffer-size")
-	defer os.Chdir(origDir)
+	defer func() {
+		err := os.Chdir(origDir)
+		if err != nil {
+			t.Fatalf("Fail to chdir %s", origDir)
+		}
+	}()
 
 	tf := func(t *testing.T, pathSuffix string) {
 
-		ctx, cancel := mustChromeCtx()
-		ctx, cancel = context.WithTimeout(ctx, 60*time.Second)
+		ctx, ccancel := mustChromeCtx()
+		defer ccancel()
+		ctx, cancel := context.WithTimeout(ctx, 60*time.Second)
 		defer cancel()
 		var val string
 		must(chromedp.Run(ctx,

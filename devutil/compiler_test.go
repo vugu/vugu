@@ -2,7 +2,7 @@ package devutil
 
 import (
 	"bytes"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -13,18 +13,18 @@ import (
 
 func TestWasmCompiler(t *testing.T) {
 
-	tmpDir, err := ioutil.TempDir("", "TestWasmCompiler")
+	tmpDir, err := os.MkdirTemp("", "TestWasmCompiler")
 	must(err)
 	defer os.RemoveAll(tmpDir)
 	t.Logf("Using temporary dir: %s", tmpDir)
 
 	wc := NewWasmCompiler().SetBuildDir(tmpDir)
 
-	must(ioutil.WriteFile(filepath.Join(tmpDir, "go.mod"), []byte(`module TestWasmCompiler
+	must(os.WriteFile(filepath.Join(tmpDir, "go.mod"), []byte(`module TestWasmCompiler
 `), 0644))
 
 	// just build
-	must(ioutil.WriteFile(filepath.Join(tmpDir, "main.go"), []byte(`package main
+	must(os.WriteFile(filepath.Join(tmpDir, "main.go"), []byte(`package main
 func main() {}`), 0644))
 	outpath, err := wc.Execute()
 	if err != nil {
@@ -37,24 +37,25 @@ func main() {}`), 0644))
 	}
 
 	// build with error
-	ioutil.WriteFile(filepath.Join(tmpDir, "main.go"), []byte(`package main
-func main() { not valid go code }`), 0644)
-	outpath, err = wc.Execute()
+	err = os.WriteFile(filepath.Join(tmpDir, "main.go"), []byte(`package main
+	func main() { not valid go code }`), 0644)
+	must(err)
+	_, err = wc.Execute()
 	if err == nil {
 		t.Fatal("should have gotten error here but didn't")
 	}
 	t.Logf("we correctly got a build error here: %v", err)
 
 	// with generate
-	must(ioutil.WriteFile(filepath.Join(tmpDir, "main.go"), []byte(`package main
+	must(os.WriteFile(filepath.Join(tmpDir, "main.go"), []byte(`package main
 import "fmt"
 //go:generate go run gen.go
 func main() { fmt.Println(other) }`), 0644))
-	must(ioutil.WriteFile(filepath.Join(tmpDir, "gen.go"), []byte(`// +build ignore
+	must(os.WriteFile(filepath.Join(tmpDir, "gen.go"), []byte(`// +build ignore
 
 package main
-import "io/ioutil"
-func main() { ioutil.WriteFile("./other.go", []byte("package main\nvar other = 123\n"), 0644) }`), 0644))
+import "os"
+func main() { os.WriteFile("./other.go", []byte("package main\nvar other = 123\n"), 0644) }`), 0644))
 	wc.SetGenerateDir(tmpDir)
 	outpath, err = wc.Execute()
 	if err != nil {
@@ -67,18 +68,18 @@ func main() { ioutil.WriteFile("./other.go", []byte("package main\nvar other = 1
 	}
 
 	// new temp dir
-	tmpDir, err = ioutil.TempDir("", "TestWasmCompiler")
+	tmpDir, err = os.MkdirTemp("", "TestWasmCompiler")
 	must(err)
 	defer os.RemoveAll(tmpDir)
 	t.Logf("Using temporary dir: %s", tmpDir)
 	wc = NewWasmCompiler().SetBuildDir(tmpDir)
 	var h http.Handler
 
-	must(ioutil.WriteFile(filepath.Join(tmpDir, "go.mod"), []byte(`module TestWasmCompiler
+	must(os.WriteFile(filepath.Join(tmpDir, "go.mod"), []byte(`module TestWasmCompiler
 `), 0644))
 
 	// main wasm handler without error
-	must(ioutil.WriteFile(filepath.Join(tmpDir, "main.go"), []byte(`package main
+	must(os.WriteFile(filepath.Join(tmpDir, "main.go"), []byte(`package main
 func main() {}`), 0644))
 	h = NewMainWasmHandler(wc)
 	req, err := http.NewRequest("GET", "/main.wasm", nil)
@@ -96,14 +97,14 @@ func main() {}`), 0644))
 	if !strings.HasPrefix(ct, "application/wasm") {
 		t.Errorf("unexpected value for Content-Type header: %s", ct)
 	}
-	b, err := ioutil.ReadAll(res.Body)
+	b, err := io.ReadAll(res.Body)
 	must(err)
-	if bytes.Compare(b[:4], []byte("\x00asm")) != 0 {
+	if !bytes.Equal(b[:4], []byte("\x00asm")) {
 		t.Errorf("got back bytes that do not look like a wasm file: %X (len=%d, cap=%d)", b[:4], len(b), cap(b))
 	}
 
 	// main wasm handler with error
-	must(ioutil.WriteFile(filepath.Join(tmpDir, "main.go"), []byte(`package main
+	must(os.WriteFile(filepath.Join(tmpDir, "main.go"), []byte(`package main
 func main() { not valid go code }`), 0644))
 	h = NewMainWasmHandler(wc)
 	req, err = http.NewRequest("GET", "/main.wasm", nil)
@@ -121,7 +122,7 @@ func main() { not valid go code }`), 0644))
 	if !strings.HasPrefix(ct, "text/plain") {
 		t.Errorf("unexpected value for Content-Type header: %s", ct)
 	}
-	b, err = ioutil.ReadAll(res.Body)
+	b, err = io.ReadAll(res.Body)
 	must(err)
 	if !bytes.Contains(b, []byte("build error")) {
 		t.Errorf("unexpected error result: %s", b)
@@ -142,7 +143,7 @@ func main() { not valid go code }`), 0644))
 	if !strings.HasPrefix(ct, "text/javascript") {
 		t.Errorf("unexpected value for Content-Type header: %s", ct)
 	}
-	b, err = ioutil.ReadAll(res.Body)
+	b, err = io.ReadAll(res.Body)
 	must(err)
 	if !bytes.Contains(b, []byte("The Go Authors")) {
 		t.Errorf("unexpected js result: %s", b)

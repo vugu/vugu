@@ -1,3 +1,4 @@
+//go:build !js
 // +build !js
 
 package js
@@ -117,7 +118,7 @@ type Wrapper interface {
 
 // Value placeholder for syscall/js
 type Value struct {
-	stub uint64
+	stub uint64 //nolint:golint,unused
 }
 
 // JSValue placeholder for syscall/js

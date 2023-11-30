@@ -20,6 +20,7 @@ import (
 // a try ;)
 
 const (
+	//nolint:golint,unused
 	opcodeEnd uint8 = 0 // no more instructions in this buffer
 	// opcodeClearRefmap      uint8 = 1 // clear the reference map, all following instructions must not reference prior IDs
 	// opcodeClearElStack uint8 = 1 // clear the stack of elements
@@ -101,13 +102,20 @@ func (il *instructionList) logf(f string, args ...interface{}) error {
 }
 
 func (il *instructionList) flush() error {
-	il.logf("flush() calling flushBufFunc")
-	err := il.flushBufFunc(il)
+	err := il.logf("flush() calling flushBufFunc")
+	if err != nil {
+		return err
+	}
+
+	err = il.flushBufFunc(il)
 	if err != nil {
 		return err
 	}
 	il.pos = 0
-	il.logf("flush() completed")
+	err = il.logf("flush() completed")
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -136,16 +144,24 @@ func (il *instructionList) checkLen(l int) error {
 	return nil
 }
 
-func (il *instructionList) writeEnd() {
-	il.logf("writeEnd[%d]()", opcodeEnd)
+//nolint:golint,unused
+func (il *instructionList) writeEnd() error {
+	err := il.logf("writeEnd[%d]()", opcodeEnd)
+	if err != nil {
+		return err
+	}
 	il.buf[il.pos] = opcodeEnd
 	il.pos++
+	return nil
 }
 
 func (il *instructionList) writeClearEl() error {
-	il.logf("writeClearEl[%d]()", opcodeClearEl)
+	err := il.logf("writeClearEl[%d]()", opcodeClearEl)
+	if err != nil {
+		return err
+	}
 
-	err := il.checkLenAndFlush(1)
+	err = il.checkLenAndFlush(1)
 	if err != nil {
 		return err
 	}
@@ -156,10 +172,12 @@ func (il *instructionList) writeClearEl() error {
 }
 
 func (il *instructionList) writeRemoveOtherAttrs() error {
+	err := il.logf("writeRemoveOtherAttrs[%d]()", opcodeRemoveOtherAttrs)
+	if err != nil {
+		return err
+	}
 
-	il.logf("writeRemoveOtherAttrs[%d]()", opcodeRemoveOtherAttrs)
-
-	err := il.checkLenAndFlush(1)
+	err = il.checkLenAndFlush(1)
 	if err != nil {
 		return err
 	}
@@ -170,12 +188,14 @@ func (il *instructionList) writeRemoveOtherAttrs() error {
 }
 
 func (il *instructionList) writeSetAttrStr(name, value string) error {
-
-	il.logf("writeSetAttrStr[%d](name=%q, value=%q)", opcodeSetAttrStr, name, value)
+	err := il.logf("writeSetAttrStr[%d](name=%q, value=%q)", opcodeSetAttrStr, name, value)
+	if err != nil {
+		return err
+	}
 
 	size := len(name) + len(value) + 9
 
-	err := il.checkLenAndFlush(size)
+	err = il.checkLenAndFlush(size)
 	if err != nil {
 		return err
 	}
@@ -188,12 +208,13 @@ func (il *instructionList) writeSetAttrStr(name, value string) error {
 }
 
 func (il *instructionList) writeSetAttrNSStr(namespace, name, value string) error {
-
-	il.logf("writeSetAttrNSStr[%d](ns=%q, name=%q, value=%q)", opcodeSetAttrNSStr, namespace, name, value)
+	err := il.logf("writeSetAttrNSStr[%d](ns=%q, name=%q, value=%q)", opcodeSetAttrNSStr, namespace, name, value)
+	if err != nil {
+		return err
+	}
 
 	size := len(namespace) + len(name) + len(value) + 13
-
-	err := il.checkLenAndFlush(size)
+	err = il.checkLenAndFlush(size)
 	if err != nil {
 		return err
 	}
@@ -207,10 +228,12 @@ func (il *instructionList) writeSetAttrNSStr(namespace, name, value string) erro
 }
 
 func (il *instructionList) writeSelectQuery(selector string) error {
+	err := il.logf("writeSelectQuery[%d](selector=%q)", opcodeSelectQuery, selector)
+	if err != nil {
+		return err
+	}
 
-	il.logf("writeSelectQuery[%d](selector=%q)", opcodeSelectQuery, selector)
-
-	err := il.checkLenAndFlush(5 + len(selector))
+	err = il.checkLenAndFlush(5 + len(selector))
 	if err != nil {
 		return err
 	}
@@ -220,10 +243,12 @@ func (il *instructionList) writeSelectQuery(selector string) error {
 }
 
 func (il *instructionList) writeSelectMountPoint(selector, nodeName string) error {
+	err := il.logf("writeSelectMountPoint[%d](selector=%q, nodeName=%q)", opcodeSelectMountPoint, selector, nodeName)
+	if err != nil {
+		return err
+	}
 
-	il.logf("writeSelectMountPoint[%d](selector=%q, nodeName=%q)", opcodeSelectMountPoint, selector, nodeName)
-
-	err := il.checkLenAndFlush(len(selector) + len(nodeName) + 9)
+	err = il.checkLenAndFlush(len(selector) + len(nodeName) + 9)
 	if err != nil {
 		return err
 	}
@@ -237,10 +262,12 @@ func (il *instructionList) writeSelectMountPoint(selector, nodeName string) erro
 }
 
 func (il *instructionList) writeMoveToFirstChild() error {
+	err := il.logf("writeMoveToFirstChild[%d]()", opcodeMoveToFirstChild)
+	if err != nil {
+		return err
+	}
 
-	il.logf("writeMoveToFirstChild[%d]()", opcodeMoveToFirstChild)
-
-	err := il.checkLenAndFlush(1)
+	err = il.checkLenAndFlush(1)
 	if err != nil {
 		return err
 	}
@@ -251,10 +278,12 @@ func (il *instructionList) writeMoveToFirstChild() error {
 }
 
 func (il *instructionList) writeSetElement(nodeName string) error {
+	err := il.logf("writeSetElement[%d](nodeName=%q)", opcodeSetElement, nodeName)
+	if err != nil {
+		return err
+	}
 
-	il.logf("writeSetElement[%d](nodeName=%q)", opcodeSetElement, nodeName)
-
-	err := il.checkLenAndFlush(len(nodeName) + 5)
+	err = il.checkLenAndFlush(len(nodeName) + 5)
 	if err != nil {
 		return err
 	}
@@ -267,11 +296,13 @@ func (il *instructionList) writeSetElement(nodeName string) error {
 }
 
 func (il *instructionList) writeSetElementNS(nodeName, namespace string) error {
-
-	il.logf("writeSetElementNS[%d](nodeName=%q, ns=%q)", opcodeSetElementNS, nodeName, namespace)
+	err := il.logf("writeSetElementNS[%d](nodeName=%q, ns=%q)", opcodeSetElementNS, nodeName, namespace)
+	if err != nil {
+		return err
+	}
 
 	size := len(nodeName) + len(namespace) + 9
-	err := il.checkLenAndFlush(size)
+	err = il.checkLenAndFlush(size)
 
 	if err != nil {
 		return err
@@ -286,10 +317,12 @@ func (il *instructionList) writeSetElementNS(nodeName, namespace string) error {
 }
 
 func (il *instructionList) writeSetText(text string) error {
+	err := il.logf("writeSetText[%d](text=%q)", opcodeSetText, text)
+	if err != nil {
+		return err
+	}
 
-	il.logf("writeSetText[%d](text=%q)", opcodeSetText, text)
-
-	err := il.checkLenAndFlush(len(text) + 5)
+	err = il.checkLenAndFlush(len(text) + 5)
 	if err != nil {
 		return err
 	}
@@ -302,10 +335,12 @@ func (il *instructionList) writeSetText(text string) error {
 }
 
 func (il *instructionList) writeSetComment(comment string) error {
+	err := il.logf("writeSetComment[%d](comment=%q)", opcodeSetComment, comment)
+	if err != nil {
+		return err
+	}
 
-	il.logf("writeSetComment[%d](comment=%q)", opcodeSetComment, comment)
-
-	err := il.checkLenAndFlush(len(comment) + 5)
+	err = il.checkLenAndFlush(len(comment) + 5)
 	if err != nil {
 		return err
 	}
@@ -318,10 +353,12 @@ func (il *instructionList) writeSetComment(comment string) error {
 }
 
 func (il *instructionList) writeMoveToParent() error {
+	err := il.logf("writeMoveToParent[%d]()", opcodeMoveToParent)
+	if err != nil {
+		return err
+	}
 
-	il.logf("writeMoveToParent[%d]()", opcodeMoveToParent)
-
-	err := il.checkLenAndFlush(1)
+	err = il.checkLenAndFlush(1)
 	if err != nil {
 		return err
 	}
@@ -332,10 +369,12 @@ func (il *instructionList) writeMoveToParent() error {
 }
 
 func (il *instructionList) writeMoveToNextSibling() error {
+	err := il.logf("writeMoveToNextSibling[%d]()", opcodeMoveToNextSibling)
+	if err != nil {
+		return err
+	}
 
-	il.logf("writeMoveToNextSibling[%d]()", opcodeMoveToNextSibling)
-
-	err := il.checkLenAndFlush(1)
+	err = il.checkLenAndFlush(1)
 	if err != nil {
 		return err
 	}
@@ -346,13 +385,15 @@ func (il *instructionList) writeMoveToNextSibling() error {
 }
 
 func (il *instructionList) writeSetInnerHTML(html string) error {
-
-	il.logf("writeSetInnerHTML[%d](html=%q)", opcodeSetInnerHTML, html)
+	err := il.logf("writeSetInnerHTML[%d](html=%q)", opcodeSetInnerHTML, html)
+	if err != nil {
+		return err
+	}
 
 	// Make sure there is room to write at least one byte
 	// (1 byte for opcode, 4 bytes for string length, 1 byte of data)
 	// [This further ensures that maxLen - il.pos > 0]
-	err := il.checkLenAndFlush(6)
+	err = il.checkLenAndFlush(6)
 	if err != nil {
 		return err
 	}
@@ -384,10 +425,12 @@ func (il *instructionList) writeSetInnerHTML(html string) error {
 }
 
 func (il *instructionList) writeSetEventListener(positionID []byte, eventType string, capture, passive bool) error {
+	err := il.logf("writeSetInnerHTML[%d](positionID=%q, eventType=%q, capture=%v, passive=%v)", opcodeSetEventListener, positionID, eventType, capture, passive)
+	if err != nil {
+		return err
+	}
 
-	il.logf("writeSetInnerHTML[%d](positionID=%q, eventType=%q, capture=%v, passive=%v)", opcodeSetEventListener, positionID, eventType, capture, passive)
-
-	err := il.checkLenAndFlush(len(positionID) + len(eventType) + 11)
+	err = il.checkLenAndFlush(len(positionID) + len(eventType) + 11)
 	if err != nil {
 		return err
 	}
@@ -413,10 +456,12 @@ func (il *instructionList) writeSetEventListener(positionID []byte, eventType st
 }
 
 func (il *instructionList) writeRemoveOtherEventListeners(positionID []byte) error {
+	err := il.logf("writeRemoveOtherEventListeners[%d](positionID=%q)", opcodeRemoveOtherEventListeners, positionID)
+	if err != nil {
+		return err
+	}
 
-	il.logf("writeRemoveOtherEventListeners[%d](positionID=%q)", opcodeRemoveOtherEventListeners, positionID)
-
-	err := il.checkLenAndFlush(5 + len(positionID))
+	err = il.checkLenAndFlush(5 + len(positionID))
 	if err != nil {
 		return err
 	}
@@ -429,8 +474,10 @@ func (il *instructionList) writeRemoveOtherEventListeners(positionID []byte) err
 }
 
 func (il *instructionList) writeSetCSSTag(elementName string, textContent []byte, attrPairs []string) error {
-
-	il.logf("writeSetCSSTag[%d](elementName=%q, textContext=%q, attrPairs=%#v)", opcodeSetCSSTag, elementName, textContent, attrPairs)
+	err := il.logf("writeSetCSSTag[%d](elementName=%q, textContext=%q, attrPairs=%#v)", opcodeSetCSSTag, elementName, textContent, attrPairs)
+	if err != nil {
+		return err
+	}
 
 	if len(attrPairs) > 254 {
 		return fmt.Errorf("attrPairs is %d, too large, max is 254", len(attrPairs))
@@ -448,7 +495,7 @@ func (il *instructionList) writeSetCSSTag(elementName string, textContent []byte
 		len(elementName) + 4 +
 		len(textContent) + 4
 
-	err := il.checkLenAndFlush(l)
+	err = il.checkLenAndFlush(l)
 	if err != nil {
 		return err
 	}
@@ -467,10 +514,12 @@ func (il *instructionList) writeSetCSSTag(elementName string, textContent []byte
 }
 
 func (il *instructionList) writeRemoveOtherCSSTags() error {
+	err := il.logf("writeRemoveOtherCSSTags[%d]()", opcodeRemoveOtherCSSTags)
+	if err != nil {
+		return err
+	}
 
-	il.logf("writeRemoveOtherCSSTags[%d]()", opcodeRemoveOtherCSSTags)
-
-	err := il.checkLenAndFlush(1)
+	err = il.checkLenAndFlush(1)
 	if err != nil {
 		return err
 	}
@@ -481,12 +530,13 @@ func (il *instructionList) writeRemoveOtherCSSTags() error {
 }
 
 func (il *instructionList) writeSetProperty(key string, jsonValue []byte) error {
-
-	il.logf("writeSetProperty[%d](key=%q, jsonValue=%q)", opcodeSetProperty, key, jsonValue)
+	err := il.logf("writeSetProperty[%d](key=%q, jsonValue=%q)", opcodeSetProperty, key, jsonValue)
+	if err != nil {
+		return err
+	}
 
 	size := len(key) + len(jsonValue) + 9
-
-	err := il.checkLenAndFlush(size)
+	err = il.checkLenAndFlush(size)
 	if err != nil {
 		return err
 	}
@@ -499,12 +549,13 @@ func (il *instructionList) writeSetProperty(key string, jsonValue []byte) error 
 }
 
 func (il *instructionList) writeCallback(callbackID uint32) error {
-
-	il.logf("writeCallback[%d](callbackID=%v)", opcodeCallback, callbackID)
+	err := il.logf("writeCallback[%d](callbackID=%v)", opcodeCallback, callbackID)
+	if err != nil {
+		return err
+	}
 
 	size := 5
-
-	err := il.checkLenAndFlush(size)
+	err = il.checkLenAndFlush(size)
 	if err != nil {
 		return err
 	}
@@ -516,12 +567,13 @@ func (il *instructionList) writeCallback(callbackID uint32) error {
 }
 
 func (il *instructionList) writeCallbackLastElement(callbackID uint32) error {
-
-	il.logf("writeCallbackLastElement[%d](callbackID=%v)", opcodeCallbackLastElement, callbackID)
+	err := il.logf("writeCallbackLastElement[%d](callbackID=%v)", opcodeCallbackLastElement, callbackID)
+	if err != nil {
+		return err
+	}
 
 	size := 5
-
-	err := il.checkLenAndFlush(size)
+	err = il.checkLenAndFlush(size)
 	if err != nil {
 		return err
 	}
@@ -542,6 +594,7 @@ func (il *instructionList) writeValUint32(v uint32) {
 	il.pos += 4
 }
 
+//nolint:golint,unused
 func (il *instructionList) writeValUint64(ref uint64) {
 	binary.BigEndian.PutUint64(il.buf[il.pos:il.pos+8], ref)
 	il.pos += 8

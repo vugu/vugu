@@ -1,7 +1,6 @@
 package staticrender
 
 import (
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -107,7 +106,7 @@ comp1 in the house
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 
-			tmpDir, err := ioutil.TempDir("", "TestRendererStaticTable")
+			tmpDir, err := os.MkdirTemp("", "TestRendererStaticTable")
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -222,8 +221,11 @@ func tstWriteFiles(dir string, m map[string]string) {
 
 	for name, contents := range m {
 		p := filepath.Join(dir, name)
-		os.MkdirAll(filepath.Dir(p), 0755)
-		err := ioutil.WriteFile(p, []byte(contents), 0644)
+		err := os.MkdirAll(filepath.Dir(p), 0755)
+		if err != nil {
+			panic(err)
+		}
+		err = os.WriteFile(p, []byte(contents), 0644)
 		if err != nil {
 			panic(err)
 		}
@@ -239,7 +241,7 @@ func tstWriteFiles(dir string, m map[string]string) {
 
 // 	// make a temp dir
 
-// 	tmpDir, err := ioutil.TempDir("", "TestRendererStatic")
+// 	tmpDir, err := os.MkdirTemp("", "TestRendererStatic")
 // 	if err != nil {
 // 		t.Fatal(err)
 // 	}
@@ -256,14 +258,14 @@ func tstWriteFiles(dir string, m map[string]string) {
 // 	}
 
 // 	// put a go.mod here that points back to the local copy of vugu
-// 	err = ioutil.WriteFile(filepath.Join(tmpDir, "go.mod"), []byte(fmt.Sprintf(`module test-render-static
+// 	err = os.WriteFile(filepath.Join(tmpDir, "go.mod"), []byte(fmt.Sprintf(`module test-render-static
 // replace github.com/vugu/vugu => %s
 // require github.com/vugu/vugu v0.0.0-00010101000000-000000000000
 // `, vuguwd)), 0644)
 
 // 	// output some components
 
-// 	err = ioutil.WriteFile(filepath.Join(tmpDir, "root.vugu"), []byte(`<html>
+// 	err = os.WriteFile(filepath.Join(tmpDir, "root.vugu"), []byte(`<html>
 // <head>
 // <title>testing!</title>
 // <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"/>
@@ -283,7 +285,7 @@ func tstWriteFiles(dir string, m map[string]string) {
 // 		t.Fatal(err)
 // 	}
 
-// 	err = ioutil.WriteFile(filepath.Join(tmpDir, "comp1.vugu"), []byte(`<span>
+// 	err = os.WriteFile(filepath.Join(tmpDir, "comp1.vugu"), []byte(`<span>
 // comp1 in the house
 // <div vg-content='vugu.HTML("<p>Some <strong>nested</strong> craziness</p>")'></div>
 // </span>`), 0644)
@@ -301,7 +303,7 @@ func tstWriteFiles(dir string, m map[string]string) {
 
 // 	// put our static output generation code here
 
-// 	err = ioutil.WriteFile(filepath.Join(tmpDir, "staticout.go"), []byte(`// +build !wasm
+// 	err = os.WriteFile(filepath.Join(tmpDir, "staticout.go"), []byte(`// +build !wasm
 
 // package main
 

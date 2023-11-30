@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -13,7 +12,7 @@ import (
 )
 
 // DefaultTinygoDockerImage is used as the docker image for Tinygo unless overridden.
-var DefaultTinygoDockerImage = "tinygo/tinygo:0.22.0"
+var DefaultTinygoDockerImage = "tinygo/tinygo:0.30.0"
 
 // MustNewTinygoCompiler is like NewTinygoCompiler but panics upon error.
 func MustNewTinygoCompiler() *TinygoCompiler {
@@ -45,10 +44,11 @@ type TinygoCompiler struct {
 	dockerBuildCmdFunc func(outpath string) *exec.Cmd
 	afterFunc          func(outpath string, err error) error
 	logWriter          io.Writer
-	dlTmpGopath        string   // temporary directory that we download dependencies into with go get
-	tinygoDockerImage  string   // docker image name to use, if empty then it is run directly
-	wasmExecJS         []byte   // contents of wasm_exec.js
-	tinygoArgs         []string // additional arguments to pass to the tinygo build cmd
+	//nolint:golint,unused
+	dlTmpGopath       string   // temporary directory that we download dependencies into with go get
+	tinygoDockerImage string   // docker image name to use, if empty then it is run directly
+	wasmExecJS        []byte   // contents of wasm_exec.js
+	tinygoArgs        []string // additional arguments to pass to the tinygo build cmd
 }
 
 // Close performs any cleanup.  For now it removes the temporary directory created by NewTinygoCompiler.
@@ -66,7 +66,7 @@ func (c *TinygoCompiler) SetTinygoArgs(tinygoArgs ...string) *TinygoCompiler {
 // The default from NewCompiler is os.Stderr
 func (c *TinygoCompiler) SetLogWriter(w io.Writer) *TinygoCompiler {
 	if w == nil {
-		w = ioutil.Discard
+		w = io.Discard
 	}
 	c.logWriter = w
 	return c
@@ -101,7 +101,7 @@ func (c *TinygoCompiler) SetBuildDir(dir string) *TinygoCompiler {
 		// example: docker run --rm \
 		// -v /:/src \
 		// -w /src/`pwd` \
-		// tinygo/tinygo:0.22.0 tinygo build -o /root/go/src/example.com/tgtest1/out.wasm \
+		// tinygo/tinygo:0.30.0 tinygo build -o /root/go/src/example.com/tgtest1/out.wasm \
 		// -target=wasm .
 
 		args := make([]string, 0, 20)
@@ -217,7 +217,7 @@ func (c *TinygoCompiler) Execute() (outpath string, err error) {
 		fmt.Fprintln(c.logWriter, "TinygoCompiler: Successful generate")
 	}
 
-	tmpf, err := ioutil.TempFile("", "WasmCompiler")
+	tmpf, err := os.CreateTemp("", "WasmCompiler")
 	if err != nil {
 		return "", logerr(fmt.Errorf("WasmCompiler: error creating temporary file: %w", err))
 	}
@@ -270,7 +270,7 @@ func (c *TinygoCompiler) WasmExecJS() (r io.Reader, err error) {
 		}
 
 		wasmExecJSPath := filepath.Join(strings.TrimSpace(string(resb)), "targets/wasm_exec.js")
-		b, err := ioutil.ReadFile(wasmExecJSPath)
+		b, err := os.ReadFile(wasmExecJSPath)
 		if err != nil {
 			return nil, fmt.Errorf("TinygoCompiler: WasmExecJS error reading %q: %w", wasmExecJSPath, err)
 		}
