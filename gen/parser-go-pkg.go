@@ -32,9 +32,9 @@ type ParserGoPkgOpts struct {
 	SkipGoMod        bool    // do not try and create go.mod if it doesn't exist
 	SkipMainGo       bool    // do not try and create main_wasm.go if it doesn't exist in a main package
 	TinyGo           bool    // emit code intended for TinyGo compilation
-	GoFileNameAppend *string // suffix to append to file names, after base name plus .go, if nil then "_vgen" is used
+	GoFileNameAppend *string // suffix to append to file names, after base name plus .go, if nil then "_gen" is used
 	MergeSingle      bool    // merge all output files into a single one
-	MergeSingleName  string  // name of merged output file, only used if MergeSingle is true, defaults to "0_components_vgen.go"
+	MergeSingleName  string  // name of merged output file, only used if MergeSingle is true, defaults to "0_components_gen.go"
 }
 
 // TODO: CallVuguSetup bool // always call vuguSetup instead of trying to auto-detect it's existence
@@ -158,14 +158,14 @@ func (p *ParserGoPkg) Run() error {
 
 	namesToCheck := []string{"main"}
 
-	goFnameAppend := "_vgen"
+	goFnameAppend := "_gen"
 	if p.opts.GoFileNameAppend != nil {
 		goFnameAppend = *p.opts.GoFileNameAppend
 	}
 
 	var mergeFiles []string
 
-	mergeSingleName := "0_components_vgen.go"
+	mergeSingleName := "0_components_gen.go"
 	if p.opts.MergeSingleName != "" {
 		mergeSingleName = p.opts.MergeSingleName
 	}
@@ -397,9 +397,9 @@ func main() {
 	if p.opts.MergeSingle {
 
 		// if a missing fix file was produced include it in the list to be merged
-		_, err := os.Stat(filepath.Join(p.pkgPath, "0_missing_vgen.go"))
+		_, err := os.Stat(filepath.Join(p.pkgPath, "0_missing_gen.go"))
 		if err == nil {
-			mergeFiles = append(mergeFiles, "0_missing_vgen.go")
+			mergeFiles = append(mergeFiles, "0_missing_gen.go")
 		}
 
 		err = mergeGoFiles(p.pkgPath, mergeSingleName, mergeFiles...)

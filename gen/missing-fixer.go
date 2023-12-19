@@ -21,8 +21,8 @@ import (
 type missingFixer struct {
 	pkgPath   string            // absolute path to package
 	pkgName   string            // short name of package from the `package` statement
-	vuguComps map[string]string // map of comp.vugu -> comp_vgen.go (all just relative base name of file, no dir)
-	outfile   string            // file name of output file (relative), 0_missing_vgen.go by default
+	vuguComps map[string]string // map of comp.vugu -> comp_gen.go (all just relative base name of file, no dir)
+	outfile   string            // file name of output file (relative), 0_missing_gen.go by default
 }
 
 func newMissingFixer(pkgPath, pkgName string, vuguComps map[string]string) *missingFixer {
@@ -55,7 +55,7 @@ func (mf *missingFixer) run() error {
 
 	var fout *os.File
 
-	// read each _vgen.go file
+	// read each _gen.go file
 	for _, goFile := range mf.vuguComps {
 
 		// var ffset token.FileSet
@@ -227,7 +227,7 @@ var _ %sHandler = %sFunc(nil)
 
 func (mf *missingFixer) fullOutfilePath() string {
 	if mf.outfile == "" {
-		return filepath.Join(mf.pkgPath, "0_missing_vgen.go")
+		return filepath.Join(mf.pkgPath, "0_missing_gen.go")
 	}
 	return filepath.Join(mf.pkgPath, mf.outfile)
 }
