@@ -1,0 +1,160 @@
+<select
+    @change='c.handleChange(event)'
+    vg-attr='c.AttrMap'
+    >
+    <option vg-for='_, k := range c.buildKeys()' :value='k' :selected='c.isOptSelected(k)' vg-content='c.optText(k)'></option>
+</select>
+
+<script type="application/x-go">
+
+
+/*
+
+VARIOUS OLD NOTES:
+
+// vg-js-create='c.el=value' vg-js-populate='c.handlePopulate()'
+//  vg-attr='vugu.VGAttributeListerFunc(c.makeAttrs)'
+
+Things to figure out:
+
+- `vg-ref=` We'll most likely need a way to access a DOM element directly after render.
+  (When exact 'after render' is I'm not sure yet).  One way to do this would be to have 
+  a vg-ref= attribute which tells the renderer to send this ID over to the JS side 
+  and associate the element so we can look it up later.  Then some method like 
+  `vuguRef(id) element` can exist in JS and we can use it to access the element 
+  via the `js` package.  Other solutions are possible but the requirement is the 
+  ability to get a js.Value reference to a specific element in your Vugu template.
+
+- "Slots", developers should have the ability to provide their own <option> elements inside 
+  of this component. E.g. <vgform:Select><option value="a">A</option></vgform:Select>.
+  There is a bit of info on ideas for slot here: https://github.com/vugu/vugu/wiki/Component-Related-Features-Design#slots
+  In this case there is only one "default" slot, but multiple names slots should be possible
+  and will be needed by component libraries.
+
+- THIS WORKS NOW "Component Events", we'll need to define what <vgform:Select @Change='...'> means.
+  I think the same convention should be used where a capital letter indicates a corresopnding 
+  Go field.  The question is what it's type should be and what should the expression
+  for '...' be above.  Another question is if there is a propagation model for these 
+  events.  Do we need the ability for these types of events to "bubble up" to parent
+  components?  If we don't need that then I think simple function fields and calls to them 
+  are fine (and I also really like that this keeps things type safe).  But if we need 
+  some bubbling system that probably won't work.
+  More info here: https://github.com/vugu/vugu/wiki/Component-Related-Features-Design#component-events
+  Idea:
+
+  @Something="log.Println(event)"
+  is shorthand for:
+  :Something='func(event SomethingEvent) { log.Println(event) }'
+
+  Convenient but also very straightforward, minimal magic.  Easy to implement.
+
+
+Those points resolved should provide what is needed to make sophisticated forms.
+Once that is done we can look at things like automatic form validation and see if 
+there are any other features needed for that sort of thing.  (E.g. in Vuetify 
+a <v-form> is aware of all of it's nested elements and it's `valid` property 
+reflects if all of it's elements are valid.  I personally think this is way too 
+magical for Vugu but nonetheless a good and concise pattern should be found.)
+
+---- 
+
+Form components: 
+- Select
+- Textarea
+- Input
+
+// for text types
+<vgform:Input Text Value="some text">
+<vgform:Input Email Value="">
+<vgform:Input Number Value=""> // hm, would be great if we could use a proper type here
+<vgform:Input Password Value="">
+<vgform:Input Radio Value="">
+
+// weird stuff like checkboxes probably should have their own thing
+<vgform:InputCheckbox Checked>
+<vgform:InputNumber :Value='1.5'>
+
+// hm, maybe Input is a base Go struct, and other types extend it?
+// perhaps just `input`, not exported.  we should avoid exposing anything
+// that is not actually useful
+InputCheckbox 
+
+// also need the ability to put regular attrs on there - probably think about 
+// how this fits in with the vg-attr functionality
+<vgform:InputCheckbox :Value='2.5' class="something">
+
+// so then what about value binding
+<vgform:InputNumber :IntValue='vgform.IntPtr(&c.someInt)'>
+
+type IntValue interface {
+  IntValue() int
+  SetIntValue(int)
+}
+
+type IntValuer interface {
+  IntValue() int
+}
+
+type SetIntValuer interface {
+  SetIntValue(int)
+}
+
+<input type="button">
+<input type="checkbox">
+<input type="color">
+<input type="date">
+<input type="datetime-local">
+<input type="email">
+<input type="file">
+<input type="hidden">
+<input type="image">
+<input type="month">
+<input type="number">
+<input type="password">
+<input type="radio">
+<input type="range">
+<input type="reset">
+<input type="search">
+<input type="submit">
+<input type="tel">
+<input type="text">
+<input type="time">
+<input type="url">
+<input type="week">
+
+
+Do not bother wrapping:
+- <button>
+
+More notes:
+
+
+So if this is the HTML we're after:
+```
+<select>
+  <option value="k1" selected>t1</option>
+  <option value="k2">t2</option>
+</select>
+```
+
+I can think of various ways developers might want to express this in a Vugu file (psuedocode, just to give the idea):
+
+<!-- a static list might just need a way to easily set the selected value -->
+<select :selected-id="c.curID">
+  <option value="k1">t1</option>
+  <option value="k2">t2</option>
+</select>
+
+<!-- but a dynamic options list will be common too -->
+<select :selected-id="c.curID">
+  <option vg-for="k, v := range c.someList" :value="k" vg-html="v"></option>
+</select>
+
+<!-- and for the impatient, i can see some people wanting the convenience of being able to just give it a map[string]string
+and it puts them in there, just sorted alphabetically -->
+<select :selected-id="c.curID" :options-map="c.optsMap"></select>
+
+
+*/
+
+</script>

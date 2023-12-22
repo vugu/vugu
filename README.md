@@ -1,9 +1,9 @@
 # Vugu
 
 [![Travis CI](https://travis-ci.org/vugu/vugu.svg?branch=master)](https://travis-ci.org/vugu/vugu)
-[![Go Report Card](https://goreportcard.com/badge/github.com/vugu/vugu)](https://goreportcard.com/report/github.com/vugu/vugu)
 [![GoDoc](https://godoc.org/github.com/vugu/vugu?status.svg)](https://godoc.org/github.com/vugu/vugu)
 [![stability-experimental](https://img.shields.io/badge/stability-experimental-orange.svg)](https://github.com/emersion/stability-badges#experimental)
+<!-- [![Go Report Card](https://goreportcard.com/badge/github.com/vugu/vugu)](https://goreportcard.com/report/github.com/vugu/vugu) -->
 
 Vugu is an experimental library for web UIs written in Go and targeting webassembly.  Guide and docs at https://www.vugu.org.
 Godoc at https://godoc.org/github.com/vugu/vugu.
@@ -16,6 +16,11 @@ No node. No JS. No npm. No node_modules folder competing with your music library
 
 ## Updates ♨
 
+* 2020-11-08 Work in progress on a UI component library, the current concept is strongly influenced by both Bootstrap and Material Design.  Some specific components, code and documentation will follow soonest.
+* 2020-09-13 v0.3.3 Lifecycle callbacks implemented (Init, Compute, Rendered, Destroy) plus documentation https://vugu.org/doc/components#lifecycle
+* 2020-06-21 v0.3.2 Vugu+TinyGo is now functional; test suite updated so most tests are run with both default Go and TinyGo compilation; docs updated; Vugu+TinyGo example works https://github.com/vugu-examples/tinygo
+* 2020-04-26 v0.3.0 Slots are now implemented. Plus vg-js-create/vg-js-populate, vg-template, vg-var; vgform package has initial prototype for form inputs; docs written for these features plus for router and wiring (several pages added to vugu.org plus other individual sections). There are two small but breaking changes with this release: vg-html now escapes markup by default and vugu.DOMEvent was changed from a struct to an interface.  For the earlier vg-html behavior use `vg-html='vugu.HTML("...")'` (see https://www.vugu.org/doc/files/markup#vg-content) and existing DOMEvent code should fix by simply removing the pointer i.e. change `event *vugu.DOMEvent` to `event vugu.DOMEvent` - and also make sure to `go get -u github.com/vugu/vugu/cmd/vugugen` again.  I generally try to avoid these sorts of breaking changes but it's better to do them sooner rather than later.
+* 2020-04-13 v0.2.3 much more flexible attribute support and SVGs now work (thanks to @tbe!); vugu-examples/simple set up, more to come; nested component rendering bug fixed (#117); tools doc page added to the site; devutil package; vgrun working
 * 2020-04-06 v0.2.0 released. vugu.org and playground ported over to it; vugugen now supports recursive and merge-single modes and output files end with _vgen.go; improved tests; various documentation updates; vgrgen route generator supports recursive and clean options
 * 2020-03-29 Vugu URL router is now functional (https://github.com/vugu/vgrouter). Features include optional fragment support, client and server-side use, two-way data binding for query and path parameters, and automatic route generation based on folder structure. The `vg-comp` tag now allows programmatic component selection. A pattern for wiring large applications with lots of components is in place and will be tested further as dev moves forward. Next steps include just a bit more dev and testing on the router and then updating vugu.org to use these new features and bring the documentation up to date.
 * 2019-12-08 First Vugu program successfully compiles with Tinygo.  Testing and a bit more alternate implementation is still required but at least the compilation works now.
@@ -61,7 +66,7 @@ Still a work in progress, but a lot of things are already functional. Some work 
 
 - [x] Single-file components (looks similar to .vue); .vugu -> .go code generation.
 - [x] Includes CSS in components.
-- [x] Basic flow control with vg-if, vg-for and output with vg-html.
+- [x] Basic flow control with vg-if, vg-for and output with vg-content.
 - [x] Dynamic attributes with `<tag :prop='expr'>`.
 - [x] Nested components with dynamic properties
 - [x] Efficiently syncs to browser DOM.
@@ -70,13 +75,13 @@ Still a work in progress, but a lot of things are already functional. Some work 
 - [x] Modification tracking to avoid unnecessary computation where possible.
 - [x] Basic dev and prod server tooling, easy to get started
 - [x] Rewrite everything so it is not so terrible internally
-- [ ] URL Router (in-progress)
-- [ ] Tinygo compilation support
-- [ ] Server-side rendering (HTML generation works, needs URL Router to make it usable)
+- [x] URL Router (in-progress)
+- [x] Tinygo compilation support
+- [x] Server-side rendering (works, needs more documentation and examples)
+- [x] Go-only component events
+- [x] Slots
+- [ ] Component library(s) (wip!)
 - [ ] Performance optimizations
-- [ ] Go-only component events
-- [ ] Slots
-- [ ] Component library(s)
 - And much more...
 
 ## Notes
@@ -98,3 +103,12 @@ via `go generate`. There are many small decisions in Vugu which follow this phil
 just use the existing mechanism instead of inventing anew.  And keep doing that until there's proof that something
 else is really needed.  So far it's been working well.  And it allows Vugu to focus on the specific things it 
 brings to the table.
+
+## Examples
+
+Examples of implementations can be found into [examples repositories](https://github.com/orgs/vugu-examples/repositories)
+
+## VSCode plugin
+
+As most of your code will be in `.vugu` files, you will need to install [vscode-vugu](https://marketplace.visualstudio.com/items?itemName=binhonglee.vscode-vugu)
+Credits goes to @binhonglee.

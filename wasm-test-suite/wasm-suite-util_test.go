@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"html/template"
 	"io"
-	"io/ioutil"
 	"log"
 	"mime/multipart"
 	"net/http"
@@ -22,15 +21,17 @@ import (
 	"time"
 
 	"github.com/chromedp/cdproto/cdp"
+	"github.com/chromedp/cdproto/runtime"
 	"github.com/chromedp/chromedp"
 
+	"github.com/vugu/vugu/devutil"
 	"github.com/vugu/vugu/distutil"
 	"github.com/vugu/vugu/gen"
 	"github.com/vugu/vugu/simplehttp"
 )
 
 func queryNode(ref string, assert func(n *cdp.Node)) chromedp.QueryAction {
-	return chromedp.QueryAfter(ref, func(ctx context.Context, nodes ...*cdp.Node) error {
+	return chromedp.QueryAfter(ref, func(ctx context.Context, id runtime.ExecutionContextID, nodes ...*cdp.Node) error {
 		if len(nodes) == 0 {
 			return fmt.Errorf("no %s element found", ref)
 		}
@@ -40,7 +41,7 @@ func queryNode(ref string, assert func(n *cdp.Node)) chromedp.QueryAction {
 }
 
 func queryAttributes(ref string, assert func(attributes map[string]string)) chromedp.QueryAction {
-	return chromedp.QueryAfter(ref, func(ctx context.Context, nodes ...*cdp.Node) error {
+	return chromedp.QueryAfter(ref, func(ctx context.Context, id runtime.ExecutionContextID, nodes ...*cdp.Node) error {
 		attributes := make(map[string]string)
 		if err := chromedp.Attributes(ref, &attributes).Do(ctx); err != nil {
 			return err
@@ -55,7 +56,7 @@ func WaitInnerTextTrimEq(sel, innerText string) chromedp.QueryAction {
 
 	return chromedp.Query(sel, func(s *chromedp.Selector) {
 
-		chromedp.WaitFunc(func(ctx context.Context, cur *cdp.Frame, ids ...cdp.NodeID) ([]*cdp.Node, error) {
+		chromedp.WaitFunc(func(ctx context.Context, cur *cdp.Frame, id runtime.ExecutionContextID, ids ...cdp.NodeID) ([]*cdp.Node, error) {
 
 			nodes := make([]*cdp.Node, len(ids))
 			cur.RLock()
@@ -112,6 +113,7 @@ func mustUseDir(reldir string) (newdir, olddir string) {
 
 func mustGen(absdir string) {
 
+	os.Remove(filepath.Join(absdir, "main_wasm.go")) // ensure it gets re-generated
 	pp := gen.NewParserGoPkg(absdir, nil)
 	err := pp.Run()
 	if err != nil {
@@ -122,6 +124,7 @@ func mustGen(absdir string) {
 
 func mustTGGen(absdir string) {
 
+	os.Remove(filepath.Join(absdir, "main_wasm.go")) // ensure it gets re-generated
 	pp := gen.NewParserGoPkg(absdir, &gen.ParserGoPkgOpts{TinyGo: true})
 	err := pp.Run()
 	if err != nil {
@@ -130,12 +133,18 @@ func mustTGGen(absdir string) {
 
 }
 
+func mustGenBuildAndLoad(absdir string) string {
+	mustGen(absdir)
+	return mustBuildAndLoad(absdir)
+}
+
 // returns path suffix
 func mustBuildAndLoad(absdir string) string {
 
+	fmt.Print(distutil.MustEnvExec([]string{"GOOS=js", "GOARCH=wasm"}, "go", "mod", "tidy"))
 	fmt.Print(distutil.MustEnvExec([]string{"GOOS=js", "GOARCH=wasm"}, "go", "build", "-o", filepath.Join(absdir, "main.wasm"), "."))
 
-	mustWriteSupportFiles(absdir)
+	mustWriteSupportFiles(absdir, true)
 
 	uploadPath := mustUploadDir(absdir, "http://localhost:8846/upload")
 	// log.Printf("uploadPath = %q", uploadPath)
@@ -179,7 +188,7 @@ func mustChromeCtx() (context.Context, context.CancelFunc) {
 
 	ctx, _ := chromedp.NewContext(allocCtx) // , chromedp.WithLogf(log.Printf))
 	// defer cancel()
-	ctx, cancel := context.WithTimeout(ctx, 15*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 60*time.Second)
 	// defer cancel()
 
 	return ctx, cancel
@@ -191,9 +200,10 @@ func must(err error) {
 	}
 }
 
+//nolint:golint,unused
 func mustCleanDir(dir string) {
 	must(os.Chdir(dir))
-	b, err := ioutil.ReadFile(".gitignore")
+	b, err := os.ReadFile(".gitignore")
 	if err != nil {
 		panic(err)
 	}
@@ -210,8 +220,10 @@ func mustCleanDir(dir string) {
 }
 
 // mustWriteSupportFiles will write index.html and wasm_exec.js to a directory
-func mustWriteSupportFiles(dir string) {
-	distutil.MustCopyFile(distutil.MustWasmExecJsPath(), filepath.Join(dir, "wasm_exec.js"))
+func mustWriteSupportFiles(dir string, doWasmExec bool) {
+	if doWasmExec {
+		distutil.MustCopyFile(distutil.MustWasmExecJsPath(), filepath.Join(dir, "wasm_exec.js"))
+	}
 	// distutil.MustCopyFile(distutil.(), filepath.Join(dir, "wasm_exec.js"))
 	// log.Println(simplehttp.DefaultPageTemplateSource)
 
@@ -223,15 +235,16 @@ func mustWriteSupportFiles(dir string) {
 	outf, err := os.OpenFile(filepath.Join(dir, "index.html"), os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
 	distutil.Must(err)
 	defer outf.Close()
-	template.Must(template.New("_page_").Parse(simplehttp.DefaultPageTemplateSource)).Execute(&buf, map[string]interface{}{"Request": req})
+	err = template.Must(template.New("_page_").Parse(simplehttp.DefaultPageTemplateSource)).Execute(&buf, map[string]interface{}{"Request": req})
+	distutil.Must(err)
 	// HACK: fix wasm_exec.js path, unti we can come up with a better way to do this
-	outf.Write(
+	_, err = outf.Write(
 		bytes.Replace(
 			bytes.Replace(buf.Bytes(), []byte(`"/wasm_exec.js"`), []byte(`"wasm_exec.js"`), 1),
 			[]byte("/main.wasm"), []byte("main.wasm"), 1,
 		),
 	)
-
+	distutil.Must(err)
 }
 
 // mustUploadDir tar+gz's the given directory and posts that file to the specified endpoint,
@@ -262,6 +275,9 @@ func mustUploadDir(dir, endpoint string) string {
 
 		// log.Printf("path = %q, fi.Name = %q", path, fi.Name())
 		hdr, err := tar.FileInfoHeader(fi, "")
+		if err != nil {
+			return err
+		}
 		hdr.Name = relPath
 		// hdr = tar.Header{
 		// 	Name: fi.Name(),
@@ -346,6 +362,8 @@ func mustUploadDir(dir, endpoint string) string {
 // mustTGTempGopathSetup makes a temp dir and recursively copies from testPjtDir into
 // filepath.Join(tmpDir, outRelPath) and returns the temp dir, which can be used
 // as the GOPATH for a tinygo build
+//
+//nolint:golint,unused
 func mustTGTempGopathSetup(testPjtDir, outRelPath string) string {
 	// buildGopath := mustTGTempGopathSetup(dir, "src/main")
 
@@ -354,7 +372,7 @@ func mustTGTempGopathSetup(testPjtDir, outRelPath string) string {
 		panic(err)
 	}
 
-	name, err := ioutil.TempDir(tmpParent, "tggopath")
+	name, err := os.MkdirTemp(tmpParent, "tggopath")
 	if err != nil {
 		panic(err)
 	}
@@ -367,7 +385,7 @@ func mustTGTempGopathSetup(testPjtDir, outRelPath string) string {
 	srcDir := filepath.Join(testPjtDir, "../..")
 	dstDir := filepath.Join(name, "src/github.com/vugu/vugu")
 	must(os.MkdirAll(dstDir, 0755))
-	fis, err := ioutil.ReadDir(srcDir)
+	fis, err := os.ReadDir(srcDir)
 	must(err)
 	for _, fi := range fis {
 		if fi.IsDir() {
@@ -422,6 +440,8 @@ func mustTGTempGopathSetup(testPjtDir, outRelPath string) string {
 
 // mustTGGoGet runs `go get` on the packages you give it with GO111MODULE=off and GOPATH set to the path you give.
 // This can be used to
+//
+//nolint:golint,unused
 func mustTGGoGet(buildGopath string, pkgNames ...string) {
 	// mustTGGoGet(buildGopath, "github.com/vugu/xxhash", "github.com/vugu/vjson")
 
@@ -441,6 +461,8 @@ func mustTGGoGet(buildGopath string, pkgNames ...string) {
 
 // mustTGBuildAndLoad does a build and load - absdir is the original program path (the "test-NNN-desc" folder),
 // and buildGopath is the temp dir where everything was copied in order to make non-module version that tinygo can compile
+//
+//nolint:golint,unused
 func mustTGBuildAndLoad(absdir, buildGopath string) string {
 	// pathSuffix := mustTGBuildAndLoad(dir, buildGopath)
 
@@ -457,7 +479,7 @@ func mustTGBuildAndLoad(absdir, buildGopath string) string {
 		"-v", buildGopath + "/src:/go/src", // map src from buildGopath
 		"-v", absdir + ":/out", // map original dir as /out so it can just write the .wasm file
 		"-e", "GOPATH=/go", // set GOPATH so it picks up buildGopath/src
-		"tinygo/tinygo-dev:latest",                                                // use latest dev (for now)
+		"vugu/tinygo-dev:latest",                                                  // use latest dev (for now)
 		"tinygo", "build", "-o", "/out/main.wasm", "-target", "wasm", "tgtestpgm", // tinygo command line
 	}
 
@@ -478,6 +500,39 @@ func mustTGBuildAndLoad(absdir, buildGopath string) string {
 
 	uploadPath := mustUploadDir(absdir, "http://localhost:8846/upload")
 	// log.Printf("uploadPath = %q", uploadPath)
+
+	return uploadPath
+}
+
+func mustTGGenBuildAndLoad(absdir string, useDocker bool) string {
+
+	mustTGGen(absdir)
+
+	wc := devutil.MustNewTinygoCompiler().SetDir(absdir)
+	defer wc.Close()
+
+	if !useDocker {
+		wc = wc.NoDocker()
+	}
+
+	outfile, err := wc.Execute()
+	if err != nil {
+		panic(err)
+	}
+	defer os.Remove(outfile)
+
+	must(distutil.CopyFile(outfile, filepath.Join(absdir, "main.wasm")))
+
+	wasmExecJSR, err := wc.WasmExecJS()
+	must(err)
+	wasmExecJSB, err := io.ReadAll(wasmExecJSR)
+	must(err)
+	wasmExecJSPath := filepath.Join(absdir, "wasm_exec.js")
+	must(os.WriteFile(wasmExecJSPath, wasmExecJSB, 0644))
+
+	mustWriteSupportFiles(absdir, false)
+
+	uploadPath := mustUploadDir(absdir, "http://localhost:8846/upload")
 
 	return uploadPath
 }

@@ -60,15 +60,36 @@ func (r *StaticRenderer) renderOne(br *vugu.BuildResults, bo *vugu.BuildOut) (*h
 
 	vgn := bo.Out[0]
 
-	var visit func(vgn *vugu.VGNode) (*html.Node, error)
-	visit = func(vgn *vugu.VGNode) (*html.Node, error) {
+	var visit func(vgn *vugu.VGNode) ([]*html.Node, error)
+	visit = func(vgn *vugu.VGNode) ([]*html.Node, error) {
 
 		// log.Printf("vgn: %#v", vgn)
 
 		// if component then look up BuildOut for it and call renderOne again and return
 		if vgn.Component != nil {
 			cbo := br.ResultFor(vgn.Component)
-			return r.renderOne(br, cbo)
+			retn, err := r.renderOne(br, cbo)
+			if err != nil {
+				return nil, err
+			}
+			return []*html.Node{retn}, nil
+			// if len(retn) != 1 {
+			// 	return nil, fmt.Errorf("StaticRenderer.renderOne component renderOne returned unexpected %d nodes", len(retn))
+			// }
+			// return retn[0], nil
+		}
+
+		// if template then just traverse the children directly and return them in a series, omitting vgn
+		if vgn.IsTemplate() {
+			var retn []*html.Node
+			for vgchild := vgn.FirstChild; vgchild != nil; vgchild = vgchild.NextSibling {
+				nchildren, err := visit(vgchild)
+				if err != nil {
+					return nil, err
+				}
+				retn = append(retn, nchildren...)
+			}
+			return retn, nil
 		}
 
 		// no component set, continue with building this node
@@ -89,21 +110,23 @@ func (r *StaticRenderer) renderOne(br *vugu.BuildResults, bo *vugu.BuildOut) (*h
 				return nil, err
 			}
 
-			for _, nc := range nparts {
-				n.AppendChild(nc)
-			}
+			// for _, nc := range nparts {
+			// 	n.AppendChild(nc)
+			// }
+			appendChildren(n, nparts)
 
 			// InnerHTML precludes other children
-			return n, nil
+			return []*html.Node{n}, nil
 		}
 
 		// handle children
 		for vgchild := vgn.FirstChild; vgchild != nil; vgchild = vgchild.NextSibling {
-			nchild, err := visit(vgchild)
+			nchildren, err := visit(vgchild)
 			if err != nil {
 				return nil, err
 			}
-			n.AppendChild(nchild)
+			// n.AppendChild(nchildren)
+			appendChildren(n, nchildren)
 		}
 
 		// special case for <head>, we need to emit the CSS here as that is separate
@@ -113,11 +136,12 @@ func (r *StaticRenderer) renderOne(br *vugu.BuildResults, bo *vugu.BuildOut) (*h
 			for _, css := range bo.CSS {
 
 				// convert each one
-				n2, err := visit(css)
+				nchildren, err := visit(css)
 				if err != nil {
 					return nil, err
 				}
-				n.AppendChild(n2)
+				// n.AppendChild(n2)
+				appendChildren(n, nchildren)
 			}
 		}
 
@@ -126,19 +150,32 @@ func (r *StaticRenderer) renderOne(br *vugu.BuildResults, bo *vugu.BuildOut) (*h
 			for _, js := range bo.JS {
 
 				// convert each one
-				n2, err := visit(js)
+				nchildren, err := visit(js)
 				if err != nil {
 					return nil, err
 				}
-				n.AppendChild(n2)
+				// n.AppendChild(n2)
+				appendChildren(n, nchildren)
 			}
 		}
 
-		return n, nil
+		return []*html.Node{n}, nil
 	}
 
-	return visit(vgn)
+	nret, err := visit(vgn)
+	if err != nil {
+		return nil, err
+	}
+	if len(nret) != 1 {
+		return nil, fmt.Errorf("StaticRenderer.renderOne visit returned unexpected %d nodes", len(nret))
+	}
+	return nret[0], nil
+}
 
+func appendChildren(parent *html.Node, children []*html.Node) {
+	for _, c := range children {
+		parent.AppendChild(c)
+	}
 }
 
 // EventEnv returns a simple EventEnv implementation suitable for use with the static renderer.

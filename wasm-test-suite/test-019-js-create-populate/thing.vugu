@@ -1,0 +1,43 @@
+<div
+    vg-js-create='c.handleJSCreate(value)' 
+    vg-js-populate='c.handleJSPopulate(value)'
+    class="thing"
+    >
+    <button id="the_button" @click="c.handleButtonClick(event)">A button here</button>
+    <div id="log" vg-if="len(c.Log)>0">
+        <div :id='fmt.Sprintf("log_%d",k)' vg-for='k, v := range c.Log' vg-html='v'></div>
+    </div>
+</div>
+
+<script type="application/x-go">
+
+import "log"
+
+type Thing struct {
+    Log []string `vugu:"data"`
+}
+
+func (c *Thing) handleJSCreate(value js.Value) {
+    log.Printf("vg-js-create: %#v", value)
+    log.Printf("vg-js-create found class: %s", value.Get("className").String())
+    log.Printf("vg-js-create firstElementChild: %v", value.Get("firstElementChild"))
+    // NOTE: We're modifying c.Log during the render pass, so we won't see this
+    // until the next time around - this is generally not a good idea but it works
+    // for the purposes of the test because we can't get the console output
+    // via chromedp in wasm-suite_test.go
+    c.Log = append(c.Log, fmt.Sprintf("vg-js-create className %s", value.Get("className").String()))
+    c.Log = append(c.Log, fmt.Sprintf("vg-js-create firstElementChild %v", value.Get("firstElementChild")))
+}
+
+func (c *Thing) handleJSPopulate(value js.Value) {
+    log.Printf("vg-js-populate: %#v", value)
+    log.Printf("vg-js-populate firstElementChild: %v", value.Get("firstElementChild"))
+    c.Log = append(c.Log, fmt.Sprintf("vg-js-populate className %s", value.Get("className").String()))
+    c.Log = append(c.Log, fmt.Sprintf("vg-js-populate firstElementChild %v", value.Get("firstElementChild")))
+}
+
+func (c *Thing) handleButtonClick(event vugu.DOMEvent) {
+}
+
+
+</script>
