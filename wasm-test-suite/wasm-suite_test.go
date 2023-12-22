@@ -910,10 +910,10 @@ func Test021Slots(t *testing.T) {
 			t.Errorf("tmplparent did not have expected innerHTML, instead got: %s", tmplparentInnerHTML)
 		}
 
-		rootvgengo, err := os.ReadFile(filepath.Join(dir, "root_vgen.go"))
+		rootvgengo, err := os.ReadFile(filepath.Join(dir, "root_gen.go"))
 		must(err)
 		if !regexp.MustCompile(`var mydt `).Match(rootvgengo) {
-			t.Errorf("missing vg-var reference in root_vgen.go")
+			t.Errorf("missing vg-var reference in root_gen.go")
 		}
 
 	}
