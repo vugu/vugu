@@ -275,18 +275,18 @@ func (r *JSRenderer) render(buildResults *vugu.BuildResults) error {
 
 	var rctx renderedCtx
 
-	for _, c := range bo.Components {
+	for _, b := range buildResults.AllOut() {
+		for _, c := range b.Components {
+			rctx = renderedCtx{eventEnv: r.eventEnv}
 
-		rctx = renderedCtx{eventEnv: r.eventEnv}
+			st, ok := r.lifecycleStateMap[c]
+			rctx.first = !ok
+			st.passNum = r.lifecyclePassNum
 
-		st, ok := r.lifecycleStateMap[c]
-		rctx.first = !ok
-		st.passNum = r.lifecyclePassNum
+			invokeRendered(c, &rctx)
 
-		invokeRendered(c, &rctx)
-
-		r.lifecycleStateMap[c] = st
-
+			r.lifecycleStateMap[c] = st
+		}
 	}
 
 	// now purge from lifecycleStateMap anything not touched in this pass
