@@ -148,6 +148,5 @@ func (s *TSrv) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// fall through to static file server on BaseDir
 	http.FileServer(http.Dir(s.BaseDir)).ServeHTTP(w, r)
-	return
 
 }
