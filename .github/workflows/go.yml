@@ -18,12 +18,12 @@ jobs:
     env:
       GO111MODULE: "on"
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
 
     - name: Set up Go
-      uses: actions/setup-go@v2
+      uses: actions/setup-go@v5
       with:
-        go-version: ${{ matrix.go }}
+        go-version: '${{ matrix.go }}'
 
     - name: before_install from Travis
       run: go get golang.org/x/tools/cmd/goimports && go install golang.org/x/tools/cmd/goimports
