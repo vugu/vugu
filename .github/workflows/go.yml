@@ -25,24 +25,8 @@ jobs:
       with:
         go-version: '${{ matrix.go }}'
 
-    - name: before_install from Travis
-      run: go get golang.org/x/tools/cmd/goimports && go install golang.org/x/tools/cmd/goimports
-    - run: wget -O /tmp/golangci-lint.deb https://github.com/golangci/golangci-lint/releases/download/v1.55.2/golangci-lint-1.55.2-linux-amd64.deb ; sudo dpkg -i /tmp/golangci-lint.deb
-    - name: Execute golangci-lint
-      run: golangci-lint run
-    - run: cd wasm-test-suite/docker && ./make-docker.sh
-    - run: docker run -d -t -p 9222:9222 -p 8846:8846 --name wasm-test-suite vugu/wasm-test-suite:latest
-    - run: wget -O /tmp/tinygo.deb https://github.com/tinygo-org/tinygo/releases/download/v0.30.0/tinygo_0.30.0_amd64.deb ; sudo dpkg -i /tmp/tinygo.deb
-
-    - name: Main script
-      run: go install ./cmd/vugugen
-    - run: go test .
-    - run: go test ./devutil
-    - run: go test ./distutil
-    - run: go test ./domrender
-    - run: go test ./gen
-    - run: go test ./js
-    - run: go test ./staticrender
-    - run: go test ./simplehttp
-    - run: go test ./vgform
-    - run: go test -timeout=20m ./wasm-test-suite
+    - name: Install task command
+      uses: arduino/setup-task@v2 # setup task via a Github action maintained by the Arduino community. This will pull task v 3.X
+    
+    - name: Build and test via the Taskfile  
+      run: task all
