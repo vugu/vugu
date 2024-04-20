@@ -12,7 +12,11 @@ import (
 )
 
 // DefaultTinygoDockerImage is used as the docker image for Tinygo unless overridden.
-var DefaultTinygoDockerImage = "tinygo/tinygo:0.30.0"
+// We always default to the latest version.
+// This also the docket image that will be used for the wasm-test-suite when building with a Dockerized tinygo
+// The first call of "docker run" will pull the latest tinygo image if it does nto exit locally.
+// We might need to make the docker pull explicit in any build script.
+var DefaultTinygoDockerImage = "tinygo/tinygo:latest"
 
 // MustNewTinygoCompiler is like NewTinygoCompiler but panics upon error.
 func MustNewTinygoCompiler() *TinygoCompiler {
