@@ -28,5 +28,8 @@ jobs:
     - name: Install task command
       uses: arduino/setup-task@v2 # setup task via a Github action maintained by the Arduino community. This will pull task v 3.X
     
+    - name: Install goinports
+      run: go get golang.org/x/tools/cmd/goimports && go install golang.org/x/tools/cmd/goimports
+
     - name: Build and test via the Taskfile  
       run: task all
