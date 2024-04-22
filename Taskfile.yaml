@@ -19,14 +19,14 @@ tasks:
       - task: clean-auto-generated-files
       # build first as this will catch any syntax/Go compiler errors
       - task: build
-      # Download and install locally the latest version of the golanfci-lint tool for linting
-      - task: download-latest-golangci-lint
-      # Lint the source code - including any auto-generated files - that we know builds
-      - task: lint
+      # Pull the lastest golangci-lint docker image
+      - task: pull-latest-golangci-lint-docker-image
+      # Lint using the dockerized golangci-lint
+      - task: lint-via-docker
       # Run the vugu test suite using the Go (but not tinygo?)
       - task: test
-      # Download and install the latest version of the tinygo compiler locally
-      - task: download-latest-tinygo
+      # Pull the latest tinygo docker image
+      - task: pull-latest-tinygo-docker-image
       # Run the wasm test suites against Go, a local tinygo compiler and a dockerized tinygo compiler.
       # Warning: the tinygo builds take significantly longer to build and run.
       - task: test-wasm
@@ -77,25 +77,19 @@ tasks:
       - go generate github.com/vugu/vugu/vgform # go generate calls vugugen
 
 
-  # Download and instal the latest version of golangci-lint locally
-  # If the we find a locally installed golangci-lint at the latest version it will not be overwritten
-  download-latest-golangci-lint:
+  # Pull/Download the latest golangci-lint docker image. We use this image in the "lint-via-docker" task below
+  pull-latest-golangci-lint-docker-image:
     preconditions:
       - task: check-cmds-exist
     cmds:
-      # we achieve this via an external bash shell script. This isn't a portable solution!
-      - ./download_golangci_lint.sh  
+      - docker pull golangci/golangci-lint:latest-alpine
 
-
-  # Run the golangci-lint linter
-  lint:
-    # we use 'golangci-lint' as a meta linter, so it's availability is a prerequisite.
+  # Run the dockerized golangci-lint linter
+  lint-via-docker:
     preconditions:
-      - sh: command -v golangci-lint
-        msg: "glangci-lint not found. Please see https://golangci-lint.run/usage/install/#local-installation for how to install locally"  
+      - task: check-cmds-exist
     cmds:
-      - golangci-lint run .
-
+      - docker run --rm -v $(pwd):/app -w /app golangci/golangci-lint:latest-alpine golangci-lint run -v
 
   # Run all of the tests - except the wasm-test-suite. The wasm-test-suite currently takes circa 35 minutes to execute.
   # Some of the tests (e.g. in the devutil package) are built using tinygo in a dockerized container. 
@@ -117,15 +111,16 @@ tasks:
   
 
   # Download and install the latest version of the tinygo compiler locally.
-  # If the currently installed tinygo is already at the latest version it will not be overwritten.
-  download-latest-tinygo:
+  pull-latest-tinygo-docker-image:
     preconditions:
       - task: check-cmds-exist
     cmds:
-      # we achieve this via an external bash shell script. This isn't a portable solution!
-      - ./download_tinygo.sh  
-
-
+      # CRITICAL - this MUST be the same docker image as specified by DefaultTinygoDockerImage in devutil/tinygo-compiler.go
+      # This change makes the pull of the docker container explicit as part of the build process instead of being implicit as part of the test run.
+      # The 'docker run ...' that runs the container in the wasm-test-suite tests will now find the correct container locally.
+      # This is s temporary situation pending the wasm-test-suite being refactored.
+      - docker pull tinygo/tinygo:latest
+  
   # Run just the wasm-test-suite tests. This can take up to 35 minutes to complete.
   # The wasm-test suite builds all of the tests three times - once using Go, once using a local tinygo and once using tinygo installed in a docker container
   # Therefore docker is a prerequisite to run these tests along with tinygo.
@@ -139,8 +134,6 @@ tasks:
       ./wasm-test-suite/docker
     # the precondition is docker and tinygo are both available
     preconditions:
-      - sh: command -v tinygo
-        msg: "tinygo not found. Please see https://tinygo.org/getting-started/install/ for how to install locally"  
       - sh: command -v docker
         msg: "docker not found. Please see https://docs.docker.com/desktop/ for how to install locally"  
     cmds:
