@@ -115,7 +115,7 @@ func Test002Click(t *testing.T) {
 	}
 
 	t.Run("go", func(t *testing.T) { tf(t, mustGenBuildAndLoad(dir)) })
-	t.Run("tinygo/NoDocker", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, false)) })
+	//t.Run("tinygo/NoDocker", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, false)) })
 	t.Run("tinygo/Docker", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, true)) })
 
 }
@@ -1056,6 +1056,8 @@ func Test024EventBufferSize(t *testing.T) {
 		log.Println(val)
 	}
 	t.Run("go", func(t *testing.T) { tf(t, mustGenBuildAndLoad(dir)) })
-	t.Run("go", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, true)) })
-	t.Run("go", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, false)) })
+	//t.Run("tinygo/NoDocker", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, false)) })
+	// Be very careful with mustTGGenBuildAndLoad - if the 2nd parameter is "false" the the code uses the local tinygo
+	// and not the dockerized tinygo regardless of the implications of the first parameter!
+	t.Run("tinygo/Docker", func(t *testing.T) { tf(t, mustTGGenBuildAndLoad(dir, true)) })
 }

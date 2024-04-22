@@ -99,8 +99,6 @@ tasks:
     # it's a precondition is that tinygo is available
     preconditions:
       - task: check-cmds-exist
-      #- sh: command -v tinygo
-      #  msg: "tinygo not found. Please see https://tinygo.org/getting-started/install/ for how to install locally"  
     cmds:
       # Display the packages we are going to tun tests in.
       #  This can be useful because we don't know the list until th test run completes. This list also gives the order the packages will be tested in.
