@@ -257,6 +257,7 @@ func (p *ParserGo) visitOverall(state *parseGoState) error {
 	fmt.Fprintf(&state.goBuf, "import %q\n", "github.com/vugu/vjson")
 	fmt.Fprintf(&state.goBuf, "import %q\n", "github.com/vugu/vugu")
 	fmt.Fprintf(&state.goBuf, "import js %q\n", "github.com/vugu/vugu/js")
+	fmt.Fprintf(&state.goBuf, "import %q\n", "log")
 	fmt.Fprintf(&state.goBuf, "\n")
 
 	// TODO: we use a prefix like "vg" as our namespace; should document that user code should not use that prefix to avoid conflicts
@@ -276,6 +277,7 @@ func (p *ParserGo) visitOverall(state *parseGoState) error {
 	fmt.Fprintf(&state.goBufBottom, "var _ reflect.Type\n")
 	fmt.Fprintf(&state.goBufBottom, "var _ vjson.RawMessage\n")
 	fmt.Fprintf(&state.goBufBottom, "var _ js.Value\n")
+	fmt.Fprintf(&state.goBufBottom, "var _ log.Logger\n")
 	fmt.Fprintf(&state.goBufBottom, "\n")
 
 	// remove document node if present
