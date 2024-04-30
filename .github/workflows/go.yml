@@ -33,8 +33,9 @@ jobs:
 
     - name: Install mage
       run: |
-        git clone https://github.com/magefile/mage /tmp
+        git clone https://github.com/magefile/mage /tmp/mage
         cd /tmp/mage && go run bootstrap.go
+        rm -rf /tmp/mage
 
     - name: Print mage version
       run: mage --version
