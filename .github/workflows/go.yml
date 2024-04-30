@@ -39,3 +39,9 @@ jobs:
 
     - name: Print mage version
       run: mage --version
+
+    - name: Create docker network bridge
+      run: docker network create --driver bridge vugu-net
+
+    - name: Destroy docker network
+      run: docker network rm vugu-net
