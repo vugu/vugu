@@ -45,7 +45,7 @@ func AllFast() error {
 		PullLatestGolangCiLintDockerImage,
 		Lint, // we can't run golangci-lint in parallel with the Build as that calls "go generate"
 		Test,
-		Test001SimpleRefactor, // Add Test001SimpleRefactor here so we can quickly test it, before adding to the all target
+		Test001SimpleRefactor, // Add there for testing before moving to the All target
 	)
 	return nil
 }
@@ -274,6 +274,33 @@ func Test001SimpleRefactor() error {
 	if err != nil {
 		return err
 	}
+
+	// DEBUG - check we have the files on the Runner
+	d, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	log.Printf("Magefile thinks CWD is: %s\n", d)
+	files, err := os.ReadDir(d)
+	if err != nil {
+		return err
+	}
+	log.Println("Magefile dir listing:\n")
+	for _, file := range files {
+		log.Println(file.Name())
+	}
+
+	pwd, err := sh.Output("pwd")
+	if err != nil {
+		return err
+	}
+	log.Printf("Shell thinks CWD is: %s\n", pwd)
+	l, err := sh.Output("ls", "-al")
+	if err != nil {
+		return err
+	}
+	log.Printf("Shell dir listing:\n%s\n", l)
+
 	err = goCmdWithV(envs, "build", "-o", "./main.wasm", "github.com/vugu/vugu/new-tests/test-001-simple")
 	if err != nil {
 		return err
