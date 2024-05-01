@@ -31,5 +31,14 @@ jobs:
     - name: Install goinports
       run: go get golang.org/x/tools/cmd/goimports && go install golang.org/x/tools/cmd/goimports
 
-    - name: Build and test via the Taskfile  
-      run: task all
+      - name: Install mage
+      run: |
+        git clone https://github.com/magefile/mage /tmp/mage
+        cd /tmp/mage && go run bootstrap.go
+        rm -rf /tmp/mage
+
+    - name: Print mage version
+      run: mage --version
+
+    - name: Run mage all
+      run: mage -v all
