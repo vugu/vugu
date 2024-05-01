@@ -11,6 +11,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"log"
+
 	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"
 )
@@ -43,6 +45,7 @@ func AllFast() error {
 		PullLatestGolangCiLintDockerImage,
 		Lint, // we can't run golangci-lint in parallel with the Build as that calls "go generate"
 		Test,
+		Test001SimpleRefactor, // Add Test001SimpleRefactor here so we can quickly test it, before adding to the all target
 	)
 	return nil
 }
@@ -170,7 +173,7 @@ func TestWasm() error {
 		"GOOS":        "linux",
 		"GOARCH":      "amd64",
 	}
-	err = sh.RunWithV(envs, "go", "build", "-o", "./wasm-test-suite-srv", "github.com/vugu/vugu/wasm-test-suite/docker")
+	err = goCmdWithV(envs, "build", "-o", "./wasm-test-suite-srv", "github.com/vugu/vugu/wasm-test-suite/docker")
 	if err != nil {
 		return err
 	}
@@ -191,4 +194,105 @@ func TestWasm() error {
 		dockerCmdV("stop", "wasm-test-suite")
 	}()
 	return goCmdV("test", "-v", "-timeout", "35m", "github.com/vugu/vugu/wasm-test-suite")
+}
+
+func PullLatestNginxImage() error {
+	mg.Deps(CheckRequiredCmdsExist)
+	return dockerCmdV("pull", "nginx:latest")
+}
+
+func PullLatestChromeDpImage() error {
+	mg.Deps(CheckRequiredCmdsExist)
+	return dockerCmdV("pull", "chromedp/headless-shell:latest")
+}
+
+func Test001SimpleRefactor() error {
+	mg.Deps(CheckRequiredCmdsExist, PullLatestNginxImage, PullLatestChromeDpImage)
+	_ = cleanupContainer("vugu-nginx")
+	_ = cleanupContainer("vugu-chromedp")
+	// remove any bridge network that we may have created previously
+	cleanupContainerNetwork("vugu-net")
+	// create the container network named "vugu-net"
+	err := dockerCmdV("network", "create", "--driver", "bridge", "vugu-net")
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = cleanupContainerNetwork("vugu-net")
+	}()
+	// start the nginx container and attach it to the new vugu-net network
+	err = dockerCmdV("run", "--name", "vugu-nginx", "--network", "vugu-net", "--mount", "type=bind,source=./new-tests/test-001-simple,target=/usr/share/nginx/html,readonly", "-p", "8888:80", "-d", "nginx")
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = cleanupContainer("vugu-nginx")
+	}()
+	// add the vugu-ngix container to the defautl bridgenetwork as well (so the container has outbound internet access)
+	err = dockerCmdV("network", "connect", "bridge", "vugu-nginx")
+	if err != nil {
+		return err
+	}
+	// start the chromedp container
+	err = dockerCmdV("run", "-d", "-t", "-p", "9222:9222", "--name", "vugu-chromedp", "--network", "vugu-net", "chromedp/headless-shell")
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = cleanupContainer("vugu-chromedp")
+	}()
+	// add the vugu-chromdp container to the default bridgenetwork as well (so the container has outbound internet access)
+	err = dockerCmdV("network", "connect", "bridge", "vugu-chromedp")
+	if err != nil {
+		return err
+	}
+
+	// check the containers are running
+	out, err := sh.Output("docker", "ps")
+	if err != nil {
+		return err
+	}
+	log.Println(out)
+
+	// build the wasm binary
+	cwd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = os.Chdir(cwd)
+	}()
+	err = os.Chdir("./new-tests/test-001-simple")
+	if err != nil {
+		return err
+	}
+	envs := map[string]string{
+		"GOOS":   "js",
+		"GOARCH": "wasm",
+	}
+	err = goCmdV("generate") // run in src dir
+	if err != nil {
+		return err
+	}
+	err = goCmdWithV(envs, "build", "-o", "./main.wasm", "github.com/vugu/vugu/new-tests/test-001-simple")
+	if err != nil {
+		return err
+	}
+	// should we cd out of ./new-tests/test-001-simple ???
+	// finally run the actual test - this uses the standard Go compiler
+	return goCmdV("test", "-v", "github.com/vugu/vugu/new-tests/test-001-simple")
+	// cleanup via the deferred functions
+}
+
+func cleanupContainer(containerName string) error {
+	if err := dockerCmdV("stop", containerName); err != nil {
+		return err
+	}
+	// remove the vugu-nginx container - again ignore the error
+	return dockerCmdV("rm", containerName)
+}
+
+func cleanupContainerNetwork(networkName string) error {
+	// remove the vugu-nginx container - again ignore the error
+	return dockerCmdV("network", "rm", networkName)
 }
