@@ -301,6 +301,25 @@ func Test001SimpleRefactor() error {
 	}
 	log.Printf("Shell dir listing:\n%s\n", l)
 
+	// run go mody tidy
+	mods, err := sh.Output("go", "mod", "tidy") // run in src dir
+	if err != nil {
+		return err
+	}
+	log.Println(mods)
+	status, err := sh.Output("git", "status") // run in src dir
+	if err != nil {
+		return err
+	}
+	log.Println(status)
+	diff, err := sh.Output("git", "diff") // run in src dir
+	if err != nil {
+		return err
+	}
+	log.Println(diff)
+
+	// DEBUG
+
 	err = goCmdWithV(envs, "build", "-o", "./main.wasm", "github.com/vugu/vugu/new-tests/test-001-simple")
 	if err != nil {
 		return err
