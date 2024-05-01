@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -117,11 +118,12 @@ func (c *TinygoCompiler) SetBuildDir(dir string) *TinygoCompiler {
 
 		args = append(args, tinygoDockerImage)
 		args = append(args, "tinygo", "build")
-		args = append(args, "-o", "/src/"+outpath)
+		args = append(args, "-o", "/src"+outpath)
 		args = append(args, "-target=wasm")
 		args = append(args, c.tinygoArgs...)
 		args = append(args, ".")
 
+		log.Printf("docker %v", args)
 		return exec.Command("docker", args...)
 	})
 }

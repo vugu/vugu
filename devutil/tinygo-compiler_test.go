@@ -3,6 +3,7 @@ package devutil
 import (
 	"bytes"
 	"io"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -15,6 +16,7 @@ func TestTinygoCompiler(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	log.Printf("Tempdir name: %q", tmpDir)
 	defer os.RemoveAll(tmpDir)
 
 	must(os.WriteFile(filepath.Join(tmpDir, "go.mod"), []byte(`module example.org/testtgc
