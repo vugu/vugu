@@ -1,5 +1,3 @@
-<html>
-    <body>
         <div id="testing">
             <div id="t0">t0text</div>
             <div id="t1" vg-html='"t1text"'></div>
@@ -12,14 +10,3 @@
             <div id="t8" vg-content='(*string)(nil)'></div>
             <div id="t9" vg-content='S("blah")'></div>
         </div>
-    </body>
-</html>
-
-<script type="application/x-go">
-
-const amp = "&amp;";
-
-type S string
-func (s S) String() string { return "S-HERE:"+string(s) }
-
-</script>

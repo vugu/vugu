@@ -3,7 +3,11 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"html/template"
+	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -17,6 +21,10 @@ import (
 // - write a TestNNNDescription method to drive it
 // - to manually view the page from a test log the URL passed to chromedp.Navigate and view it in your browser
 //   (if you suspect you are getting console errors that you can't see, this is a simple way to check)
+
+type TestPath struct {
+	TestDir string
+}
 
 func Test001Simple(t *testing.T) {
 
@@ -40,10 +48,48 @@ func Test001Simple(t *testing.T) {
 		{"t9", "S-HERE:blah"},
 	}
 
-	tout := make([]string, len(cases))
-
 	//log.Printf("URL: http://localhost:8888")
-	actions := []chromedp.Action{chromedp.Navigate("http://vugu-nginx")}
+	// The magefile mounts the test's parent directory as the directory into the nginx container
+	// So we need to know our package name, which is the last component of the directory path.
+	// We then need to append the package name onto the end of the URL passed to chromedp
+	cwd, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	pkgName := filepath.Base(cwd)
+
+	t.Logf("CWD: %q", cwd)
+	tp := TestPath{TestDir: pkgName}
+
+	tmpl, err := template.ParseFiles(cwd + "/index.html.tmpl")
+	if err != nil {
+		t.Fatal(err)
+	}
+	// remove any existing "index.html" - we don't care if the file does not exist
+	err = os.Remove(cwd + "/index.html")
+	if err != nil {
+		t.Logf("rm error (not fatal) %s", err)
+	}
+	indexHTML, err := os.Create(cwd + "/index.html")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = tmpl.Execute(indexHTML, tp)
+	if err != nil {
+		t.Fatal(err)
+	}
+	indexHTML.Sync()
+	err = indexHTML.Close()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	url := "http://vugu-nginx/" + pkgName
+	log.Printf("URL: %s", url)
+	actions := []chromedp.Action{chromedp.Navigate(url)}
+
+	tout := make([]string, len(cases))
 	for i, c := range cases {
 		actions = append(actions, chromedp.InnerHTML("#"+c.id, &tout[i]))
 	}
