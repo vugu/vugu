@@ -379,6 +379,8 @@ func runFuncInDir(dir string, f func() error) error {
 			_ = os.Chdir(cwd) // can't defer this as defer is function scope when we want look scope
 			return nil
 		}
+		newcwd, _ := os.Getwd()
+		log.Printf("Running command in: %s", newcwd)
 		err = f()
 		if err != nil {
 			fmt.Println("5")
