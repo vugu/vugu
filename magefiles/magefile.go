@@ -282,6 +282,7 @@ func WasmTestSuiteRefactor() error {
 func runGoGenerateInTestDirs() error {
 	f := func() error {
 		// cd into the directory and run go generate followed by go mod tidy
+		log.Printf("About to tun: go generate")
 		return goCmdV("generate") // run in src dir
 	}
 	return runFuncInDir("./new-tests", f)
@@ -290,6 +291,7 @@ func runGoGenerateInTestDirs() error {
 func runGoModTidyInTestDirs() error {
 	f := func() error {
 		// cd into the directory and run go generate followed by go mod tidy
+		log.Printf("About to tun: go mod tidy")
 		return goCmdV("mod", "tidy") // run in src dir
 	}
 	return runFuncInDir("./new-tests", f)
@@ -304,10 +306,12 @@ func runGoBuildInTestDirs() error {
 
 		// the test is defined as a module, so we need to use go list -m to find the module name
 		// go list will read and parse the local go.mod for us
+		log.Printf("About to tun: go list -m")
 		module, err := goCmdCaptureOutput("list", "-m") // -m will print the module path
 		if err != nil {
 			return err
 		}
+		log.Printf("About to tun: go build -o ./main.wasm %s", module)
 		return goCmdWithV(envs, "build", "-o", "./main.wasm", module)
 	}
 	return runFuncInDir("./new-tests", f)
@@ -319,11 +323,12 @@ func runGoTestInTestDirs() error {
 
 		// the test is defined as a module, so we need to use go list -m to find the module name
 		// go list will read and parse the local go.mod for us
+		log.Printf("About to run: go list -m")
 		module, err := goCmdCaptureOutput("list", "-m") // -m will print the module path
 		if err != nil {
 			return err
 		}
-
+		log.Printf("About to tun: go test -v %s", module)
 		return goCmdV("test", "-v", module)
 	}
 	return runFuncInDir("./new-tests", f)
