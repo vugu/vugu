@@ -2,7 +2,7 @@ module github.com/vugu/vugu/new-tests/test-002-simple
 
 replace github.com/vugu/vugu => ../..
 
-go 1.21.4
+go 1.22.3
 
 require (
 	github.com/chromedp/chromedp v0.9.5
