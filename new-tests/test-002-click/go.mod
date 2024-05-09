@@ -1,4 +1,4 @@
-module github.com/vugu/vugu/new-tests/test-002-simple
+module github.com/vugu/vugu/new-tests/test-002-click
 
 replace github.com/vugu/vugu => ../..
 
