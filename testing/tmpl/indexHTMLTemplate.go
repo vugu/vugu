@@ -32,15 +32,18 @@ func CreateIndexHtml(t *testing.T, pkgName string) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
+	defer func() {
+		err = indexHTML.Close()
+		if err != nil {
+			t.Fatal(err)
+		}
+	}()
 	err = tmpl.Execute(indexHTML, tp)
 	if err != nil {
 		t.Fatal(err)
 	}
-	indexHTML.Sync() // ensure we flush to disk
-	err = indexHTML.Close()
+	err = indexHTML.Sync() // ensure we flush to disk
 	if err != nil {
 		t.Fatal(err)
 	}
-
 }
