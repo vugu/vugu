@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -85,4 +86,14 @@ func WaitInnerTextTrimEq(sel, innerText string) chromedp.QueryAction {
 
 	})
 
+}
+
+func QueryNode(ref string, assert func(n *cdp.Node)) chromedp.QueryAction {
+	return chromedp.QueryAfter(ref, func(ctx context.Context, id runtime.ExecutionContextID, nodes ...*cdp.Node) error {
+		if len(nodes) == 0 {
+			return fmt.Errorf("no %s element found", ref)
+		}
+		assert(nodes[0])
+		return nil
+	})
 }
