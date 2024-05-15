@@ -1,0 +1,3 @@
+<div>
+    <button id="the_button" @click="c.HandleButtonClick(event)">A button here</button>
+</div>
