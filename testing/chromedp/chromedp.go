@@ -97,3 +97,14 @@ func QueryNode(ref string, assert func(n *cdp.Node)) chromedp.QueryAction {
 		return nil
 	})
 }
+
+func QueryAttributes(ref string, assert func(attributes map[string]string)) chromedp.QueryAction {
+	return chromedp.QueryAfter(ref, func(ctx context.Context, id runtime.ExecutionContextID, nodes ...*cdp.Node) error {
+		attributes := make(map[string]string)
+		if err := chromedp.Attributes(ref, &attributes).Do(ctx); err != nil {
+			return err
+		}
+		assert(attributes)
+		return nil
+	})
+}
