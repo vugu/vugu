@@ -49,10 +49,12 @@ type TinygoCompiler struct {
 	afterFunc          func(outpath string, err error) error
 	logWriter          io.Writer
 	//nolint:golint,unused
-	dlTmpGopath       string   // temporary directory that we download dependencies into with go get
-	tinygoDockerImage string   // docker image name to use, if empty then it is run directly
-	wasmExecJS        []byte   // contents of wasm_exec.js
-	tinygoArgs        []string // additional arguments to pass to the tinygo build cmd
+	dlTmpGopath        string   // temporary directory that we download dependencies into with go get
+	tinygoDockerImage  string   // docker image name to use, if empty then it is run directly
+	wasmExecJS         []byte   // contents of wasm_exec.js
+	tinygoArgs         []string // additional arguments to pass to the tinygo build cmd
+	disableGoModCache  bool     // set to true to disable the GOMODCACHE functionality
+	disableTinygoCache bool     // set to true to disable setting the GOCACHE dir for tinygo when running docker
 }
 
 // Close performs any cleanup.  For now it removes the temporary directory created by NewTinygoCompiler.
@@ -99,6 +101,8 @@ func (c *TinygoCompiler) SetBuildDir(dir string) *TinygoCompiler {
 			panic(err)
 		}
 
+		outDir, outName := filepath.Split(outpath)
+
 		tinygoDockerImage := c.tinygoDockerImage
 
 		// run tinygo via docker
@@ -110,14 +114,26 @@ func (c *TinygoCompiler) SetBuildDir(dir string) *TinygoCompiler {
 
 		args := make([]string, 0, 20)
 		args = append(args, "run", "--rm")
-		args = append(args, "-v", "/:/src") // map dir for dependencies
+
+		if goModCache, err := getGoModCache(); err == nil && !c.disableGoModCache && goModCache != "" {
+			args = append(args, "-v", goModCache+":/gomodcache") // map host machines temp directory
+			args = append(args, "-e", "GOMODCACHE=/gomodcache")
+		}
+
+		if tinygoCache, err := getTinygoCache(); err == nil && !c.disableTinygoCache && tinygoCache != "" {
+			args = append(args, "-v", tinygoCache+":/tinygocache")
+			args = append(args, "-e", "GOCACHE=/tinygocache")
+		}
+
+		args = append(args, "-v", "/:/src")       // map dir for dependencies, everything input
+		args = append(args, "-v", outDir+":/out") // map the output directory separately to /out, this fixes weird temp dir stuff on Mac and should still work everywhere
 		args = append(args, "-e", "HOME=/tmp")
 		args = append(args, fmt.Sprintf("--user=%d", os.Getuid()))
 		args = append(args, "-w", "/src"+buildDirAbs)
 
 		args = append(args, tinygoDockerImage)
 		args = append(args, "tinygo", "build")
-		args = append(args, "-o", "/src/"+outpath)
+		args = append(args, "-o", "/out/"+outName)
 		args = append(args, "-target=wasm")
 		args = append(args, c.tinygoArgs...)
 		args = append(args, ".")
@@ -166,6 +182,18 @@ func (c *TinygoCompiler) SetBeforeFunc(f func() error) *TinygoCompiler {
 // SetAfterFunc specifies a function to be executed after everthing else during Execute().
 func (c *TinygoCompiler) SetAfterFunc(f func(outpath string, err error) error) *TinygoCompiler {
 	c.afterFunc = f
+	return c
+}
+
+// SetDisableGoModCache will disable sharing the GOMODCACHE directory through the docker run command.
+func (c *TinygoCompiler) SetDisableGoModCache(v bool) *TinygoCompiler {
+	c.disableGoModCache = v
+	return c
+}
+
+// SetDisableTinygoCache will disable setting GOCACHE to ~/.cache/tinygo when running via docker
+func (c *TinygoCompiler) SetDisableTinygoCache(v bool) *TinygoCompiler {
+	c.disableTinygoCache = v
 	return c
 }
 
@@ -304,4 +332,31 @@ func (c *TinygoCompiler) WasmExecJS() (r io.Reader, err error) {
 
 	return bytes.NewReader(c.wasmExecJS), nil
 
+}
+
+// getGoModCache returns go's value for GOMODCACHE
+func getGoModCache() (goModCache string, err error) {
+	cmd := exec.Command("go", "env", "GOMODCACHE")
+	// TODO: it would be best if we were setting the working dire
+	// correctly, but unfortunately it's not readily available
+	// cmd.Dir = dir
+	b, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", err
+	}
+	return strings.TrimSpace(string(b)), nil
+}
+
+// getTinygoCache creates and returns the path to ~/.cache/tinygo
+func getTinygoCache() (tinygoCache string, err error) {
+	userHomeDir, err := os.UserHomeDir()
+	if err != nil {
+		return "", err
+	}
+	tinygoCache = filepath.Join(userHomeDir, ".cache", "tinygo")
+	err = os.MkdirAll(tinygoCache, 0755)
+	if err != nil {
+		return tinygoCache, err
+	}
+	return tinygoCache, nil
 }
