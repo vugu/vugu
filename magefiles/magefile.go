@@ -246,7 +246,6 @@ func WasmTestSuiteRefactor() error {
 }
 
 func TestSingleWasmTest(moduleName string) error {
-	log.Printf("Called with argument: %q", moduleName)
 	mg.SerialDeps(Build, PullLatestNginxImage, PullLatestChromeDpImage)
 	cleanupContainers()
 	// create the container network named "vugu-net"
@@ -302,4 +301,21 @@ func TestSingleWasmTest(moduleName string) error {
 
 	return runGoTestForTest(moduleName)
 	// cleanup via the deferred functions
+}
+
+func StartLocalNginx() error {
+	mg.SerialDeps(PullLatestNginxImage)
+	cleanupContainer(VuguNginxContainerName)
+	err := startLocalNginxContainer(WasmTestSuiteDir)
+	if err == nil {
+		log.Printf("Local nginx container started.\nConnect to http://localhost:8888/<wasm-test-directory-name>\ne,g. http://localhost:8888/test-001-simple")
+		log.Printf("To stop the local nginx container please run:\n\tmage StopLocalNginx")
+	}
+	return err
+}
+
+func StopLocalNginx() error {
+	// we intended to ignore the error as the container might not be running
+	_ = cleanupContainer(VuguNginxContainerName)
+	return nil
 }

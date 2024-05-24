@@ -75,6 +75,13 @@ func startNginxContainer(dirToServe string) error {
 	return dockerCmdV("run", "--name", VuguNginxContainerName, "--network", VuguContainerNetworkName, "--mount", mountArg, "-p", "8888:80", "-d", "nginx")
 }
 
+func startLocalNginxContainer(dirToServe string) error {
+	// not NO "./" in the dirToServe
+	mountArg := "type=bind,source=" + dirToServe + ",target=/usr/share/nginx/html,readonly"
+	// start the nginx container and attached it to the default hosts bridge network
+	return dockerCmdV("run", "--name", VuguNginxContainerName, "--mount", mountArg, "-p", "8888:80", "-d", "nginx")
+}
+
 func dockerPullImage(imageName string) error {
 	return dockerCmdV("pull", imageName)
 }
