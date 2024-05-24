@@ -9,8 +9,6 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
-
-	"github.com/magefile/mage/sh"
 )
 
 //------- utils ------------------------
@@ -69,20 +67,4 @@ func deleteGeneratedFiles(path string, d fs.DirEntry, err error) error {
 		}
 	}
 	return nil
-}
-
-func goCmdV(args ...string) error {
-	return sh.RunV("go", args...)
-}
-
-func goCmdCaptureOutput(args ...string) (string, error) {
-	return sh.Output("go", args...)
-}
-
-func goCmdWithV(env map[string]string, args ...string) error {
-	return sh.RunWithV(env, "go", args...)
-}
-
-func dockerCmdV(args ...string) error {
-	return sh.RunV("docker", args...)
 }
