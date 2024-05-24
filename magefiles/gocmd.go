@@ -65,24 +65,16 @@ func testLegacyWasmtestSuite() error {
 
 func runGoGenerateInTestDirs() error {
 	f := func() error {
-		// cd into the directory and run go generate followed by go mod tidy
-		log.Printf("About to run: go generate -v")
-		output, err := goCmdCaptureOutput("generate", "-v") // run in src dir
-		log.Println(output)
-		return err
+		return goCmdV("generate") // run in src dir
 	}
-	return runFuncInDir("./new-tests", f)
+	return runFuncInDir(WasmTestSuiteDir, f)
 }
 
 func runGoModTidyInTestDirs() error {
 	f := func() error {
-		// cd into the directory and run go generate followed by go mod tidy
-		log.Printf("About to run: go mod tidy -v")
-		output, err := goCmdCaptureOutput("mod", "tidy", "-v") // run in src dir
-		log.Println(output)
-		return err
+		return goCmdV("mod", "tidy") // run in src dir
 	}
-	return runFuncInDir("./new-tests", f)
+	return runFuncInDir(WasmTestSuiteDir, f)
 }
 
 func runGoBuildInTestDirs() error {
@@ -94,15 +86,13 @@ func runGoBuildInTestDirs() error {
 
 		// the test is defined as a module, so we need to use go list -m to find the module name
 		// go list will read and parse the local go.mod for us
-		log.Printf("About to run: go list -m")
 		module, err := goCmdCaptureOutput("list", "-m") // -m will print the module path
 		if err != nil {
 			return err
 		}
-		log.Printf("About to run: go build -o ./main.wasm %s", module)
 		return goCmdWithV(envs, "build", "-o", "./main.wasm", module)
 	}
-	return runFuncInDir("./new-tests", f)
+	return runFuncInDir(WasmTestSuiteDir, f)
 }
 
 func runGoTestInTestDirs() error {
@@ -111,21 +101,67 @@ func runGoTestInTestDirs() error {
 
 		// the test is defined as a module, so we need to use go list -m to find the module name
 		// go list will read and parse the local go.mod for us
-		log.Printf("About to run: go list -m")
 		module, err := goCmdCaptureOutput("list", "-m") // -m will print the module path
 		if err != nil {
 			return err
 		}
-		log.Printf("About to run: go test -v %s", module)
 		return goCmdV("test", "-v", module)
 	}
-	return runFuncInDir("./new-tests", f)
+	return runFuncInDir(WasmTestSuiteDir, f)
+}
+
+func runGoGenerateForTest(moduleName string) error {
+	f := func() error {
+		// cd into the directory and run go generate followed by go mod tidy
+		return goCmdV("generate") // run in src dir
+	}
+	return runFuncInModuleDir(moduleName, WasmTestSuiteDir, f)
+}
+
+func runGoModTidyForTest(moduleName string) error {
+	f := func() error {
+		// cd into the directory and run go generate followed by go mod tidy
+		return goCmdV("mod", "tidy") // run in src dir
+	}
+	return runFuncInModuleDir(moduleName, WasmTestSuiteDir, f)
+}
+
+func runGoBuildForTest(moduleName string) error {
+	f := func() error {
+		envs := map[string]string{
+			"GOOS":   "js",
+			"GOARCH": "wasm",
+		}
+
+		// the test is defined as a module, so we need to use go list -m to find the module name
+		// go list will read and parse the local go.mod for us
+		module, err := goCmdCaptureOutput("list", "-m") // -m will print the module path
+		if err != nil {
+			return err
+		}
+		return goCmdWithV(envs, "build", "-o", "./main.wasm", module)
+	}
+	return runFuncInModuleDir(moduleName, WasmTestSuiteDir, f)
+}
+
+func runGoTestForTest(moduleName string) error {
+	f := func() error {
+		// finally run the actual test - this uses the standard Go compiler
+
+		// the test is defined as a module, so we need to use go list -m to find the module name
+		// go list will read and parse the local go.mod for us
+		module, err := goCmdCaptureOutput("list", "-m") // -m will print the module path
+		if err != nil {
+			return err
+		}
+		return goCmdV("test", "-v", module)
+	}
+	return runFuncInModuleDir(moduleName, WasmTestSuiteDir, f)
 }
 
 func runFuncInDir(dir string, f func() error) error {
 	cwd, err := os.Getwd() //  cwd should be the module root
 	if err != nil {
-		fmt.Println("1")
 		return err
 	}
 	defer func() {
@@ -144,17 +180,12 @@ func runFuncInDir(dir string, f func() error) error {
 	// Change dir into the new test directory - currently called "new-tests"
 	err = os.Chdir(dir)
 	if err != nil {
-		fmt.Println("2")
 		return err
 	}
 
 	// find all the directories under "new-tests"
 	entries, err := os.ReadDir(dir)
 	if err != nil {
-		fmt.Println(dir)
-		fmt.Println("3")
-		c, _ := os.Getwd()
-		fmt.Println(c)
 		return err
 	}
 	for _, e := range entries {
@@ -164,7 +195,6 @@ func runFuncInDir(dir string, f func() error) error {
 		}
 		cwd, err := os.Getwd()
 		if err != nil {
-			fmt.Println("4")
 			return nil
 		}
 		err = os.Chdir(e.Name())
@@ -176,11 +206,92 @@ func runFuncInDir(dir string, f func() error) error {
 		log.Printf("Running command in: %s", newcwd)
 		err = f()
 		if err != nil {
+			_ = os.Chdir(cwd)
+			return err
+		}
+		_ = os.Chdir(cwd)
+	}
+	return nil
+}
+
+func runFuncInModuleDir(moduleName, dir string, f func() error) error {
+	cwd, err := os.Getwd() //  cwd should be the module root
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = os.Chdir(cwd)
+	}()
+
+	// resolve the dir to an absolute, not symlink path. On MacOS we need to resolve the symlinks....
+	dir, err = filepath.Abs(dir)
+	if err != nil {
+		return err
+	}
+	dir, err = filepath.EvalSymlinks(dir)
+	if err != nil {
+		return err
+	}
+	// Change dir into the new test directory - currently called "new-tests"
+	err = os.Chdir(dir)
+	if err != nil {
+		return err
+	}
+
+	// find all the directories under "new-tests"
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return err
+	}
+	moduleFound := 0
+	for _, e := range entries {
+		// skip any files
+		if !e.IsDir() {
+			continue
+		}
+		cwd, err := os.Getwd()
+		if err != nil {
+			return nil
+		}
+		err = os.Chdir(e.Name())
+		if err != nil {
+			_ = os.Chdir(cwd) // can't defer this as defer is function scope when we want loop scope
+			return nil
+		}
+		newcwd, _ := os.Getwd()
+		log.Printf("Running command in: %s", newcwd)
+
+		// is this the module we want?
+		output, err := goCmdCaptureOutput("list", "-m")
+		if err != nil {
+			return err
+		}
+		modules := strings.Split(output, "\n")
+
+		if len(modules) != 1 {
+			return fmt.Errorf("There should be exactly one module in the directory %s but have found %d.", e.Name(), len(modules))
+		}
+		// is this the module we want?
+		if moduleName != modules[0] {
+			log.Printf("Skipping module %q", modules[0])
+			//  cd out of the directory back to the
+			_ = os.Chdir(cwd) // can't defer this as defer is function scope when we want loop scope
+			continue
+		} else {
+			log.Printf("Found module %q", modules[0])
+		}
+		moduleFound++
+		// we have the correct module do do the work in the modules directory.
+		err = f()
+		if err != nil {
 			fmt.Println("5")
 			_ = os.Chdir(cwd)
 			return err
 		}
 		_ = os.Chdir(cwd)
+	}
+	if moduleFound != 1 {
+		return fmt.Errorf("Could nto find module %q", moduleName)
 	}
 	return nil
 }

@@ -7,6 +7,7 @@
 package main
 
 import (
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -241,5 +242,64 @@ func WasmTestSuiteRefactor() error {
 	}
 
 	return runGoTestInTestDirs()
+	// cleanup via the deferred functions
+}
+
+func TestSingleWasmTest(moduleName string) error {
+	log.Printf("Called with argument: %q", moduleName)
+	mg.SerialDeps(Build, PullLatestNginxImage, PullLatestChromeDpImage)
+	cleanupContainers()
+	// create the container network named "vugu-net"
+	err := createContainerNetwork(VuguContainerNetworkName)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = cleanupContainerNetwork(VuguContainerNetworkName)
+	}()
+
+	// start the nginx container and attach it to the new vugu-net network
+	err = startNginxContainer(WasmTestSuiteDir)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = cleanupContainer(VuguNginxContainerName)
+	}()
+	// add the vugu-ngix container to the defautl bridgenetwork as well (so the container has outbound internet access)
+	err = connectContainerToHostNetwork(VuguNginxContainerName)
+	if err != nil {
+		return err
+	}
+	// start the chromedp container
+	err = startChromeDpContainer()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = cleanupContainer(VuguChromeDpContainerName)
+	}()
+	// add the vugu-chromdp container to the default bridgenetwork as well (so the container has outbound internet access)
+	err = connectContainerToHostNetwork(VuguChromeDpContainerName)
+	if err != nil {
+		return err
+	}
+
+	// build the wasm binary
+	err = runGoGenerateForTest(moduleName)
+	if err != nil {
+		return err
+	}
+	err = runGoModTidyForTest(moduleName)
+	if err != nil {
+		return err
+	}
+
+	err = runGoBuildForTest(moduleName)
+	if err != nil {
+		return err
+	}
+
+	return runGoTestForTest(moduleName)
 	// cleanup via the deferred functions
 }
