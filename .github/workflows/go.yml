@@ -40,11 +40,5 @@ jobs:
     - name: Print mage version
       run: mage --version
 
-    - name: Create docker network bridge
-      run: docker network create --driver bridge vugu-net
-
-    - name: Destroy docker network
-      run: docker network rm vugu-net
-
-    - name: Run Test 001 Simple Refactored
-      run: mage -v allfast
+    - name: Build and test vugu including the legecy wasm test suite
+      run: mage -v AllWithLegacyWasm
