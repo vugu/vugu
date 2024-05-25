@@ -1,0 +1,26 @@
+<table vg-attr='c.AttrMap'>
+    <tr><td>testing top</td></tr>
+    <tr><td>
+        <vg-comp expr='c.DefaultSlot'></vg-comp>
+    </td></tr>
+    <tr><td>testing bottom</td></tr>
+    <tr><td id="another_slot">
+        <vg-comp expr='c.AnotherSlot'></vg-comp>
+    </td></tr>
+    <tr><td id="mapidx_slot">
+        <vg-comp expr='c.SlotMap["mapidx"]'></vg-comp>
+    </td></tr>
+</table>
+
+<script type="application/x-go">
+
+type MyDataTable struct {
+
+    AttrMap vugu.AttrMap
+
+    DefaultSlot vugu.Builder
+    AnotherSlot vugu.Builder
+    SlotMap map[string]vugu.Builder
+}    
+
+</script>

@@ -1,6 +1,0 @@
-<div id="testdiv">
-    <div id="t1">This is a test.</div>
-    <button id="run1" @click="c.OnClickRun(event, 2)" :data-whatever="c.Something">run1</button>
-    <div id="success" vg-if="c.Success">success</div>
-    <!-- <div vg-html='"Some <strong id=\"c\">content</strong> here"'></div> -->
-</div>

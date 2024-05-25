@@ -10,8 +10,4 @@
 
 <script type="application/x-go">
 	import "log"
-	type Final struct {
-		ID int `vugu:"data"`
-		Clicked bool `vugu:"data"`
-	}
 </script>

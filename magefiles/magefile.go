@@ -118,7 +118,7 @@ func Test() error {
 		return err
 	}
 	for _, pkg := range packages {
-		if strings.Contains(pkg, "wasm-test-suite") {
+		if strings.Contains(pkg, LegacyWasmTestSuiteDir) {
 			continue // skip the wasm-test-suite packages
 		}
 		err = goTest(pkg)
@@ -157,24 +157,24 @@ func TestWasm() error {
 		return err
 	}
 	// build the wasm-test-suite-srv
-	err = buildWasmTestSuiteServer()
+	err = buildLegacyWasmTestSuiteServer()
 	if err != nil {
 		return err
 	}
-	err = buildWasmTestSuiteContainer()
+	err = buildLegacyWasmTestSuiteContainer()
 	if err != nil {
 		return err
 	}
 	// We intend to ignore any errors here, as the container might not be running
-	stopWasmTestSuiteContainer()
-	err = startWasmTestSuiteContainer()
+	stopLegacyWasmTestSuiteContainer()
+	err = startLegacyWasmTestSuiteContainer()
 	if err != nil {
 		return err
 	}
 	// stop the running container on function exit
 	// We intend to ignore any errors here, as the container might not be running
-	defer stopWasmTestSuiteContainer()
-	return testLegacyWasmtestSuite()
+	defer stopLegacyWasmTestSuiteContainer()
+	return testLegacyWasmTestSuite()
 }
 
 func PullLatestNginxImage() error {

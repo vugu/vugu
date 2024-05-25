@@ -1,8 +1,0 @@
-<html>
-  <head></head>
-  <body>
-    <div id="items">
-      <span vg-for='c.Items()' vg-html='value'></span>
-    </div>
-  </body>
-</html>

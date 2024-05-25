@@ -3,12 +3,3 @@
     <div vg-if="len(c.ShowText)>0" id="show_text" vg-html="c.ShowText"></div>
 </div>
 
-<script type="application/x-go">
-
-import "fmt"
-
-type Root struct {
-    ShowText string `vugu:"data"`
-}
-
-</script>

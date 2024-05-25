@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"path"
 	"strings"
 
@@ -16,11 +17,13 @@ func vuguSetup(buildEnv *vugu.BuildEnv, eventEnv vugu.EventEnv) vugu.Builder {
 	// if there is a fragment when the page is loaded we go into fragment mode
 	if strings.HasPrefix(js.Global().Get("window").Get("location").Get("hash").String(), "#") {
 		router.SetUseFragment(true)
+		log.Printf("router: SetUseFragment = true")
 	} else {
 		// otherwise we set the path prefix
 		browserPath := path.Clean("/" + js.Global().Get("window").Get("location").Get("pathname").String())
 		pathPrefix := "/" + strings.Split(strings.TrimPrefix(browserPath, "/"), "/")[0]
 		router.SetPathPrefix(pathPrefix)
+		log.Printf("pathPrefix: %q", pathPrefix)
 	}
 
 	buildEnv.SetWireFunc(func(b vugu.Builder) {
@@ -35,10 +38,10 @@ func vuguSetup(buildEnv *vugu.BuildEnv, eventEnv vugu.EventEnv) vugu.Builder {
 	router.MustAddRouteExact("/", vgrouter.RouteHandlerFunc(func(rm *vgrouter.RouteMatch) {
 		root.Body = &Page1{}
 	}))
-	router.MustAddRouteExact("/page1", vgrouter.RouteHandlerFunc(func(rm *vgrouter.RouteMatch) {
+	router.MustAddRouteExact("/#page1", vgrouter.RouteHandlerFunc(func(rm *vgrouter.RouteMatch) {
 		root.Body = &Page1{}
 	}))
-	router.MustAddRouteExact("/page2", vgrouter.RouteHandlerFunc(func(rm *vgrouter.RouteMatch) {
+	router.MustAddRouteExact("/#page2", vgrouter.RouteHandlerFunc(func(rm *vgrouter.RouteMatch) {
 		root.Body = &Page2{}
 	}))
 	router.SetNotFound(vgrouter.RouteHandlerFunc(func(rm *vgrouter.RouteMatch) {

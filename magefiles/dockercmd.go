@@ -8,18 +8,18 @@ import (
 
 const GoLangCiLintImageName = "golangci/golangci-lint:latest-alpine"
 const TinyGoImageName = "tinygo/tinygo:latest"
-const WasmTestSuiteImageName = "vugu/wasm-test-suite:latest"
+const LegacyWasmTestSuiteImageName = "vugu/wasm-test-suite:latest"
 const NginxImageName = "nginx:latest"
 const ChromeDpHeadlessShellImageName = "chromedp/headless-shell:latest"
 
-const WasmTestSuiteContainerName = "wasm-test-suite"
+const LegacyWasmTestSuiteContainerName = "wasm-test-suite"
 const VuguNginxContainerName = "vugu-nginx"
 const VuguChromeDpContainerName = "vugu-chromedp"
 
 const VuguContainerNetworkName = "vugu-net"
 
-const WasmTestSuiteDir = "./new-tests"
-const LegacyWasmTestSuiteDir = "./wasm-test-suite"
+const WasmTestSuiteDir = "wasm-test-suite"
+const LegacyWasmTestSuiteDir = "legacy-wasm-test-suite"
 
 func cleanupContainers() {
 	// remove any bridge network that we may have created previously - before removing any containers that my be left over
@@ -51,17 +51,17 @@ func runGolangCiLint() error {
 }
 
 // we INTEND to ignore any errors here, as the containers might not be running.
-func stopWasmTestSuiteContainer() {
-	_ = dockerCmdV("stop", WasmTestSuiteContainerName)
-	_ = dockerCmdV("rm", WasmTestSuiteContainerName)
+func stopLegacyWasmTestSuiteContainer() {
+	_ = dockerCmdV("stop", LegacyWasmTestSuiteContainerName)
+	_ = dockerCmdV("rm", LegacyWasmTestSuiteContainerName)
 }
 
-func startWasmTestSuiteContainer() error {
-	return dockerCmdV("run", "-d", "-t", "-p", "9222:9222", "-p", "8846:8846", "--name", WasmTestSuiteContainerName, WasmTestSuiteImageName)
+func startLegacyWasmTestSuiteContainer() error {
+	return dockerCmdV("run", "-d", "-t", "-p", "9222:9222", "-p", "8846:8846", "--name", LegacyWasmTestSuiteContainerName, LegacyWasmTestSuiteImageName)
 }
 
-func buildWasmTestSuiteContainer() error {
-	return dockerCmdV("build", "-t", WasmTestSuiteImageName, ".")
+func buildLegacyWasmTestSuiteContainer() error {
+	return dockerCmdV("build", "-t", LegacyWasmTestSuiteImageName, ".")
 }
 
 func createContainerNetwork(networkName string) error {
@@ -69,15 +69,15 @@ func createContainerNetwork(networkName string) error {
 }
 
 func startNginxContainer(dirToServe string) error {
-	// not NO "./" in the dirToServe
-	mountArg := "type=bind,source=" + dirToServe + ",target=/usr/share/nginx/html,readonly"
+	// note we must prefix "./" to the dirToServe as the mount requires an absolute path
+	mountArg := "type=bind,source=./" + dirToServe + ",target=/usr/share/nginx/html,readonly"
 	// start the nginx container and attach it to the new vugu-net network
 	return dockerCmdV("run", "--name", VuguNginxContainerName, "--network", VuguContainerNetworkName, "--mount", mountArg, "-p", "8888:80", "-d", "nginx")
 }
 
 func startLocalNginxContainer(dirToServe string) error {
-	// not NO "./" in the dirToServe
-	mountArg := "type=bind,source=" + dirToServe + ",target=/usr/share/nginx/html,readonly"
+	// note we must prefix "./" to the dirToServe as the mount requires an absolute path
+	mountArg := "type=bind,source=./" + dirToServe + ",target=/usr/share/nginx/html,readonly"
 	// start the nginx container and attached it to the default hosts bridge network
 	return dockerCmdV("run", "--name", VuguNginxContainerName, "--mount", mountArg, "-p", "8888:80", "-d", "nginx")
 }

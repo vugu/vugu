@@ -1,8 +1,0 @@
-<div id="content">
-    <button @click='c.Make(2, event)' id="make2">Make 2</button>
-    <button @click='c.Make(6, event)' id="make6">Make 6</button>
-
-    <div vg-for='_,n := range c.Numbers' vg-key='n' vg-html='n' :id='n'></div>
-
-</div>
-

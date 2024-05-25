@@ -1,0 +1,28 @@
+<div id="c2">
+    c2 here
+</div>
+
+<script type="application/x-go">
+
+type C2 struct {
+}
+
+// alternate version without context for simplicity
+
+func (c *C2) Init() {
+    sendLogText("got C2.Init()")
+}
+
+func (c *C2) Compute() {
+    sendLogText("got C2.Compute()")
+}
+
+func (c *C2) Rendered() {
+    sendLogText("got C2.Rendered()")
+}
+
+func (c *C2) Destroy() {
+    sendLogText("got C2.Destroy()")
+}
+
+</script>

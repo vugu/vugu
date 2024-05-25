@@ -1,8 +1,0 @@
-<div>
-
-	<main:Helper :ID="1"></main:Helper>
-	<br>
-	<br>
-	<main:Helper :ID="2"></main:Helper>
-
-</div>
