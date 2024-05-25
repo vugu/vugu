@@ -49,18 +49,18 @@ func goBuildWithEnvs(envs map[string]string, binaryName, pkgName string) error {
 
 }
 
-func buildWasmTestSuiteServer() error {
+func buildLegacyWasmTestSuiteServer() error {
 	envs := map[string]string{
 		"CGO_ENABLED": "0",
 		"GOOS":        "linux",
 		"GOARCH":      "amd64",
 	}
-	return goCmdWithV(envs, "build", "-o", "./wasm-test-suite-srv", "github.com/vugu/vugu/wasm-test-suite/docker")
+	return goCmdWithV(envs, "build", "-o", "./wasm-test-suite-srv", "github.com/vugu/vugu/legacy-wasm-test-suite/docker")
 
 }
 
-func testLegacyWasmtestSuite() error {
-	return goCmdV("test", "-v", "-timeout", "35m", "github.com/vugu/vugu/wasm-test-suite")
+func testLegacyWasmTestSuite() error {
+	return goCmdV("test", "-v", "-timeout", "35m", "github.com/vugu/vugu/legacy-wasm-test-suite")
 }
 
 func runGoGenerateInTestDirs() error {

@@ -11,13 +11,3 @@
     </div>
   </body>
 </html>
-
-<script type='application/x-go'>
-  type Root struct {
-    Clicked string
-  }
-
-  func (c *Root) Items() []string {
-    return []string{"a","b","c","d","e"}
-  }
-</script>

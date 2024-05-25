@@ -1,0 +1,41 @@
+<div id="top">
+
+    <form>
+        <div class="form-group">
+            <label for="food_group">Select a Food Group</label>
+            <vgform:Select id="food_group" class="form-control" 
+                :Value='vgform.StringPtrDefault(&c.FoodGroup, "jungle_group")'
+                :Options='vgform.SliceOptions{"sandwich_group","cow_group","jungle_group","butterfinger_group"}.Title()'
+                ></vgform:Select>
+        </div>
+        <div class="form-group">
+            <label for="textarea1">Enter a bunch of text</label>
+            <vgform:Textarea id="textarea1" class="form-control" rows="10"
+                :Value='vgform.StringPtrDefault(&c.Textarea1Value, "testing")'
+                ></vgform:Textarea>
+        </div>
+        <div class="form-group">
+            <label for="inputtext1">Enter a line of text</label>
+            <vgform:Input type="email" id="inputtext1" class="form-control"
+                :Value='vgform.StringPtrDefault(&c.Inputtext1Value, "joe@example.com")'
+                ></vgform:Input>
+        </div>
+    </form>
+
+    <div>Your select: <span id="food_group_value" vg-content='c.FoodGroup'></span></div>
+    <div>Your textarea: <pre id="textarea1_value" vg-content="c.Textarea1Value"></pre></div>
+    <div>Your inputtext: <pre id="inputtext1_value" vg-content="c.Inputtext1Value"></pre></div>
+
+</div>
+
+<script type="application/x-go">
+
+import "github.com/vugu/vugu/vgform"
+
+type Root struct {
+    FoodGroup string
+    Textarea1Value string
+    Inputtext1Value string
+}
+
+</script>

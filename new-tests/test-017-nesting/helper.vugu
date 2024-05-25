@@ -1,3 +1,0 @@
-<div class="helper">
-	<main:Final :ID="c.ID"></main:Final>
-</div>

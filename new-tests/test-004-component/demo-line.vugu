@@ -1,7 +1,0 @@
-<li class="demo-line"><strong vg-html="c.Num"></strong> a line is here</li>
-
-<style>
-.demo-line {
-    color: green;
-}
-</style>
