@@ -68,6 +68,8 @@ go install golang.org/x/tools/cmd/goimports@latest
 In order to run the tests you will also need `docker` installed. If you don't have `docker` installed then follow the [docker install instructions](https://docs.docker.com/engine/install/#licensing).
 
 
+**You must have Go v1.22.3 as a minimum to build `vugu`. We require the for loop changes that were introduced in Go v1.22, and v1.22.3 was the lastest at the time writing.**
+
 The `Magefile` is self documenting. To see all of the targets, execute:
 
 ```

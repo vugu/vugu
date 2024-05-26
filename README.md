@@ -36,6 +36,8 @@ Get started: http://www.vugu.org/doc/start
 
 Still a work in progress, but a lot of things are already functional. Some work really well.
 
+**You must have Go v1.22.3 as a minimum to use `vugu`. We require the for loop changes that were introduced in Go v1.22, and v1.22.3 was the lastest at the time writing.**
+
 
 ## Building `vugu` for Contributors
 
