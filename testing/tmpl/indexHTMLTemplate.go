@@ -16,7 +16,6 @@ func CreateIndexHtml(t *testing.T, pkgName string) {
 		t.Fatal(err)
 	}
 
-	t.Logf("CWD: %q", cwd)
 	tp := TestPath{TestDir: pkgName}
 
 	tmpl, err := template.ParseFiles(cwd + "/index.html.tmpl")
