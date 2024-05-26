@@ -2,7 +2,7 @@ module github.com/vugu/vugu/legacy-wasm-test-suite/test
 
 replace github.com/vugu/vugu => ../..
 
-go 1.21.4
+go 1.22.3
 
 require (
 	github.com/vugu/vjson v0.0.0-20200505061711-f9cbed27d3d9
