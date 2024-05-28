@@ -1,0 +1,28 @@
+<div id="c1">
+    c1 here
+</div>
+
+<script type="application/x-go">
+
+type C1 struct {
+}
+
+// this version has contexts for each call
+
+func (c *C1) Init(ctx vugu.InitCtx) {
+    sendLogText("got C1.Init(ctx)")
+}
+
+func (c *C1) Compute(ctx vugu.ComputeCtx) {
+    sendLogText("got C1.Compute(ctx)")
+}
+
+func (c *C1) Rendered(ctx vugu.RenderedCtx) {
+    sendLogText(fmt.Sprintf("got C1.Rendered(ctx)[first=%t]\n", ctx.First()))
+}
+
+func (c *C1) Destroy(ctx vugu.DestroyCtx) {
+    sendLogText("got C1.Destroy(ctx)")
+}
+
+</script>

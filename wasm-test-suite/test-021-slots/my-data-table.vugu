@@ -11,16 +11,3 @@
         <vg-comp expr='c.SlotMap["mapidx"]'></vg-comp>
     </td></tr>
 </table>
-
-<script type="application/x-go">
-
-type MyDataTable struct {
-
-    AttrMap vugu.AttrMap
-
-    DefaultSlot vugu.Builder
-    AnotherSlot vugu.Builder
-    SlotMap map[string]vugu.Builder
-}    
-
-</script>

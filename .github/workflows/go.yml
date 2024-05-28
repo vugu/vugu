@@ -2,7 +2,9 @@ name: Go tests
 
 on:
   push:
-    branches: [ master ]
+    branches:
+      - master
+      - PR/** # Build on any branch named PR/<something> from https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#onpushbranchestagsbranches-ignoretags-ignore
   pull_request:
     branches: [ master ]
 
@@ -12,35 +14,31 @@ jobs:
     strategy:
       matrix:
         go:
-        - '1.21.4'
+        - '1.22.3'
     env:
       GO111MODULE: "on"
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
 
     - name: Set up Go
-      uses: actions/setup-go@v2
+      uses: actions/setup-go@v5
       with:
-        go-version: ${{ matrix.go }}
+        go-version: '${{ matrix.go }}'
 
-    - name: before_install from Travis
+    - name: Install task command
+      uses: arduino/setup-task@v2 # setup task via a Github action maintained by the Arduino community. This will pull task v 3.X
+    
+    - name: Install goinports
       run: go get golang.org/x/tools/cmd/goimports && go install golang.org/x/tools/cmd/goimports
-    - run: wget -O /tmp/golangci-lint.deb https://github.com/golangci/golangci-lint/releases/download/v1.55.2/golangci-lint-1.55.2-linux-amd64.deb ; sudo dpkg -i /tmp/golangci-lint.deb
-    - name: Execute golangci-lint
-      run: golangci-lint run
-    - run: cd wasm-test-suite/docker && ./make-docker.sh
-    - run: docker run -d -t -p 9222:9222 -p 8846:8846 --name wasm-test-suite vugu/wasm-test-suite:latest
-    - run: wget -O /tmp/tinygo.deb https://github.com/tinygo-org/tinygo/releases/download/v0.30.0/tinygo_0.30.0_amd64.deb ; sudo dpkg -i /tmp/tinygo.deb
 
-    - name: Main script
-      run: go install ./cmd/vugugen
-    - run: go test .
-    - run: go test ./devutil
-    - run: go test ./distutil
-    - run: go test ./domrender
-    - run: go test ./gen
-    - run: go test ./js
-    - run: go test ./staticrender
-    - run: go test ./simplehttp
-    - run: go test ./vgform
-    - run: go test -timeout=20m ./wasm-test-suite
+    - name: Install mage
+      run: |
+        git clone https://github.com/magefile/mage /tmp/mage
+        cd /tmp/mage && go run bootstrap.go
+        rm -rf /tmp/mage
+
+    - name: Print mage version
+      run: mage --version
+
+    - name: Build and test vugu including the legecy wasm test suite
+      run: mage -v AllWithLegacyWasm
