@@ -176,7 +176,7 @@ func TestWasm() error {
 //
 // e.g.
 //
-//	mage TestSingleWasmTest test-012-router
+//	mage TestSingleWasmTest github.com/vugu/vugu/wasm-test-suite/test-012-router
 //
 // to run the router test case.
 // The 'wasm' will be built with the standard Go compiler.
