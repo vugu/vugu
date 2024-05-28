@@ -292,6 +292,19 @@ func StartLocalNginx() error {
 	return err
 }
 
+func StartLocalNginxForExamples() error {
+	mg.SerialDeps(StopLocalNginx,
+		PullLatestNginxImage,
+	)
+
+	err := startLocalNginxContainer(ExamplesDir)
+	if err == nil {
+		log.Printf("Local nginx container started.\nConnect to http://localhost:8888/<example-test-directory-name>\ne,g. http://localhost:8888/fetch-and-display")
+		log.Printf("To stop the local nginx container please run:\n\tmage StopLocalNginx")
+	}
+	return err
+}
+
 // Stops any locally running nginx container.
 // See: StartLocalNginx
 func StopLocalNginx() error {
@@ -306,6 +319,68 @@ func StopLocalNginx() error {
 func PullLatestTinyGoDockerImage() error {
 	mg.Deps(CheckRequiredCmdsExist)
 	return dockerPullImage(TinyGoImageName)
+}
+
+// Builds and serves all of the examples via a local nginx container.
+// The examples will be served at
+//
+//	http://localhost:8888/<name-of-example-directory>
+//
+// for example for the fetch and display example
+//
+//	http://localhost:8888/fetch-and-display
+//
+// The 'wasm' files are built using the standard Go compiler.
+func Examples() error {
+	mg.SerialDeps(Build, PullLatestNginxImage, StartLocalNginxForExamples)
+	log.Printf("After StartLocalNginxForExasmples")
+	//cleanupContainers()
+	log.Printf("After cleanupContainers")
+	// build the wasm binary
+	err := runGoGenerateInExampleDirs()
+	if err != nil {
+		return err
+	}
+	err = runGoModTidyInExampleDirs()
+	if err != nil {
+		return err
+	}
+
+	return runGoBuildInExampleDirs()
+}
+
+// Builds, and serves a single example using a local nginx container.
+// The usage is:
+//
+//	mage SingleExample <example-module-name>
+//
+// e.g.
+//
+//	mage SingleExample gtihub.com/vugu/vugu/examples/fetch-and-display
+//
+// The examples will be served at
+//
+//	http://localhost:8888/<name-of-example-directory>
+//
+// for example for the fetch and display example
+//
+//	http://localhost:8888/fetch-and-display
+//
+// The 'wasm' files are built using the standard Go compiler.
+func SingleExample(moduleName string) error {
+	mg.SerialDeps(Build, PullLatestNginxImage, StartLocalNginxForExamples)
+
+	// build the wasm binary
+	err := runGoGenerateForExample(moduleName)
+	if err != nil {
+		return err
+	}
+	err = runGoModTidyForExample(moduleName)
+	if err != nil {
+		return err
+	}
+
+	return runGoBuildForExample(moduleName)
 }
 
 // Run the 'legacy-wasm-test-suite' building the tests cases using both the standard Go compiler and the 'tinygo' compiler.
