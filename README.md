@@ -46,6 +46,133 @@ Still a work in progress, but a lot of things are already functional. Some work 
 
 Please see the updated build instruction in the [Contributors Guide](https://github.com/vugu/vugu/blob/master/CONTRIBUTING.md)
 
+
+## Running the examples
+
+To run the examples you must have the [`mage`](https://magefile.org/) tool, `docker` and `goimports` installed. `vugu` uses `mage` to manage the build process.
+
+The simplest way to install `mage` is:
+
+```
+git clone https://github.com/magefile/mage
+cd mage
+go run bootstrap.go
+```
+
+You must run `mage` from the module root of `vugu`, this is the directory where the top level `go.mod` exists.
+
+You will also need the [`goimports`](https://pkg.go.dev/golang.org/x/tools/cmd/goimports) tool installed. It is very likely that you have this installed already, normally as part of an editor plugin. If not then the it can be installed with:
+
+```
+go install golang.org/x/tools/cmd/goimports@latest
+```
+
+In order to run the examples you will also need `docker` installed. If you don't have `docker` installed then follow the [docker install instructions](https://docs.docker.com/engine/install/#licensing). Each example will be served by a local `nginx` container.
+
+All of the examples are in the `examples` directory. Each sub-directory of `examples` contains a single example. Each example is it own Go module.
+
+Building and serving all of the examples is a simple as:
+
+```
+cd path/to/vugu
+mage examples
+```
+
+or
+
+```
+cd path/to/vugu
+mage -v examples
+```
+
+Each example will be served at a URL of the form
+
+```
+http://localhost:8888/<name-of-example-directory>
+```
+
+For example to see the `fetch-and-display` example the URL would be:
+
+```
+http://localhost:8888/fetch-and-display
+```
+
+Or if you only want to run a single example use:
+
+```
+cd path/to/vugu
+mage singleExample <name-of-example-module>
+```
+
+For example to serve just the `fetch-and-display` example the command would be:
+
+```
+cd path/to/vugu
+mage singleExample github.com/vugu/vugu/example/fetch-and-display
+```
+
+### Creating a new example
+
+If you need to create a new example the process is fairly straight forward. The critical point is to base it on a working example.
+
+For example
+
+```
+cd /path/to/vugu
+cp -r ./examples/fetch-and-display/ ./examples/my-new-example
+
+```
+
+The `cp` will copy everything in the directory including the critical local `.gitignore` file to the new example directory. Please make sire the `.gitignore` is present to ensure that vugu generated files are not submitted to the repository.
+
+You then need to edit the `./examples/my-new-example/go.mod` to change the module name. ***This step is critical.***
+
+The module name must be changed to match the example, so in this case the module name would be changed to `github.com/vugu/vugu/examples/my-new-example`
+
+You can then edit the `root.vugu`, `root.go` as needed to support the example, or add more `*.vugu` and `*.go` files as necessary.
+
+The files `main_wasm.go` and `wasm_exec.js` should not be edited.
+
+The examples `index.html` file will need to edited in two distinct places. The first is circa line 11
+
+```
+<script src="/fetch-and-display/wasm_exec.js"></script>
+```
+
+To change the path to reflect the name of the example. In this case:
+
+```
+<script src="/my-new-example/wasm_exec.js"></script>
+```
+
+
+The second change is similar but reflects the path of the `main.wasm` binary. This is circa line 29
+
+```
+WebAssembly.instantiateStreaming(fetch("/fetch-and-display/main.wasm"), go.importObject).then((result) => {
+```
+
+which in this case would be changed to:
+
+```
+WebAssembly.instantiateStreaming(fetch("/my-new-example/main.wasm"), go.importObject).then((result) => {
+```
+
+The new example can then be built and served with:
+
+```
+cd /path/to/vugu
+mage examples
+```
+
+Or individually like this:
+
+```
+cd /path/to/vugu
+mage singleExample github.com/vugu/vugu/example/my-new-example
+```
+
+
 ## Abbreviated Roadmap
 
 - [x] Move to a Mage based build
