@@ -165,14 +165,14 @@ if you only want to run a single wasm test, useful if only one test is failing o
 
 ```
 cd /path/to/vugu
-mage testSingleWasmTest <test-directory-name>
+mage testSingleWasmTest <test-module-name>
 ```
 
 For example to run the test `test-002-click` which is located in the `wasm-test-suite/test-002-click` directory its as simple as:
 
 ```
 cd /path/to/vugu
-mage testSingleWasmTest test-002-click
+mage testSingleWasmTest github.com/vugu/vugu/wasm-test-suite/test-002-click
 ```
 
 *Note: At present all of the `wasm` tests are built with the standard Go compiler. The `mage` based build does not yet support building the test cases with the `tinygo` compiler suite. Using the `tinygo` compiler suite to built these tests will be added again at a future date.* 
@@ -246,7 +246,7 @@ Or individually like this:
 
 ```
 cd /path/to/vugu
-mage testSingleWasmTest test-xxx-objective
+mage testSingleWasmTest github.com/vugu/vugu/wasm-test-suite/test-xxx-objective
 ```
 
 ## Running the `legacy-wasm-test-suite`
