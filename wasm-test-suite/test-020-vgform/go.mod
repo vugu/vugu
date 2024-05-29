@@ -11,7 +11,7 @@ require (
 )
 
 require (
-	github.com/chromedp/cdproto v0.0.0-20240512230644-b3296df1660c // indirect
+	github.com/chromedp/cdproto v0.0.0-20240524221637-55927c2a4565 // indirect
 	github.com/chromedp/sysutil v1.0.0 // indirect
 	github.com/gobwas/httphead v0.1.0 // indirect
 	github.com/gobwas/pool v0.2.1 // indirect
@@ -20,5 +20,5 @@ require (
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/vugu/xxhash v0.0.0-20191111030615-ed24d0179019 // indirect
 	golang.org/x/sys v0.20.0 // indirect
-	golang.org/x/text v0.15.0 // indirect
+	golang.org/x/text v0.14.0 // indirect
 )

@@ -7,7 +7,3 @@
 		<p>I haven't been clicked!</p>
 	</div>
 </div>
-
-<script type="application/x-go">
-	import "log"
-</script>
