@@ -8,13 +8,3 @@
         </div>
     </div>
 </section>
-
-<script type="application/x-go">
-
-    import "github.com/vugu/vgrouter"
-
-    type Create struct {
-    vgrouter.NavigatorRef
-    }
-
-</script>
