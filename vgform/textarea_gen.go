@@ -8,6 +8,7 @@ import "reflect"
 import "github.com/vugu/vjson"
 import "github.com/vugu/vugu"
 import js "github.com/vugu/vugu/js"
+import "log"
 
 func (c *Textarea) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 
@@ -39,3 +40,4 @@ var _ fmt.Stringer
 var _ reflect.Type
 var _ vjson.RawMessage
 var _ js.Value
+var _ log.Logger
