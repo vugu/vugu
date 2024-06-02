@@ -20,9 +20,9 @@ import (
 
 func attrFromHtml(attr html.Attribute) vugu.VGAttribute {
 	return vugu.VGAttribute{
-		Namespace:    attr.Namespace,
-		Key:          attr.OrigKey,
-		Val:          attr.Val,
+		Namespace: attr.Namespace,
+		Key:       attr.OrigKey,
+		Val:       attr.Val,
 	}
 }
 
@@ -40,10 +40,11 @@ func staticVGAttr(inAttr []html.Attribute) (ret []vugu.VGAttribute) {
 
 	for _, a := range inAttr {
 		switch {
-		case a.Key == "vg-if":
-		case a.Key == "vg-for":
-		case a.Key == "vg-key":
-		case a.Key == "vg-html":
+		// case a.Key == "vg-if":
+		// case a.Key == "vg-for":
+		// case a.Key == "vg-key":
+		// case a.Key == "vg-html":
+		case strings.HasPrefix(a.Key, "vg-"):
 		case strings.HasPrefix(a.Key, "."):
 		case strings.HasPrefix(a.Key, ":"):
 		case strings.HasPrefix(a.Key, "@"):
@@ -55,23 +56,23 @@ func staticVGAttr(inAttr []html.Attribute) (ret []vugu.VGAttribute) {
 	return ret
 }
 
-// func staticVGAttrx(inAttr []htmlx.Attribute) (ret []vugu.VGAttribute) {
+func vgSlotName(n *html.Node) string {
+	for _, a := range n.Attr {
+		if a.Key == "name" {
+			return a.Val
+		}
+	}
+	return ""
+}
 
-// 	for _, a := range inAttr {
-// 		switch {
-// 		case a.Key == "vg-if":
-// 		case a.Key == "vg-for":
-// 		case a.Key == "vg-html":
-// 		case strings.HasPrefix(a.Key, "."):
-// 		case strings.HasPrefix(a.Key, ":"):
-// 		case strings.HasPrefix(a.Key, "@"):
-// 		default:
-// 			ret = append(ret, attrFromHtmlx(a))
-// 		}
-// 	}
-
-// 	return ret
-// }
+func vgVarExpr(n *html.Node) string {
+	for _, a := range n.Attr {
+		if a.Key == "vg-var" {
+			return a.Val
+		}
+	}
+	return ""
+}
 
 func vgIfExpr(n *html.Node) string {
 	for _, a := range n.Attr {
@@ -135,39 +136,21 @@ func vgForExpr(n *html.Node) (vgForAttr, error) {
 	return vgForAttr{}, nil
 }
 
-// func vgForExprx(n *htmlx.Node) string {
-// 	for _, a := range n.Attr {
-// 		if a.Key == "vg-for" {
-
-// 			v := strings.TrimSpace(a.Val)
-
-// 			if !strings.Contains(v, " ") { // make it so `w` is a shorthand for `key, value := range w`
-// 				v = "key, value := range " + v
-// 			}
-
-// 			return v
-// 		}
-// 	}
-// 	return ""
-// }
-
 func vgHTMLExpr(n *html.Node) string {
 	for _, a := range n.Attr {
+		// vg-html and vg-content are the same thing,
+		// the name vg-content was introduced to call out
+		// the difference between Vue's v-html attribute
+		// which does not perform escaping.
 		if a.Key == "vg-html" {
+			return a.Val
+		}
+		if a.Key == "vg-content" {
 			return a.Val
 		}
 	}
 	return ""
 }
-
-// func vgHTMLExprx(n *htmlx.Node) string {
-// 	for _, a := range n.Attr {
-// 		if a.Key == "vg-html" {
-// 			return a.Val
-// 		}
-// 	}
-// 	return ""
-// }
 
 // extract ":attr" stuff from a node
 func dynamicVGAttrExpr(n *html.Node) (ret map[string]string, retKeys []string) {
@@ -216,6 +199,19 @@ func propVGAttrExpr(n *html.Node) (ret map[string]string, retKeys []string) {
 	}
 	sort.Strings(retKeys)
 	return
+}
+
+// returns vg-js-create and vg-js-populate
+func jsCallbackVGAttrExpr(n *html.Node) (ret map[string]string) {
+	for _, attr := range n.Attr {
+		if strings.HasPrefix(attr.OrigKey, "vg-js-") {
+			if ret == nil {
+				ret = make(map[string]string, 2)
+			}
+			ret[attr.OrigKey] = attr.Val
+		}
+	}
+	return ret
 }
 
 func vgDOMEventExprs(n *html.Node) (ret map[string]string, retKeys []string) {
@@ -339,4 +335,5 @@ func dedupAstFileImports(f *ast.File) {
 
 	}
 	f.Decls = outdecls
+
 }

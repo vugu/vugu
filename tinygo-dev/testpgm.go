@@ -16,7 +16,7 @@ func main() {
 	var jr domrender.JSRenderer
 
 	// log.Printf("hello there!")
-	fmt.Printf("hello testpgm: %v %v %v\n", r, be, jr)
-	fmt.Printf("hello testpgm: %v\n", jr)
+	fmt.Printf("hello testpgm: %v %v %v\n", r, be, jr) //nolint
+	fmt.Printf("hello testpgm: %v\n", jr)              //nolint
 	// println("blah blah")
 }

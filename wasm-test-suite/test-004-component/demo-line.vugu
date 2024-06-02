@@ -5,11 +5,3 @@
     color: green;
 }
 </style>
-        
-<script type="application/x-go">
-
-type DemoLine struct {
-    Num int `vugu:"data"`
-}
-
-</script>
