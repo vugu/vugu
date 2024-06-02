@@ -3,11 +3,3 @@
     <div class="demo-comp2-c" vg-html="c.NextCount()"></div>
 
 </div>
-
-<script type="application/x-go">
-
-type DemoComp2 struct {
-    CounterRef
-}
-
-</script>
