@@ -14,3 +14,4 @@ const VuguContainerNetworkName = "vugu-net"
 
 const WasmTestSuiteDir = "wasm-test-suite"
 const LegacyWasmTestSuiteDir = "legacy-wasm-test-suite"
+const ExamplesDir = "examples"

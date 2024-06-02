@@ -159,6 +159,72 @@ func runGoTestForTest(moduleName string) error {
 	return runFuncInModuleDir(moduleName, WasmTestSuiteDir, f)
 }
 
+func runGoGenerateInExampleDirs() error {
+	f := func() error {
+		return goCmdV("generate") // run in src dir
+	}
+	return runFuncInDir(ExamplesDir, f)
+}
+
+func runGoModTidyInExampleDirs() error {
+	f := func() error {
+		return goCmdV("mod", "tidy") // run in src dir
+	}
+	return runFuncInDir(ExamplesDir, f)
+}
+
+func runGoBuildInExampleDirs() error {
+	f := func() error {
+		envs := map[string]string{
+			"GOOS":   "js",
+			"GOARCH": "wasm",
+		}
+
+		// the test is defined as a module, so we need to use go list -m to find the module name
+		// go list will read and parse the local go.mod for us
+		module, err := goCmdCaptureOutput("list", "-m") // -m will print the module path
+		if err != nil {
+			return err
+		}
+		return goCmdWithV(envs, "build", "-o", "./main.wasm", module)
+	}
+	return runFuncInDir(ExamplesDir, f)
+}
+
+func runGoGenerateForExample(moduleName string) error {
+	f := func() error {
+		// cd into the directory and run go generate followed by go mod tidy
+		return goCmdV("generate") // run in src dir
+	}
+	return runFuncInModuleDir(moduleName, ExamplesDir, f)
+}
+
+func runGoModTidyForExample(moduleName string) error {
+	f := func() error {
+		// cd into the directory and run go generate followed by go mod tidy
+		return goCmdV("mod", "tidy") // run in src dir
+	}
+	return runFuncInModuleDir(moduleName, ExamplesDir, f)
+}
+
+func runGoBuildForExample(moduleName string) error {
+	f := func() error {
+		envs := map[string]string{
+			"GOOS":   "js",
+			"GOARCH": "wasm",
+		}
+
+		// the test is defined as a module, so we need to use go list -m to find the module name
+		// go list will read and parse the local go.mod for us
+		module, err := goCmdCaptureOutput("list", "-m") // -m will print the module path
+		if err != nil {
+			return err
+		}
+		return goCmdWithV(envs, "build", "-o", "./main.wasm", module)
+	}
+	return runFuncInModuleDir(moduleName, ExamplesDir, f)
+}
+
 func runFuncInDir(dir string, f func() error) error {
 	cwd, err := os.Getwd() //  cwd should be the module root
 	if err != nil {

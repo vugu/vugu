@@ -14,16 +14,16 @@ func cleanupContainers() {
 }
 
 func cleanupContainer(containerName string) error {
-	if err := dockerCmdV("stop", containerName); err != nil {
-		return err
-	}
+	dockerCmdV("stop", containerName)
 	// remove the vugu-nginx container - again ignore the error
-	return dockerCmdV("rm", containerName)
+	dockerCmdV("rm", containerName)
+	return nil
 }
 
 func cleanupContainerNetwork(networkName string) error {
 	// remove the vugu-nginx container - again ignore the error
-	return dockerCmdV("network", "rm", networkName)
+	_ = dockerCmdV("network", "rm", networkName)
+	return nil
 }
 
 func runGolangCiLint() error {
