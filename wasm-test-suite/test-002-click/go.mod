@@ -8,7 +8,7 @@ require (
 	github.com/chromedp/chromedp v0.9.5
 	github.com/stretchr/testify v1.9.0
 	github.com/vugu/vjson v0.0.0-20200505061711-f9cbed27d3d9
-	github.com/vugu/vugu v0.0.0-00010101000000-000000000000
+	github.com/vugu/vugu v0.3.5
 )
 
 require (
