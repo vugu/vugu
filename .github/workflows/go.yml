@@ -20,6 +20,9 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    - nane: Get tags
+      run: git fetch --tags origin
+
     - name: Set up Go
       uses: actions/setup-go@v5
       with:
