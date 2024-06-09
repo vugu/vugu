@@ -2,7 +2,7 @@ module github.com/vugu/vugu/wasm-test-suite/test-002-click
 
 replace github.com/vugu/vugu => ../..
 
-go 1.22.3
+go 1.22
 
 require (
 	github.com/chromedp/chromedp v0.9.5
