@@ -151,10 +151,18 @@ func TestWasm() error {
 	}
 
 	// build the wasm binary
+
+	// run go mod tidy initially, since deps are different before codegen
+	err = runGoModTidyInTestDirs()
+	if err != nil {
+		return err
+	}
+	// perform codegen with vugugen
 	err = runGoGenerateInTestDirs()
 	if err != nil {
 		return err
 	}
+	// run go mod tidy again in case deps have changed after codegen
 	err = runGoModTidyInTestDirs()
 	if err != nil {
 		return err
