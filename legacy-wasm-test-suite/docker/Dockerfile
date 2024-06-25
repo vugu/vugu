@@ -1,5 +1,5 @@
 
-FROM chromedp/headless-shell:latest
+FROM chromedp/headless-shell:125.0.6422.142
 
 RUN apt-get update && apt-get install dumb-init
 
