@@ -14,10 +14,6 @@ func goInstall(pkgName string) error {
 	return goCmdV("install", pkgName)
 }
 
-func goGenerate(pkgName string) error {
-	return goCmdV("generate", pkgName)
-}
-
 func goTest(pkgName string) error {
 	return goCmdV("test", "-v", pkgName)
 }
@@ -63,13 +59,6 @@ func testLegacyWasmTestSuite() error {
 	return goCmdV("test", "-v", "-timeout", "35m", "github.com/vugu/vugu/legacy-wasm-test-suite")
 }
 
-func runGoGenerateInTestDirs() error {
-	f := func() error {
-		return goCmdV("generate") // run in src dir
-	}
-	return runFuncInDir(WasmTestSuiteDir, f)
-}
-
 func runGoModTidyInTestDirs() error {
 	f := func() error {
 		return goCmdV("mod", "tidy") // run in src dir
@@ -108,14 +97,6 @@ func runGoTestInTestDirs() error {
 		return goCmdV("test", "-v", module)
 	}
 	return runFuncInDir(WasmTestSuiteDir, f)
-}
-
-func runGoGenerateForTest(moduleName string) error {
-	f := func() error {
-		// cd into the directory and run go generate followed by go mod tidy
-		return goCmdV("generate") // run in src dir
-	}
-	return runFuncInModuleDir(moduleName, WasmTestSuiteDir, f)
 }
 
 func runGoModTidyForTest(moduleName string) error {
@@ -159,13 +140,6 @@ func runGoTestForTest(moduleName string) error {
 	return runFuncInModuleDir(moduleName, WasmTestSuiteDir, f)
 }
 
-func runGoGenerateInExampleDirs() error {
-	f := func() error {
-		return goCmdV("generate") // run in src dir
-	}
-	return runFuncInDir(ExamplesDir, f)
-}
-
 func runGoModTidyInExampleDirs() error {
 	f := func() error {
 		return goCmdV("mod", "tidy") // run in src dir
@@ -189,14 +163,6 @@ func runGoBuildInExampleDirs() error {
 		return goCmdWithV(envs, "build", "-o", "./main.wasm", module)
 	}
 	return runFuncInDir(ExamplesDir, f)
-}
-
-func runGoGenerateForExample(moduleName string) error {
-	f := func() error {
-		// cd into the directory and run go generate followed by go mod tidy
-		return goCmdV("generate") // run in src dir
-	}
-	return runFuncInModuleDir(moduleName, ExamplesDir, f)
 }
 
 func runGoModTidyForExample(moduleName string) error {
