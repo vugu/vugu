@@ -31,26 +31,40 @@ func checkCmdExists(cmd string) bool {
 	return err == nil
 }
 
-func matchFilename(fn string) (bool, error) {
-	match, err := regexp.MatchString("^.*_gen[.]go$", fn)
-	// did we fail
-	if err != nil {
-		return match, err // error in the regex - so match is false
-	}
-	// did we match a file called "*_gen.go"?
-	// if we did we bail early
-	if match {
-		return match, err
-	}
-	// nope we didn't match "*_gen.go" do we match "*.wasm"
-	// return if we matched or not and any error
+func matchWasmFilename(fn string) (bool, error) {
 	return regexp.MatchString("^.*[.]wasm$", fn)
+}
+
+func matchGeneratedFilename(fn string) (bool, error) {
+	return regexp.MatchString("^.*_gen[.]go$", fn)
+}
+
+func deleteGeneratedWasmFiles(path string, d fs.DirEntry, err error) error {
+	// skip all directories
+	if !d.IsDir() {
+		match, err := matchWasmFilename(d.Name())
+		if err != nil {
+			return err
+		}
+		if match { // name contains only the base name i.e. the last part of the path inc the extension
+			// is this a dry run?
+			dryrun := os.Getenv("VUGU_MAGE_DRY_RUN")
+			if dryrun != "" {
+				// dry run set DO NOT DELETE
+				log.Printf("VUGU_MAGE_DRY_RUN set: Would have removed: %s\n", path)
+				return nil
+			}
+			// else remove the file - the full name is in path
+			return os.Remove(path)
+		}
+	}
+	return nil
 }
 
 func deleteGeneratedFiles(path string, d fs.DirEntry, err error) error {
 	// skip all directories
 	if !d.IsDir() {
-		match, err := matchFilename(d.Name())
+		match, err := matchGeneratedFilename(d.Name())
 		if err != nil {
 			return err
 		}
