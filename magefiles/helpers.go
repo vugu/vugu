@@ -9,6 +9,8 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
+
+	"github.com/magefile/mage/sh"
 )
 
 //------- utils ------------------------
@@ -81,4 +83,35 @@ func deleteGeneratedFiles(path string, d fs.DirEntry, err error) error {
 		}
 	}
 	return nil
+}
+
+func generatedFilesCheck(dir string) error {
+	cwd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = os.Chdir(cwd)
+	}()
+	err = os.Chdir(dir)
+	if err != nil {
+		return err
+	}
+	// run vugugen to regenerated the generated files. This will overwrite any existing files
+	err = sh.RunV("vugugen")
+	if err != nil {
+		return err
+	}
+	// now run go mod tidy
+	err = runGoModTidyInCurrentDir()
+	if err != nil {
+		return err
+	}
+	// now check the generated files are identical
+	err = gitDiffFiles()
+	if err != nil {
+		return err
+	}
+
+	return err
 }
