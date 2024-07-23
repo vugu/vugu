@@ -66,7 +66,14 @@ func Build() error {
 		return err
 	}
 	// install the vugufmt command by executing
-	return goInstall("github.com/vugu/vugu/cmd/vugufmt")
+	err = goInstall("github.com/vugu/vugu/cmd/vugufmt")
+	if err != nil {
+		return err
+	}
+
+	// sanity check that the generated files have been submitted, and that the go.mod and go.sum are
+	// as they should be post calling vugugen
+	return generatedFilesCheck("./vgform")
 }
 
 // Pulls the latest version of the 'golangci-lint' docker image. 'The 'vugu' project used 'golangci-lint' as its lint tool. See the Lint target
@@ -154,6 +161,12 @@ func TestWasm() error {
 		return err
 	}
 
+	// sanity check that we have what we expect
+	err = runGitDiffFilesInTestDirs()
+	if err != nil {
+		return err
+	}
+
 	err = runGoBuildInTestDirs()
 	if err != nil {
 		return err
@@ -219,6 +232,12 @@ func TestSingleWasmTest(moduleName string) error {
 		return err
 	}
 	err = runGoModTidyForTest(moduleName)
+	if err != nil {
+		return err
+	}
+
+	// sanity check that we have what we expect
+	err = runGitDiffFilesForTest(moduleName)
 	if err != nil {
 		return err
 	}
@@ -350,6 +369,12 @@ func Examples() error {
 		return err
 	}
 
+	// sanity check that we have what we expect
+	err = runGitDiffFilesInExampleDirs()
+	if err != nil {
+		return err
+	}
+
 	return runGoBuildInExampleDirs()
 }
 
@@ -380,6 +405,12 @@ func SingleExample(moduleName string) error {
 		return err
 	}
 	err = runGoModTidyForExample(moduleName)
+	if err != nil {
+		return err
+	}
+
+	// sanity check that we have what we expect
+	err = runGitDiffFilesForExample(moduleName)
 	if err != nil {
 		return err
 	}

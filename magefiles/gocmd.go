@@ -59,11 +59,12 @@ func testLegacyWasmTestSuite() error {
 	return goCmdV("test", "-v", "-timeout", "35m", "github.com/vugu/vugu/legacy-wasm-test-suite")
 }
 
+func runGoModTidyInCurrentDir() error {
+	return goCmdV("mod", "tidy") // run in current dir
+}
+
 func runGoModTidyInTestDirs() error {
-	f := func() error {
-		return goCmdV("mod", "tidy") // run in src dir
-	}
-	return runFuncInDir(WasmTestSuiteDir, f)
+	return runFuncInDir(WasmTestSuiteDir, runGoModTidyInCurrentDir)
 }
 
 func runGoBuildInTestDirs() error {
