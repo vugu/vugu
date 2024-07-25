@@ -52,8 +52,38 @@ func AllWithLegacyWasm() error {
 	return nil
 }
 
+// Like 'AllWithLegacy' but additionally confirm that the generated files that should have been committed are correct. Intended to be used by the GitHub Action
+func AllGitHubAction() error {
+	mg.SerialDeps(
+		BuildWithGeneratedFilesCheck,
+		Lint,
+		Test,
+		TestWasmWithGeneratedFilesCheck,
+		TestLegacyWasm,
+	)
+	return nil
+}
+
 // Build the 'vugu' package, the 'vugugen' and 'vugufmt' commands
 func Build() error {
+	mg.SerialDeps(Clean)
+	// install the vugu module by executing
+	err := goInstall("github.com/vugu/vugu")
+	if err != nil {
+		return err
+	}
+	// install the vugugen command by executing
+	err = goInstall("github.com/vugu/vugu/cmd/vugugen")
+	if err != nil {
+		return err
+	}
+	// install the vugufmt command by executing
+	err = goInstall("github.com/vugu/vugu/cmd/vugufmt")
+	return err
+}
+
+// Build the 'vugu' package, the 'vugugen' and 'vugufmt' and additionally confirm that the generated files that should have been committed are correct.
+func BuildWithGeneratedFilesCheck() error {
 	mg.SerialDeps(Clean)
 	// install the vugu module by executing
 	err := goInstall("github.com/vugu/vugu")
@@ -161,6 +191,65 @@ func TestWasm() error {
 		return err
 	}
 
+	err = runGoBuildInTestDirs()
+	if err != nil {
+		return err
+	}
+
+	return runGoTestInTestDirs()
+	// cleanup via the deferred functions
+}
+
+// Like TestWasm but additionally confirm that the generated files that should have been committed are correct.
+func TestWasmWithGeneratedFilesCheck() error {
+	mg.SerialDeps(Build, PullLatestNginxImage, PullLatestChromeDpImage)
+	cleanupContainers()
+	// create the container network named "vugu-net"
+	err := createContainerNetwork(VuguContainerNetworkName)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = cleanupContainerNetwork(VuguContainerNetworkName)
+	}()
+
+	// start the nginx container and attach it to the new vugu-net network
+	err = startNginxContainer(WasmTestSuiteDir)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = cleanupContainer(VuguNginxContainerName)
+	}()
+	// add the vugu-ngix container to the defautl bridgenetwork as well (so the container has outbound internet access)
+	err = connectContainerToHostNetwork(VuguNginxContainerName)
+	if err != nil {
+		return err
+	}
+	// start the chromedp container
+	err = startChromeDpContainer()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = cleanupContainer(VuguChromeDpContainerName)
+	}()
+	// add the vugu-chromdp container to the default bridgenetwork as well (so the container has outbound internet access)
+	err = connectContainerToHostNetwork(VuguChromeDpContainerName)
+	if err != nil {
+		return err
+	}
+
+	// build the wasm binary
+	err = runVugugenInTestDirs()
+	if err != nil {
+		return err
+	}
+	err = runGoModTidyInTestDirs()
+	if err != nil {
+		return err
+	}
+
 	// sanity check that we have what we expect
 	err = runGitDiffFilesInTestDirs()
 	if err != nil {
@@ -188,6 +277,65 @@ func TestWasm() error {
 // to run the router test case.
 // The 'wasm' will be built with the standard Go compiler.
 func TestSingleWasmTest(moduleName string) error {
+	mg.SerialDeps(Build, PullLatestNginxImage, PullLatestChromeDpImage)
+	cleanupContainers()
+	// create the container network named "vugu-net"
+	err := createContainerNetwork(VuguContainerNetworkName)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = cleanupContainerNetwork(VuguContainerNetworkName)
+	}()
+
+	// start the nginx container and attach it to the new vugu-net network
+	err = startNginxContainer(WasmTestSuiteDir)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = cleanupContainer(VuguNginxContainerName)
+	}()
+	// add the vugu-ngix container to the defautl bridgenetwork as well (so the container has outbound internet access)
+	err = connectContainerToHostNetwork(VuguNginxContainerName)
+	if err != nil {
+		return err
+	}
+	// start the chromedp container
+	err = startChromeDpContainer()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = cleanupContainer(VuguChromeDpContainerName)
+	}()
+	// add the vugu-chromdp container to the default bridgenetwork as well (so the container has outbound internet access)
+	err = connectContainerToHostNetwork(VuguChromeDpContainerName)
+	if err != nil {
+		return err
+	}
+
+	// build the wasm binary
+	err = runVugugenForTest(moduleName)
+	if err != nil {
+		return err
+	}
+	err = runGoModTidyForTest(moduleName)
+	if err != nil {
+		return err
+	}
+
+	err = runGoBuildForTest(moduleName)
+	if err != nil {
+		return err
+	}
+
+	return runGoTestForTest(moduleName)
+	// cleanup via the deferred functions
+}
+
+// Like TestSingleWasm but additionally confirm that the generated files that should have been committed are correct.
+func TestSingleWasmTestWithGeneratedFilesCheck(moduleName string) error {
 	mg.SerialDeps(Build, PullLatestNginxImage, PullLatestChromeDpImage)
 	cleanupContainers()
 	// create the container network named "vugu-net"
@@ -369,6 +517,25 @@ func Examples() error {
 		return err
 	}
 
+	return runGoBuildInExampleDirs()
+}
+
+// Like Examples but additionally confirm that the generated files that should have been committed are correct.
+func ExamplesWithGeneratedFilesCheck() error {
+	mg.SerialDeps(Build, PullLatestNginxImage, StartLocalNginxForExamples)
+	log.Printf("After StartLocalNginxForExasmples")
+	//cleanupContainers()
+	log.Printf("After cleanupContainers")
+	// build the wasm binary
+	err := runVugugenInExampleDirs()
+	if err != nil {
+		return err
+	}
+	err = runGoModTidyInExampleDirs()
+	if err != nil {
+		return err
+	}
+
 	// sanity check that we have what we expect
 	err = runGitDiffFilesInExampleDirs()
 	if err != nil {
@@ -397,6 +564,23 @@ func Examples() error {
 //
 // The 'wasm' files are built using the standard Go compiler.
 func SingleExample(moduleName string) error {
+	mg.SerialDeps(Build, PullLatestNginxImage, StartLocalNginxForExamples)
+
+	// build the wasm binary
+	err := runVugugenForExample(moduleName)
+	if err != nil {
+		return err
+	}
+	err = runGoModTidyForExample(moduleName)
+	if err != nil {
+		return err
+	}
+
+	return runGoBuildForExample(moduleName)
+}
+
+// Like SingleExample but additionally confirm that the generated files that should have been committed are correct.
+func SingleExampleWithGeneratedFilesCheck(moduleName string) error {
 	mg.SerialDeps(Build, PullLatestNginxImage, StartLocalNginxForExamples)
 
 	// build the wasm binary

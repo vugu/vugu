@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/magefile/mage/sh"
 )
@@ -24,11 +23,15 @@ func runGitDiffFilesForExample(moduleName string) error {
 }
 
 func gitDiffFiles() error {
-	out, err := gitCmdCaptureOutput("diff", "--quiet")
+	err := gitCmdV("diff", "--quiet") // --quiet surpresses all output - see "git hulp diff" so we don't need gitCmdCombinedOutput here
 	if err != nil {
-		return fmt.Errorf("git diff --quiet fails with %q\n%q\n", err, out)
-	} else {
-		log.Printf("As expected err is nil. No differences found\n")
+		// the diff failed so return the output of "git status" to indicate which files have changed.
+		// The contributor can then determin the actual change
+		out, statusErr := gitCmdCaptureOutput("status")
+		if statusErr != nil {
+			return fmt.Errorf("git diff --quiet failed with: %s\ngit status failed with: %s\nOutput follows:\n%s\n", err, statusErr, out)
+		}
+		return fmt.Errorf("The git repo is dirty. Where these files committed to the repository after `vugugen` and `go mod tidy` had been run?\ngit status output:\n%s\n", out)
 	}
 	return err
 }
