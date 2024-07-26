@@ -41,4 +41,4 @@ jobs:
       run: mage --version
 
     - name: Build and test vugu including the legecy wasm test suite
-      run: mage -v AllWithLegacyWasm
+      run: mage -v AllGithubAction
