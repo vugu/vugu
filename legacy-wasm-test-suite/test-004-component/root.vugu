@@ -1,0 +1,46 @@
+<html>
+    <head>
+        <title>Test page</title>
+        <link rel="stylesheet" 
+            href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" 
+            integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" 
+            crossorigin="anonymous">
+    </head>
+    <body>
+
+        <div class="test-div" id="testdiv">
+
+            <ul>
+                <main:DemoLine vg-for="i := 0; i < c.ItemCount; i++" vg-key="i" :Num="i"></main:DemoLine>
+            </ul>
+
+            <button id="addbtn" @click="c.OnAdd()">Add</button>
+
+        </div>
+                
+    </body>
+</html>
+
+<style>
+#test_div_id {
+    background: #ddd;
+}
+</style>
+
+<script type="application/x-go">
+
+type Root struct {
+    ItemCount int `vugu:"data"`
+}
+
+func (c *Root) BeforeBuild() {
+    if c.ItemCount == 0 {
+        c.ItemCount = 3
+    }
+}
+
+func (c *Root) OnAdd() {
+    c.ItemCount++
+}
+
+</script>

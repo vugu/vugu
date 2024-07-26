@@ -57,6 +57,9 @@ func New(mountPointSelector string) (*JSRenderer, error) {
 		return nil
 	})
 
+	// enable debug logging
+	// ret.instructionList.logWriter = os.Stdout
+
 	ret.eventHandlerBuffer = make([]byte, 16384)
 	// ret.eventHandlerTypedArray = js.TypedArrayOf(ret.eventHandlerBuffer)
 
@@ -64,6 +67,11 @@ func New(mountPointSelector string) (*JSRenderer, error) {
 		if len(args) != 1 {
 			panic(fmt.Errorf("eventHandlerFunc got arg slice not exactly 1 element in length: %#v", args))
 		}
+		bufferLength := args[0].Length()
+		if cap(ret.eventHandlerBuffer) < bufferLength+1 {
+			ret.eventHandlerBuffer = make([]byte, bufferLength+1)
+		}
+		//log.Println(cap(ret.eventHandlerBuffer))
 		n := js.CopyBytesToGo(ret.eventHandlerBuffer, args[0])
 		if n >= len(ret.eventHandlerBuffer) {
 			panic(errors.New("event data is too large, cannot continue, len: " + strconv.Itoa(n)))
@@ -75,6 +83,9 @@ func New(mountPointSelector string) (*JSRenderer, error) {
 
 	// wire up the event handler func and the array that we used to communicate with instead of js.Value
 	// ret.window.Call("vuguSetEventHandlerAndBuffer", ret.eventHandlerFunc, ret.eventHandlerTypedArray)
+
+	// wire up callback handler
+	ret.window.Call("vuguSetCallbackHandler", js.FuncOf(ret.handleCallback))
 
 	// wire up the event handler func
 	ret.window.Call("vuguSetEventHandler", ret.eventHandlerFunc)
@@ -95,6 +106,9 @@ func New(mountPointSelector string) (*JSRenderer, error) {
 type jsRenderState struct {
 	// stores positionID to slice of DOMEventHandlerSpec
 	domHandlerMap map[string][]vugu.DOMEventHandlerSpec
+
+	// callback stuff is handled by callbackManager
+	callbackManager callbackManager
 }
 
 func newJsRenderState() *jsRenderState {
@@ -117,12 +131,19 @@ type JSRenderer struct {
 
 	instructionBuffer   []byte   // our local instruction buffer
 	instructionBufferJS js.Value // a Uint8Array on the JS side that we copy into
-	// instructionTypedArray js.TypedArray
-	instructionList *instructionList
+	instructionList     *instructionList
 
 	window js.Value
 
 	jsRenderState *jsRenderState
+
+	// manages the Rendered lifecycle callback stuff
+	lifecycleStateMap map[interface{}]lifecycleState
+	lifecyclePassNum  uint8
+}
+
+type lifecycleState struct {
+	passNum uint8
 }
 
 // EventEnv returns an EventEnv that can be used for synchronizing updates.
@@ -137,7 +158,6 @@ func (r *JSRenderer) Release() {
 	// r.instructionTypedArray.Release()
 }
 
-// Render implements Renderer.
 func (r *JSRenderer) render(buildResults *vugu.BuildResults) error {
 
 	bo := buildResults.Out
@@ -158,113 +178,15 @@ func (r *JSRenderer) render(buildResults *vugu.BuildResults) error {
 		return errors.New("BuildOut.Out[0].Type is not vugu.ElementNode: " + strconv.Itoa(int(bo.Out[0].Type)))
 	}
 
-	// log.Printf("BuildOut: %#v", b)
-
-	// NOTE:
-	// We need two different strategies for rendering elements in <html> or <head>
-	// as opposed to the stuff once we're inside <body>.  If we have a specific element
-	// we're rendering into we have complete control and can just replace it out entirely.
-	// But for <head> we want things like existing meta tags, title tags, and script includes not be removed
-	// when we sync.
-	// Interestingly enough, we also want to override the title tag (not add a second one).
-	// Meta tags likewise it would make the most sense to selectively replace them by their name attribute.
-	// So what we're headed for is something like we record what the <head> section looked like at startup,
-	// and then based on the tag type we have different handlings - like meta tags we set by name, title
-	// tag we always update if present, script tags we just avoid duplication if the tag is already there
-	// exactly the same or with the same src, and so on.  But then you if you just drop in some random
-	// crap it will just be added.
-	// This is fine for <head> - it's easy to identify. But what about script tags added toward the bottom
-	// of the page just inside the body tag.  Potentially we could get away with just nuking the script tags,
-	// but what if someone puts in in-line styles in a style tag - replacing it would definitely remove
-	// the styling - unexpected for sure.  There needs to be some well-defined rules about this.
-	// Perhaps we have separately logic for the <head>, and then otherwise we still have a designated
-	// element within body which is what we target.  It should be possible to just make this the body
-	// tag if nobody care, but if they need to be able to do other custom stuff outside of head, it should
-	// be possible - while still controlling title and meta tags etc from the Vugu app.
-
-	// const (
-	// 	modeHTML          int = iota // in html tag
-	// 	modeHead                     // in head tag
-	// 	modeBodyUnmounted            // in body tag but not yet mounted
-	// 	modeMounted                  // in the mounted tag (could be body or something else)
-	// )
-
-	// var mode int
-	// switch strings.ToLower(bo.Doc.Data) {
-	// case "html":
-	// 	mode = modeHTML
-	// case "head":
-	// 	return errors.New("BuildOut.Doc is a head element, use html instead")
-	// case "body":
-	// 	mode = modeBodyUnmounted
-	// default:
-	// 	mode = modeBodyUnmounted
-	// }
-
-	// _ = mode
-
-	// TODO: we need to make sure this call path back and forth to the outside for DOM syncing is
-	// efficient - it determines Vugu's overall performance characteristics to a large degree.
-	// Do some tests and see what the performance difference is if pass data directly using Call()
-	// a number of times vs shipping JSON over in an ArrayBuffer and parse and process it in JS.
-	// NOTE: doing Call() all over the place and getting/passing various element referances around
-	// causes a memory leak, since the Go code has no way of gargage collecting the various references.
-	// And while the situation should improve at some point it may be a while and it might be prudent.
-	// to use a solution that does not leak (as much).  Will give a more stable feel until full DOM
-	// access is figured out in WASM.
-
-	// Test results:
-
-	// 25us per call
-	// g.Call("eval", "function testf1(a) { return a + 'f1'; }")
-
-	// 42us per call
-	// g.Call("eval", "function testf1(a) { var e = document.createElement('div'); e.innerHTML = a + 'f1'; document.body.appendChild(e); }")
-
-	// Conclusion: it takes twice as long to call from Go into JS as it does to create and attach an HTML element.
-	// Ergo, we need to minimize the number of Call()s we do.
-
-	// Approach: used a typed array buffer to produce a sort of simple set of instructions that describe how to synchronize
-	// the DOM tree.  The Go code can optimize away nodes that don't need to be changed, but if they do then it writes
-	// an instruction into the queue - once this queue/buffer is filled up with an appropriate number of instructions, a
-	// single call is done over to JS, which reads and executes these instructions.
-	// It's a bit of work, but it will force us to break down and think through the synchronization and the result
-	// should be much much faster.
-	// (While we're at it, we should also see if we can optimize the callback path for events - so those use a preallocated
-	// buffer as well and avoid accumulating references for each event)
-
-	// r.instructionBuffer[0] = 7
-	// r.instructionBuffer[1] = 9
-
 	// always make sure we have at least a non-nil render state
 	if r.jsRenderState == nil {
 		r.jsRenderState = newJsRenderState()
 	}
 
-	// log.Printf("BuildOut: %#v", bo)
+	state := r.jsRenderState
 
-	el := bo.Out[0]
-	_ = el
-	// log.Printf("el: %#v", el)
-
-	// NOTE: Mount rules:
-	// <body>, <head> forbidden as top level component tag
-	// * if component tag is not <html>, then whatever it is gets mounted at mount point
-	// * if component tag is <html>, then html attrs are sync, head elements are synced, body attrs are synced,
-	//   and first element inside <body> is mounted at mount point
-
-	// how do we do this mountpoint thing, it's pretty important...
-
-	// start cases:
-	// * starts with html tag
-	// * starts with something else
-	// loop cases:
-	// * in html, waiting for head or body
-	// * in head, needs careful replacement
-	// * in body, waiting for mount point
-	// * inside mounted aread, main dom sync logic
-
-	state := newJsRenderState()
+	state.callbackManager.startRender()
+	defer state.callbackManager.doneRender()
 
 	// TODO: move this next chunk out to it's own func at least
 
@@ -345,7 +267,34 @@ func (r *JSRenderer) render(buildResults *vugu.BuildResults) error {
 		return err
 	}
 
-	r.jsRenderState = state
+	// handle Rendered lifecycle callback
+	if r.lifecycleStateMap == nil {
+		r.lifecycleStateMap = make(map[interface{}]lifecycleState, len(bo.Components))
+	}
+	r.lifecyclePassNum++
+
+	var rctx renderedCtx
+
+	for _, c := range bo.Components {
+
+		rctx = renderedCtx{eventEnv: r.eventEnv}
+
+		st, ok := r.lifecycleStateMap[c]
+		rctx.first = !ok
+		st.passNum = r.lifecyclePassNum
+
+		invokeRendered(c, &rctx)
+
+		r.lifecycleStateMap[c] = st
+
+	}
+
+	// now purge from lifecycleStateMap anything not touched in this pass
+	for k, st := range r.lifecycleStateMap {
+		if st.passNum != r.lifecyclePassNum {
+			delete(r.lifecycleStateMap, k)
+		}
+	}
 
 	return nil
 
@@ -501,6 +450,36 @@ func (r *JSRenderer) visitSyncNode(state *jsRenderState, bo *vugu.BuildOut, br *
 		return r.visitSyncNode(state, compBuildOut, br, compBuildOut.Out[0], positionID)
 	}
 
+	// check for template (used by vg-template and vg-slot) in which case we process the children directly and ignore n
+	if n.IsTemplate() {
+
+		childIndex := 1
+		for nchild := n.FirstChild; nchild != nil; nchild = nchild.NextSibling {
+
+			// use a different character here for the position to ensure it's unique
+			childPositionID := append(positionID, []byte(fmt.Sprintf("_t_%d", childIndex))...)
+
+			err = r.visitSyncNode(state, bo, br, nchild, childPositionID)
+			if err != nil {
+				return err
+			}
+
+			// if there are more children, advance to the next
+			if nchild.NextSibling != nil {
+				err = r.instructionList.writeMoveToNextSibling()
+				if err != nil {
+					return err
+				}
+
+			}
+
+			childIndex++
+		}
+
+		// element is fully handled
+		return nil
+	}
+
 	switch n.Type {
 	case vugu.ElementNode:
 		// check if this element has a namespace set
@@ -537,6 +516,19 @@ func (r *JSRenderer) visitSyncElementEtc(state *jsRenderState, bo *vugu.BuildOut
 		return r.instructionList.writeSetInnerHTML(*n.InnerHTML)
 	}
 
+	// tell callbackManager about the create and populate functions
+	// (if present, otherwise this is a nop and will return 0,0)
+	cid, pid := state.callbackManager.addCreateAndPopulateHandlers(n.JSCreateHandler, n.JSPopulateHandler)
+
+	// for vg-js-create, send an instruction to call us back when this element is created
+	// (handled by callbackManager)
+	if cid != 0 {
+		err := r.instructionList.writeCallbackLastElement(cid)
+		if err != nil {
+			return err
+		}
+	}
+
 	if n.FirstChild != nil {
 
 		err = r.instructionList.writeMoveToFirstChild()
@@ -553,6 +545,7 @@ func (r *JSRenderer) visitSyncElementEtc(state *jsRenderState, bo *vugu.BuildOut
 			if err != nil {
 				return err
 			}
+			// log.Printf("GOT HERE X: %#v", n)
 			err = r.instructionList.writeMoveToNextSibling()
 			if err != nil {
 				return err
@@ -561,6 +554,15 @@ func (r *JSRenderer) visitSyncElementEtc(state *jsRenderState, bo *vugu.BuildOut
 		}
 
 		err = r.instructionList.writeMoveToParent()
+		if err != nil {
+			return err
+		}
+	}
+
+	// for vg-js-populate, send an instruction to call us back again with the populate flag for this same one
+	// (handled by callbackManager)
+	if pid != 0 {
+		err := r.instructionList.writeCallback(pid)
 		if err != nil {
 			return err
 		}
@@ -633,6 +635,10 @@ func (r *JSRenderer) syncElement(state *jsRenderState, n *vugu.VGNode, positionI
 // 	return nil
 // }
 
+func (r *JSRenderer) handleCallback(this js.Value, args []js.Value) interface{} {
+	return r.jsRenderState.callbackManager.callback(this, args)
+}
+
 func (r *JSRenderer) handleDOMEvent() {
 
 	strlen := binary.BigEndian.Uint32(r.eventHandlerBuffer[:4])
@@ -676,7 +682,7 @@ func (r *JSRenderer) handleDOMEvent() {
 
 	r.eventRWMU.Lock()
 	handlers := r.jsRenderState.domHandlerMap[eventDetail.PositionID]
-	var f func(*vugu.DOMEvent)
+	var f func(vugu.DOMEvent)
 	for _, h := range handlers {
 		if h.EventType == eventDetail.EventType && h.Capture == eventDetail.Capture {
 			f = h.Func
