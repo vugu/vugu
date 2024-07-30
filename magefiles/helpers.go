@@ -9,8 +9,6 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
-
-	"github.com/magefile/mage/sh"
 )
 
 //------- utils ------------------------
@@ -41,10 +39,30 @@ func matchGeneratedFilename(fn string) (bool, error) {
 	return regexp.MatchString("^.*_gen[.]go$", fn)
 }
 
-func deleteGeneratedWasmFiles(path string, d fs.DirEntry, err error) error {
+type Matcher interface {
+	matchFilename(fn string) (bool, error)
+}
+
+type wasmFilenameMatcher struct {
+	Matcher
+}
+
+func (m *wasmFilenameMatcher) matchFilename(fn string) (bool, error) {
+	return matchWasmFilename(fn)
+}
+
+type generatedFilenameMatcher struct {
+	Matcher
+}
+
+func (m *generatedFilenameMatcher) matchFilename(fn string) (bool, error) {
+	return matchGeneratedFilename(fn)
+}
+
+func deleteGenerated(path string, d fs.DirEntry, err error, m Matcher) error {
 	// skip all directories
 	if !d.IsDir() {
-		match, err := matchWasmFilename(d.Name())
+		match, err := m.matchFilename(d.Name())
 		if err != nil {
 			return err
 		}
@@ -61,28 +79,17 @@ func deleteGeneratedWasmFiles(path string, d fs.DirEntry, err error) error {
 		}
 	}
 	return nil
+
+}
+
+func deleteGeneratedWasmFiles(path string, d fs.DirEntry, err error) error {
+	m := new(wasmFilenameMatcher)
+	return deleteGenerated(path, d, err, m)
 }
 
 func deleteGeneratedFiles(path string, d fs.DirEntry, err error) error {
-	// skip all directories
-	if !d.IsDir() {
-		match, err := matchGeneratedFilename(d.Name())
-		if err != nil {
-			return err
-		}
-		if match { // name contains only the base name i.e. the last part of the path inc the extension
-			// is this a dry run?
-			dryrun := os.Getenv("VUGU_MAGE_DRY_RUN")
-			if dryrun != "" {
-				// dry run set DO NOT DELETE
-				log.Printf("VUGU_MAGE_DRY_RUN set: Would have removed: %s\n", path)
-				return nil
-			}
-			// else remove the file - the full name is in path
-			return os.Remove(path)
-		}
-	}
-	return nil
+	m := new(generatedFilenameMatcher)
+	return deleteGenerated(path, d, err, m)
 }
 
 func generatedFilesCheck(dir string) error {
@@ -98,7 +105,7 @@ func generatedFilesCheck(dir string) error {
 		return err
 	}
 	// run vugugen to regenerated the generated files. This will overwrite any existing files
-	err = sh.RunV("vugugen")
+	err = runVugugenInCurrentDir()
 	if err != nil {
 		return err
 	}
@@ -108,10 +115,5 @@ func generatedFilesCheck(dir string) error {
 		return err
 	}
 	// now check the generated files are identical
-	err = gitDiffFiles()
-	if err != nil {
-		return err
-	}
-
-	return err
+	return gitDiffFiles()
 }
