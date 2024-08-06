@@ -55,9 +55,10 @@ func createContainerNetwork(networkName string) error {
 
 func startNginxContainer(dirToServe string) error {
 	// note we must prefix "./" to the dirToServe as the mount requires an absolute path
-	mountArg := "type=bind,source=./" + dirToServe + ",target=/usr/share/nginx/html,readonly"
+	htmlMountArg := "type=bind,source=./" + dirToServe + ",target=/usr/share/nginx/html,readonly"
+	configMountArg := "type=bind,source=./wasm-test-suite/nginx-test.conf,target=/usr/share/nginx/config/config.d/nginx-test.conf,readonly"
 	// start the nginx container and attach it to the new vugu-net network
-	return dockerCmdV("run", "--name", VuguNginxContainerName, "--network", VuguContainerNetworkName, "--mount", mountArg, "-p", "8888:80", "-d", "nginx")
+	return dockerCmdV("run", "--name", VuguNginxContainerName, "--network", VuguContainerNetworkName, "--mount", htmlMountArg, "--mount", configMountArg, "-p", "8888:80", "-d", "nginx")
 }
 
 func startLocalNginxContainer(dirToServe string) error {
