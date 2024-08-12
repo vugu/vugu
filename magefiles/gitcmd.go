@@ -1,3 +1,5 @@
+//go:build mage
+
 package main
 
 import (
@@ -5,22 +7,6 @@ import (
 
 	"github.com/magefile/mage/sh"
 )
-
-func runGitDiffFilesInTestDirs() error {
-	return runFuncInDir(WasmTestSuiteDir, gitDiffFiles)
-}
-
-func runGitDiffFilesForTest(moduleName string) error {
-	return runFuncInModuleDir(moduleName, WasmTestSuiteDir, gitDiffFiles)
-}
-
-func runGitDiffFilesInExampleDirs() error {
-	return runFuncInDir(ExamplesDir, gitDiffFiles)
-}
-
-func runGitDiffFilesForExample(moduleName string) error {
-	return runFuncInModuleDir(moduleName, ExamplesDir, gitDiffFiles)
-}
 
 func gitDiffFiles() error {
 	err := gitCmdV("diff", "--quiet") // --quiet surpresses all output - see "git hulp diff" so we don't need gitCmdCombinedOutput here
