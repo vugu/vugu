@@ -112,19 +112,19 @@ func startContainerForExamples() error {
 func startNginxContainer(containerName, port, dirToServe string) error {
 	// note we must prefix "./" to the dirToServe as the mount requires an absolute path
 	htmlMountArg := "type=bind,source=./" + dirToServe + ",target=/usr/share/nginx/html,readonly"
-	configMountArg := "type=bind,source=./wasm-test-suite/nginx-test.conf,target=/usr/share/nginx/config/config.d/nginx-test.conf,readonly"	
+	configMountArg := "type=bind,source=./wasm-test-suite/nginx-test.conf,target=/usr/share/nginx/config/config.d/nginx-test.conf,readonly"
 	portArg := port + ":80"
 	// start the nginx container and attached it to the default hosts bridge network
-	return dockerCmdV("run", "--name", containerName, "--mount", htmlmountArg, "--mount", configMountArg, "-p", portArg, "-d", "nginx")
+	return dockerCmdV("run", "--name", containerName, "--mount", htmlMountArg, "--mount", configMountArg, "-p", portArg, "-d", "nginx")
 }
 
 func startNginxContainerWithNetwork(containerName, port, dirToServe, networkName string) error {
 	// note we must prefix "./" to the dirToServe as the mount requires an absolute path
 	htmlMountArg := "type=bind,source=./" + dirToServe + ",target=/usr/share/nginx/html,readonly"
-	configMountArg := "type=bind,source=./wasm-test-suite/nginx-test.conf,target=/usr/share/nginx/config/config.d/nginx-test.conf,readonly"	
+	configMountArg := "type=bind,source=./wasm-test-suite/nginx-test.conf,target=/usr/share/nginx/config/config.d/nginx-test.conf,readonly"
 	portArg := port + ":80"
 	// start the nginx container and attach it to the new vugu-net network
-	return dockerCmdV("run", "--name", containerName, "--network", networkName, "--mount", htmlmountArg, "--mount", configMountArg, "-p", portArg, "-d", "nginx")
+	return dockerCmdV("run", "--name", containerName, "--network", networkName, "--mount", htmlMountArg, "--mount", configMountArg, "-p", portArg, "-d", "nginx")
 }
 
 func dockerPullImage(imageName string) error {
