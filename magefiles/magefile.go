@@ -497,3 +497,39 @@ func TestLegacyWasm() error {
 	defer stopLegacyWasmTestSuiteContainer()
 	return testLegacyWasmTestSuite()
 }
+
+// Update all of the dependencies by running "go get -u -t <module-name> for every module - the root vugu module, the wasm-test-suite modules and the example modules"
+func UpgradeAllDependencies() error {
+	mg.SerialDeps(UpgradeRootDependencies, UpgradeWasmTestSuiteDependencies, UpgradeExampleDependencies)
+	modules, err := modulesUnderDir("./") // we want to run this in the vugu module root - path MUST tbe relative ofr moduleUnderDir to resolve it correctly
+	if err != nil {
+		return err
+	}
+	// loop ove reach module dir
+	for _, module := range modules {
+		// build the wasm binary
+		err = updateModuleDependencies(module)
+		if err != nil {
+			return err
+		}
+	}
+	// cleanup via the deferred functions
+	return err // must be nil at this point
+
+}
+
+// Like UpgradeAllDependencies but only for the root vugu module
+func UpgradeRootDependencies() error {
+	mg.SerialDeps(Build)
+	return upgradeModuleDependencies("./") // we want to run this in the vugu module root - path MUST tbe relative ofr moduleUnderDir to resolve it correctly
+}
+
+// Like UpgradeAllDependencies but only for the wasm test suite modules
+func UpgradeWasmTestSuiteDependencies() error {
+	return upgradeModuleDependencies(WasmTestSuiteDir)
+}
+
+// Like UpgradeAllDependencies but only for the examples modules
+func UpgradeExampleDependencies() error {
+	return upgradeModuleDependencies(ExamplesDir)
+}

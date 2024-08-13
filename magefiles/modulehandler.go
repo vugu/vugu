@@ -18,6 +18,23 @@ func buildModule(module moduleData, withGeneratedFileCheck bool) error {
 	return doBuildAndTestModule(module, false, withGeneratedFileCheck)
 }
 
+func upgradeModuleDependencies(dir string) error {
+	modules, err := modulesUnderDir(dir)
+	if err != nil {
+		return err
+	}
+	// loop ove reach module dir
+	for _, module := range modules {
+		// build the wasm binary
+		err = updateModuleDependencies(module)
+		if err != nil {
+			return err
+		}
+	}
+	// cleanup via the deferred functions
+	return err // must be nil at this point
+}
+
 func doBuildAndTestModule(module moduleData, withTests bool, withGeneratedFileCheck bool) error {
 	err := runVugugenInModuleDir(module)
 	if err != nil {
@@ -87,6 +104,13 @@ func runGitDiffFilesInModuleDir(module moduleData) error {
 	return runFuncIn(module, gitDiffFiles)
 }
 
+func updateModuleDependencies(module moduleData) error {
+	f := func() error {
+		return goCmdV("get", "-u", "-t", module.name)
+	}
+	return runFuncIn(module, f)
+}
+
 func runFuncIn(module moduleData, f func() error) error {
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -127,6 +151,7 @@ type moduleData struct {
 }
 
 func modulesUnderDir(dir string) ([]moduleData, error) {
+	moduleDataMap := make(map[string]string)
 	moduledata := make([]moduleData, 0, 27) // 27 is the current number of wasm tests
 	vuguModuleRoot, err := os.Getwd()       //  cwd should be the module root
 	if err != nil {
@@ -158,6 +183,9 @@ func modulesUnderDir(dir string) ([]moduleData, error) {
 		if !e.IsDir() {
 			continue
 		}
+		if strings.Contains(e.Name(), MagefilesDir) {
+			continue // ignore the magefiles directory
+		}
 		subdir, err := resolveDirToAbs(dir, e.Name())
 		if err != nil {
 			return nil, err
@@ -167,20 +195,30 @@ func modulesUnderDir(dir string) ([]moduleData, error) {
 		if err != nil {
 			return nil, nil
 		}
-		// run the function
-		//err = f()
-		// is this dir a module?
-		// is this safe if there is no module???? Do we care???
-		output, err := goCmdCaptureOutput("list", "-m", "-f", "{{.Path}}") // we only want to module path i.e. no replacement info required. This returns a single line
+		// seems we need to call go list -m twice - once to get the module name (i.e. Path) and once to get the source code dir
+		moduleName, err := goCmdCaptureOutput("list", "-m", "-f", "{{.Path}}") // we only want to module path i.e. no replacement info required. This returns a single line
 		if err != nil {
 			return nil, err
 		}
-		module := strings.TrimSpace(output)
-		moduledata = append(moduledata, moduleData{name: module, dir: subdir})
+		moduleDir, err := goCmdCaptureOutput("list", "-m", "-f", "{{.Dir}}") // we only want to module directory where the source code is located. This returns a single line
+		if err != nil {
+			return nil, err
+		}
+
+		moduleName = strings.TrimSpace(moduleName)
+		moduleDir = strings.TrimSpace(moduleDir)
+		// not every subdir of dir contains a module - i.e. we can have just package directories or hidden directories
+		// so we will have duplicate moduleName and moduleDir for these entries - as they will always refer to the
+		// module that contains the subdir.
+		// We use a map to deduplicate the module entries
+		moduleDataMap[moduleName] = moduleDir
+	}
+	// now we hae a map, convert it to a slice of moduleData, as that's what the rest of the code expects
+	for k, v := range moduleDataMap {
+		moduledata = append(moduledata, moduleData{name: k, dir: v})
 		if err != nil {
 			return nil, err
 		}
 	}
 	return moduledata, nil
-
 }
