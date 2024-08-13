@@ -4,6 +4,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/magefile/mage/sh"
 )
@@ -17,7 +18,9 @@ func gitDiffFiles() error {
 		if statusErr != nil {
 			return fmt.Errorf("git diff --quiet failed with: %s\ngit status failed with: %s\nOutput follows:\n%s\n", err, statusErr, out)
 		}
-		return fmt.Errorf("The git repo is dirty. Where these files committed to the repository after `vugugen` and `go mod tidy` had been run?\ngit status output:\n%s\n", out)
+		cwd, _ := os.Getwd()
+		diff, _ := gitCmdCaptureOutput("diff")
+		return fmt.Errorf("The git repo is dirty. Where these files committed to the repository after `vugugen` and `go mod tidy` had been run?\ngit status output from dir: %s:\n%s\ndiff:\n%s\n", cwd, out, diff)
 	}
 	return err
 }
