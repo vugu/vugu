@@ -465,7 +465,6 @@ func singleWasmTest(moduleName string, withGeneratedFilesCheck bool) error {
 
 func buildSingleModule(dir string, moduleName string, withGeneratedFilesCheck bool) error {
 	mg.SerialDeps(Build, PullLatestNginxImage)
-	StartLocalNginxForExamples()
 
 	// find all the modules under dir
 	allmodules, err := modulesUnderDir(dir)
