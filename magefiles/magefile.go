@@ -427,9 +427,47 @@ func SingleExampleWithGeneratedFilesCheck(moduleName string) error {
 func singleExample(moduleName string, withGeneratedFilesCheck bool) error {
 	mg.SerialDeps(Build, PullLatestNginxImage)
 	StartLocalNginxForExamples()
+	return buildSingleModule(ExamplesDir, moduleName, withGeneratedFilesCheck)
+}
+
+// Builds, and serves a single wasm test using a local nginx container.
+// The usage is:
+//
+//	mage SingleWasmtest <wasm-test-module-name>
+//
+// e.g.
+//
+//	mage SingleExample gtihub.com/vugu/vugu/wasm-test-suite/test-002-click
+//
+// The examples will be served at
+//
+//	http://localhost:8888/<name-of-wasm-test-directory>
+//
+// for example for the test-0020-click
+//
+//	http://localhost:8888/test-0020-click
+//
+// The 'wasm' files are built using the standard Go compiler.
+func SingleWasmTest(moduleName string) error {
+	return singleWasmTest(moduleName, false)
+}
+
+// Like SingleExample but additionally confirm that the generated files that should have been committed are correct.
+func SingleWasmTestWithGeneratedFilesCheck(moduleName string) error {
+	return singleWasmTest(moduleName, true)
+}
+
+func singleWasmTest(moduleName string, withGeneratedFilesCheck bool) error {
+	mg.SerialDeps(Build, PullLatestNginxImage)
+	StartLocalNginxForExamples()
+	return buildSingleModule(WasmTestSuiteDir, moduleName, withGeneratedFilesCheck)
+}
+
+func buildSingleModule(dir string, moduleName string, withGeneratedFilesCheck bool) error {
+	mg.SerialDeps(Build, PullLatestNginxImage)
 
 	// find all the modules under dir
-	allmodules, err := modulesUnderDir(ExamplesDir)
+	allmodules, err := modulesUnderDir(dir)
 	if err != nil {
 		return err
 	}
