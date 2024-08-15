@@ -1,4 +1,4 @@
-name: Go tests
+name: Vugu build using Go @ oldstable
 
 on:
   push:
@@ -13,8 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go:
-        - '1.22.3'
+        go: [ 'oldstable' ]
     env:
       GO111MODULE: "on"
     steps:
@@ -25,11 +24,11 @@ jobs:
       with:
         go-version: '${{ matrix.go }}'
 
-    - name: Install task command
-      uses: arduino/setup-task@v2 # setup task via a Github action maintained by the Arduino community. This will pull task v 3.X
-    
     - name: Install goinports
       run: go get golang.org/x/tools/cmd/goimports && go install golang.org/x/tools/cmd/goimports
+
+    - name: Print Go version
+      run: go version
 
     - name: Install mage
       run: |
