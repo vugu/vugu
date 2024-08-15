@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go: [ 'oldstable', 'stable' ]
+        go: [ 'oldstable' ]
     env:
       GO111MODULE: "on"
     steps:
