@@ -1,4 +1,4 @@
-name: Go tests
+name: Vugu build using Go @ oldstable
 
 on:
   push:
