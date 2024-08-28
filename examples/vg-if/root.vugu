@@ -1,0 +1,24 @@
+<div>
+    <main role="main" class="container text-center">
+
+        <div class="mt-5">
+            <h1>vg-if Example</h1>
+
+                <button @click='c.ToggleShow()'>Toggle List</button>
+                <button @click='c.Push()'>Push Number</button>
+                <button @click='c.Pop()'>Pop Number</button>
+                <button @click='c.Reverse()'>Reverse List</button>
+
+                <ul vg-if='c.Show && len(c.List) > 0'>
+                    <li vg-for='pos, value := range c.List' vg-content='fmt.Sprintf("Position[%d] : Item[%d]", pos, value)'></li>
+                </ul>
+                <p vg-if='!c.Show'>List is not empty, but hidden.</p>
+                <p vg-if='len(c.List)==0'>List is empty.</p>
+
+
+        </div>
+
+    </main>
+</div>
+    
+</script>
