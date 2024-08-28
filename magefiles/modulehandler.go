@@ -3,6 +3,8 @@
 package main
 
 import (
+	"bufio"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -42,6 +44,11 @@ func doBuildAndTestModule(module moduleData, withTests bool, withGeneratedFileCh
 	}
 
 	err = runGoModTidyInModuleDir(module)
+	if err != nil {
+		return err
+	}
+
+	err = copyWasmExecJSFromGoRoot(module)
 	if err != nil {
 		return err
 	}
@@ -221,4 +228,41 @@ func modulesUnderDir(dir string) ([]moduleData, error) {
 		}
 	}
 	return moduledata, nil
+}
+
+func copyWasmExecJSFromGoRoot(module moduleData) error {
+	goRoot, err := goGetGoRoot()
+	if err != nil {
+		return err
+	}
+	fullWasmExecPath := filepath.Join(goRoot, WasmExecJSPathMiscDir, WasmExecJSPathWasmDir, WasmExecJS)
+	// create a fie reader on the wasm_exec.js file
+	wasmExecJs, err := os.Open(fullWasmExecPath)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = wasmExecJs.Close()
+	}()
+	r := bufio.NewReader(wasmExecJs)
+	localWasmExecJsPath := filepath.Join(module.dir, WasmExecJS)
+	localWasmExecJs, err := os.Create(localWasmExecJsPath) // will truncate the file if it exists or create it if it doesn't
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = localWasmExecJs.Close()
+	}()
+	w := bufio.NewWriter(localWasmExecJs)
+	// now copy
+	_, err = io.Copy(w, r)
+	if err != nil {
+		return err
+	}
+	// now are the files different - this is AFTER the copy so if they are the local wasm_exec.js will be different from the copy in the repo
+	err = gitDiffFile(localWasmExecJsPath)
+	if err != nil {
+		return err
+	}
+	return nil
 }

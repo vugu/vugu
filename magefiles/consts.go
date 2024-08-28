@@ -25,3 +25,8 @@ const WasmTestSuiteDir = "wasm-test-suite"
 const LegacyWasmTestSuiteDir = "legacy-wasm-test-suite"
 const ExamplesDir = "examples"
 const MagefilesDir = "magefiles"
+
+const GoRoot = "GOROOT" // GOROOT env var name
+const WasmExecJSPathMiscDir = "misc"
+const WasmExecJSPathWasmDir = "wasm"
+const WasmExecJS = "wasm_exec.js"
