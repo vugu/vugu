@@ -465,7 +465,7 @@ func goGuessPkgName(pkgPath string) (ret string) {
 		goto checkMore
 	}
 	{
-		var pkg *ast.Package
+		var pkg *ast.Package //nolint:staticcheck // ast.Package is deprecated as of Go 1.23
 		for _, pkg1 := range pkgs {
 			pkg = pkg1
 		}
@@ -507,8 +507,7 @@ func goPkgCheckNames(pkgPath string, names []string) (map[string]interface{}, er
 	if len(pkgs) != 1 {
 		return ret, fmt.Errorf("unexpected package count after parsing, expected 1 and got this: %#v", pkgs)
 	}
-
-	var pkg *ast.Package
+	var pkg *ast.Package //nolint:staticcheck // ast.Package is deprecated as of Go 1.23
 	for _, pkg1 := range pkgs {
 		pkg = pkg1
 	}

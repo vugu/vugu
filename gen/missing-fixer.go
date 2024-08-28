@@ -313,6 +313,8 @@ func readVugugenComments(pkgPath string) (map[string][]string, error) {
 // fileInPackage given pkg and "blah.go" will return the file whose base name is "blah.go"
 // (i.e. it ignores the directory part of the map key in pkg.Files)
 // Will return nil if not found.
+//
+//nolint:staticcheck // ast.Package is deprecated as of Go 1.23
 func fileInPackage(pkg *ast.Package, fileName string) *ast.File {
 	for fpath, file := range pkg.Files {
 		if filepath.Base(fpath) == fileName {
@@ -324,6 +326,8 @@ func fileInPackage(pkg *ast.Package, fileName string) *ast.File {
 
 // findTypeDecl looks through the package for the given type and returns
 // the declaraction or nil if not found
+//
+//nolint:staticcheck // ast.Package is deprecated as of Go 1.23
 func findTypeDecl(fset *token.FileSet, pkg *ast.Package, typeName string) ast.Decl {
 	for _, file := range pkg.Files {
 		for _, decl := range file.Decls {

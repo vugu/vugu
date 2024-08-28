@@ -9,7 +9,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -106,19 +105,14 @@ func PullLatestGolangCiLintDockerImage() error {
 	return dockerPullImage(GoLangCiLintImageName)
 }
 
-// Linting is current disabled, pending resolution of issue #320, See https://github.com/vugu/vugu/issues/302.
 // Lint the 'vugu' source code including the tests, and examples and any generated files. The linter used is a dockerized version of the 'golangci-lint' linter.
 // See: https://golangci-lint.run/ for more details of the linter
 func Lint() error {
-	log.Printf("Linting is current disabled, pending resolution of issue #320, See https://github.com/vugu/vugu/issues/302.")
-	return nil
-
-	// uncomment to renable the linter
-	// mg.SerialDeps(
-	// 	Build,
-	// 	PullLatestGolangCiLintDockerImage,
-	// )
-	// return runGolangCiLint()
+	mg.SerialDeps(
+		Build,
+		PullLatestGolangCiLintDockerImage,
+	)
+	return runGolangCiLint()
 }
 
 // Builds and runs all of the Go unit tests for 'vugu', except the 'legacy-wasm-test-suite' tests using the standard Go compiler.
