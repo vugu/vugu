@@ -1,26 +1,22 @@
-//go:build wasm
-// +build wasm
+//go:build js && wasm
 
 package main
 
 import (
 	"fmt"
 
-	"flag"
-
 	"github.com/vugu/vugu"
 	"github.com/vugu/vugu/domrender"
 )
 
 func main() {
-
-	mountPoint := flag.String("mount-point", "#vugu_mount_point", "The query selector for the mount point for the root component, if it is not a full HTML component")
-	flag.Parse()
-
-	fmt.Printf("Entering main(), -mount-point=%q\n", *mountPoint)
+	// this is the id of the div where the wasm will be loaded.
+	// this MUST match the div id defined in the index.html file (circa line 14)
+	mountPoint := "#vugu_mount_point"
+	fmt.Printf("Entering main(), -mount-point=%q\n", mountPoint) // thjs goes to the javascript console in the browser
 	defer fmt.Printf("Exiting main()\n")
 
-	renderer, err := domrender.New(*mountPoint)
+	renderer, err := domrender.New(mountPoint)
 	if err != nil {
 		panic(err)
 	}
@@ -31,12 +27,17 @@ func main() {
 		panic(err)
 	}
 
+	// By default 'Root` is the name of the top most component
+	// This struct is defined in root.go.
+	// The generated code that allows methods on property on an instance of Root to be called or accessed
+	// is in root_gen.go
 	rootBuilder := &Root{}
 
+	// wait until we get a render event
 	for ok := true; ok; ok = renderer.EventWait() {
-
+		// build a new DOM tree to update the page state
 		buildResults := buildEnv.RunBuild(rootBuilder)
-
+		// render the new DOM tree to update the browser display
 		err = renderer.Render(buildResults)
 		if err != nil {
 			panic(err)

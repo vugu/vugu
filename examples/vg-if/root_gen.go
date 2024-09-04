@@ -29,7 +29,7 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 		{
 			vgparent := vgn
 			_ = vgparent
-			vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n\n        "}
+			vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n        "}
 			vgparent.AppendChild(vgn)
 			vgn = &vugu.VGNode{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute{{Namespace: "", Key: "class", Val: "mt-5"}}}
 			vgparent.AppendChild(vgn)
@@ -41,7 +41,15 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 				vgn = &vugu.VGNode{Type: vugu.VGNodeType(3), Namespace: "", Data: "h1", Attr: []vugu.VGAttribute(nil)}
 				vgparent.AppendChild(vgn)
 				vgn.SetInnerHTML(vugu.HTML("vg-if Example"))
-				vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n\n                "}
+				vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n                "}
+				vgparent.AppendChild(vgn)
+				vgn = &vugu.VGNode{Type: vugu.VGNodeType(4), Data: " Add some buttons that trigger methods on the component when clicked "}
+				vgparent.AppendChild(vgn)
+				vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n                "}
+				vgparent.AppendChild(vgn)
+				vgn = &vugu.VGNode{Type: vugu.VGNodeType(4), Data: " 'c' is an instance of the `Root` structure. The methods are attached to the stucture as normal in the Go code "}
+				vgparent.AppendChild(vgn)
+				vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n                "}
 				vgparent.AppendChild(vgn)
 				vgn = &vugu.VGNode{Type: vugu.VGNodeType(3), Namespace: "", Data: "button", Attr: []vugu.VGAttribute(nil)}
 				vgparent.AppendChild(vgn)
@@ -103,32 +111,36 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 				}
 				vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n\n                "}
 				vgparent.AppendChild(vgn)
-				if c.Show && len(c.List) > 0 {
-					vgn = &vugu.VGNode{Type: vugu.VGNodeType(3), Namespace: "", Data: "ul", Attr: []vugu.VGAttribute(nil)}
-					vgparent.AppendChild(vgn)
-					{
-						vgparent := vgn
-						_ = vgparent
-						vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n                    "}
-						vgparent.AppendChild(vgn)
-						for pos, value := range c.List {
-							var vgiterkey interface{} = pos
-							_ = vgiterkey
-							pos := pos
-							_ = pos
-							value := value
-							_ = value
-							vgn = &vugu.VGNode{Type: vugu.VGNodeType(3), Namespace: "", Data: "li", Attr: []vugu.VGAttribute(nil)}
-							vgparent.AppendChild(vgn)
-							vgn.SetInnerHTML(fmt.Sprintf("Position[%d] : Item[%d]", pos, value))
-						}
-						vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n                "}
-						vgparent.AppendChild(vgn)
-					}
-				}
+				vgn = &vugu.VGNode{Type: vugu.VGNodeType(4), Data: " If the list is visible and length > 0 then print out all of the elements in a vertical list "}
+				vgparent.AppendChild(vgn)
 				vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n                "}
 				vgparent.AppendChild(vgn)
-				if !c.Show {
+				vgn = &vugu.VGNode{Type: vugu.VGNodeType(4), Data: " We access the visibility property directly, the `c.Show` but the list length via a method, the `c.ListLength()`\n                <ul vg-if='c.Show && c.ListLength() > 0'>\n                    <!-- use 'vg-content' to set the InnerHTML elelement of the <li> element dynamically "}
+				vgparent.AppendChild(vgn)
+				vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n                    "}
+				vgparent.AppendChild(vgn)
+				vgn = &vugu.VGNode{Type: vugu.VGNodeType(4), Data: " use a key value, range form of a `vg-for` to loop ove the list elements "}
+				vgparent.AppendChild(vgn)
+				vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n                    "}
+				vgparent.AppendChild(vgn)
+				for pos, value := range c.List() {
+					var vgiterkey interface{} = pos
+					_ = vgiterkey
+					pos := pos
+					_ = pos
+					value := value
+					_ = value
+					vgn = &vugu.VGNode{Type: vugu.VGNodeType(3), Namespace: "", Data: "li", Attr: []vugu.VGAttribute(nil)}
+					vgparent.AppendChild(vgn)
+					vgn.SetInnerHTML(fmt.Sprintf("Position[%d] : Item[%d]", pos, value))
+				}
+				vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n                \n                "}
+				vgparent.AppendChild(vgn)
+				vgn = &vugu.VGNode{Type: vugu.VGNodeType(4), Data: " vugu doesn't yet have an `else if` statement so we need to be explicit and check if the list is hidden but not empty "}
+				vgparent.AppendChild(vgn)
+				vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n                "}
+				vgparent.AppendChild(vgn)
+				if !c.Show && c.ListLength() > 0 {
 					vgn = &vugu.VGNode{Type: vugu.VGNodeType(3), Namespace: "", Data: "p", Attr: []vugu.VGAttribute(nil)}
 					vgparent.AppendChild(vgn)
 					{
@@ -140,7 +152,11 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 				}
 				vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n                "}
 				vgparent.AppendChild(vgn)
-				if len(c.List) == 0 {
+				vgn = &vugu.VGNode{Type: vugu.VGNodeType(4), Data: " vugu doesn't yet have a `vg-else` statement so again we must make the condition explicit "}
+				vgparent.AppendChild(vgn)
+				vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n                "}
+				vgparent.AppendChild(vgn)
+				if c.ListLength() == 0 {
 					vgn = &vugu.VGNode{Type: vugu.VGNodeType(3), Namespace: "", Data: "p", Attr: []vugu.VGAttribute(nil)}
 					vgparent.AppendChild(vgn)
 					{
@@ -150,10 +166,10 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 						vgparent.AppendChild(vgn)
 					}
 				}
-				vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n\n\n        "}
+				vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n        "}
 				vgparent.AppendChild(vgn)
 			}
-			vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n\n    "}
+			vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n    "}
 			vgparent.AppendChild(vgn)
 		}
 		vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n"}

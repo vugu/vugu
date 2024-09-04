@@ -1,24 +1,25 @@
 <div>
     <main role="main" class="container text-center">
-
         <div class="mt-5">
             <h1>vg-if Example</h1>
-
+                <!-- Add some buttons that trigger methods on the component when clicked -->
+                <!-- 'c' is an instance of the `Root` structure. The methods are attached to the stucture as normal in the Go code -->
                 <button @click='c.ToggleShow()'>Toggle List</button>
                 <button @click='c.Push()'>Push Number</button>
                 <button @click='c.Pop()'>Pop Number</button>
                 <button @click='c.Reverse()'>Reverse List</button>
 
-                <ul vg-if='c.Show && len(c.List) > 0'>
-                    <li vg-for='pos, value := range c.List' vg-content='fmt.Sprintf("Position[%d] : Item[%d]", pos, value)'></li>
+                <!-- If the list is visible and length > 0 then print out all of the elements in a vertical list -->
+                <!-- We access the visibility property directly, the `c.Show` but the list length via a method, the `c.ListLength()`
+                <ul vg-if='c.Show && c.ListLength() > 0'>
+                    <!-- use 'vg-content' to set the InnerHTML elelement of the <li> element dynamically -->
+                    <!-- use a key value, range form of a `vg-for` to loop ove the list elements -->
+                    <li vg-for='pos, value := range c.List()' vg-content='fmt.Sprintf("Position[%d] : Item[%d]", pos, value)'></li>
                 </ul>
-                <p vg-if='!c.Show'>List is not empty, but hidden.</p>
-                <p vg-if='len(c.List)==0'>List is empty.</p>
-
-
+                <!-- vugu doesn't yet have an `else if` statement so we need to be explicit and check if the list is hidden but not empty -->
+                <p vg-if='!c.Show && c.ListLength() > 0'>List is not empty, but hidden.</p>
+                <!-- vugu doesn't yet have a `vg-else` statement so again we must make the condition explicit -->
+                <p vg-if='c.ListLength()==0'>List is empty.</p>
         </div>
-
     </main>
 </div>
-    
-</script>
