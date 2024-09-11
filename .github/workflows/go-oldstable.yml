@@ -25,7 +25,7 @@ jobs:
         go-version: '${{ matrix.go }}'
 
     - name: Install goinports
-      run: go get golang.org/x/tools/cmd/goimports && go install golang.org/x/tools/cmd/goimports
+      run: go get golang.org/x/tools/cmd/goimports@latest && go install golang.org/x/tools/cmd/goimports@latest
 
     - name: Print Go version
       run: go version
