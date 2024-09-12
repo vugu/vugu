@@ -11,5 +11,5 @@ require (
 
 require (
 	github.com/vugu/xxhash v0.0.0-20191111030615-ed24d0179019 // indirect
-	golang.org/x/text v0.14.0 // indirect
+	golang.org/x/text v0.17.0 // indirect
 )
