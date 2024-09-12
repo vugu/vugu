@@ -87,7 +87,7 @@ func Build() error {
 		return err
 	}
 	// install the vugufmt command by executing
-	err = goInstall("github.com/vugu/vugu/cmd/vugufmt")
+	err = goInstall("github.com/vugu/vugu/cmd/vugufmt@latest")
 	return err
 }
 
