@@ -9,6 +9,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -75,7 +76,7 @@ func AllGitHubAction() error {
 
 // Build the 'vugu' package, the 'vugugen' and 'vugufmt' commands
 func Build() error {
-	mg.SerialDeps(Clean)
+	mg.SerialDeps(InstallGoImports)
 	// install the vugu module by executing
 	err := goInstall("github.com/vugu/vugu")
 	if err != nil {
@@ -87,7 +88,7 @@ func Build() error {
 		return err
 	}
 	// install the vugufmt command by executing
-	err = goInstall("github.com/vugu/vugu/cmd/vugufmt@latest")
+	err = goInstall("github.com/vugu/vugu/cmd/vugufmt@latest") //vugufmt can use the goimports tool
 	return err
 }
 
@@ -97,6 +98,16 @@ func BuildWithGeneratedFilesCheck() error {
 	// sanity check that the generated files have been submitted, and that the go.mod and go.sum are
 	// as they should be post calling vugugen
 	return generatedFilesCheck("./vgform")
+}
+
+// Install the latest vertsion of the goimports tool if a version is not already installed locally.
+func InstallGoImports() error {
+	mg.SerialDeps(Clean)
+	if !checkCmdExists("goimports") {
+		log.Printf("No copy of goimports found, installing latest version")
+		return goInstall("golang.org/x/tools/cmd/goimports@latest")
+	}
+	return nil
 }
 
 // Pulls the latest version of the 'golangci-lint' docker image. 'The 'vugu' project used 'golangci-lint' as its lint tool. See the Lint target
