@@ -43,6 +43,12 @@ func goBuildWithEnvs(envs map[string]string, binaryName, pkgName string) error {
 
 }
 
+// Get the GOROOT for the standard go compiler via go env
+// we need a tinygo version of this!
+func goGetGoRoot() (string, error) {
+	return goCmdCaptureOutput("env", GoRoot)
+}
+
 func buildLegacyWasmTestSuiteServer() error {
 	envs := map[string]string{
 		"CGO_ENABLED": "0",

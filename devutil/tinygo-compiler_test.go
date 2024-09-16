@@ -10,8 +10,6 @@ import (
 )
 
 func TestTinygoCompiler(t *testing.T) {
-	// skip the test until we have go v1.23+ support.
-	t.Skip("TTestTinygoCompiler is skipped until the tinygo compiler supports Go v1.23+")
 
 	tmpDir, err := os.MkdirTemp("", "TestTinygoCompiler")
 	if err != nil {
