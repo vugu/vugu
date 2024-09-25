@@ -4,6 +4,8 @@ A very simple example that primarily demonstrates how the `vg-if` attribute on a
 
 ## Building the example
 
+*This build instructions are based on using `mage` as the built tool. If you require a different built tool please use the generic method of building in the [Readme](https://github.com/vugu/vugu/blob/master/examples/Readme.md) at the root of the `examples` package.*
+
 Building the example is easy. 
 
 You will need [`docker`](docker.com) and [`mage`](https://magefile.org/) preinstalled before you begin.
