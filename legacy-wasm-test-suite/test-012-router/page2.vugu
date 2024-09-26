@@ -1,0 +1,17 @@
+<div id="page2">
+    this is page 2
+    <a :href='linkFor("page1")' id="page1_link">link to page1</a>
+    <button id="page1_button" @click='c.Navigate("/page1", nil)'>button to page1</button>
+    <button id="page1_button_repl" @click='c.Navigate("/page1", nil, vgrouter.NavReplace)'>button to page (replace)</button>
+</div>
+
+<script type="application/x-go">
+
+import "github.com/vugu/vgrouter"
+
+type Page2 struct {
+    vgrouter.NavigatorRef
+}
+
+</script>
+

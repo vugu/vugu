@@ -1,0 +1,10 @@
+<div
+    vg-js-create='c.handleJSCreate(value)' 
+    vg-js-populate='c.handleJSPopulate(value)'
+    class="thing"
+    >
+    <button id="the_button" @click="c.handleButtonClick(event)">A button here</button>
+    <div id="log" vg-if="len(c.Log)>0">
+        <div :id='fmt.Sprintf("log_%d",k)' vg-for='k, v := range c.Log' vg-html='v'></div>
+    </div>
+</div>

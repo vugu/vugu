@@ -1,0 +1,28 @@
+<div>
+    <div vg-if='c.ActiveView == "view1" || c.ActiveView == ""'>
+        <h3 id="view1">This is view1</h3>
+        <button id="switch_btn" @mouseup='c.SwitchView(event, "view2")'>Switch</button>
+    </div>
+    <div vg-if='c.ActiveView == "view2"'>
+        <h3 id="view2">This is view2</h3>
+        <button id="switch_btn" @mouseup='c.SwitchView(event, "view1")'>Switch</button>
+    </div>
+</div>
+
+<script type="application/x-go">
+
+type Root struct {
+    ActiveView string `vugu:"data"`
+}
+
+func (c *Root) SwitchView(event vugu.DOMEvent, viewname string) {
+    fmt.Println("switching to "+viewname)
+    go func() {
+        ee := event.EventEnv()
+        ee.Lock()
+        c.ActiveView = viewname
+        ee.UnlockRender()
+    }()
+}
+
+</script>

@@ -1,3 +1,4 @@
+//go:build !tinygo
 // +build !tinygo
 
 package vugu
@@ -47,6 +48,7 @@ func (mt *ModTracker) TrackNext() {
 
 }
 
+//nolint:golint,unused
 func (mt *ModTracker) dump() []byte {
 	var buf bytes.Buffer
 	fmt.Fprintf(&buf, "-- cur (len=%d): --\n", len(mt.cur))
@@ -240,7 +242,8 @@ func (mt *ModTracker) ModCheckAll(values ...interface{}) (ret bool) {
 				if l > 0 {
 					// use the unsafe package to make a byte slice corresponding to the raw slice contents
 					var bs []byte
-					bsh := (*reflect.SliceHeader)(unsafe.Pointer(&bs))
+					// TODO: need to be fix later
+					bsh := (*reflect.SliceHeader)(unsafe.Pointer(&bs)) //nolint:staticcheck
 
 					el0 := rvv.Index(0)
 					el0t = el0.Type()
@@ -250,7 +253,10 @@ func (mt *ModTracker) ModCheckAll(values ...interface{}) (ret bool) {
 					bsh.Cap = bsh.Len
 
 					// hash it
-					ha.Write(bs)
+					_, err := ha.Write(bs)
+					if err != nil {
+						panic(err)
+					}
 				}
 
 				hashval := ha.Sum64()
@@ -296,7 +302,7 @@ func (mt *ModTracker) ModCheckAll(values ...interface{}) (ret bool) {
 				// just use bool(true) as the data value for a struct - this way it will always be modified the first time,
 				// but every subsequent check will solely depend on the checks on it's fields
 				oldval, ok := oldres.data.(bool)
-				mod = !ok || oldval != true
+				mod = !ok || !oldval
 				newdata = true
 
 				rvvt := rvv.Type()
