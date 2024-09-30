@@ -1,0 +1,33 @@
+<div>
+    <main role="main" class="container text-center">
+        <div class="mt-5">
+            <h1>dom-events Example</h1>
+                <!-- Create a red rectandle and listen for mouse entry adn exit events, and clicks -->               
+                <div id=redBlock style="background-color:#D94A38;width:120px;height:20px;padding:40px;" @mouseover='c.MouseOver(event)' @mouseout='c.MouseOut(event)' @click='c.RedBoxClick(event)'>
+                    <div vg-content='c.RedBoxText()'></div>
+                </div>
+                <hr>
+
+                <!-- Create a text area and listen for keydown events -->
+                <!-- TODO: Note: if the text area is resized then the next keydown event will reset the size to the default. Is theis a vugu bug?? --> 
+                <div id="textarea">
+                    <textarea @keydown='c.KeyDown(event)'>Type in here</textarea>
+                </div>
+                <hr>
+    
+                <!-- Create a button and listen for left, right and double click events -->
+                <!-- A double click event also emits two single click events -->
+                <button @click='c.ButtonLeftClick(event)' @contextmenu='c.ButtonRightClick(event)' @dblclick='c.ButtonDoubleClick(event)'>Click, right-click and double click me!</button>
+
+                <hr>
+                <h3>Event List</h3>
+                <p>Newer events first</p>
+                <ul>
+                    <!-- Print out the events in reverse order -->
+                    <li vg-for='eventName := range c.Events()'>
+                        <div vg-content='fmt.Sprintf("%s",eventName)'></div>
+                    </li>
+                </ul>
+        </div>
+    </main>
+</div>
