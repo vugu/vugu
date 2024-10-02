@@ -2,7 +2,7 @@
     <main role="main" class="container text-center">
         <div class="mt-5">
             <h1>dom-events Example</h1>
-                <!-- Create a red rectandle and listen for mouse entry adn exit events, and clicks -->               
+                <!-- Create a red rectangle and listen for mouse entry adn exit events, and clicks -->               
                 <div id=redBlock style="background-color:#D94A38;width:120px;height:20px;padding:40px;" @mouseover='c.MouseOver(event)' @mouseout='c.MouseOut(event)' @click='c.RedBoxClick(event)'>
                     <div vg-content='c.RedBoxText()'></div>
                 </div>

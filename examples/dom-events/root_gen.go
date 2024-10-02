@@ -41,6 +41,10 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 				vgn = &vugu.VGNode{Type: vugu.VGNodeType(3), Namespace: "", Data: "h1", Attr: []vugu.VGAttribute(nil)}
 				vgparent.AppendChild(vgn)
 				vgn.SetInnerHTML(vugu.HTML("dom-events Example"))
+				vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n                "}
+				vgparent.AppendChild(vgn)
+				vgn = &vugu.VGNode{Type: vugu.VGNodeType(4), Data: " Create a red rectangle and listen for mouse entry adn exit events, and clicks "}
+				vgparent.AppendChild(vgn)
 				vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "               \n                "}
 				vgparent.AppendChild(vgn)
 				vgn = &vugu.VGNode{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute{{Namespace: "", Key: "id", Val: "redBlock"}, vugu.VGAttribute{Namespace: "", Key: "style", Val: "background-color:#D94A38;width:120px;height:20px;padding:40px;"}}}
@@ -78,6 +82,14 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 				vgn.SetInnerHTML(vugu.HTML(""))
 				vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n\n                "}
 				vgparent.AppendChild(vgn)
+				vgn = &vugu.VGNode{Type: vugu.VGNodeType(4), Data: " Create a text area and listen for keydown events "}
+				vgparent.AppendChild(vgn)
+				vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n                "}
+				vgparent.AppendChild(vgn)
+				vgn = &vugu.VGNode{Type: vugu.VGNodeType(4), Data: " TODO: Note: if the text area is resized then the next keydown event will reset the size to the default. Is theis a vugu bug?? "}
+				vgparent.AppendChild(vgn)
+				vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: " \n                "}
+				vgparent.AppendChild(vgn)
 				vgn = &vugu.VGNode{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute{{Namespace: "", Key: "id", Val: "textarea"}}}
 				vgparent.AppendChild(vgn)
 				{
@@ -106,15 +118,11 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 				vgn = &vugu.VGNode{Type: vugu.VGNodeType(3), Namespace: "", Data: "hr", Attr: []vugu.VGAttribute(nil)}
 				vgparent.AppendChild(vgn)
 				vgn.SetInnerHTML(vugu.HTML(""))
-				vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n        \n                "}
+				vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n    \n                "}
 				vgparent.AppendChild(vgn)
-				vgn = &vugu.VGNode{Type: vugu.VGNodeType(4), Data: " Add some buttons that trigger methods on the component when clicked "}
+				vgn = &vugu.VGNode{Type: vugu.VGNodeType(4), Data: " Create a button and listen for left, right and double click events "}
 				vgparent.AppendChild(vgn)
 				vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n                "}
-				vgparent.AppendChild(vgn)
-				vgn = &vugu.VGNode{Type: vugu.VGNodeType(4), Data: " 'c' is an instance of the `Root` structure. The methods are attached to the stucture as normal in the Go code "}
-				vgparent.AppendChild(vgn)
-				vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n\n                "}
 				vgparent.AppendChild(vgn)
 				vgn = &vugu.VGNode{Type: vugu.VGNodeType(4), Data: " A double click event also emits two single click events "}
 				vgparent.AppendChild(vgn)
@@ -167,11 +175,7 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 					_ = vgparent
 					vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n                    "}
 					vgparent.AppendChild(vgn)
-					vgn = &vugu.VGNode{Type: vugu.VGNodeType(4), Data: " This example uses the explicit form of the vg-for "}
-					vgparent.AppendChild(vgn)
-					vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n                    "}
-					vgparent.AppendChild(vgn)
-					vgn = &vugu.VGNode{Type: vugu.VGNodeType(4), Data: " This time the methods c.DaysInWeekIthSorted uses the new iter, sllice and maps package internally "}
+					vgn = &vugu.VGNode{Type: vugu.VGNodeType(4), Data: " Print out the events in reverse order "}
 					vgparent.AppendChild(vgn)
 					vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n                    "}
 					vgparent.AppendChild(vgn)
