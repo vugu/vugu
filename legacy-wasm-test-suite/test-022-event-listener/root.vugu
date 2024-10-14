@@ -1,0 +1,27 @@
+<div id="top">
+    <button id="switch" @click="c.Switch()">switch</button>
+    <input type="button" id="noclick" vg-if="c.Visible" value="no click"/><input type="button" id="click" @click='c.Click("click")' value="click"/>
+    <div id="text" vg-if="c.Count>2" vg-content="c.Text"></div>
+</div>
+
+<script type="application/x-go">
+
+type Root struct {
+    Count int
+    Visible bool
+    Text string
+}
+
+func (c *Root) Switch() {
+    c.Visible = !c.Visible
+    c.Count++
+}
+
+func (c *Root) Click(msg string) {
+    if c.Text != "" {
+        c.Text += " "
+    }
+    c.Text += msg
+}
+
+</script>

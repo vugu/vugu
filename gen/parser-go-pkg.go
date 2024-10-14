@@ -7,7 +7,6 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -33,9 +32,9 @@ type ParserGoPkgOpts struct {
 	SkipGoMod        bool    // do not try and create go.mod if it doesn't exist
 	SkipMainGo       bool    // do not try and create main_wasm.go if it doesn't exist in a main package
 	TinyGo           bool    // emit code intended for TinyGo compilation
-	GoFileNameAppend *string // suffix to append to file names, after base name plus .go, if nil then "_vgen" is used
+	GoFileNameAppend *string // suffix to append to file names, after base name plus .go, if nil then "_gen" is used
 	MergeSingle      bool    // merge all output files into a single one
-	MergeSingleName  string  // name of merged output file, only used if MergeSingle is true, defaults to "0_components_vgen.go"
+	MergeSingleName  string  // name of merged output file, only used if MergeSingle is true, defaults to "0_components_gen.go"
 }
 
 // TODO: CallVuguSetup bool // always call vuguSetup instead of trying to auto-detect it's existence
@@ -127,27 +126,6 @@ func (p *ParserGoPkg) Opts() ParserGoPkgOpts {
 // Per-file code generation is performed by ParserGo.
 func (p *ParserGoPkg) Run() error {
 
-	// vugugen path/to/package
-
-	// comp-name.vugu
-	// comp-name.go
-	// tag is "comp-name"
-	// component type is CompName
-	// component data type is CompNameData
-	// register unless disabled
-	// create CompName if it doesn't exist in the package
-	// create CompNameData if it doesn't exist in the package
-	// create CompName.NewData with defaults if it doesn't exist in the package
-
-	// how about a default main_wasm.go if one doesn't exist in the package? would be really useful!
-	// also go.mod
-
-	// flags:
-	// * component registration
-	// * skip generating go.mod
-
-	// --
-
 	// record the times of existing files, so we can restore after if the same
 	hashTimes, err := fileHashTimes(p.pkgPath)
 	if err != nil {
@@ -180,17 +158,19 @@ func (p *ParserGoPkg) Run() error {
 
 	namesToCheck := []string{"main"}
 
-	goFnameAppend := "_vgen"
+	goFnameAppend := "_gen"
 	if p.opts.GoFileNameAppend != nil {
 		goFnameAppend = *p.opts.GoFileNameAppend
 	}
 
 	var mergeFiles []string
 
-	mergeSingleName := "0_components_vgen.go"
+	mergeSingleName := "0_components_gen.go"
 	if p.opts.MergeSingleName != "" {
 		mergeSingleName = p.opts.MergeSingleName
 	}
+
+	missingFmap := make(map[string]string, len(vuguFileNames))
 
 	// run ParserGo on each file to generate the .go files
 	for _, fn := range vuguFileNames {
@@ -198,6 +178,9 @@ func (p *ParserGoPkg) Run() error {
 		baseFileName := strings.TrimSuffix(fn, ".vugu")
 		goFileName := baseFileName + goFnameAppend + ".go"
 		compTypeName := fnameToGoTypeName(baseFileName)
+
+		// keep track of which files to scan for missing structs
+		missingFmap[fn] = goFileName
 
 		mergeFiles = append(mergeFiles, goFileName)
 
@@ -218,7 +201,7 @@ func (p *ParserGoPkg) Run() error {
 		namesToCheck = append(namesToCheck, "vuguSetup")
 
 		// read in source
-		b, err := ioutil.ReadFile(filepath.Join(p.pkgPath, fn))
+		b, err := os.ReadFile(filepath.Join(p.pkgPath, fn))
 		if err != nil {
 			return err
 		}
@@ -284,17 +267,17 @@ func main() {
 	{{if not $opts.TinyGo}}defer fmt.Printf("Exiting main()\n")
 {{end}}
 
-	buildEnv, err := vugu.NewBuildEnv()
-	if err != nil {
-		panic(err)
-	}
-
 	renderer, err := domrender.New(*mountPoint)
 	if err != nil {
 		panic(err)
 	}
 	{{if not $opts.TinyGo}}defer renderer.Release()
 {{end}}
+
+	buildEnv, err := vugu.NewBuildEnv(renderer.EventEnv())
+	if err != nil {
+		panic(err)
+	}
 
 {{if (index .NamesFound "vuguSetup")}}
 	rootBuilder := vuguSetup(buildEnv, renderer.EventEnv())
@@ -332,7 +315,7 @@ func main() {
 				log.Printf("WARNING: gofmt on main_wasm.go failed: %v", err)
 			}
 
-			err = ioutil.WriteFile(mainGoPath, []byte(bufstr), 0644)
+			err = os.WriteFile(mainGoPath, []byte(bufstr), 0644)
 			if err != nil {
 				return err
 			}
@@ -345,7 +328,7 @@ func main() {
 	// otherwise we really don't know what the right module name is
 	goModPath := filepath.Join(p.pkgPath, "go.mod")
 	if pkgName == "main" && !p.opts.SkipGoMod && !fileExists(goModPath) {
-		err := ioutil.WriteFile(goModPath, []byte(`module `+pkgName+"\n"), 0644)
+		err := os.WriteFile(goModPath, []byte(`module `+pkgName+"\n"), 0644)
 		if err != nil {
 			return err
 		}
@@ -356,54 +339,68 @@ func main() {
 		os.Remove(filepath.Join(p.pkgPath, mergeSingleName))
 	}
 
-	for _, fn := range vuguFileNames {
+	// for _, fn := range vuguFileNames {
 
-		goFileName := strings.TrimSuffix(fn, ".vugu") + goFnameAppend + ".go"
-		goFilePath := filepath.Join(p.pkgPath, goFileName)
+	// 	goFileName := strings.TrimSuffix(fn, ".vugu") + goFnameAppend + ".go"
+	// 	goFilePath := filepath.Join(p.pkgPath, goFileName)
 
-		err := func() error {
-			// get ready to append to file
-			f, err := os.OpenFile(goFilePath, os.O_WRONLY|os.O_APPEND, 0644)
-			if err != nil {
-				return err
-			}
-			defer f.Close()
+	// 	err := func() error {
+	// 		// get ready to append to file
+	// 		f, err := os.OpenFile(goFilePath, os.O_WRONLY|os.O_APPEND, 0644)
+	// 		if err != nil {
+	// 			return err
+	// 		}
+	// 		defer f.Close()
 
-			// TODO: would be nice to clean this up and get a better grip on how we do this filename -> struct name mapping, but this works for now
-			compTypeName := fnameToGoTypeName(strings.TrimSuffix(goFileName, goFnameAppend+".go"))
+	// 		// TODO: would be nice to clean this up and get a better grip on how we do this filename -> struct name mapping, but this works for now
+	// 		compTypeName := fnameToGoTypeName(strings.TrimSuffix(goFileName, goFnameAppend+".go"))
 
-			// create CompName struct if it doesn't exist in the package
-			if _, ok := namesFound[compTypeName]; !ok {
-				fmt.Fprintf(f, "\ntype %s struct {}\n", compTypeName)
-			}
+	// 		// create CompName struct if it doesn't exist in the package
+	// 		if _, ok := namesFound[compTypeName]; !ok {
+	// 			fmt.Fprintf(f, "\ntype %s struct {}\n", compTypeName)
+	// 		}
 
-			// // create CompNameData struct if it doesn't exist in the package
-			// if _, ok := namesFound[compTypeName+"Data"]; !ok {
-			// 	fmt.Fprintf(f, "\ntype %s struct {}\n", compTypeName+"Data")
-			// }
+	// 		// // create CompNameData struct if it doesn't exist in the package
+	// 		// if _, ok := namesFound[compTypeName+"Data"]; !ok {
+	// 		// 	fmt.Fprintf(f, "\ntype %s struct {}\n", compTypeName+"Data")
+	// 		// }
 
-			// create CompName.NewData with defaults if it doesn't exist in the package
-			// if _, ok := namesFound[compTypeName+".NewData"]; !ok {
-			// 	fmt.Fprintf(f, "\nfunc (ct *%s) NewData(props vugu.Props) (interface{}, error) { return &%s{}, nil }\n",
-			// 		compTypeName, compTypeName+"Data")
-			// }
+	// 		// create CompName.NewData with defaults if it doesn't exist in the package
+	// 		// if _, ok := namesFound[compTypeName+".NewData"]; !ok {
+	// 		// 	fmt.Fprintf(f, "\nfunc (ct *%s) NewData(props vugu.Props) (interface{}, error) { return &%s{}, nil }\n",
+	// 		// 		compTypeName, compTypeName+"Data")
+	// 		// }
 
-			// // register component unless disabled - nope, no more component registry
-			// if !p.opts.SkipRegisterComponentTypes && !fileHasInitFunc(goFilePath) {
-			// 	fmt.Fprintf(f, "\nfunc init() { vugu.RegisterComponentType(%q, &%s{}) }\n", strings.TrimSuffix(goFileName, ".go"), compTypeName)
-			// }
+	// 		// // register component unless disabled - nope, no more component registry
+	// 		// if !p.opts.SkipRegisterComponentTypes && !fileHasInitFunc(goFilePath) {
+	// 		// 	fmt.Fprintf(f, "\nfunc init() { vugu.RegisterComponentType(%q, &%s{}) }\n", strings.TrimSuffix(goFileName, ".go"), compTypeName)
+	// 		// }
 
-			return nil
-		}()
-		if err != nil {
-			return err
-		}
+	// 		return nil
+	// 	}()
+	// 	if err != nil {
+	// 		return err
+	// 	}
 
+	// }
+
+	// generate anything missing and process vugugen comments
+	mf := newMissingFixer(p.pkgPath, pkgName, missingFmap)
+	err = mf.run()
+	if err != nil {
+		return fmt.Errorf("missing fixer error: %w", err)
 	}
 
 	// if requested, do merge
 	if p.opts.MergeSingle {
-		err := mergeGoFiles(p.pkgPath, mergeSingleName, mergeFiles...)
+
+		// if a missing fix file was produced include it in the list to be merged
+		_, err := os.Stat(filepath.Join(p.pkgPath, "0_missing_gen.go"))
+		if err == nil {
+			mergeFiles = append(mergeFiles, "0_missing_gen.go")
+		}
+
+		err = mergeGoFiles(p.pkgPath, mergeSingleName, mergeFiles...)
 		if err != nil {
 			return err
 		}
@@ -426,8 +423,9 @@ func main() {
 
 }
 
+//nolint:golint,unused
 func fileHasInitFunc(p string) bool {
-	b, err := ioutil.ReadFile(p)
+	b, err := os.ReadFile(p)
 	if err != nil {
 		return false
 	}
@@ -467,7 +465,7 @@ func goGuessPkgName(pkgPath string) (ret string) {
 		goto checkMore
 	}
 	{
-		var pkg *ast.Package
+		var pkg *ast.Package //nolint:staticcheck // ast.Package is deprecated as of Go 1.23
 		for _, pkg1 := range pkgs {
 			pkg = pkg1
 		}
@@ -509,8 +507,7 @@ func goPkgCheckNames(pkgPath string, names []string) (map[string]interface{}, er
 	if len(pkgs) != 1 {
 		return ret, fmt.Errorf("unexpected package count after parsing, expected 1 and got this: %#v", pkgs)
 	}
-
-	var pkg *ast.Package
+	var pkg *ast.Package //nolint:staticcheck // ast.Package is deprecated as of Go 1.23
 	for _, pkg1 := range pkgs {
 		pkg = pkg1
 	}
@@ -612,11 +609,14 @@ func fileHashTimes(dir string) (map[uint64]time.Time, error) {
 		}
 		h := xxhash.New()
 		fmt.Fprint(h, fi.Name()) // hash the name too so we don't confuse different files with the same contents
-		b, err := ioutil.ReadFile(filepath.Join(dir, fi.Name()))
+		b, err := os.ReadFile(filepath.Join(dir, fi.Name()))
 		if err != nil {
 			return nil, err
 		}
-		h.Write(b)
+		_, err = h.Write(b)
+		if err != nil {
+			return nil, err
+		}
 		ret[h.Sum64()] = fi.ModTime()
 	}
 
@@ -648,11 +648,14 @@ func restoreFileHashTimes(dir string, hashTimes map[uint64]time.Time) error {
 		fiPath := filepath.Join(dir, fi.Name())
 		h := xxhash.New()
 		fmt.Fprint(h, fi.Name()) // hash the name too so we don't confuse different files with the same contents
-		b, err := ioutil.ReadFile(fiPath)
+		b, err := os.ReadFile(fiPath)
 		if err != nil {
 			return err
 		}
-		h.Write(b)
+		_, err = h.Write(b)
+		if err != nil {
+			return err
+		}
 		if t, ok := hashTimes[h.Sum64()]; ok {
 			err := os.Chtimes(fiPath, time.Now(), t)
 			if err != nil {
