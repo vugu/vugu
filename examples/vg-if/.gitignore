@@ -4,3 +4,6 @@
 # *.wasm - generated wasm files
 
 *.wasm
+
+# this should always be taken from the GOROOT on each build
+wasm_exec.js
