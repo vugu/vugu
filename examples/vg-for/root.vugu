@@ -41,7 +41,7 @@
 
                 <div id="for_shortcut_loop" vg-if='c.ShowShortCutLoop()'>
                     <h3> shortcut version of the key value style for loop example </h3>
-                    <p>This time the list is geneated using a shortcut version of the <code>vg-for</code> loop.</p>
+                    <p>This time the list is generated using a shortcut version of the <code>vg-for</code> loop.</p>
                     <p>The order of the following list is intended to be random! The loop iterates over a Go map which is always in a random order, as per the Go spec.</p>
                     <p>If you toggle the Key Value loop you will get a different order.</p>
                     <ul>
