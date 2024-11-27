@@ -2,20 +2,12 @@ package vugu
 
 import (
 	"fmt"
+	"html"
 	"reflect"
 	"strconv"
+
+	"github.com/vugu/vugu/js"
 )
-
-// Things to sort out:
-// * vg-if, vg-range, etc (JUST COPIED FROM ATTRS, EVALUATED LATER)
-// * :whatever syntax (ALSO JUST COPIED FROM ATTRS, EVALUATED LATER)
-// * vg-model (IGNORE FOR NOW, WILL BE COMPOSED FROM OTHER FEATURES)
-// * @click and other events (JUST A METHOD NAME TO INVOKE ON THE COMPONENT TYPE)
-// * components and their properties (TAG NAME IS JUST CHECKED LATER, AND IF MATCH CAUSES THE EVAL STEPS ABOVE TO USE A DIFFERENT PATH, ATTRS GET REFS INSTEAD OF TEXT RENDER ETC)
-// actually, we should rework this so they are function pointers... and the
-// template compilation can support actual Go code
-
-// VDom states: Just one, after being converted from html.Node
 
 // VGNodeType is one of the valid node types (error, text, document, element, comment, doctype).
 // Note that only text, element and comment are currently used.
@@ -48,6 +40,24 @@ type VGProperty struct {
 }
 
 // VGNode represents a node from our virtual DOM with the dynamic parts wired up into functions.
+//
+// For the static parts, an instance of VGNode corresponds directly to the DOM representation of
+// an HTML node.  The pointers to other VGNode instances (Parent, FirstChild, etc.) are used to manage the tree.
+// Type, Data, Namespace and Attr have the usual meanings for nodes.
+//
+// The Component field, if not-nil indicates that rendering should be delegated to the specified component,
+// all other fields are ignored.
+//
+// Another special case is when Type is ElementNode and Data is an empty string (and Component is nil) then this node is a "template"
+// (i.e. <vg-template>) and its children will be "flattened" into the DOM in position of this element
+// and attributes, events, etc. ignored.
+//
+// Prop contains JavaScript property values to be assigned during render. InnerHTML provides alternate
+// HTML content instead of children.  DOMEventHandlerSpecList specifies DOM handlers to register.
+// And the JS...Handler fields are used to register callbacks to obtain information at JS render-time.
+//
+// TODO: This and its related parts should probably move into a sub-package (vgnode?) and
+// the "VG" prefixes removed.
 type VGNode struct {
 	Parent, FirstChild, LastChild, PrevSibling, NextSibling *VGNode
 
@@ -64,26 +74,31 @@ type VGNode struct {
 
 	InnerHTML *string // indicates that children should be ignored and this raw HTML is the children of this tag; nil means not set, empty string means explicitly set to empty string
 
-	// DOMEventHandlers map[string]DOMEventHandler // describes invocations when DOM events happen
-
-	DOMEventHandlerSpecList []DOMEventHandlerSpec // replacing DOMEventHandlers
+	DOMEventHandlerSpecList []DOMEventHandlerSpec // describes invocations when DOM events happen
 
 	// indicates this node's output should be delegated to the specified component
 	Component interface{}
 
-	// default of 0 means it will be calculated when positionHash() is called
-	// positionHashVal uint64
+	// if not-nil, called when element is created (but before examining child nodes)
+	JSCreateHandler JSValueHandler
+	// if not-nil, called after children have been visited
+	JSPopulateHandler JSValueHandler
 }
 
-// // SetDOMEventHandler will assign a named event to DOMEventHandlers (will allocate the map if nil).
-// // Used during VDOM construction and during render to determine browser events to hook up.
-// func (n *VGNode) SetDOMEventHandler(name string, h DOMEventHandler) {
-// 	if n.DOMEventHandlers == nil {
-// 		n.DOMEventHandlers = map[string]DOMEventHandler{name: h}
-// 		return
-// 	}
-// 	n.DOMEventHandlers[name] = h
-// }
+// IsComponent returns true if this is a component (Component != nil).
+// Components have rendering delegated to them instead of processing this node.
+func (n *VGNode) IsComponent() bool {
+	return n.Component != nil
+}
+
+// IsTemplate returns true if this is a template (Type is ElementNode and Data is an empty string and not a Component).
+// Templates have their children flattened into the output DOM instead of being processed directly.
+func (n *VGNode) IsTemplate() bool {
+	if n.Type == ElementNode && n.Data == "" && n.Component == nil {
+		return true
+	}
+	return false
+}
 
 // InsertBefore inserts newChild as a child of n, immediately before oldChild
 // in the sequence of n's children. oldChild may be nil, in which case newChild
@@ -240,7 +255,7 @@ func (n *VGNode) AddAttrInterface(key string, val interface{}) {
 		nattr.Val = key
 	case fmt.Stringer:
 		// we have to check that the given interface does not hide a nil ptr
-		if reflect.ValueOf(val).IsNil() {
+		if p := reflect.ValueOf(val); p.Kind() == reflect.Ptr && p.IsNil() {
 			return
 		}
 		nattr.Val = v.String()
@@ -248,13 +263,15 @@ func (n *VGNode) AddAttrInterface(key string, val interface{}) {
 		// check if this is a ptr
 		rv := reflect.ValueOf(val)
 		if rv.Kind() == reflect.Ptr {
+			if rv.IsNil() {
+				return
+			}
 			// indirect the ptr and recurse
-			if !rv.IsZero() {
+			if !rvIsZero(rv) {
 				n.AddAttrInterface(key, reflect.Indirect(rv).Interface())
 			}
 			return
 		}
-
 		// fall back to fmt
 		nattr.Val = fmt.Sprintf("%v", val)
 	}
@@ -264,153 +281,104 @@ func (n *VGNode) AddAttrInterface(key string, val interface{}) {
 
 // AddAttrList takes a VGAttributeLister and sets the returned attributes to the node
 func (n *VGNode) AddAttrList(lister VGAttributeLister) {
-	for _, attr := range lister.AttributeList() {
-		n.Attr = append(n.Attr, attr)
-	}
+	n.Attr = append(n.Attr, lister.AttributeList()...)
 }
 
-// // positionHash calculates a hash based on position in the tree only (specifically it does not consider element attributes),
-// // stores the result in positionHashVal and returns it.
-// // The same element position will have the same hash, regardless of element contents.  Each unique position in the vdom should have
-// // a unique positionHash value, allowing for the usual hash collision caveat.
-// // (subsequent calls return positionHashVal).  Special case: root nodes (Parent==nil) always return 0.
-// // This is used to efficiently answer the question "is this vdom element structurally in the same position as ...".
-// func (vgn *VGNode) positionHash() uint64 {
+// SetInnerHTML assigns the InnerHTML field with useful logic based on the type of input.
+// Values of string type are escaped using html.EscapeString().  Values in the
+// int or float type families or bool are converted to a string using the strconv package
+// (no escaping is required).  Nil values set InnerHTML to nil.  Non-nil pointers
+// are followed and the same rules applied.  Values implementing HTMLer will have their
+// HTML() method called and the result put into InnerHTML without escaping.
+// Values implementing fmt.Stringer have thier String() method called and the escaped result
+// used as in string above.
+//
+// All other values have undefined behavior but are currently handled by setting InnerHTML
+// to the result of: `html.EscapeString(fmt.Sprintf("%v", val))`
+func (n *VGNode) SetInnerHTML(val interface{}) {
 
-// 	if vgn.positionHashVal != 0 {
-// 		return vgn.positionHashVal
-// 	}
+	var s string
 
-// 	// root element always returns 0
-// 	if vgn.Parent == nil {
-// 		return 0
-// 	}
+	if val == nil {
+		n.InnerHTML = nil
+		return
+	}
 
-// 	b8 := make([]byte, 8)
+	switch v := val.(type) {
+	case string:
+		s = html.EscapeString(v)
+	case int:
+		s = strconv.Itoa(v)
+	case int8:
+		s = strconv.Itoa(int(v))
+	case int16:
+		s = strconv.Itoa(int(v))
+	case int32:
+		s = strconv.Itoa(int(v))
+	case int64:
+		s = strconv.FormatInt(v, 10)
+	case uint:
+		s = strconv.FormatUint(uint64(v), 10)
+	case uint8:
+		s = strconv.FormatUint(uint64(v), 10)
+	case uint16:
+		s = strconv.FormatUint(uint64(v), 10)
+	case uint32:
+		s = strconv.FormatUint(uint64(v), 10)
+	case uint64:
+		s = strconv.FormatUint(v, 10)
+	case float32:
+		s = strconv.FormatFloat(float64(v), 'f', 6, 32)
+	case float64:
+		s = strconv.FormatFloat(v, 'f', 6, 64)
+	case bool:
+		// I don't see any use in making false result in no output in this case.
+		// I'm guessing if someone puts a bool in vg-content/vg-html
+		// they are expecting it to print out the text "true" or "false".
+		// It's different from AddAttrInterface but I think appropriate here.
+		s = strconv.FormatBool(v)
 
-// 	h := xxhash.New()
+	case HTMLer:
+		s = v.HTML()
 
-// 	// hash in parent's positionHash
-// 	binary.BigEndian.PutUint64(b8, vgn.Parent.positionHash())
-// 	h.Write(b8)
+	case fmt.Stringer:
+		// we have to check that the given interface does not hide a nil ptr
+		if p := reflect.ValueOf(val); p.Kind() == reflect.Ptr && p.IsNil() {
+			n.InnerHTML = nil
+			return
+		}
+		s = html.EscapeString(v.String())
+	default:
+		// check if this is a ptr
+		rv := reflect.ValueOf(val)
 
-// 	// calculate our sibling depth
-// 	var n uint64
-// 	for prev := vgn.PrevSibling; prev != nil; prev = prev.PrevSibling {
-// 		n++
-// 	}
+		if rv.Kind() == reflect.Ptr {
+			if rv.IsNil() {
+				return
+			}
+			if !rvIsZero(rv) {
+				indirected := reflect.Indirect(rv)
+				if !indirected.IsNil() {
+					n.SetInnerHTML(indirected.Interface())
+				}
+			}
+			return
+		}
 
-// 	// hash in sibling depth
-// 	binary.BigEndian.PutUint64(b8, n)
-// 	h.Write(b8)
+		// fall back to fmt
+		s = html.EscapeString(fmt.Sprintf("%v", val))
+	}
 
-// 	// that's it
-// 	vgn.positionHashVal = h.Sum64()
-// 	return vgn.positionHashVal
-// }
+	n.InnerHTML = &s
+}
 
-// // elementHash calculates and returns a hash of just the contents of this element - it's type, Data, Attrs and Props and InnerHTML,
-// // it specifically does not include element position data like any of the Parent, NextSibling, etc pointers.
-// // The same element at different positions in the tree, assuming the same start param, will result in the same hash.
-// // FIXME: will need to add events here.
-// // The return value is not cached, it is calculated newly each time.
-// // A starting point to be hashed in can be provided also if needed, otherwise pass 0.
-// func (vgn *VGNode) elementHash(start uint64) uint64 {
+// JSValueHandler does something with a js.Value
+type JSValueHandler interface {
+	JSValueHandle(js.Value)
+}
 
-// 	b8 := make([]byte, 8)
+// JSValueFunc implements JSValueHandler as a function.
+type JSValueFunc func(js.Value)
 
-// 	h := xxhash.New()
-
-// 	if start != 0 {
-// 		binary.BigEndian.PutUint64(b8, start)
-// 		h.Write(b8)
-// 	}
-
-// 	// type (element, text, comment)
-// 	binary.BigEndian.PutUint64(b8, uint64(vgn.Type))
-// 	h.Write(b8)
-
-// 	// name of the element or text content
-// 	fmt.Fprint(h, vgn.Data)
-
-// 	// hash static attrs
-// 	for _, a := range vgn.Attr {
-// 		fmt.Fprint(h, a.Key)
-// 		fmt.Fprint(h, a.Val)
-// 	}
-
-// 	// // hash props (dynamic attrs)
-// 	// pks := vgn.Props.OrderedKeys() // stable sequence
-// 	// for _, pk := range pks {
-// 	// 	fmt.Fprint(h, pk) // key goes in as string
-
-// 	// 	// use ComputeHash on the value because we don't know it's type
-// 	// 	vh := ComputeHash(vgn.Props[pk])
-// 	// 	binary.BigEndian.PutUint64(b8, vh)
-// 	// 	h.Write(b8)
-// 	// }
-
-// 	// hash events
-// 	if len(vgn.DOMEventHandlers) > 0 {
-// 		keys := make([]string, len(vgn.DOMEventHandlers))
-// 		for k := range vgn.DOMEventHandlers {
-// 			keys = append(keys, k)
-// 		}
-// 		sort.Strings(keys)
-// 		for _, k := range keys {
-// 			vh := vgn.DOMEventHandlers[k].hash()
-// 			binary.BigEndian.PutUint64(b8, vh)
-// 			h.Write(b8)
-// 		}
-// 	}
-
-// 	// innerHTML if any
-// 	if vgn.InnerHTML != nil {
-// 		fmt.Fprint(h, *vgn.InnerHTML)
-// 	}
-
-// 	return h.Sum64()
-// }
-
-// var cruftHtml *html.Node
-// var cruftBody *html.Node
-
-// func init() {
-
-// 	// startTime := time.Now()
-// 	// defer func() { log.Printf("init() took %v", time.Since(startTime)) }() // NOTE: 35us on my laptop
-
-// 	n, err := html.Parse(bytes.NewReader([]byte(`<html><body></body></html>`)))
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// 	cruftHtml = n
-
-// 	// find the body tag and store in cruftBody
-// 	var walk func(n *html.Node)
-// 	walk = func(n *html.Node) {
-
-// 		// log.Printf("walk: %#v", n)
-
-// 		if n == nil {
-// 			return
-// 		}
-
-// 		if n.Type == html.ElementNode && n.Data == "body" {
-// 			cruftBody = n
-// 			return
-// 		}
-
-// 		if n.FirstChild != nil {
-// 			walk(n.FirstChild)
-// 		}
-// 		if n.NextSibling != nil {
-// 			walk(n.NextSibling)
-// 		}
-// 	}
-// 	walk(cruftHtml)
-
-// 	if cruftBody == nil {
-// 		panic("unable to find <body> tag in html, something went terribly wrong")
-// 	}
-// }
+// JSValueHandle implements the JSValueHandler interface.
+func (f JSValueFunc) JSValueHandle(v js.Value) { f(v) }
