@@ -1,0 +1,12 @@
+<!-- A simple select control with four fixed options to choose from. -->
+<div id=cards>
+    <label for="cars">Choose a car:</label>
+    <!-- Note 'c' in this case is the Staticselect component itself. -->
+    <!-- We call Staticselect.Change when the value changes to read the new value -->
+    <select name="cars" id="cars" @change='c.Change(event)'>
+    <option value="volvo">Volvo</option>
+    <option value="saab">Saab</option>
+    <option value="mercedes">Mercedes</option>
+    <option value="audi" selected="true">Audi</option> <!-- the default in the code is set to Audi. See staticselect.go -->
+    </select> 
+</div>
