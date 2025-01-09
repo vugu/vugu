@@ -1,0 +1,11 @@
+<!-- a simple set of radio buttons, used in this case to pick a language -->
+<div id="radiobuttons">
+    <!-- Note in this case 'c' is the Radiobuttins control itself. -->
+    <!-- We call Radiobuttons.Change when the value changes to read the updated value -->
+    <input type="radio" id="english" name="language" value="English" checked="checked" @change='c.Change(event)'>
+    <label for="english">English</label><br>
+    <input type="radio" id="french" name="language" value="Français" @change='c.Change(event)'>
+    <label for="french">Français</label><br>
+    <input type="radio" id="italian" name="language" value="Italiano" @change='c.Change(event)'>
+    <label for="italian">Italiano</label><br>
+</div>
