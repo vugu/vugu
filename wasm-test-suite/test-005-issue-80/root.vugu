@@ -6,14 +6,3 @@
     </div>
   </body>
 </html>
-
-<style>
-</style>
-
-<script type="application/x-go">
-  type Root struct {}
-
-  func (c *Root) Items() []string {
-    return []string{"a","b","c","d"}
-  }
-</script>
