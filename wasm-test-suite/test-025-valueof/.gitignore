@@ -1,0 +1,8 @@
+# Local .gitignore for the wasm test suite
+# We want to ignore any file that the test generates
+# These are the:
+# *.wasm - generated wasm files
+# index.html - as thisis created dynamiclly from the index.html.tmpl template buy the test itself
+
+*.wasm
+index.html
