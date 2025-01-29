@@ -1,0 +1,40 @@
+<div id="top">
+    <main:C1 vg-if="c.ShowC1"></main:C1>
+    <main:C2 vg-if="c.ShowC2"></main:C2>
+    <button id="refresh" @click="return">Refresh</button>
+    <button id="togglec1" @click="c.ShowC1=!c.ShowC1">Toggle C1</button>
+    <button id="togglec2" @click="c.ShowC2=!c.ShowC2">Toggle C2</button>
+
+    <!-- <pre vg-content="logText"></pre> -->
+</div>
+
+<script type="application/x-go">
+
+func init() {
+    js.Global().Call("eval", `
+    window.logText = function(t) {
+        if (!window.logTextContent) {
+            window.logTextContent = ""
+        }
+        if (!t.endsWith("\n")) {
+            t+="\n"
+        }
+        window.logTextContent += t
+    }`)
+}
+
+func sendLogText(text string) {
+    js.Global().Call("logText", text)
+}
+
+type Root struct {
+    ShowC1 bool `vugu:"data"`
+    ShowC2 bool `vugu:"data"`
+}
+
+func (c *Root) Init() {
+    c.ShowC1 = true
+    c.ShowC2 = true
+}
+
+</script>

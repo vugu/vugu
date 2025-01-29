@@ -1,0 +1,9 @@
+# Local .gitignore for the wasm test suite
+# We want to ignore any file that the test generates
+# These are the:
+# *.wasm - generated wasm files
+
+*.wasm
+
+# this should always be taken from the GOROOT on each build
+wasm_exec.js
