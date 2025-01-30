@@ -1,0 +1,3 @@
+        <div id="testing">
+            <div id="date_object" vg-content='c.ValueOf()'></div>
+        </div>
