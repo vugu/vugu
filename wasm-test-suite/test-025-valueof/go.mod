@@ -6,7 +6,7 @@ go 1.22.3
 
 require (
 	github.com/chromedp/chromedp v0.10.0
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.10.0
 	github.com/vugu/vjson v0.0.0-20200505061711-f9cbed27d3d9
 	github.com/vugu/vugu v0.0.0-00010101000000-000000000000
 )
