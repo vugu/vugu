@@ -1,4 +1,4 @@
-// +build js
+//go:build js && wasm
 
 package js
 
@@ -24,58 +24,173 @@ package js
 // go away, can't really tell; my crystal ball is broken.
 // See: https://hacks.mozilla.org/2019/03/standardizing-wasi-a-webassembly-system-interface/
 
-import sjs "syscall/js"
+import (
+	sjs "syscall/js"
+)
 
-// import "unsafe"
+// ######################
+// # syscall/js func.go #
+// ######################
 
-// Error alias to syscall/js
-type Error struct {
-	// Value is the underlying JavaScript error value.
-	Value
-}
-
-// Error alias to syscall/js
-func (e Error) Error() string {
-	return sjs.Error{Value: sjs.Value(e.Value)}.Error()
-	// return (*(*sjs.Error)(unsafe.Pointer(&e))).Error()
-}
-
-// Func alias to syscall/js
+// Func is a wrapped Go function to be called by JavaScript.
+//
+// This is a syscall/js alias.
 type Func struct {
-	Value
-	f sjs.Func // proxy for this func from syscall/js
+	Value          // A copy of the syscall/js Value inside of f, casted into Value.
+	f     sjs.Func // The original syscall/js Func object.
 }
 
-// FuncOf alias to syscall/js
-func FuncOf(fn func(Value, []Value) interface{}) Func {
-
-	fn2 := func(this sjs.Value, args []sjs.Value) interface{} {
-		args2 := make([]Value, len(args))
-		for i := range args {
-			args2[i] = Value(args[i])
+// FuncOf returns a function to be used by JavaScript.
+//
+// The Go function fn is called with the value of JavaScript's "this" keyword and the
+// arguments of the invocation. The return value of the invocation is
+// the result of the Go function mapped back to JavaScript according to ValueOf.
+//
+// Invoking the wrapped Go function from JavaScript will
+// pause the event loop and spawn a new goroutine.
+// Other wrapped functions which are triggered during a call from Go to JavaScript
+// get executed on the same goroutine.
+//
+// As a consequence, if one wrapped function blocks, JavaScript's event loop
+// is blocked until that function returns. Hence, calling any async JavaScript
+// API, which requires the event loop, like fetch (http.Client), will cause an
+// immediate deadlock. Therefore a blocking function should explicitly start a
+// new goroutine.
+//
+// Func.Release must be called to free up resources when the function will not be invoked any more.
+//
+// This is a syscall/js alias.
+func FuncOf(fn func(this Value, args []Value) any) Func {
+	fnConv := func(this sjs.Value, args []sjs.Value) any {
+		argsConv := make([]Value, len(args))
+		for i, arg := range args {
+			argsConv[i] = Value(arg)
 		}
-		return fn(Value(this), args2)
+		return convertAnyToSJS(fn(Value(this), argsConv))
 	}
 
-	f := sjs.FuncOf(fn2)
+	f := sjs.FuncOf(fnConv)
 
-	ret := Func{
+	return Func{
 		Value: Value(f.Value),
 		f:     f,
 	}
-
-	return ret
 }
 
-// Release alias to syscall/js
+// Release frees up resources allocated for the function.
+// The function must not be invoked after calling Release.
+// It is allowed to call Release while the function is still running.
+//
+// This is a syscall/js alias.
 func (c Func) Release() {
-	// return (*(*sjs.Func)(unsafe.Pointer(&c))).Release()
 	c.f.Release()
 }
 
-// Type alias to syscall/js
-type Type int
+// ####################
+// # syscall/js js.go #
+// ####################
 
+// Value represents a JavaScript value. The zero value is the JavaScript value "undefined".
+// Values can be checked for equality with the Equal method.
+//
+// This is a syscall/js alias.
+type Value sjs.Value
+
+// Error wraps a JavaScript error.
+//
+// This is a syscall/js alias.
+type Error = sjs.Error
+
+// Error implements the error interface.
+//
+// This is a syscall/js alias.
+// func (e Error) Error() string
+
+// Equal reports whether v and w are equal according to JavaScript's === operator.
+//
+// This is a syscall/js alias.
+func (v Value) Equal(w Value) bool {
+	return sjs.Value(v).Equal(sjs.Value(w))
+}
+
+// Undefined returns the JavaScript value "undefined".
+//
+// This is a syscall/js alias.
+func Undefined() Value {
+	return Value(sjs.Undefined())
+}
+
+// IsUndefined reports whether v is the JavaScript value "undefined".
+//
+// This is a syscall/js alias.
+func (v Value) IsUndefined() bool {
+	return sjs.Value(v).IsUndefined()
+}
+
+// Null returns the JavaScript value "null".
+//
+// This is a syscall/js alias.
+func Null() Value {
+	return Value(sjs.Null())
+}
+
+// Null returns the JavaScript value "null".
+//
+// This is a syscall/js alias.
+func (v Value) IsNull() bool {
+	return sjs.Value(v).IsNull()
+}
+
+// IsNaN reports whether v is the JavaScript value "NaN".
+//
+// This is a syscall/js alias.
+func (v Value) IsNaN() bool {
+	return sjs.Value(v).IsNaN()
+}
+
+// Global returns the JavaScript global object, usually "window" or "global".
+//
+// This is a syscall/js alias.
+func Global() Value {
+	return Value(sjs.Global())
+}
+
+// ValueOf returns x as a JavaScript value:
+//
+//	| Go                     | JavaScript             |
+//	| ---------------------- | ---------------------- |
+//	| js.Value               | [its value]            |
+//	| js.Func                | function               |
+//	| nil                    | null                   |
+//	| bool                   | boolean                |
+//	| integers and floats    | number                 |
+//	| string                 | string                 |
+//	| []interface{}          | new array              |
+//	| map[string]interface{} | new object             |
+//
+// Panics if x is not one of the expected types.
+//
+// This is a syscall/js alias.
+func ValueOf(x any) Value {
+	switch x := x.(type) {
+	case []any:
+		return Value(sjs.ValueOf(convertSliceToSJS(x)))
+
+	case map[string]any:
+		return Value(sjs.ValueOf(convertMapToSJS(x)))
+
+	default:
+		return Value(sjs.ValueOf(convertAnyToSJS(x)))
+
+	}
+}
+
+// Type represents the JavaScript type of a Value.
+//
+// This is a syscall/js alias.
+type Type = sjs.Type
+
+// This is a syscall/js alias.
 const (
 	TypeUndefined = Type(sjs.TypeUndefined)
 	TypeNull      = Type(sjs.TypeNull)
@@ -87,162 +202,166 @@ const (
 	TypeFunction  = Type(sjs.TypeFunction)
 )
 
-// String alias to syscall/js
-func (t Type) String() string {
-	return sjs.Type(t).String()
-}
+// This is a syscall/js alias.
+// func (t Type) String() string
 
-// Undefined alias to syscall/js
-func Undefined() Value {
-	return Value(sjs.Undefined())
-}
-
-// Null alias to syscall/js
-func Null() Value {
-	return Value(sjs.Null())
-}
-
-// Global alias to syscall/js
-func Global() Value {
-	return Value(sjs.Global())
-}
-
-// ValueOf alias to syscall/js
-func ValueOf(x interface{}) Value {
-	return Value(sjs.ValueOf(x))
-}
-
-// CopyBytesToGo alias to syscall/js
-func CopyBytesToGo(dst []byte, src Value) int {
-	return sjs.CopyBytesToGo(dst, sjs.Value(src))
-}
-
-// CopyBytesToJS alias to syscall/js
-func CopyBytesToJS(dst Value, src []byte) int {
-	return sjs.CopyBytesToJS(sjs.Value(dst), src)
-}
-
-// // TypedArray alias to syscall/js
-// type TypedArray struct {
-// 	Value
-// }
-
-// // TypedArrayOf alias to syscall/js
-// func TypedArrayOf(slice interface{}) TypedArray {
-// 	return TypedArray{Value: Value(sjs.TypedArrayOf(slice).Value)}
-// }
-
-// // Release alias to syscall/js
-// func (a TypedArray) Release() {
-// 	sjs.TypedArray{Value: sjs.Value(a.Value)}.Release()
-// }
-
-// ValueError alias to syscall/js
-type ValueError struct {
-	Method string
-	Type   Type
-}
-
-// Error alias to syscall/js
-func (e *ValueError) Error() string {
-	e2 := sjs.ValueError{Method: e.Method, Type: sjs.Type(e.Type)}
-	return e2.Error()
-}
-
-// Wrapper alias to syscall/js
-type Wrapper interface {
-	JSValue() Value
-}
-
-// Value alias to syscall/js
-type Value sjs.Value
-
-// JSValue alias to syscall/js
-func (v Value) JSValue() Value {
-	return v
-}
-
-// Type alias to syscall/js
+// Type returns the JavaScript type of the value v. It is similar to JavaScript's typeof operator,
+// except that it returns TypeNull instead of TypeObject for null.
+//
+// This is a syscall/js alias.
 func (v Value) Type() Type {
 	return Type(sjs.Value(v).Type())
 }
 
+// Get returns the JavaScript property p of value v.
+// It panics if v is not a JavaScript object.
+//
+// This is a syscall/js alias.
 func (v Value) Get(p string) Value {
 	return Value(sjs.Value(v).Get(p))
 }
 
-func (v Value) Set(p string, x interface{}) {
-	sjs.Value(v).Set(p, x)
+// Set sets the JavaScript property p of value v to ValueOf(x).
+// It panics if v is not a JavaScript object.
+//
+// This is a syscall/js alias.
+func (v Value) Set(p string, x any) {
+	sjs.Value(v).Set(p, convertAnyToSJS(x))
 }
 
+// Delete deletes the JavaScript property p of value v.
+// It panics if v is not a JavaScript object.
+//
+// This is a syscall/js alias.
+func (v Value) Delete(p string) {
+	sjs.Value(v).Delete(p)
+}
+
+// Index returns JavaScript index i of value v.
+// It panics if v is not a JavaScript object.
+//
+// This is a syscall/js alias.
 func (v Value) Index(i int) Value {
 	return Value(sjs.Value(v).Index(i))
 }
 
-func (v Value) SetIndex(i int, x interface{}) {
-	sjs.Value(v).SetIndex(i, x)
+// SetIndex sets the JavaScript index i of value v to ValueOf(x).
+// It panics if v is not a JavaScript object.
+//
+// This is a syscall/js alias.
+func (v Value) SetIndex(i int, x any) {
+	sjs.Value(v).SetIndex(i, convertAnyToSJS(x))
 }
 
+// Length returns the JavaScript property "length" of v.
+// It panics if v is not a JavaScript object.
+//
+// This is a syscall/js alias.
 func (v Value) Length() int {
 	return sjs.Value(v).Length()
 }
 
-func (v Value) Call(m string, args ...interface{}) Value {
-	return Value(sjs.Value(v).Call(m, fixArgsToSjs(args)...))
+// Call does a JavaScript call to the method m of value v with the given arguments.
+// It panics if v has no method m.
+// The arguments get mapped to JavaScript values according to the ValueOf function.
+//
+// This is a syscall/js alias.
+func (v Value) Call(m string, args ...any) Value {
+	return Value(sjs.Value(v).Call(m, convertSliceToSJS(args)...))
 }
 
-func (v Value) Invoke(args ...interface{}) Value {
-	return Value(sjs.Value(v).Invoke(fixArgsToSjs(args)...))
+// Invoke does a JavaScript call of the value v with the given arguments.
+// It panics if v is not a JavaScript function.
+// The arguments get mapped to JavaScript values according to the ValueOf function.
+//
+// This is a syscall/js alias.
+func (v Value) Invoke(args ...any) Value {
+	return Value(sjs.Value(v).Invoke(convertSliceToSJS(args)...))
 }
 
-func (v Value) New(args ...interface{}) Value {
-	return Value(sjs.Value(v).New(fixArgsToSjs(args)...))
+// New uses JavaScript's "new" operator with value v as constructor and the given arguments.
+// It panics if v is not a JavaScript function.
+// The arguments get mapped to JavaScript values according to the ValueOf function.
+//
+// This is a syscall/js alias.
+func (v Value) New(args ...any) Value {
+	return Value(sjs.Value(v).New(convertSliceToSJS(args)...))
 }
 
+// Float returns the value v as a float64.
+// It panics if v is not a JavaScript number.
+//
+// This is a syscall/js alias.
 func (v Value) Float() float64 {
 	return sjs.Value(v).Float()
 }
 
+// Int returns the value v truncated to an int.
+// It panics if v is not a JavaScript number.
+//
+// This is a syscall/js alias.
 func (v Value) Int() int {
 	return sjs.Value(v).Int()
 }
 
+// Bool returns the value v as a bool.
+// It panics if v is not a JavaScript boolean.
+//
+// This is a syscall/js alias.
 func (v Value) Bool() bool {
 	return sjs.Value(v).Bool()
 }
 
+// Truthy returns the JavaScript "truthiness" of the value v. In JavaScript,
+// false, 0, "", null, undefined, and NaN are "falsy", and everything else is
+// "truthy". See https://developer.mozilla.org/en-US/docs/Glossary/Truthy.
+//
+// This is a syscall/js alias.
 func (v Value) Truthy() bool {
 	return sjs.Value(v).Truthy()
 }
 
+// String returns the value v as a string.
+// String is a special case because of Go's String method convention. Unlike the other getters,
+// it does not panic if v's Type is not TypeString. Instead, it returns a string of the form "<T>"
+// or "<T: V>" where T is v's type and V is a string representation of v's value.
+//
+// This is a syscall/js alias.
 func (v Value) String() string {
 	return sjs.Value(v).String()
 }
 
+// InstanceOf reports whether v is an instance of type t according to JavaScript's instanceof operator.
+//
+// This is a syscall/js alias.
 func (v Value) InstanceOf(t Value) bool {
 	return sjs.Value(v).InstanceOf(sjs.Value(t))
 }
 
-func (v Value) IsUndefined() bool {
-	return sjs.Value(v).IsUndefined()
+// A ValueError occurs when a Value method is invoked on
+// a Value that does not support it. Such cases are documented
+// in the description of each method.
+//
+// This is a syscall/js alias.
+type ValueError = sjs.ValueError
+
+// This is a syscall/js alias.
+// func (e *ValueError) Error() string
+
+// CopyBytesToGo copies bytes from src to dst.
+// It panics if src is not a Uint8Array or Uint8ClampedArray.
+// It returns the number of bytes copied, which will be the minimum of the lengths of src and dst.
+//
+// This is a syscall/js alias.
+func CopyBytesToGo(dst []byte, src Value) int {
+	return sjs.CopyBytesToGo(dst, sjs.Value(src))
 }
 
-func (v Value) IsNull() bool {
-	return sjs.Value(v).IsNull()
-}
-
-func fixArgsToSjs(args []interface{}) []interface{} {
-	for i := 0; i < len(args); i++ {
-		v := args[i]
-		if val, ok := v.(Value); ok {
-			args[i] = sjs.Value(val) // convert to sjs.Value
-		}
-		if f, ok := v.(Func); ok {
-			args[i] = f.f
-		}
-		// if ta, ok := v.(TypedArray); ok {
-		// 	args[i] = sjs.TypedArray{Value: sjs.Value(ta.Value)}
-		// }
-	}
-	return args
+// CopyBytesToJS copies bytes from src to dst.
+// It panics if dst is not a Uint8Array or Uint8ClampedArray.
+// It returns the number of bytes copied, which will be the minimum of the lengths of src and dst.
+//
+// This is a syscall/js alias.
+func CopyBytesToJS(dst Value, src []byte) int {
+	return sjs.CopyBytesToJS(sjs.Value(dst), src)
 }
