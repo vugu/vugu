@@ -129,17 +129,20 @@ func (p *ParserGoPkg) Run() error {
 	// record the times of existing files, so we can restore after if the same
 	hashTimes, err := fileHashTimes(p.pkgPath)
 	if err != nil {
+		log.Printf("\t*** fileHashTimes Errors\n")
 		return err
 	}
 
 	pkgF, err := os.Open(p.pkgPath)
 	if err != nil {
+		log.Printf("\t*** os.Open Errors\n")
 		return err
 	}
 	defer pkgF.Close()
 
 	allFileNames, err := pkgF.Readdirnames(-1)
 	if err != nil {
+		log.Printf("\t*** pkgF.Readdirnames Errors\n")
 		return err
 	}
 
@@ -151,6 +154,7 @@ func (p *ParserGoPkg) Run() error {
 	}
 
 	if len(vuguFileNames) == 0 {
+		log.Printf("\t*** len(vuguFileNames) Errors\n")
 		return fmt.Errorf("no .vugu files found, please create one and try again")
 	}
 
@@ -174,8 +178,10 @@ func (p *ParserGoPkg) Run() error {
 
 	// run ParserGo on each file to generate the .go files
 	for _, fn := range vuguFileNames {
-
+		log.Printf("\t*** ParserGo wil run on Filename: %s\n", fn)
 		baseFileName := strings.TrimSuffix(fn, ".vugu")
+		log.Printf("\t*** basefilename: %s\n", baseFileName)
+		log.Printf("\t*** goFnameAppend: %s\n", goFnameAppend)
 		goFileName := baseFileName + goFnameAppend + ".go"
 		compTypeName := fnameToGoTypeName(baseFileName)
 
@@ -203,12 +209,14 @@ func (p *ParserGoPkg) Run() error {
 		// read in source
 		b, err := os.ReadFile(filepath.Join(p.pkgPath, fn))
 		if err != nil {
+			log.Printf("\t*** os.Readfile Errors\n")
 			return err
 		}
 
 		// parse it
 		err = pg.Parse(bytes.NewReader(b), fn)
 		if err != nil {
+			log.Printf("\t*** pg.Parse Errors\n")
 			return fmt.Errorf("error parsing %q: %v", fn, err)
 		}
 
@@ -218,6 +226,7 @@ func (p *ParserGoPkg) Run() error {
 	// what we need to generate
 	namesFound, err := goPkgCheckNames(p.pkgPath, namesToCheck)
 	if err != nil {
+		log.Printf("\t*** goPkgCheckNames Errors\n")
 		return err
 	}
 
@@ -315,6 +324,8 @@ func main() {
 				log.Printf("WARNING: gofmt on main_wasm.go failed: %v", err)
 			}
 
+			log.Printf("\t*** os.WriteFile called. mainGoPath %s\n", mainGoPath)
+
 			err = os.WriteFile(mainGoPath, []byte(bufstr), 0644)
 			if err != nil {
 				return err
@@ -328,6 +339,9 @@ func main() {
 	// otherwise we really don't know what the right module name is
 	goModPath := filepath.Join(p.pkgPath, "go.mod")
 	if pkgName == "main" && !p.opts.SkipGoMod && !fileExists(goModPath) {
+
+		log.Printf("\t*** os.WriteFile called. goModPath %s\n", goModPath)
+
 		err := os.WriteFile(goModPath, []byte(`module `+pkgName+"\n"), 0644)
 		if err != nil {
 			return err
@@ -384,10 +398,14 @@ func main() {
 
 	// }
 
+	log.Printf("\t*** before MissingFixer.run() missingFmap: %v\n", missingFmap)
+
 	// generate anything missing and process vugugen comments
 	mf := newMissingFixer(p.pkgPath, pkgName, missingFmap)
 	err = mf.run()
+
 	if err != nil {
+		log.Printf("\t*** MissingFixer.run() errors\n")
 		return fmt.Errorf("missing fixer error: %w", err)
 	}
 

@@ -1,3 +1,5 @@
+//go:build !js || !wasm
+
 package gen
 
 import (
@@ -188,18 +190,21 @@ func (p *ParserGo) Parse(r io.Reader, fname string) error {
 	}
 
 	// write to final output file
-	err = os.WriteFile(outPath, dedupedBuf.Bytes(), 0644)
-	if err != nil {
-		return err
-	}
-	err = removeRedundantDefinitions(outPath)
+
+	// thsi writes *_gen.go which we don't want any more!
+	// err = os.WriteFile(outPath, dedupedBuf.Bytes(), 0644)
+	// if err != nil {
+	// 	return err
+	// }
+
+	err = removeRedundantDefinitions(dedupedBuf.String(), outPath)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func removeRedundantDefinitions(fileName string) error {
+func removeRedundantDefinitions(deduped, fileName string) error {
 	type definitions struct {
 		old, new string
 	}
@@ -210,21 +215,62 @@ func removeRedundantDefinitions(fileName string) error {
 		},
 	}
 
-	content, err := os.ReadFile(fileName)
+	var newContents string
+	for _, v := range r {
+		newContents = strings.Replace(deduped, v.old, v.new, -1)
+	}
+
+	err := writeNonJsPlatformFile(fileName, newContents)
 	if err != nil {
 		return err
 	}
 
-	var newContents string
-	for _, v := range r {
-		newContents = strings.Replace(string(content), v.old, v.new, -1)
-	}
-
-	err = os.WriteFile(fileName, []byte(newContents), 0644)
+	err = writeJsPlatformFile(fileName, newContents)
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+func writeNonJsPlatformFile(fileName, newContents string) error {
+	// we need to insert a build tag like:
+	// "//go:build !js || !wasm"
+	// as the first line to ensure this file is only use don non-js and non-wasm targets
+
+	buildTag := []byte("//go:build !js || !wasm\n\n\n")
+	newContentsWithBuildTag := append(buildTag, []byte(newContents)...)
+
+	// removed to see if we can pass the tests again
+	// the generated file will be left with a "_gen.go" extension.
+	// for all platforms
+	// path := filepath.Dir(fileName)
+	// basename := filepath.Base(fileName)
+	// ext := filepath.Ext(fileName)
+	// filenameNoExt, _ := strings.CutSuffix(basename, ext)
+	// newFileName := path + string(filepath.Separator) + filenameNoExt + "_notjs_notwasm" + ext
+
+	newFileName := fileName
+	return os.WriteFile(newFileName, []byte(newContentsWithBuildTag), 0644)
+}
+
+func writeJsPlatformFile(fileName, newContents string) error {
+	// syscall/js hack!
+	// write 2nd new file with a _js_wasm.go suffix
+	path := filepath.Dir(fileName)
+	basename := filepath.Base(fileName)
+	ext := filepath.Ext(fileName)
+	filenameNoExt, _ := strings.CutSuffix(basename, ext)
+
+	newFileName := path + string(filepath.Separator) + filenameNoExt + "_js_wasm" + ext
+
+	// replace "vugu/js" with "syscall/js"
+	newContents = strings.Replace(string(newContents), "github.com/vugu/vugu/js", "syscall/js", -1)
+
+	err := os.WriteFile(newFileName, []byte(newContents), 0644)
+	if err != nil {
+		return err
+	}
+	return err
 }
 
 //nolint:golint,unused
