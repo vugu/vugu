@@ -113,7 +113,26 @@ func runGitDiffFilesInModuleDir(module moduleData) error {
 
 func updateModuleDependencies(module moduleData) error {
 	f := func() error {
-		return goCmdV("get", "-u", "-t", module.name)
+		err := goCmdV("get", "-u", "-t", module.name)
+		if err != nil {
+			// bail out early if the "go get -u -t" fails
+			return err
+		}
+		// we need to run a "go mod tidy" after a "go get -u -t" because only the "go mod tidy" ill remove
+		// unused (i.e. older versions of modules) from teh "go.mod". The "go get -u -t" will only ever add to the "go.mod".
+		//
+		// From the "go get" docs
+		// The -u flag instructs get to update modules providing dependencies
+		// of packages named on the command line to use newer minor or patch
+		// releases when available.
+		//
+		// from the "go mod tidy" docs
+		// Tidy makes sure go.mod matches the source code in the module.
+		// It adds any missing modules necessary to build the current module's
+		// packages and dependencies, and it __removes__ unused modules that
+		// don't provide any relevant packages. It also adds any missing entries
+		// to go.sum and removes any unnecessary ones.
+		return goCmdV("mod", "tidy")
 	}
 	return runFuncIn(module, f)
 }
