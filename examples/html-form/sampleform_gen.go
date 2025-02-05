@@ -83,6 +83,14 @@ func (c *Sampleform) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 		vgparent.AppendChild(vgn)
 		vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n    "}
 		vgparent.AppendChild(vgn)
+		vgn = &vugu.VGNode{Type: vugu.VGNodeType(4), Data: " This has been extended so that it now uses the new Language Radio Button component "}
+		vgparent.AppendChild(vgn)
+		vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n    "}
+		vgparent.AppendChild(vgn)
+		vgn = &vugu.VGNode{Type: vugu.VGNodeType(4), Data: " which can manage default selections without duplication between the vugu anf Go sides. "}
+		vgparent.AppendChild(vgn)
+		vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n    "}
+		vgparent.AppendChild(vgn)
 		{
 			vgcompKey := vugu.MakeCompKey(0x2F83E693BC19BD7^vgin.CurrentPositionHash(), vgiterkey)
 			// ask BuildEnv for prior instance of this specific component
@@ -94,6 +102,7 @@ func (c *Sampleform) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 			}
 			vgin.BuildEnv.UseComponent(vgcompKey, vgcomp)	// ensure we can use this in the cache next time around
 			vgcomp.Form = c
+			vgcomp.SelectionDefault = "german"
 			vgout.Components = append(vgout.Components, vgcomp)
 			vgn = &vugu.VGNode{Component: vgcomp}
 			vgparent.AppendChild(vgn)

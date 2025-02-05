@@ -1,11 +1,12 @@
 <!-- a simple set of radio buttons, used in this case to pick a language -->
 <div id="radiobuttons">
-    <!-- Note in this case 'c' is the Radiobuttins control itself. -->
-    <!-- We call Radiobuttons.Change when the value changes to read the updated value -->
-    <input type="radio" id="english" name="language" value="English" checked="checked" @change='c.Change(event)'>
-    <label for="english">English</label><br>
-    <input type="radio" id="french" name="language" value="Français" @change='c.Change(event)'>
-    <label for="french">Français</label><br>
-    <input type="radio" id="italian" name="language" value="Italiano" @change='c.Change(event)'>
-    <label for="italian">Italiano</label><br>
+    <!-- create the 4 radio buttons in the group, passing the properties we would nornmally set in JS as -->
+    <!-- fields in the underlying Go struct. The Language Radio Button can then read these fields to determine -->
+    <!-- if it is the selected default option. -->
+    <!-- In this case 'c' is the containing radio buttons not the language radio button itself -->
+    <main:Languageradiobutton :Group='c' Id="english" Value="English"></main:Languageradiobutton>
+    <main:Languageradiobutton :Group='c' Id="french" Value="Français"></main:Languageradiobutton>
+    <main:Languageradiobutton :Group='c' Id="italian" Value="Italiano"></main:Languageradiobutton>
+    <main:Languageradiobutton :Group='c' Id="german" Value="Deutsch"></main:Languageradiobutton>
+
 </div>
