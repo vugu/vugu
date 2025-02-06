@@ -46,6 +46,13 @@ func New(mountPointSelector string) (*JSRenderer, error) {
 	ret.instructionList = newInstructionList(ret.instructionBuffer, func(il *instructionList) error {
 
 		// call vuguRender to have the instructions processed in JS
+		if il.pos > cap(ret.instructionBuffer) {
+			size := computeRequiredSize(il.pos)
+			buf := make([]byte, size)
+			copy(buf, ret.instructionBuffer)
+			ret.instructionBuffer = buf
+		}
+
 		ret.instructionBuffer[il.pos] = 0 // ensure zero terminator
 
 		// copy the data over
