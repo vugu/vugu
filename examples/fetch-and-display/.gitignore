@@ -4,3 +4,6 @@
 # *.wasm - generated wasm files
 
 *.wasm
+
+# ignore wasm_exec.js as this should be copied from the GOROOT by the build process
+wasm_exec.js
