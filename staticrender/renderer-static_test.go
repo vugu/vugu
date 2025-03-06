@@ -100,6 +100,46 @@ comp1 in the house
 			},
 			outReNotMatch: []string{`vg-template`},
 		},
+		{
+			name:      "syscall-js",
+			opts:      gen.ParserGoPkgOpts{},
+			recursive: false,
+			infiles: map[string]string{
+				"root.vugu": `<div id="testing"><div id="syscalljs" vg-content='c.ValueOf()'></div></div>`,
+				"root.go": `
+package main
+
+import (
+	"fmt"
+	"time"
+
+	js "github.com/vugu/vugu/js"
+)
+
+type Root struct {
+}
+
+func (c *Root) ValueOf() (s string) {
+	defer func() {
+		if r := recover(); r != nil {
+			s = fmt.Sprintf("%s", r) // set the names return value to the panic string
+		}
+	}()
+	c.panicingFunc()
+	return "syscall/js passed"
+}
+
+func (c *Root) panicingFunc() {
+	date := js.Global().Get("Date")
+	timeEndValue := date.New(time.Now().UnixMilli())
+	js.ValueOf(timeEndValue)
+}`,
+			},
+			outReMatch: []string{
+				`<div id="testing"><div id="syscalljs">syscall/js passed</div>`,
+			},
+			outReNotMatch: []string{`Panic`},
+		},
 	}
 
 	for _, tc := range tcList {
