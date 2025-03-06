@@ -8,7 +8,9 @@
     <!-- Add an email input box -->
     <main:Emailinput :Form='c'></main:Emailinput>
     <!-- Add some radio buttons -->
-    <main:Radiobuttons :Form='c'></main:Radiobuttons>
+    <!-- This has been extended so that it now uses the new Language Radio Button component -->
+    <!-- which can manage default selections without duplication between the vugu anf Go sides. -->
+    <main:Radiobuttons :Form='c' SelectionDefault="german"></main:Radiobuttons>
     <!-- Add a select from a static list -->
     <main:Staticselect :Form='c'></main:StaticSelect>
     <!-- Add a select from a dynamically generated list -->

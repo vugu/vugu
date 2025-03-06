@@ -56,4 +56,5 @@ func (c *Sampleform) SetCar(car string) {
 // Set the random number field in the form data
 func (c *Sampleform) SetRandomNumber(n int) {
 	c.data.RandomNumber = n
+
 }
