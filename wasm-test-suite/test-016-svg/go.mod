@@ -7,11 +7,11 @@ toolchain go1.23.5
 replace github.com/vugu/vugu => ../..
 
 require (
-	github.com/chromedp/cdproto v0.0.0-20250120090109-d38428e4d9c8
-	github.com/chromedp/chromedp v0.11.2
+	github.com/chromedp/cdproto v0.0.0-20250126231910-1730200a0f74
+	github.com/chromedp/chromedp v0.12.1
 	github.com/stretchr/testify v1.10.0
 	github.com/vugu/vjson v0.0.0-20200505061711-f9cbed27d3d9
-	github.com/vugu/vugu v0.0.0-00010101000000-000000000000
+	github.com/vugu/vugu v0.4.0
 )
 
 require (
