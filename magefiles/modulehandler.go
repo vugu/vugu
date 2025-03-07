@@ -5,11 +5,13 @@ package main
 import (
 	"bufio"
 	"io"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/magefile/mage/sh"
+	"golang.org/x/mod/semver"
 )
 
 func buildAndTestModule(module moduleData, withGeneratedFileCheck bool) error {
@@ -254,7 +256,24 @@ func copyWasmExecJSFromGoRoot(module moduleData) error {
 	if err != nil {
 		return err
 	}
-	fullWasmExecPath := filepath.Join(goRoot, WasmExecJSPathMiscDir, WasmExecJSPathWasmDir, WasmExecJS)
+	// which version of Go are we, as the path to the wasm_exec.js is different pre go1.24
+	goSemVer, err := goGetSemVer()
+	if err != nil {
+		return err
+	}
+	log.Printf("Go Sem Ver: %s\n", goSemVer)
+	log.Printf("Sem Ver Constant: %s\n", Go1_24_0SemVer)
+	var fullWasmExecPath string
+	if semver.Compare(goSemVer, Go1_24_0SemVer) < 0 {
+		// we are pre go 1.24.0
+		log.Printf("Pre Go 1.24.0 - using misc\n")
+		fullWasmExecPath = filepath.Join(goRoot, WasmExecJSPathMiscDir, WasmExecJSPathWasmDir, WasmExecJS)
+	} else {
+		// we are Go1.24.0 or greater
+		log.Printf("Go 1.24.0 or later- using lib\n")
+		fullWasmExecPath = filepath.Join(goRoot, WasmExecJSPathLibDir, WasmExecJSPathWasmDir, WasmExecJS)
+	}
+
 	// create a fie reader on the wasm_exec.js file
 	wasmExecJs, err := os.Open(fullWasmExecPath)
 	if err != nil {

@@ -51,6 +51,21 @@ func goGetGoRoot() (string, error) {
 	return goCmdCaptureOutput("env", GoRoot)
 }
 
+// return the go version as a semvar string
+func goGetSemVer() (string, error) {
+	goVersion, err := goCmdCaptureOutput("env", GoVersion)
+	if err != nil {
+		return "", err
+	}
+	// the goVersion looks like:
+	// go1.24.0
+	// But we need it in the form
+	// v1.24.0
+	// for comparison
+	goVersion = strings.ReplaceAll(goVersion, "go", "v")
+	return goVersion, nil
+}
+
 func buildLegacyWasmTestSuiteServer() error {
 	envs := map[string]string{
 		"CGO_ENABLED": "0",
