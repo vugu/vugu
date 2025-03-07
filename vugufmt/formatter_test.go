@@ -2,7 +2,6 @@ package vugufmt
 
 import (
 	"bytes"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -51,7 +50,7 @@ func TestVuguFmtNoError(t *testing.T) {
 
 		assert.NoError(t, err, f)
 		// get a handle on the file
-		testFile, err := ioutil.ReadFile(absPath)
+		testFile, err := os.ReadFile(absPath)
 		testFileString := string(testFile)
 		assert.NoError(t, err, f)
 		// run gofmt on it
@@ -64,7 +63,7 @@ func TestVuguFmtNoError(t *testing.T) {
 		assert.NotNil(t, buf.String(), f)
 		assert.Equal(t, testFileString, prettyVersion, f)
 
-		//ioutil.WriteFile(absPath+".html", []byte(prettyVersion), 0644)
+		//os.WriteFile(absPath+".html", []byte(prettyVersion), 0644)
 	}
 
 	err := filepath.Walk("./testdata/ok/", func(path string, info os.FileInfo, err error) error {
@@ -87,12 +86,14 @@ func TestUncompilableGo(t *testing.T) {
 
 		assert.NoError(t, err, f)
 		// get a handle on the file
-		testFile, err := ioutil.ReadFile(absPath)
-		testFileString := string(testFile)
+		testFile, err := os.ReadFile(absPath)
 		assert.NoError(t, err, f)
+		testFileString := string(testFile)
 		// run gofmt on it
 		var buf bytes.Buffer
-		ferr := formatter.FormatHTML("oknow", strings.NewReader(testFileString), &buf)
+		err = formatter.FormatHTML("oknow", strings.NewReader(testFileString), &buf)
+		ferr, ok := err.(*FmtError)
+		assert.True(t, ok)
 		assert.NotNil(t, ferr, f)
 		// confirm the offset is correct!
 		assert.Equal(t, 46, ferr.Line, f)

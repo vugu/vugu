@@ -1,0 +1,40 @@
+name: Vugu build using Go @ oldstable
+
+on:
+  push:
+    branches:
+      - master
+      - PR/** # Build on any branch named PR/<something> from https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#onpushbranchestagsbranches-ignoretags-ignore
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go: [ 'oldstable' ]
+    env:
+      GO111MODULE: "on"
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '${{ matrix.go }}'
+
+    - name: Print Go version
+      run: go version
+
+    - name: Install mage
+      run: |
+        git clone https://github.com/magefile/mage /tmp/mage
+        cd /tmp/mage && go run bootstrap.go
+        rm -rf /tmp/mage
+
+    - name: Print mage version
+      run: mage --version
+
+    - name: Build and test vugu including the legecy wasm test suite
+      run: mage -v AllGithubAction
