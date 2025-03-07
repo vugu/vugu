@@ -26,7 +26,14 @@ const LegacyWasmTestSuiteDir = "legacy-wasm-test-suite"
 const ExamplesDir = "examples"
 const MagefilesDir = "magefiles"
 
-const GoRoot = "GOROOT" // GOROOT env var name
-const WasmExecJSPathMiscDir = "misc"
+const GoRoot = "GOROOT"       // GOROOT env var name
+const GoVersion = "GOVERSION" // GOVERSION env var name
+// The Go 1.24 release notes state that the "wasm_exec.js1" file has been moved from:
+// $GOROOT/misc/wasm to $GOROOT/lib/wasm.
+// While we still build with a pre go1.24 versions we ned to account for the different paths
+const WasmExecJSPathMiscDir = "misc" // used for pre go1.24
+const WasmExecJSPathLibDir = "lib"   // used for go1.24 and onwards
 const WasmExecJSPathWasmDir = "wasm"
 const WasmExecJS = "wasm_exec.js"
+
+const Go1_24_0SemVer = "v1.24.0"
