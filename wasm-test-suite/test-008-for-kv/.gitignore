@@ -6,3 +6,9 @@
 
 *.wasm
 index.html
+
+# ignore wasm_exec.js as this should be copied from the GOROOT by the build process
+wasm_exec.js
+
+# ignore wasm_exec.js as this should be copied from the GOROOT by the build process
+wasm_exec.js

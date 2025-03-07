@@ -46,6 +46,8 @@ func goBuildWithEnvs(envs map[string]string, binaryName, pkgName string) error {
 // Get the GOROOT for the standard go compiler via go env
 // we need a tinygo version of this!
 func goGetGoRoot() (string, error) {
+	// TODO - ref Issue #344 - https://github.com/vugu/vugu/issues/344
+	// What does tinygo do???? The GOROOT has to point to a different location so we need to take this into account.
 	return goCmdCaptureOutput("env", GoRoot)
 }
 

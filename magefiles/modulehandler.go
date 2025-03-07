@@ -278,10 +278,5 @@ func copyWasmExecJSFromGoRoot(module moduleData) error {
 	if err != nil {
 		return err
 	}
-	// now are the files different - this is AFTER the copy so if they are the local wasm_exec.js will be different from the copy in the repo
-	err = gitDiffFile(localWasmExecJsPath)
-	if err != nil {
-		return err
-	}
 	return nil
 }
