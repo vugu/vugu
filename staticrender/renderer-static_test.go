@@ -107,6 +107,8 @@ comp1 in the house
 			infiles: map[string]string{
 				"root.vugu": `<div id="testing"><div id="syscalljs" vg-content='c.ValueOf()'></div></div>`,
 				"root.go": `
+// this test is built natively, so uses the limited vugu/js package
+// we expect attempting to call js.Value.Get(p string) to panic as we are not running on a GOOS=js && GOARCH=wasm platform 
 package main
 
 import (
@@ -130,13 +132,13 @@ func (c *Root) ValueOf() (s string) {
 }
 
 func (c *Root) panicingFunc() {
-	date := js.Global().Get("Date")
+	date := js.Global().Get("Date") // the Get call will FAIL as we are building this test is NOT being built for GOOS=js GOARCH-wasm its being built natively.
 	timeEndValue := date.New(time.Now().UnixMilli())
 	js.ValueOf(timeEndValue)
 }`,
 			},
 			outReMatch: []string{
-				`<div id="testing"><div id="syscalljs">syscall/js passed</div>`,
+				`<div id="testing"><div id="syscalljs">js not implemented</div>`,
 			},
 			outReNotMatch: []string{`Panic`},
 		},
