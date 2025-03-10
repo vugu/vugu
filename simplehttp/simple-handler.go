@@ -42,6 +42,7 @@ import (
 	"time"
 
 	"github.com/vugu/vugu/gen"
+	"golang.org/x/mod/semver"
 )
 
 // SimpleHandler provides common web serving functionality useful for building Vugu sites.
@@ -305,18 +306,41 @@ serveBuiltFile:
 }
 
 func (h *SimpleHandler) serveGoEnvWasmExecJs(w http.ResponseWriter, r *http.Request) {
-
-	b, err := exec.Command("go", "env", "GOROOT").CombinedOutput()
+	goRoot, err := exec.Command("go", "env", "GOROOT").CombinedOutput()
 	if err != nil {
 		http.Error(w, "failed to run `go env GOROOT`: "+err.Error(), 500)
 		return
 	}
 
 	h.wasmExecJsOnce.Do(func() {
-		h.wasmExecJsContent, err = os.ReadFile(filepath.Join(strings.TrimSpace(string(b)), "misc/wasm/wasm_exec.js"))
+		// return the go version as a semvar string
+		b, err := exec.Command("go", "version").CombinedOutput()
 		if err != nil {
-			http.Error(w, "failed to run `go env GOROOT`: "+err.Error(), 500)
+			http.Error(w, "failed to run `go version`: "+err.Error(), 500)
 			return
+		}
+		goVersion := strings.Split(string(b), " ")[2] // format is go version go1.24.0 linux/amd64 - so we always want the 3rd element
+		// the goVersion looks like:
+		// go1.24.0
+		// But we need it in the form
+		// v1.24.0
+		// for comparison
+		goVersion = strings.ReplaceAll(goVersion, "go", "v")
+
+		const Go1_24_0SemVer = "v1.24.0"
+		if semver.Compare(goVersion, Go1_24_0SemVer) < 0 {
+			// we are pre go 1.24.0
+			h.wasmExecJsContent, err = os.ReadFile(filepath.Join(strings.TrimSpace(string(goRoot)), "misc/wasm/wasm_exec.js"))
+			if err != nil {
+				http.Error(w, "goVersion: "+goVersion+", failed to read \"misc/wasm/wasm_exec.js\" file: "+err.Error(), 500)
+				return
+			}
+		} else {
+			h.wasmExecJsContent, err = os.ReadFile(filepath.Join(strings.TrimSpace(string(goRoot)), "lib/wasm/wasm_exec.js"))
+			if err != nil {
+				http.Error(w, "failed to read \"lib/wasm/wasm_exec.js\" file: "+err.Error(), 500)
+				return
+			}
 		}
 		h.wasmExecJsTs = time.Now() // hack but whatever for now
 	})
