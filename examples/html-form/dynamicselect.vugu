@@ -1,0 +1,16 @@
+<!-- A select control that contains a random number of options, each of which is a random number -->
+<div id=numbers>
+    <div >
+        <label for="numbers">Choose a number:</label>
+        <!-- In this case 'c' is the instance of the Emailinput component. -->
+        <!-- When the value changes we call the 'Change' method to read the new value -->
+        <select name="numbers" id="numbers" @change='c.Change(event)'>
+        <div>
+            <!-- NOTE the embedded vg-for statement. This generates N option tags, where N is the number of random numbers we have generated between [1..10] -->
+            <!-- We set the value attribute dynamically to the value of the loop index i -->
+            <!-- but we set the content to the ith random number in the set (which the component generates when first initialised) -->
+            <option vg-for='i:=0; i<c.NumberOfOptions(); i++'  :value='fmt.Sprintf("%d", i)' vg-content='c.Random(i)'></option>
+        </div>
+        </select> 
+    </div>
+</div>

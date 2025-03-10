@@ -1,0 +1,7 @@
+<!-- A very simple single line text input component -->
+<div id="nameinput">
+    <label for="name">Name</label>
+    <!-- Note in this case 'c' is the Nameinput component itself. -->
+    <!-- We call Nameinput.Change when the value changes to retrieve the new value -->
+    <input id="name" type="text" value="enter your name" @change='c.Change(event)'></input>
+</div>
