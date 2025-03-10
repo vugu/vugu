@@ -69,7 +69,23 @@ func AllGitHubAction() error {
 		TestWasmWithGeneratedFilesCheck,
 		Examples,
 		StopLocalNginxForExamples,
-		TestLegacyWasm,
+		// With Go 1.24.x the location of the wasm_exec.js file has changed.
+		// We do not wan to update the legacy test suite - we want to eventually remove it - so we have not updated the
+		// test code to reflect this change.
+		// In addition if we use Go 1.23.x then the latest version of tinygo (v0.36+) wil panic with:
+		//    --- FAIL: Test012Router/tinygo/Docker (20.85s)
+		//		panic: TinygoCompiler: build error: exit status 1; cmd.args: [docker run --rm -v /home/owen/go/pkg/mod:/gomodcache -e GOMODCACHE=/gomodcache -v /home/owen/.cache/tinygo:/tinygocache -e GOCACHE=/tinygocache -v /:/src -v /tmp/:/out -e HOME=/tmp --user=1000 -w /src/home/owen/src/vugu/legacy-wasm-test-suite/test-012-router tinygo/tinygo:latest tinygo build -o /out/WasmCompiler226958135 -target=wasm .], full output:
+		//		/usr/local/go/src/crypto/internal/sysrand/rand_js.go:13:22: //go:wasmimport gojs runtime.getRandomData: unsupported parameter type []byte
+		//		[recovered]
+		//		panic: TinygoCompiler: build error: exit status 1; cmd.args: [docker run --rm -v /home/owen/go/pkg/mod:/gomodcache -e GOMODCACHE=/gomodcache -v /home/owen/.cache/tinygo:/tinygocache -e GOCACHE=/tinygocache -v /:/src -v /tmp/:/out -e HOME=/tmp --user=1000 -w /src/home/owen/src/vugu/legacy-wasm-test-suite/test-012-router tinygo/tinygo:latest tinygo build -o /out/WasmCompiler226958135 -target=wasm .], full output:
+		///usr/local/go/src/crypto/internal/sysrand/rand_js.go:13:22: //go:wasmimport gojs runtime.getRandomData: unsupported parameter type []byte
+		//
+		// Given that we want to remove the legacy test suite this is not worth fixing.
+		// However Issues #278 and #279 now urgently need fixed:
+		// https://github.com/vugu/vugu/issues/279
+		// https://github.com/vugu/vugu/issues/278
+		//
+		//TestLegacyWasm,
 	)
 	return nil
 }
