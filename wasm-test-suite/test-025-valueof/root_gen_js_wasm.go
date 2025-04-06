@@ -24,7 +24,7 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 		_ = vgparent
 		vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n            "}
 		vgparent.AppendChild(vgn)
-		vgn = &vugu.VGNode{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute{{Namespace: "", Key: "id", Val: "date_object"}}}
+		vgn = &vugu.VGNode{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute{{Namespace: "", Key: "id", Val: "t1"}}}
 		vgparent.AppendChild(vgn)
 		vgn.SetInnerHTML(c.ValueOf())
 		vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n        "}
