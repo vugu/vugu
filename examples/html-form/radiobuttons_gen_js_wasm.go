@@ -24,64 +24,97 @@ func (c *Radiobuttons) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 		_ = vgparent
 		vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n    "}
 		vgparent.AppendChild(vgn)
-		vgn = &vugu.VGNode{Type: vugu.VGNodeType(4), Data: " Note in this case 'c' is the Radiobuttins control itself. "}
+		vgn = &vugu.VGNode{Type: vugu.VGNodeType(4), Data: " create the 4 radio buttons in the group, passing the properties we would nornmally set in JS as "}
 		vgparent.AppendChild(vgn)
 		vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n    "}
 		vgparent.AppendChild(vgn)
-		vgn = &vugu.VGNode{Type: vugu.VGNodeType(4), Data: " We call Radiobuttons.Change when the value changes to read the updated value "}
+		vgn = &vugu.VGNode{Type: vugu.VGNodeType(4), Data: " fields in the underlying Go struct. The Language Radio Button can then read these fields to determine "}
 		vgparent.AppendChild(vgn)
 		vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n    "}
 		vgparent.AppendChild(vgn)
-		vgn = &vugu.VGNode{Type: vugu.VGNodeType(3), Namespace: "", Data: "input", Attr: []vugu.VGAttribute{{Namespace: "", Key: "type", Val: "radio"}, vugu.VGAttribute{Namespace: "", Key: "id", Val: "english"}, vugu.VGAttribute{Namespace: "", Key: "name", Val: "language"}, vugu.VGAttribute{Namespace: "", Key: "value", Val: "English"}, vugu.VGAttribute{Namespace: "", Key: "checked", Val: "checked"}}}
+		vgn = &vugu.VGNode{Type: vugu.VGNodeType(4), Data: " if it is the selected default option. "}
 		vgparent.AppendChild(vgn)
-		vgn.DOMEventHandlerSpecList = append(vgn.DOMEventHandlerSpecList, vugu.DOMEventHandlerSpec{
-			EventType:	"change",
-			Func:		func(event vugu.DOMEvent) { c.Change(event) },
-			// TODO: implement capture, etc. mostly need to decide syntax
-		})
 		vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n    "}
 		vgparent.AppendChild(vgn)
-		vgn = &vugu.VGNode{Type: vugu.VGNodeType(3), Namespace: "", Data: "label", Attr: []vugu.VGAttribute{{Namespace: "", Key: "for", Val: "english"}}}
+		vgn = &vugu.VGNode{Type: vugu.VGNodeType(4), Data: " In this case 'c' is the containing radio buttons not the language radio button itself "}
 		vgparent.AppendChild(vgn)
-		vgn.SetInnerHTML(vugu.HTML("English"))
-		vgn = &vugu.VGNode{Type: vugu.VGNodeType(3), Namespace: "", Data: "br", Attr: []vugu.VGAttribute(nil)}
-		vgparent.AppendChild(vgn)
-		vgn.SetInnerHTML(vugu.HTML(""))
 		vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n    "}
 		vgparent.AppendChild(vgn)
-		vgn = &vugu.VGNode{Type: vugu.VGNodeType(3), Namespace: "", Data: "input", Attr: []vugu.VGAttribute{{Namespace: "", Key: "type", Val: "radio"}, vugu.VGAttribute{Namespace: "", Key: "id", Val: "french"}, vugu.VGAttribute{Namespace: "", Key: "name", Val: "language"}, vugu.VGAttribute{Namespace: "", Key: "value", Val: "Français"}}}
-		vgparent.AppendChild(vgn)
-		vgn.DOMEventHandlerSpecList = append(vgn.DOMEventHandlerSpecList, vugu.DOMEventHandlerSpec{
-			EventType:	"change",
-			Func:		func(event vugu.DOMEvent) { c.Change(event) },
-			// TODO: implement capture, etc. mostly need to decide syntax
-		})
+		{
+			vgcompKey := vugu.MakeCompKey(0x8C585497C929C8D0^vgin.CurrentPositionHash(), vgiterkey)
+			// ask BuildEnv for prior instance of this specific component
+			vgcomp, _ := vgin.BuildEnv.CachedComponent(vgcompKey).(*Languageradiobutton)
+			if vgcomp == nil {
+				// create new one if needed
+				vgcomp = new(Languageradiobutton)
+				vgin.BuildEnv.WireComponent(vgcomp)
+			}
+			vgin.BuildEnv.UseComponent(vgcompKey, vgcomp)	// ensure we can use this in the cache next time around
+			vgcomp.Group = c
+			vgcomp.Id = "english"
+			vgcomp.Value = "English"
+			vgout.Components = append(vgout.Components, vgcomp)
+			vgn = &vugu.VGNode{Component: vgcomp}
+			vgparent.AppendChild(vgn)
+		}
 		vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n    "}
 		vgparent.AppendChild(vgn)
-		vgn = &vugu.VGNode{Type: vugu.VGNodeType(3), Namespace: "", Data: "label", Attr: []vugu.VGAttribute{{Namespace: "", Key: "for", Val: "french"}}}
-		vgparent.AppendChild(vgn)
-		vgn.SetInnerHTML(vugu.HTML("Français"))
-		vgn = &vugu.VGNode{Type: vugu.VGNodeType(3), Namespace: "", Data: "br", Attr: []vugu.VGAttribute(nil)}
-		vgparent.AppendChild(vgn)
-		vgn.SetInnerHTML(vugu.HTML(""))
+		{
+			vgcompKey := vugu.MakeCompKey(0x543FED92C55D9DB7^vgin.CurrentPositionHash(), vgiterkey)
+			// ask BuildEnv for prior instance of this specific component
+			vgcomp, _ := vgin.BuildEnv.CachedComponent(vgcompKey).(*Languageradiobutton)
+			if vgcomp == nil {
+				// create new one if needed
+				vgcomp = new(Languageradiobutton)
+				vgin.BuildEnv.WireComponent(vgcomp)
+			}
+			vgin.BuildEnv.UseComponent(vgcompKey, vgcomp)	// ensure we can use this in the cache next time around
+			vgcomp.Group = c
+			vgcomp.Id = "french"
+			vgcomp.Value = "Français"
+			vgout.Components = append(vgout.Components, vgcomp)
+			vgn = &vugu.VGNode{Component: vgcomp}
+			vgparent.AppendChild(vgn)
+		}
 		vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n    "}
 		vgparent.AppendChild(vgn)
-		vgn = &vugu.VGNode{Type: vugu.VGNodeType(3), Namespace: "", Data: "input", Attr: []vugu.VGAttribute{{Namespace: "", Key: "type", Val: "radio"}, vugu.VGAttribute{Namespace: "", Key: "id", Val: "italian"}, vugu.VGAttribute{Namespace: "", Key: "name", Val: "language"}, vugu.VGAttribute{Namespace: "", Key: "value", Val: "Italiano"}}}
-		vgparent.AppendChild(vgn)
-		vgn.DOMEventHandlerSpecList = append(vgn.DOMEventHandlerSpecList, vugu.DOMEventHandlerSpec{
-			EventType:	"change",
-			Func:		func(event vugu.DOMEvent) { c.Change(event) },
-			// TODO: implement capture, etc. mostly need to decide syntax
-		})
+		{
+			vgcompKey := vugu.MakeCompKey(0x6C5F66EA4BDFA5E7^vgin.CurrentPositionHash(), vgiterkey)
+			// ask BuildEnv for prior instance of this specific component
+			vgcomp, _ := vgin.BuildEnv.CachedComponent(vgcompKey).(*Languageradiobutton)
+			if vgcomp == nil {
+				// create new one if needed
+				vgcomp = new(Languageradiobutton)
+				vgin.BuildEnv.WireComponent(vgcomp)
+			}
+			vgin.BuildEnv.UseComponent(vgcompKey, vgcomp)	// ensure we can use this in the cache next time around
+			vgcomp.Group = c
+			vgcomp.Id = "italian"
+			vgcomp.Value = "Italiano"
+			vgout.Components = append(vgout.Components, vgcomp)
+			vgn = &vugu.VGNode{Component: vgcomp}
+			vgparent.AppendChild(vgn)
+		}
 		vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n    "}
 		vgparent.AppendChild(vgn)
-		vgn = &vugu.VGNode{Type: vugu.VGNodeType(3), Namespace: "", Data: "label", Attr: []vugu.VGAttribute{{Namespace: "", Key: "for", Val: "italian"}}}
-		vgparent.AppendChild(vgn)
-		vgn.SetInnerHTML(vugu.HTML("Italiano"))
-		vgn = &vugu.VGNode{Type: vugu.VGNodeType(3), Namespace: "", Data: "br", Attr: []vugu.VGAttribute(nil)}
-		vgparent.AppendChild(vgn)
-		vgn.SetInnerHTML(vugu.HTML(""))
-		vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n"}
+		{
+			vgcompKey := vugu.MakeCompKey(0x4AE3FCEC446ADEF5^vgin.CurrentPositionHash(), vgiterkey)
+			// ask BuildEnv for prior instance of this specific component
+			vgcomp, _ := vgin.BuildEnv.CachedComponent(vgcompKey).(*Languageradiobutton)
+			if vgcomp == nil {
+				// create new one if needed
+				vgcomp = new(Languageradiobutton)
+				vgin.BuildEnv.WireComponent(vgcomp)
+			}
+			vgin.BuildEnv.UseComponent(vgcompKey, vgcomp)	// ensure we can use this in the cache next time around
+			vgcomp.Group = c
+			vgcomp.Id = "german"
+			vgcomp.Value = "Deutsch"
+			vgout.Components = append(vgout.Components, vgcomp)
+			vgn = &vugu.VGNode{Component: vgcomp}
+			vgparent.AppendChild(vgn)
+		}
+		vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n\n"}
 		vgparent.AppendChild(vgn)
 	}
 	return vgout
