@@ -35,7 +35,6 @@ type ParserGo struct {
 }
 
 func gofmt(pgm string) (string, error) {
-
 	// build up command to run
 	cmd := exec.Command("gofmt")
 
@@ -78,7 +77,6 @@ func gofmt(pgm string) (string, error) {
 // Parse is an experiment...
 // r is the actual input, fname is only used to emit line directives
 func (p *ParserGo) Parse(r io.Reader, fname string) error {
-
 	state := &parseGoState{}
 
 	inRaw, err := io.ReadAll(r)
@@ -377,7 +375,6 @@ func (p *ParserGo) visitOverall(state *parseGoState) error {
 }
 
 func (p *ParserGo) visitHTML(state *parseGoState, n *html.Node) error {
-
 	pOutputTag(state, n)
 	// fmt.Fprintf(&state.buildBuf, "vgn = &vugu.VGNode{Type:vugu.VGNodeType(%d),Data:%q,Attr:%#v}\n", n.Type, n.Data, staticVGAttr(n.Attr))
 	// fmt.Fprintf(&state.buildBuf, "vgout.Out = append(vgout.Out, vgn) // root for output\n") // for first element we need to assign as Doc on BuildOut
@@ -402,7 +399,6 @@ func (p *ParserGo) visitHTML(state *parseGoState, n *html.Node) error {
 			err = p.visitBody(state, childN)
 		} else {
 			return fmt.Errorf("unknown tag inside html %q", childN.Data)
-
 		}
 
 		if err != nil {
@@ -417,7 +413,6 @@ func (p *ParserGo) visitHTML(state *parseGoState, n *html.Node) error {
 }
 
 func (p *ParserGo) visitHead(state *parseGoState, n *html.Node) error {
-
 	pOutputTag(state, n)
 	// fmt.Fprintf(&state.buildBuf, "vgn = &vugu.VGNode{Type:vugu.VGNodeType(%d),Data:%q,Attr:%#v}\n", n.Type, n.Data, staticVGAttr(n.Attr))
 	// fmt.Fprintf(&state.buildBuf, "vgout.Out = append(vgout.Out, vgn) // root for output\n") // for first element we need to assign as Doc on BuildOut
@@ -449,11 +444,9 @@ func (p *ParserGo) visitHead(state *parseGoState, n *html.Node) error {
 	fmt.Fprintf(&state.buildBuf, "}\n")
 
 	return nil
-
 }
 
 func (p *ParserGo) visitBody(state *parseGoState, n *html.Node) error {
-
 	pOutputTag(state, n)
 	// fmt.Fprintf(&state.buildBuf, "vgn = &vugu.VGNode{Type:vugu.VGNodeType(%d),Data:%q,Attr:%#v}\n", n.Type, n.Data, staticVGAttr(n.Attr))
 	// fmt.Fprintf(&state.buildBuf, "vgout.Out = append(vgout.Out, vgn) // root for output\n") // for first element we need to assign as Doc on BuildOut
@@ -497,13 +490,11 @@ func (p *ParserGo) visitBody(state *parseGoState, n *html.Node) error {
 	fmt.Fprintf(&state.buildBuf, "}\n")
 
 	return nil
-
 }
 
 // visitScriptOrStyle calls visitJS, visitCSS or visitGo accordingly,
 // will error if the node does not correspond to one of those
 func (p *ParserGo) visitScriptOrStyle(state *parseGoState, n *html.Node) error {
-
 	nodeName := strings.ToLower(n.Data)
 
 	// script tag
@@ -556,7 +547,6 @@ func (p *ParserGo) visitScriptOrStyle(state *parseGoState, n *html.Node) error {
 }
 
 func (p *ParserGo) visitJS(state *parseGoState, n *html.Node) error {
-
 	if n.Type != html.ElementNode {
 		return fmt.Errorf("visitJS, not an element node %#v", n)
 	}
@@ -632,7 +622,6 @@ func (p *ParserGo) visitJS(state *parseGoState, n *html.Node) error {
 }
 
 func (p *ParserGo) visitCSS(state *parseGoState, n *html.Node) error {
-
 	if n.Type != html.ElementNode {
 		return fmt.Errorf("visitCSS, not an element node %#v", n)
 	}
@@ -711,7 +700,6 @@ func (p *ParserGo) visitCSS(state *parseGoState, n *html.Node) error {
 }
 
 func (p *ParserGo) visitGo(state *parseGoState, n *html.Node) error {
-
 	for childN := n.FirstChild; childN != nil; childN = childN.NextSibling {
 		if childN.Type != html.TextNode {
 			return fmt.Errorf("unexpected node type %v inside of script tag", childN.Type)
@@ -727,7 +715,6 @@ func (p *ParserGo) visitGo(state *parseGoState, n *html.Node) error {
 
 // visitTopNode handles the "mount point"
 func (p *ParserGo) visitTopNode(state *parseGoState, n *html.Node) error {
-
 	// handle the top element other than <html>
 
 	err := p.visitNodeJustElement(state, n)
@@ -740,7 +727,6 @@ func (p *ParserGo) visitTopNode(state *parseGoState, n *html.Node) error {
 
 // visitNodeElementAndCtrl handles an element that supports vg-if, vg-for etc
 func (p *ParserGo) visitNodeElementAndCtrl(state *parseGoState, n *html.Node) error {
-
 	// vg-for
 	if v, _ := vgForExpr(n); v.expr != "" {
 		if err := p.emitForExpr(state, n); err != nil {
@@ -766,7 +752,6 @@ func (p *ParserGo) visitNodeElementAndCtrl(state *parseGoState, n *html.Node) er
 
 // visitNodeJustElement handles an element, ignoring any vg-if, vg-for (but it does handle vg-html - since that is not really "control" just a shorthand for it's contents)
 func (p *ParserGo) visitNodeJustElement(state *parseGoState, n *html.Node) error {
-
 	// regular element
 
 	// if n.Line > 0 {
@@ -834,7 +819,6 @@ func (p *ParserGo) visitNodeJustElement(state *parseGoState, n *html.Node) error
 }
 
 func (p *ParserGo) visitDefaultByType(state *parseGoState, n *html.Node) error {
-
 	// handle child according to type
 	var err error
 	switch {
@@ -866,7 +850,6 @@ func (p *ParserGo) visitDefaultByType(state *parseGoState, n *html.Node) error {
 }
 
 func (p *ParserGo) visitNodeText(state *parseGoState, n *html.Node) error {
-
 	fmt.Fprintf(&state.buildBuf, "vgn = &vugu.VGNode{Type:vugu.VGNodeType(%d),Data:%q}\n", n.Type, n.Data)
 	fmt.Fprintf(&state.buildBuf, "vgparent.AppendChild(vgn)\n")
 
@@ -874,7 +857,6 @@ func (p *ParserGo) visitNodeText(state *parseGoState, n *html.Node) error {
 }
 
 func (p *ParserGo) visitNodeComment(state *parseGoState, n *html.Node) error {
-
 	fmt.Fprintf(&state.buildBuf, "vgn = &vugu.VGNode{Type:vugu.VGNodeType(%d),Data:%q}\n", n.Type, n.Data)
 	fmt.Fprintf(&state.buildBuf, "vgparent.AppendChild(vgn)\n")
 
@@ -883,7 +865,6 @@ func (p *ParserGo) visitNodeComment(state *parseGoState, n *html.Node) error {
 
 // visitVGCompTag handles a vg-comp
 func (p *ParserGo) visitVGCompTag(state *parseGoState, n *html.Node) error {
-
 	// vg-for not allowed here
 
 	// vg-if is supported
@@ -916,7 +897,6 @@ func (p *ParserGo) visitVGCompTag(state *parseGoState, n *html.Node) error {
 
 // visitVGTemplateTag handles vg-template
 func (p *ParserGo) visitVGTemplateTag(state *parseGoState, n *html.Node) error {
-
 	// vg-for
 	if v, _ := vgForExpr(n); v.expr != "" {
 		if err := p.emitForExpr(state, n); err != nil {
@@ -960,7 +940,6 @@ func (p *ParserGo) visitVGTemplateTag(state *parseGoState, n *html.Node) error {
 
 // visitNodeComponentElement handles an element that is a call to a component
 func (p *ParserGo) visitNodeComponentElement(state *parseGoState, n *html.Node) error {
-
 	// components are just different so we handle all of our own vg-for vg-if and everything else
 
 	// vg-for
@@ -1268,7 +1247,6 @@ func (p *ParserGo) visitNodeComponentElement(state *parseGoState, n *html.Node) 
 
 // NOTE: caller is responsible for emitting the closing curly bracket
 func (p *ParserGo) emitForExpr(state *parseGoState, n *html.Node) error {
-
 	forattr, err := vgForExpr(n)
 	if err != nil {
 		return err
@@ -1330,15 +1308,13 @@ func (p *ParserGo) emitForExpr(state *parseGoState, n *html.Node) error {
 	fmt.Fprintf(&state.buildBuf, "for %s {\n", forx)
 	fmt.Fprintf(&state.buildBuf, "var vgiterkey interface{} = %s\n", vgiterkeyx)
 	fmt.Fprintf(&state.buildBuf, "_ = vgiterkey\n")
-	if !forattr.noshadow {
-		if iterkey != "_" && iterkey != "vgiterkeyt" {
-			fmt.Fprintf(&state.buildBuf, "%[1]s := %[1]s\n", iterkey)
-			fmt.Fprintf(&state.buildBuf, "_ = %s\n", iterkey)
-		}
-		if iterval != "_" && iterval != "" {
-			fmt.Fprintf(&state.buildBuf, "%[1]s := %[1]s\n", iterval)
-			fmt.Fprintf(&state.buildBuf, "_ = %s\n", iterval)
-		}
+	if iterkey != "_" && iterkey != "vgiterkeyt" {
+		fmt.Fprintf(&state.buildBuf, "%[1]s := %[1]s\n", iterkey)
+		fmt.Fprintf(&state.buildBuf, "_ = %s\n", iterkey)
+	}
+	if iterval != "_" && iterval != "" {
+		fmt.Fprintf(&state.buildBuf, "%[1]s := %[1]s\n", iterval)
+		fmt.Fprintf(&state.buildBuf, "_ = %s\n", iterval)
 	}
 
 	return nil
@@ -1371,7 +1347,6 @@ func pOutputTag(state *parseGoState, n *html.Node) {
 		fmt.Fprintf(&state.buildBuf, "vgout.Out = append(vgout.Out, vgn) // root for output\n") // for first element we need to assign as Doc on BuildOut
 		state.outIsSet = true
 	}
-
 }
 
 func attrWithKey(n *html.Node, key string) *html.Attribute {
