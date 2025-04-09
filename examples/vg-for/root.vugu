@@ -77,7 +77,7 @@
                     <ul>
                         <!-- This example uses the explicit form of the vg-for -->
                         <!-- This time the methods c.DaysInWeekIthSorted uses the new iter, sllice and maps package internally -->
-                        <li vg-for='index, value := range c.DaysInWeekIterator()'>
+                        <li vg-for='index := range c.DaysInWeekIterator()'>
                             <div vg-content='fmt.Sprintf("The day of the week at index %d is %s", index, c.DayOfWeek(index))'></div>
                         </li>
                     </ul>
