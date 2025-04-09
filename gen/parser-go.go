@@ -1262,61 +1262,14 @@ func (p *ParserGo) emitForExpr(state *parseGoState, n *html.Node) error {
 	// * key, value := // unused vars, use 'key' as iter val
 	// * k, v := // detect `k` and use as iterval
 
-	vgiterkeyx := vgKeyExpr(n)
-
 	// determine iteration variables
-	var iterkey, iterval string
 	if !strings.Contains(forx, ":=") {
 		// make it so `w` is a shorthand for `key, value := range w`
-		iterkey, iterval = "key", "value"
+		// iterkey = "key"
 		forx = "key, value := range " + forx
-	} else {
-		// extract iteration variables
-		var (
-			itervars [2]string
-			iteridx  int
-		)
-		for _, c := range forx {
-			if c == ':' {
-				break
-			}
-			if c == ',' {
-				iteridx++
-				continue
-			}
-			if unicode.IsSpace(c) {
-				continue
-			}
-			itervars[iteridx] += string(c)
-		}
-
-		iterkey = itervars[0]
-		iterval = itervars[1]
-	}
-
-	// detect "_, k := " form combined with no vg-key specified and replace
-	if vgiterkeyx == "" && iterkey == "_" {
-		iterkey = "vgiterkeyt"
-		forx = "vgiterkeyt " + forx[1:]
-	}
-
-	// if still no vgiterkeyx use the first identifier
-	if vgiterkeyx == "" {
-		vgiterkeyx = iterkey
 	}
 
 	fmt.Fprintf(&state.buildBuf, "for %s {\n", forx)
-	fmt.Fprintf(&state.buildBuf, "var vgiterkey interface{} = %s\n", vgiterkeyx)
-	fmt.Fprintf(&state.buildBuf, "_ = vgiterkey\n")
-	if iterkey != "_" && iterkey != "vgiterkeyt" {
-		fmt.Fprintf(&state.buildBuf, "%[1]s := %[1]s\n", iterkey)
-		fmt.Fprintf(&state.buildBuf, "_ = %s\n", iterkey)
-	}
-	if iterval != "_" && iterval != "" {
-		fmt.Fprintf(&state.buildBuf, "%[1]s := %[1]s\n", iterval)
-		fmt.Fprintf(&state.buildBuf, "_ = %s\n", iterval)
-	}
-
 	return nil
 }
 
