@@ -30,11 +30,7 @@ func (c *Select) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 		_ = vgparent
 		vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n    "}
 		vgparent.AppendChild(vgn)
-		for vgiterkeyt, k := range c.buildKeys() {
-			var vgiterkey interface{} = vgiterkeyt
-			_ = vgiterkey
-			k := k
-			_ = k
+		for _, k := range c.buildKeys() {
 			vgn = &vugu.VGNode{Type: vugu.VGNodeType(3), Namespace: "", Data: "option", Attr: []vugu.VGAttribute(nil)}
 			vgparent.AppendChild(vgn)
 			vgn.AddAttrInterface("selected", c.isOptSelected(k))
