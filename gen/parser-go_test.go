@@ -29,6 +29,8 @@ func TestEmitForExpr(t *testing.T) {
 			},
 			// WARNING these tests are very brittle. The new line is required.
 			expectedResult: `for key, value := range c.Items {
+_ = key
+_ = value
 `,
 		},
 		{
@@ -40,6 +42,8 @@ func TestEmitForExpr(t *testing.T) {
 				},
 			},
 			expectedResult: `for key, value := range c.Items {
+_ = key
+_ = value
 `,
 		},
 		{
@@ -99,6 +103,17 @@ func TestEmitForExpr(t *testing.T) {
 			node: &html.Node{
 				Attr: []html.Attribute{
 					{Key: "vg-for", Val: "i:= 0; i < 5; i++"},
+				},
+			},
+			expectedResult: `for i:= 0; i < 5; i++ {
+`,
+		},
+		{
+			name: "iteration with for clause with vg-key",
+			node: &html.Node{
+				Attr: []html.Attribute{
+					{Key: "vg-for", Val: "i:= 0; i < 5; i++"},
+					{Key: "vg-key", Val: "1"},
 				},
 			},
 			expectedResult: `for i:= 0; i < 5; i++ {

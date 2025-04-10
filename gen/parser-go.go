@@ -16,6 +16,7 @@ import (
 	// "github.com/vugu/vugu/internal/htmlx/atom"
 	// "golang.org/x/net/html"
 	// "golang.org/x/net/html/atom"
+
 	"github.com/vugu/html"
 	"github.com/vugu/html/atom"
 	"github.com/vugu/vugu"
@@ -1263,13 +1264,35 @@ func (p *ParserGo) emitForExpr(state *parseGoState, n *html.Node) error {
 	// * k, v := // detect `k` and use as iterval
 
 	// determine iteration variables
+	var shortcutCase bool
 	if !strings.Contains(forx, ":=") {
 		// make it so `w` is a shorthand for `key, value := range w`
-		// iterkey = "key"
+		// iterkey = "key" b
 		forx = "key, value := range " + forx
+		shortcutCase = true
 	}
 
 	fmt.Fprintf(&state.buildBuf, "for %s {\n", forx)
+	if shortcutCase {
+		// we have no way to know if the "key" or "value" loop variables are used
+		// wholly within the HTML tag the vg-for attribute is applied to like this:
+		// <li vgfor=`c.Items()` vg-content='fmt.Sprintf("%s\n", value)'></li>
+		// Where the content of the <li> tag uses the "value" loop variabele directly
+		// OR
+		// if a loop variable is used within an inner tag, like this:
+		// <li vg-for='c.Items()'>
+		//      <div vg-content='fmt.Sprintf("%s\n", value)'></div>
+		// </li>
+		// Now the use of the "value" is in the enclosed <div> not the <li>
+		// OR
+		// the loop variables may never be used, like this:
+		// <li vg-for='c.Items()' vg-content='fmt.Sprintf("Hello World\n")'></li>
+		// Without parsing the rest of *.vugu file it is impossible to answer these questions.
+		// Therefore the only (sub-optimal) choice we have is to always add unused references to these
+		// variables. Without these the Go compiler will correctly fail with a "variable declared but
+		// not used" error.
+		fmt.Fprintf(&state.buildBuf, "_ = key\n_ = value\n")
+	}
 	return nil
 }
 
