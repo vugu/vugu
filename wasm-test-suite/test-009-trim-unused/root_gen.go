@@ -55,10 +55,6 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 		vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n\n    "}
 		vgparent.AppendChild(vgn)
 		for _, n := range c.Numbers {
-			var vgiterkey interface{} = n
-			_ = vgiterkey
-			n := n
-			_ = n
 			vgn = &vugu.VGNode{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute(nil)}
 			vgparent.AppendChild(vgn)
 			vgn.AddAttrInterface("id", n)

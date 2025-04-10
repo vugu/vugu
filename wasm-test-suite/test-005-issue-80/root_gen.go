@@ -41,11 +41,7 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 				vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n      "}
 				vgparent.AppendChild(vgn)
 				for key, value := range c.Items() {
-					var vgiterkey interface{} = key
-					_ = vgiterkey
-					key := key
 					_ = key
-					value := value
 					_ = value
 					vgn = &vugu.VGNode{Type: vugu.VGNodeType(3), Namespace: "", Data: "span", Attr: []vugu.VGAttribute(nil)}
 					vgparent.AppendChild(vgn)

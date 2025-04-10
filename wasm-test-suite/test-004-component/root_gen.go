@@ -64,10 +64,6 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 					vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n                "}
 					vgparent.AppendChild(vgn)
 					for i := 0; i < c.ItemCount; i++ {
-						var vgiterkey interface{} = i
-						_ = vgiterkey
-						i := i
-						_ = i
 						{
 							vgcompKey := vugu.MakeCompKey(0x4A265D7939989913^vgin.CurrentPositionHash(), i)
 							// ask BuildEnv for prior instance of this specific component
