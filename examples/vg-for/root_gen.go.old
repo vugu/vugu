@@ -314,8 +314,6 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 							vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n                        "}
 							vgparent.AppendChild(vgn)
 							for key, value := range c.DaysInWeekIth() {
-								_ = key
-								_ = value
 								vgn = &vugu.VGNode{Type: vugu.VGNodeType(3), Namespace: "", Data: "li", Attr: []vugu.VGAttribute(nil)}
 								vgparent.AppendChild(vgn)
 								{
@@ -448,7 +446,7 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 							vgparent.AppendChild(vgn)
 							vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n                        "}
 							vgparent.AppendChild(vgn)
-							for index := range c.DaysInWeekIterator() {
+							for index, value := range c.DaysInWeekIterator() {
 								vgn = &vugu.VGNode{Type: vugu.VGNodeType(3), Namespace: "", Data: "li", Attr: []vugu.VGAttribute(nil)}
 								vgparent.AppendChild(vgn)
 								{
