@@ -10,8 +10,6 @@ import "github.com/vugu/vugu"
 import js "syscall/js"
 import "log"
 
-import "github.com/vugu/vgrouter"
-
 func (c *Page1) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 
 	vgout = &vugu.BuildOut{}
@@ -35,7 +33,7 @@ func (c *Page1) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 		vgparent.AppendChild(vgn)
 		vgn.DOMEventHandlerSpecList = append(vgn.DOMEventHandlerSpecList, vugu.DOMEventHandlerSpec{
 			EventType:	"click",
-			Func:		func(event vugu.DOMEvent) { c.Navigate("/#page2", nil) },
+			Func:		func(event vugu.DOMEvent) { c.NavigateToPage("/#page2") },
 			// TODO: implement capture, etc. mostly need to decide syntax
 		})
 		{
@@ -50,7 +48,7 @@ func (c *Page1) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 		vgparent.AppendChild(vgn)
 		vgn.DOMEventHandlerSpecList = append(vgn.DOMEventHandlerSpecList, vugu.DOMEventHandlerSpec{
 			EventType:	"click",
-			Func:		func(event vugu.DOMEvent) { c.Navigate("/#page2", nil, vgrouter.NavReplace) },
+			Func:		func(event vugu.DOMEvent) { c.NavigateToPageWithReplace("/#page2") },
 			// TODO: implement capture, etc. mostly need to decide syntax
 		})
 		{
