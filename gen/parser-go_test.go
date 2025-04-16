@@ -27,25 +27,10 @@ func TestEmitForExpr(t *testing.T) {
 					{Key: "vg-for", Val: "c.Items"},
 				},
 			},
+			// WARNING these tests are very brittle. The new line is required.
 			expectedResult: `for key, value := range c.Items {
-var vgiterkey interface{} = key
-_ = vgiterkey
-key := key
 _ = key
-value := value
 _ = value
-`,
-		},
-		{
-			name: "no iteration vars noshadow",
-			node: &html.Node{
-				Attr: []html.Attribute{
-					{Key: "vg-for.noshadow", Val: "c.Items"},
-				},
-			},
-			expectedResult: `for key, value := range c.Items {
-var vgiterkey interface{} = key
-_ = vgiterkey
 `,
 		},
 		{
@@ -57,11 +42,7 @@ _ = vgiterkey
 				},
 			},
 			expectedResult: `for key, value := range c.Items {
-var vgiterkey interface{} = 1
-_ = vgiterkey
-key := key
 _ = key
-value := value
 _ = value
 `,
 		},
@@ -73,24 +54,6 @@ _ = value
 				},
 			},
 			expectedResult: `for k, v := range c.Items {
-var vgiterkey interface{} = k
-_ = vgiterkey
-k := k
-_ = k
-v := v
-_ = v
-`,
-		},
-		{
-			name: "key and value vars noshadow",
-			node: &html.Node{
-				Attr: []html.Attribute{
-					{Key: "vg-for.noshadow", Val: "k, v := range c.Items"},
-				},
-			},
-			expectedResult: `for k, v := range c.Items {
-var vgiterkey interface{} = k
-_ = vgiterkey
 `,
 		},
 		{
@@ -101,22 +64,6 @@ _ = vgiterkey
 				},
 			},
 			expectedResult: `for k := range c.Items {
-var vgiterkey interface{} = k
-_ = vgiterkey
-k := k
-_ = k
-`,
-		},
-		{
-			name: "only key var noshadow",
-			node: &html.Node{
-				Attr: []html.Attribute{
-					{Key: "vg-for.noshadow", Val: "k := range c.Items"},
-				},
-			},
-			expectedResult: `for k := range c.Items {
-var vgiterkey interface{} = k
-_ = vgiterkey
 `,
 		},
 		{
@@ -128,10 +75,6 @@ _ = vgiterkey
 				},
 			},
 			expectedResult: `for k := range c.Items {
-var vgiterkey interface{} = 1
-_ = vgiterkey
-k := k
-_ = k
 `,
 		},
 		{
@@ -141,23 +84,7 @@ _ = k
 					{Key: "vg-for", Val: "_, v := range c.Items"},
 				},
 			},
-			expectedResult: `for vgiterkeyt , v := range c.Items {
-var vgiterkey interface{} = vgiterkeyt
-_ = vgiterkey
-v := v
-_ = v
-`,
-		},
-		{
-			name: "only value var noshadow",
-			node: &html.Node{
-				Attr: []html.Attribute{
-					{Key: "vg-for.noshadow", Val: "_, v := range c.Items"},
-				},
-			},
-			expectedResult: `for vgiterkeyt , v := range c.Items {
-var vgiterkey interface{} = vgiterkeyt
-_ = vgiterkey
+			expectedResult: `for _, v := range c.Items {
 `,
 		},
 		{
@@ -169,10 +96,6 @@ _ = vgiterkey
 				},
 			},
 			expectedResult: `for _, v := range c.Items {
-var vgiterkey interface{} = 1
-_ = vgiterkey
-v := v
-_ = v
 `,
 		},
 		{
@@ -183,22 +106,6 @@ _ = v
 				},
 			},
 			expectedResult: `for i:= 0; i < 5; i++ {
-var vgiterkey interface{} = i
-_ = vgiterkey
-i := i
-_ = i
-`,
-		},
-		{
-			name: "iteration with for clause noshadow",
-			node: &html.Node{
-				Attr: []html.Attribute{
-					{Key: "vg-for.noshadow", Val: "i:= 0; i < 5; i++"},
-				},
-			},
-			expectedResult: `for i:= 0; i < 5; i++ {
-var vgiterkey interface{} = i
-_ = vgiterkey
 `,
 		},
 		{
@@ -210,10 +117,17 @@ _ = vgiterkey
 				},
 			},
 			expectedResult: `for i:= 0; i < 5; i++ {
-var vgiterkey interface{} = 1
-_ = vgiterkey
-i := i
-_ = i
+`,
+		},
+		{
+			name: "iteration with for clause with vg-key",
+			node: &html.Node{
+				Attr: []html.Attribute{
+					{Key: "vg-for", Val: "i:= 0; i < 5; i++"},
+					{Key: "vg-key", Val: "1"},
+				},
+			},
+			expectedResult: `for i:= 0; i < 5; i++ {
 `,
 		},
 	}

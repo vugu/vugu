@@ -183,10 +183,6 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 					vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n                    "}
 					vgparent.AppendChild(vgn)
 					for eventName := range c.Events() {
-						var vgiterkey interface{} = eventName
-						_ = vgiterkey
-						eventName := eventName
-						_ = eventName
 						vgn = &vugu.VGNode{Type: vugu.VGNodeType(3), Namespace: "", Data: "li", Attr: []vugu.VGAttribute(nil)}
 						vgparent.AppendChild(vgn)
 						{

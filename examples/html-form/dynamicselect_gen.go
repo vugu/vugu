@@ -72,10 +72,6 @@ func (c *Dynamicselect) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 				vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n            "}
 				vgparent.AppendChild(vgn)
 				for i := 0; i < c.NumberOfOptions(); i++ {
-					var vgiterkey interface{} = i
-					_ = vgiterkey
-					i := i
-					_ = i
 					vgn = &vugu.VGNode{Type: vugu.VGNodeType(3), Namespace: "", Data: "option", Attr: []vugu.VGAttribute(nil)}
 					vgparent.AppendChild(vgn)
 					vgn.AddAttrInterface("value", fmt.Sprintf("%d", i))

@@ -58,8 +58,8 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 						vgin.BuildEnv.WireComponent(vgcomp)
 					}
 					vgin.BuildEnv.UseComponent(vgcompKey, vgcomp)	// ensure we can use this in the cache next time around
-					vgcomp.Options = vgform.SliceOptions{"sandwich_group", "cow_group", "jungle_group", "butterfinger_group"}.Title()
-					vgcomp.Value = vgform.StringPtrDefault(&c.FoodGroup, "jungle_group")
+					vgcomp.Options = c.SetSliceOptions().Title()
+					vgcomp.Value = c.SetStringPtrDefault(&c.FoodGroup, "jungle_group")
 					vgcomp.AttrMap = make(map[string]interface{}, 8)
 					vgcomp.AttrMap["id"] = "food_group"
 					vgcomp.AttrMap["class"] = "form-control"
@@ -94,7 +94,7 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 						vgin.BuildEnv.WireComponent(vgcomp)
 					}
 					vgin.BuildEnv.UseComponent(vgcompKey, vgcomp)	// ensure we can use this in the cache next time around
-					vgcomp.Value = vgform.StringPtrDefault(&c.Textarea1Value, "testing")
+					vgcomp.Value = c.SetStringPtrDefault(&c.Textarea1Value, "testing")
 					vgcomp.AttrMap = make(map[string]interface{}, 8)
 					vgcomp.AttrMap["id"] = "textarea1"
 					vgcomp.AttrMap["class"] = "form-control"
@@ -130,7 +130,7 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 						vgin.BuildEnv.WireComponent(vgcomp)
 					}
 					vgin.BuildEnv.UseComponent(vgcompKey, vgcomp)	// ensure we can use this in the cache next time around
-					vgcomp.Value = vgform.StringPtrDefault(&c.Inputtext1Value, "joe@example.com")
+					vgcomp.Value = c.SetStringPtrDefault(&c.Inputtext1Value, "joe@example.com")
 					vgcomp.AttrMap = make(map[string]interface{}, 8)
 					vgcomp.AttrMap["type"] = "email"
 					vgcomp.AttrMap["id"] = "inputtext1"

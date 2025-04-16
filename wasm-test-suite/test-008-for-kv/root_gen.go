@@ -44,12 +44,6 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 				vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n      "}
 				vgparent.AppendChild(vgn)
 				for k, v := range c.Items() {
-					var vgiterkey interface{} = k
-					_ = vgiterkey
-					k := k
-					_ = k
-					v := v
-					_ = v
 					vgn = &vugu.VGNode{Type: vugu.VGNodeType(3), Namespace: "", Data: "span", Attr: []vugu.VGAttribute(nil)}
 					vgparent.AppendChild(vgn)
 					vgn.AddAttrInterface("id", fmt.Sprintf("id%d", k))

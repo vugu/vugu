@@ -39,11 +39,7 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 			_ = vgparent
 			vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n\t\t"}
 			vgparent.AppendChild(vgn)
-			for vgiterkeyt, v := range c.OptionsList {
-				var vgiterkey interface{} = vgiterkeyt
-				_ = vgiterkey
-				v := v
-				_ = v
+			for _, v := range c.OptionsList {
 				vgn = &vugu.VGNode{Type: vugu.VGNodeType(3), Namespace: "", Data: "option", Attr: []vugu.VGAttribute(nil)}
 				vgparent.AppendChild(vgn)
 				vgn.AddAttrInterface("value", v.value)
