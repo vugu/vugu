@@ -124,12 +124,6 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 				vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n                    "}
 				vgparent.AppendChild(vgn)
 				for pos, value := range c.List() {
-					var vgiterkey interface{} = pos
-					_ = vgiterkey
-					pos := pos
-					_ = pos
-					value := value
-					_ = value
 					vgn = &vugu.VGNode{Type: vugu.VGNodeType(3), Namespace: "", Data: "li", Attr: []vugu.VGAttribute(nil)}
 					vgparent.AppendChild(vgn)
 					vgn.SetInnerHTML(fmt.Sprintf("Position[%d] : Item[%d]", pos, value))

@@ -37,7 +37,6 @@ func attrFromHtml(attr html.Attribute) vugu.VGAttribute {
 // stuff that is common to both parsers can get moved into here
 
 func staticVGAttr(inAttr []html.Attribute) (ret []vugu.VGAttribute) {
-
 	for _, a := range inAttr {
 		switch {
 		// case a.Key == "vg-if":
@@ -111,8 +110,7 @@ func vgCompExpr(n *html.Node) string {
 // }
 
 type vgForAttr struct {
-	expr     string
-	noshadow bool
+	expr string
 }
 
 func vgForExpr(n *html.Node) (vgForAttr, error) {
@@ -123,8 +121,6 @@ func vgForExpr(n *html.Node) (vgForAttr, error) {
 			if len(opts) > 1 {
 				for _, opt := range opts[1:] {
 					switch opt {
-					case "noshadow":
-						v.noshadow = true
 					default:
 						return vgForAttr{}, fmt.Errorf("option %q unknown", opt)
 					}
@@ -267,7 +263,6 @@ func vgEventExprs(n *html.Node) (ret map[string]string, retKeys []string) {
 
 // dedupImports reads Go source and removes duplicate import statements.
 func dedupImports(r io.Reader, w io.Writer, fname string) error {
-
 	fset := token.NewFileSet() // positions are relative to fset
 	f, err := parser.ParseFile(fset, fname, r, parser.AllErrors|parser.ParseComments)
 	if err != nil {
@@ -291,7 +286,6 @@ func dedupImports(r io.Reader, w io.Writer, fname string) error {
 }
 
 func dedupAstFileImports(f *ast.File) {
-
 	imap := make(map[string]bool, len(f.Imports)+10)
 
 	outdecls := make([]ast.Decl, 0, len(f.Decls))
@@ -335,5 +329,4 @@ func dedupAstFileImports(f *ast.File) {
 
 	}
 	f.Decls = outdecls
-
 }
