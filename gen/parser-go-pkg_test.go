@@ -2,7 +2,6 @@ package gen
 
 import (
 	"bytes"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -16,17 +15,17 @@ func TestSimpleParseGoPkgRun(t *testing.T) {
 
 	assert := assert.New(t)
 
-	tmpDir, err := ioutil.TempDir("", "TestParseGoPkgRun")
+	tmpDir, err := os.MkdirTemp("", "TestParseGoPkgRun")
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer os.RemoveAll(tmpDir)
 
-	// 	assert.NoError(ioutil.WriteFile(filepath.Join(tmpDir, "go.mod"), []byte(`
+	// 	assert.NoError(os.WriteFile(filepath.Join(tmpDir, "go.mod"), []byte(`
 	// module main
 	// `), 0644))
 
-	assert.NoError(ioutil.WriteFile(filepath.Join(tmpDir, "root.vugu"), []byte(`
+	assert.NoError(os.WriteFile(filepath.Join(tmpDir, "root.vugu"), []byte(`
 <div id="root_comp">
 	<h1>Hello!</h1>
 </div>
@@ -36,14 +35,17 @@ func TestSimpleParseGoPkgRun(t *testing.T) {
 
 	assert.NoError(p.Run())
 
-	b, err := ioutil.ReadFile(filepath.Join(tmpDir, "root_vgen.go"))
+	b, err := os.ReadFile(filepath.Join(tmpDir, "root_gen.go"))
 	assert.NoError(err)
-	// t.Logf("OUT FILE root_vgen.go: %s", b)
-	// log.Printf("OUT FILE root_vgen.go: %s", b)
+	// t.Logf("OUT FILE root_gen.go: %s", b)
+	// log.Printf("OUT FILE root_gen.go: %s", b)
 
 	if !bytes.Contains(b, []byte(`func (c *Root) Build`)) {
 		t.Errorf("failed to find Build method signature")
 	}
+
+	b, err = os.ReadFile(filepath.Join(tmpDir, "0_missing_gen.go"))
+	assert.NoError(err)
 
 	if !bytes.Contains(b, []byte(`type Root struct`)) {
 		t.Errorf("failed to find Root struct definition")
@@ -82,7 +84,8 @@ func TestRun(t *testing.T) {
 				"main.go":   "package main\nfunc main(){}",
 			},
 			out: map[string][]string{
-				"root_vgen.go": {`func \(c \*Root\) Build`, `type Root struct`},
+				"root_gen.go":      {`func \(c \*Root\) Build`},
+				"0_missing_gen.go": {`type Root struct`},
 			},
 			build: "default",
 		},
@@ -95,7 +98,8 @@ func TestRun(t *testing.T) {
 				"go.mod":    "module testcase\nreplace github.com/vugu/vugu => " + pwd + "\n",
 			},
 			out: map[string][]string{
-				"root_vgen.go": {`func \(c \*Root\) Build`, `type Root struct`},
+				"root_gen.go":      {`func \(c \*Root\) Build`},
+				"0_missing_gen.go": {`type Root struct`},
 			},
 			build: "wasm",
 		},
@@ -110,8 +114,9 @@ func TestRun(t *testing.T) {
 				"subdir1/example.vugu": "<div>Example Here</div>",
 			},
 			out: map[string][]string{
-				"root_vgen.go":            {`func \(c \*Root\) Build`, `type Root struct`, `root here`},
-				"subdir1/example_vgen.go": {`Example Here`},
+				"root_gen.go":            {`func \(c \*Root\) Build`, `root here`},
+				"0_missing_gen.go":       {`type Root struct`},
+				"subdir1/example_gen.go": {`Example Here`},
 			},
 			build: "default",
 		},
@@ -126,13 +131,28 @@ func TestRun(t *testing.T) {
 				"subdir1/example.vugu": "<div>Example Here</div>",
 			},
 			out: map[string][]string{
-				"0_components_vgen.go":         {`func \(c \*Root\) Build`, `type Root struct`, `root here`},
-				"subdir1/0_components_vgen.go": {`Example Here`},
-				"root.vugu":                    {`root here`}, // make sure vugu files didn't get nuked
-				"subdir1/example.vugu":         {`Example Here`},
+				"0_components_gen.go":         {`func \(c \*Root\) Build`, `type Root struct`},
+				"subdir1/0_components_gen.go": {`Example Here`},
+				"root.vugu":                   {`root here`}, // make sure vugu files didn't get nuked
+				"subdir1/example.vugu":        {`Example Here`},
 			},
 			afterRun: func(dir string, t *testing.T) {
-				noFile(filepath.Join(dir, "subdir1/example_vgen.go"), t)
+				noFile(filepath.Join(dir, "subdir1/example_gen.go"), t)
+			},
+			build: "default",
+		},
+		{
+			name:      "events",
+			opts:      ParserGoPkgOpts{},
+			recursive: false,
+			infiles: map[string]string{
+				"root.vugu": `<div>root here</div>`,
+				"go.mod":    "module testcase\nreplace github.com/vugu/vugu => " + pwd + "\n",
+				"main.go":   "package main\nfunc main(){}\n\n//vugugen:event Sample\n",
+			},
+			out: map[string][]string{
+				"root_gen.go":      {`func \(c \*Root\) Build`},
+				"0_missing_gen.go": {`type Root struct`, `SampleEvent`, `SampleHandler`, `SampleFunc`},
 			},
 			build: "default",
 		},
@@ -142,7 +162,7 @@ func TestRun(t *testing.T) {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 
-			tmpDir, err := ioutil.TempDir("", "TestRun")
+			tmpDir, err := os.MkdirTemp("", "TestRun")
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -150,7 +170,6 @@ func TestRun(t *testing.T) {
 			if debug {
 				t.Logf("Test %q using tmpDir: %s", tc.name, tmpDir)
 			} else {
-				defer os.RemoveAll(tmpDir)
 				t.Parallel()
 			}
 
@@ -166,7 +185,7 @@ func TestRun(t *testing.T) {
 			}
 
 			for fname, patterns := range tc.out {
-				b, err := ioutil.ReadFile(filepath.Join(tmpDir, fname))
+				b, err := os.ReadFile(filepath.Join(tmpDir, fname))
 				if err != nil {
 					t.Errorf("failed to read file %q after Run: %v", fname, err)
 					continue
@@ -184,6 +203,13 @@ func TestRun(t *testing.T) {
 			}
 
 			tstWriteFiles(tmpDir, tc.bfiles)
+
+			cmd := exec.Command("go", "mod", "tidy")
+			cmd.Dir = tmpDir
+			b, err := cmd.CombinedOutput()
+			if err != nil {
+				t.Fatalf("go mod tidy error: %s; OUTPUT:\n%s", err, b)
+			}
 
 			switch tc.build {
 
@@ -218,6 +244,11 @@ func TestRun(t *testing.T) {
 				t.Errorf("unknown build value %q", tc.build)
 			}
 
+			// only if everthing is golden do we remove
+			if !t.Failed() {
+				os.RemoveAll(tmpDir)
+			}
+
 		})
 	}
 
@@ -234,8 +265,11 @@ func tstWriteFiles(dir string, m map[string]string) {
 
 	for name, contents := range m {
 		p := filepath.Join(dir, name)
-		os.MkdirAll(filepath.Dir(p), 0755)
-		err := ioutil.WriteFile(p, []byte(contents), 0644)
+		err := os.MkdirAll(filepath.Dir(p), 0755)
+		if err != nil {
+			panic(err)
+		}
+		err = os.WriteFile(p, []byte(contents), 0644)
 		if err != nil {
 			panic(err)
 		}

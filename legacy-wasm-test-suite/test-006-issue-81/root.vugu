@@ -1,0 +1,19 @@
+<html :lang='c.Lang()' class='html-class'>
+  <head :class='c.HeadClass()'></head>
+  <body class='body-class'>
+    <div>
+    <p id="content">foo</p>
+    </div>
+  </body>
+</html>
+
+<script type='application/x-go'>
+  type Root struct {} 
+
+  func (c *Root) Lang() string {
+    return "en"
+  }
+  func (c *Root) HeadClass() string {
+    return "head-class"
+  }
+</script>

@@ -1,0 +1,11 @@
+<div id="top">
+    <main:Thing></main:Thing>
+</div>
+
+<script type="application/x-go">
+
+
+type Root struct {
+}
+
+</script>

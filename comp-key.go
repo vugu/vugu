@@ -17,7 +17,10 @@ func MakeCompKeyID(t time.Time, data uint32) uint64 {
 // MakeCompKeyIDTimeHash forms a value for CompKey.ID from the given time and a hash of the bytes you provide.
 func MakeCompKeyIDTimeHash(t time.Time, b []byte) uint64 {
 	h := xxhash.New()
-	h.Write(b)
+	_, err := h.Write(b)
+	if err != nil {
+		panic(err)
+	}
 	return MakeCompKeyID(t, uint32(h.Sum64()))
 }
 

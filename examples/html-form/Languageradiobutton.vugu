@@ -1,0 +1,11 @@
+<!-- Language Radio Button - uses dynamic properties stored in the struct and assigned ot the HTML/JS properties -->
+<div>
+    <!-- Anyone comming from JS will want to write this id="english" value="English" etc to set the properties -->
+    <!-- but this won't work because we have no way to access those properties outside of an event occurring. -->
+    <!-- This is a particular problem because the "IsSelectionDefault" method needs to compare the current value of _this_ -->
+    <!-- instance of the language radio button, but vugu provides no way to do this. -->
+    <!-- So the alternative is to carry these attributes as values in underlying Go struct and then set them dynamically -->
+    <!-- at construction time rom the containing Radiobuttons group. --> 
+    <input type="radio" id='c.Id' name="language" value='c.Value' checked='c.IsSelectionDefault()' @change='c.Change(event)'></input>
+    <label for='c.Value' vg-content='c.Value'></label><br>
+</div>

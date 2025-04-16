@@ -1,0 +1,13 @@
+<div class="demo-comp1">
+
+    <div class="demo-comp1-c" vg-html="c.NextCount()"></div>
+
+</div>
+
+<script type="application/x-go">
+
+type DemoComp1 struct {
+    CounterRef
+}
+
+</script>

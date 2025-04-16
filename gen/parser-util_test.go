@@ -51,19 +51,6 @@ func TestVgForExpr(t *testing.T) {
 			},
 			expectedError: "option \"unknown\" unknown",
 		},
-		{
-			name: "attr with noshadow option",
-			node: &html.Node{
-				Attr: []html.Attribute{
-					{Key: "vg-html", Val: "html"},
-					{Key: "vg-for.noshadow", Val: "value"},
-				},
-			},
-			expectedRet: vgForAttr{
-				expr:     "value",
-				noshadow: true,
-			},
-		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

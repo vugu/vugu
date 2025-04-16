@@ -1,7 +1,6 @@
 package gen
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -10,7 +9,7 @@ import (
 
 func TestMerge(t *testing.T) {
 
-	debug := false
+	debug := true
 
 	type tcase struct {
 		name    string
@@ -53,26 +52,26 @@ func TestMerge(t *testing.T) {
 				"out.go": {`(?ms)import "fmt".*import "fmt"`},
 			},
 		},
-		// { // FIXME: this definitely needs to be sorted out
-		// 	name: "import-dedup-2",
-		// 	infiles: map[string]string{
-		// 		"file1.go": "package main\nimport \"fmt\"\n// main comment here\nfunc main(){}",
-		// 		"file2.go": "package main\nimport \"fmt\"\nimport \"log\"\nvar a string // a comment here\n",
-		// 	},
-		// 	out: map[string][]string{
-		// 		"out.go": {`import "fmt"`, `import "log"`},
-		// 	},
-		// 	outNot: map[string][]string{
-		// 		"out.go": {`(?ms)\}.*import "log"`},
-		// 	},
-		// },
+		{
+			name: "import-dedup-2",
+			infiles: map[string]string{
+				"file1.go": "package main\nimport \"fmt\"\n// main comment here\nfunc main(){}",
+				"file2.go": "package main\nimport \"fmt\"\nimport \"log\"\nvar a string // a comment here\n",
+			},
+			out: map[string][]string{
+				"out.go": {`import "fmt"`, `import "log"`},
+			},
+			outNot: map[string][]string{
+				"out.go": {`(?ms)\}.*import "log"`},
+			},
+		},
 	}
 
 	for _, tc := range tcList {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 
-			tmpDir, err := ioutil.TempDir("", "TestMerge")
+			tmpDir, err := os.MkdirTemp("", "TestMerge")
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -97,7 +96,7 @@ func TestMerge(t *testing.T) {
 			}
 
 			for fname, patterns := range tc.out {
-				b, err := ioutil.ReadFile(filepath.Join(tmpDir, fname))
+				b, err := os.ReadFile(filepath.Join(tmpDir, fname))
 				if err != nil {
 					t.Errorf("failed to read file %q after Run: %v", fname, err)
 					continue
@@ -111,7 +110,7 @@ func TestMerge(t *testing.T) {
 			}
 
 			for fname, patterns := range tc.outNot {
-				b, err := ioutil.ReadFile(filepath.Join(tmpDir, fname))
+				b, err := os.ReadFile(filepath.Join(tmpDir, fname))
 				if err != nil {
 					t.Errorf("failed to read file %q after Run: %v", fname, err)
 					continue
@@ -125,7 +124,7 @@ func TestMerge(t *testing.T) {
 			}
 
 			if debug {
-				outb, _ := ioutil.ReadFile(filepath.Join(tmpDir, "out.go"))
+				outb, _ := os.ReadFile(filepath.Join(tmpDir, "out.go"))
 				t.Logf("OUTPUT:\n%s", outb)
 			}
 

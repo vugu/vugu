@@ -43,6 +43,11 @@
     const opcodeSetAttrNSStr = 38 // assign attribute string to the current selected namespaced element
     const opcodeSetElementNS = 39 // assign current selected node as an element of the specified type in the specified namespace
 
+    const opcodeCallback = 40 // issue callback, sends just callbackID
+    const opcodeCallbackLastElement = 41 // issue callback with callbackID and most recent element reference
+
+    /*DEBUG OPCODE STRINGS*/
+
     // Decoder provides our binary decoding.
     // Using a class because that's what all the cool JS kids are doing these days.
     class Decoder {
@@ -69,7 +74,15 @@
             return ret;
         }
 
-        // readString is 4 bytes length followed by utf chars
+        // readUint32 reads a 32-bit unsigned int and returns it as a regular number
+        readUint32() {
+            // getUint32 returns a regular JS number
+            var ret = this.dataView.getUint32(this.offset);
+            this.offset += 4;
+            return ret;
+        }
+
+        // readString is 4 bytes length followed by utf-8 chars
         readString() {
             var len = this.dataView.getUint32(this.offset);
             var ret = utf8decoder.decode(new DataView(this.dataView.buffer, this.dataView.byteOffset + this.offset + 4, len));
@@ -119,10 +132,18 @@
     //     state.eventHandlerFunc = eventHandlerFunc;
     // }
 
+    // function called when DOM events happen
     window.vuguSetEventHandler = function (eventHandlerFunc) {
         let state = window.vuguState || {};
         window.vuguState = state;
         state.eventHandlerFunc = eventHandlerFunc;
+    }
+
+    // function called when callback instructions are encountered
+    window.vuguSetCallbackHandler = function (callbackHandlerFunc) {
+        let state = window.vuguState || {};
+        window.vuguState = state;
+        state.callbackHandlerFunc = callbackHandlerFunc;
     }
 
     window.vuguGetRenderArray = function () {
@@ -194,8 +215,7 @@
 
             try {
 
-                // console.log("processing opcode", opcode);
-                // console.log("test_span_id: ", document.querySelector("#test_span_id"));
+                /*DEBUG*/ console.log("processing opcode", opcode, "("+textOpcodes[opcode]+")");
 
                 switch (opcode) {
 
@@ -216,12 +236,14 @@
                         }
                         let propName = decoder.readString();
                         let propValueJSON = decoder.readString();
+                        /*DEBUG*/ console.log("opcodeSetProperty", propName, propValueJSON);
                         el[propName] = JSON.parse(propValueJSON);
                         break;
                     }
 
                     case opcodeSelectQuery: {
                         let selector = decoder.readString();
+                        /*DEBUG*/ console.log("opcodeSelectQuery", selector);
                         state.el = document.querySelector(selector);
                         state.nextElMove = null;
                         break;
@@ -234,6 +256,7 @@
                         }
                         let attrName = decoder.readString();
                         let attrValue = decoder.readString();
+                        /*DEBUG*/ console.log("opcodeSetAttrStr", attrName, attrValue);
                         el.setAttribute(attrName, attrValue);
                         state.elAttrNames[attrName] = true;
                         // console.log("setting attr", attrName, attrValue, el)
@@ -251,6 +274,7 @@
                         }
                         let attrName = decoder.readString();
                         let attrValue = decoder.readString();
+                        /*DEBUG*/ console.log("opcodeSetAttrNSStr", attrNamespace, attrName, attrValue);
                         el.setAttributeNS(attrNamespace, attrName, attrValue);
                         state.elAttrNames[attrName] = true;
                         // console.log("setting attr", attrName, attrValue, el)
@@ -265,6 +289,9 @@
                         // select mount point using selector or if it was done earlier re-use the one from before
                         let selector = decoder.readString();
                         let nodeName = decoder.readString();
+
+                        /*DEBUG*/ console.log("opcodeSelectMountPoint", selector, nodeName);
+
                         // console.log("GOT HERE selector,nodeName = ", selector, nodeName);
                         // console.log("state.mountPointEl", state.mountPointEl);
                         if (state.mountPointEl) {
@@ -415,10 +442,7 @@
 
                         let nodeName = decoder.readString();
 
-                        // this.console.log("opcodeSetElement for ",
-                        //     "nodeName=", nodeName, 
-                        //     ", state.el=", state.el, 
-                        //     ", state.nextElMove=", state.nextElMove);
+                        /*DEBUG*/ console.log("opcodeSetElement", nodeName);
 
                         state.elAttrNames = {};
                         state.elEventKeys = {};
@@ -475,6 +499,8 @@
                         let nodeName = decoder.readString();
                         let namespace = decoder.readString();
 
+                        /*DEBUG*/ console.log("opcodeSetElementNS", nodeName, namespace);
+
                         state.elAttrNames = {};
                         state.elEventKeys = {};
 
@@ -529,6 +555,8 @@
                     case opcodeSetText: {
 
                         let content = decoder.readString();
+
+                        /*DEBUG*/ console.log("opcodeSetText", content);
 
                         // this.console.log("opcodeSetText:", content);
 
@@ -592,6 +620,8 @@
 
                         let content = decoder.readString();
 
+                        /*DEBUG*/ console.log("opcodeSetComment", content);
+
                         // handle nextElMove cases
 
                         if (state.nextElMove == "first_child") {
@@ -648,6 +678,9 @@
                     case opcodeSetInnerHTML: {
 
                         let html = decoder.readString();
+
+                        /*DEBUG*/ console.log("opcodeSetInnerHTML", html);
+
                         // this.console.log("opcodeSetInnerHTML:", html);
 
                         if (!state.el) {
@@ -668,9 +701,10 @@
 
                     // remove all event listeners from currently selected element that were not just set
                     case opcodeRemoveOtherEventListeners: {
-                        // this.console.log("opcodeRemoveOtherEventListeners");
 
                         let positionID = decoder.readString();
+
+                        /*DEBUG*/ console.log("opcodeRemoveOtherEventListeners", positionID);
 
                         // look at all registered events for this positionID
                         let emap = state.eventHandlerMap[positionID] || {};
@@ -687,7 +721,7 @@
                             let k = toBeRemoved[i];
                             let f = emap[k];
                             let kparts = k.split("|");
-                            state.el.removeEventListener(kparts[0], f, {capture: !!kparts[1], passive: !!kparts[2]});
+                            state.el.removeEventListener(kparts[0], f, {capture: +kparts[1], passive: +kparts[2]});
                             delete emap[k];
                         }
 
@@ -708,6 +742,8 @@
                         let capture = decoder.readUint8();
                         let passive = decoder.readUint8();
 
+                        /*DEBUG*/ console.log("opcodeSetEventListener", positionID, eventType, capture, passive);
+
                         if (!state.el) {
                             throw "must have state.el set in order to call opcodeSetEventListener";
                         }
@@ -724,17 +760,22 @@
                         if (!f) {
                             f = function (event) {
 
+                                /*DEBUG*/ console.log("event listener called with event", event);
+
                                 // set the active event, so the Go code and call back in and examine it if needed
                                 state.activeEvent = event;
 
                                 let eventObj = {};
                                 // console.log(event);
                                 for (let i in event) {
-                                    let itype = typeof (event[i]);
-                                    // copy primitive values directly
-                                    if ((itype == "boolean" || itype == "number" || itype == "string") && true/*event.hasOwnProperty(i)*/) {
-                                        eventObj[i] = event[i];
-                                    }
+                                    try {
+                                        // accessing `selectionDirection`, `selectionStart`, or `selectionEnd` throws in WebKit-based browsers.
+                                        let itype = typeof (event[i]);
+                                        // copy primitive values directly
+                                        if (itype == "boolean" || itype == "number" || itype == "string") {
+                                            eventObj[i] = event[i];
+                                        }
+                                    } catch {}
                                 }
 
                                 // also do the same for anything in "target"
@@ -742,10 +783,12 @@
                                     eventObj.target = {};
                                     let et = event.target;
                                     for (let i in et) {
-                                        let itype = typeof (et[i]);
-                                        if ((itype == "boolean" || itype == "number" || itype == "string") && true/*et.hasOwnProperty(i)*/) {
-                                            eventObj.target[i] = et[i];
-                                        }
+                                        try {
+                                            let itype = typeof (et[i]);
+                                            if (itype == "boolean" || itype == "number" || itype == "string") {
+                                                eventObj.target[i] = et[i];
+                                            }
+                                        } catch {}
                                     }
                                 }
 
@@ -767,24 +810,41 @@
 
                                 // console.log(state.eventBuffer);
 
-                                // make sure eventBuffer and eventBufferView are setup
-                                let eventBuffer = state.eventBuffer;
-                                if (!eventBuffer) {
-                                    // FIXME: not yet sure how to handle different lengths here,
-                                    // but for now this needs to be at least one byte shorter 
-                                    // than Go's buffer
-                                    eventBuffer = new Uint8Array(16383);
-                                    state.eventBuffer = eventBuffer;
-                                    state.eventBufferView = new DataView(eventBuffer.buffer, eventBuffer.byteOffset, eventBuffer.byteLength);
-                                }
-
                                 // write JSON to state.eventBuffer with uint32 length prefix
 
                                 let encodeResultBuffer = textEncoder.encode(fullJSON);
+
+                                const dataSize = encodeResultBuffer.byteLength - encodeResultBuffer.byteOffset
+                                // we need to allocate more bytes for storing data size in the beginning of the buffer
+                                const requiredBufferSize = dataSize + 4
+
+                                const computeEventBufferSize = (requiredBufferSize) => {
+                                    const sixteen_kb = 16384
+                                    const actualRequired = requiredBufferSize + 1
+                                    const remainder = actualRequired % sixteen_kb
+
+                                    // but for now this needs to be at least one byte shorter
+                                    // than Go's buffer
+                                    if (remainder === 0) {
+                                        return actualRequired - 1
+                                    }
+
+                                    return actualRequired + (sixteen_kb - remainder) - 1
+                                }
+
+                                // before eventHandlerFunc is called make sure eventBuffer and eventBufferView are setup,
+                                // and allocateEventBuffer is called
+                                let eventBuffer = state.eventBuffer;
+                                if (!eventBuffer || eventBuffer.length < requiredBufferSize) {
+                                    const eventBufferSize = computeEventBufferSize(requiredBufferSize)
+                                    eventBuffer = new Uint8Array(eventBufferSize);
+                                    state.eventBuffer = eventBuffer;
+                                    state.eventBufferView = new DataView(eventBuffer.buffer, eventBuffer.byteOffset, eventBuffer.byteLength);
+                                }
                                 //console.log("encodeResult", encodeResult);
                                 state.eventBuffer.set(encodeResultBuffer, 4); // copy encoded string to event buffer
                                 // now write length using DataView as uint32
-                                state.eventBufferView.setUint32(0, encodeResultBuffer.byteLength - encodeResultBuffer.byteOffset);
+                                state.eventBufferView.setUint32(0, dataSize);
 
                                 // let result = textEncoder.encodeInto(fullJSON, state.eventBuffer);
                                 // let eventBufferDataView = new DataView(state.eventBuffer.buffer, state.eventBuffer.byteOffset, state.eventBuffer.byteLength);
@@ -797,7 +857,8 @@
                                 // and keep track of the target element, also consider grabbing
                                 // the value or relevant properties as appropriate for form things
 
-                                state.eventHandlerFunc.call(null, eventBuffer); // call with null this avoid unnecessary js.Value reference
+                                /*DEBUG*/ console.log("event handler calling state.eventHandlerFunc", eventBuffer);
+                                state.eventHandlerFunc.call(null, eventBuffer); // call with null this avoids unnecessary js.Value reference
 
                                 // unset the active event
                                 state.activeEvent = null;
@@ -826,6 +887,10 @@
                         let elementName = decoder.readString();
                         let textContent = decoder.readString();
                         let attrPairsLen = decoder.readUint8();
+
+
+                        /*DEBUG*/ console.log("opcodeSetCSSTag", elementName, textContent, attrPairsLen);
+
                         if (attrPairsLen % 2 != 0) {
                             throw "attrPairsLen is odd number: " + attrPairsLen;
                         }
@@ -834,6 +899,7 @@
                         for (let i = 0; i < attrPairsLen; i += 2) {
                             let key = decoder.readString();
                             let val = decoder.readString();
+                            /*DEBUG*/ console.log("opcodeSetCSSTag attr", key, val);
                             attrMap[key] = val;
                         }
 
@@ -852,7 +918,7 @@
                             break;
                         }
 
-                        // TODO: 
+                        // TODO:
                         // * find all tags that have the same element type (link or style)
                         // * for each one for style use textContent as key, for link use url
                         // * see if matching tag already exists
@@ -897,7 +963,7 @@
                     }
                     case opcodeRemoveOtherCSSTags: {
 
-                        // this.console.log("got opcodeRemoveOtherCSSTags");
+                        /*DEBUG*/ console.log("opcodeRemoveOtherCSSTags");
 
                         // any link or style tag in doc that has vuguCreated==true and is not in css tags set map gets removed
 
@@ -921,6 +987,29 @@
 
                         state.elCSSTagsSet = null; // clear this out so it gets reinitialized the next time opcodeSetCSSTag or this opcode is used
 
+                        break;
+                    }
+
+                    case opcodeCallbackLastElement: {
+                        let callbackID = decoder.readUint32();
+
+                        /*DEBUG*/ console.log("opcodeCallbackLastElement", callbackID);
+
+                        let el = state.el;
+                        if (!el) {
+                            throw "opcodeCallbackLastElement: no current reference";
+                        }
+                        // this.console.log("got opcodeCallbackLastElement, ", callbackID);
+                        state.callbackHandlerFunc(callbackID, el);
+                        break;
+                    }
+
+                    case opcodeCallback: {
+                        let callbackID = decoder.readUint32();
+
+                        /*DEBUG*/ console.log("opcodeCallback", callbackID);
+
+                        state.callbackHandlerFunc(callbackID);
                         break;
                     }
 
