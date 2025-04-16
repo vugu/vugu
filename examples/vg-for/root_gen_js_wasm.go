@@ -159,10 +159,6 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 							vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n                        "}
 							vgparent.AppendChild(vgn)
 							for i := 0; i < c.DaysInWeek(); i++ {
-								var vgiterkey interface{} = i
-								_ = vgiterkey
-								i := i
-								_ = i
 								vgn = &vugu.VGNode{Type: vugu.VGNodeType(3), Namespace: "", Data: "li", Attr: []vugu.VGAttribute(nil)}
 								vgparent.AppendChild(vgn)
 								{
@@ -238,12 +234,6 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 							vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: " \n                        "}
 							vgparent.AppendChild(vgn)
 							for k, v := range c.DaysInWeekIth() {
-								var vgiterkey interface{} = k
-								_ = vgiterkey
-								k := k
-								_ = k
-								v := v
-								_ = v
 								vgn = &vugu.VGNode{Type: vugu.VGNodeType(3), Namespace: "", Data: "li", Attr: []vugu.VGAttribute(nil)}
 								vgparent.AppendChild(vgn)
 								{
@@ -324,11 +314,7 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 							vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n                        "}
 							vgparent.AppendChild(vgn)
 							for key, value := range c.DaysInWeekIth() {
-								var vgiterkey interface{} = key
-								_ = vgiterkey
-								key := key
 								_ = key
-								value := value
 								_ = value
 								vgn = &vugu.VGNode{Type: vugu.VGNodeType(3), Namespace: "", Data: "li", Attr: []vugu.VGAttribute(nil)}
 								vgparent.AppendChild(vgn)
@@ -401,12 +387,6 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 							vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n                        "}
 							vgparent.AppendChild(vgn)
 							for index, value := range c.DaysInWeekIthSorted() {
-								var vgiterkey interface{} = index
-								_ = vgiterkey
-								index := index
-								_ = index
-								value := value
-								_ = value
 								vgn = &vugu.VGNode{Type: vugu.VGNodeType(3), Namespace: "", Data: "li", Attr: []vugu.VGAttribute(nil)}
 								vgparent.AppendChild(vgn)
 								{
@@ -468,13 +448,7 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 							vgparent.AppendChild(vgn)
 							vgn = &vugu.VGNode{Type: vugu.VGNodeType(1), Data: "\n                        "}
 							vgparent.AppendChild(vgn)
-							for index, value := range c.DaysInWeekIterator() {
-								var vgiterkey interface{} = index
-								_ = vgiterkey
-								index := index
-								_ = index
-								value := value
-								_ = value
+							for index := range c.DaysInWeekIterator() {
 								vgn = &vugu.VGNode{Type: vugu.VGNodeType(3), Namespace: "", Data: "li", Attr: []vugu.VGAttribute(nil)}
 								vgparent.AppendChild(vgn)
 								{
