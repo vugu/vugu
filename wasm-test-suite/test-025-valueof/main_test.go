@@ -20,7 +20,7 @@ import (
 //   (if you suspect you are getting console errors that you can't see, this is a simple way to check)
 
 // Adapted from test-001-simple to show Issue #328 vugu.js.ValueOf causing a panic.
-func Test001Simple(t *testing.T) {
+func Test025ValueOf(t *testing.T) {
 
 	t.Logf("Refactored test-025-valueof running in networked docker containers!\n")
 	ctx, cancel := chromedpHelper.MustChromeCtx()

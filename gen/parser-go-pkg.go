@@ -45,7 +45,6 @@ var errNoVuguFile = errors.New("no .vugu file(s) found")
 // directory under pkgPath.  The opts will be modified for subfolders to disable go.mod and main.go
 // logic.  If pkgPath does not contain a .vugu file this function will return an error.
 func RunRecursive(pkgPath string, opts *ParserGoPkgOpts) error {
-
 	if opts == nil {
 		opts = &ParserGoPkgOpts{}
 	}
@@ -125,7 +124,6 @@ func (p *ParserGoPkg) Opts() ParserGoPkgOpts {
 // if package already has file with package name something other than main).
 // Per-file code generation is performed by ParserGo.
 func (p *ParserGoPkg) Run() error {
-
 	// record the times of existing files, so we can restore after if the same
 	hashTimes, err := fileHashTimes(p.pkgPath)
 	if err != nil {
@@ -137,6 +135,11 @@ func (p *ParserGoPkg) Run() error {
 		return err
 	}
 	defer pkgF.Close()
+
+	_, err = os.ReadDir(p.pkgPath)
+	if err != nil {
+		return err
+	}
 
 	allFileNames, err := pkgF.Readdirnames(-1)
 	if err != nil {
@@ -174,14 +177,15 @@ func (p *ParserGoPkg) Run() error {
 
 	// run ParserGo on each file to generate the .go files
 	for _, fn := range vuguFileNames {
-
 		baseFileName := strings.TrimSuffix(fn, ".vugu")
+		// the pg.parse method will create the *_gen_notjs_notwasm.go and *_gen_js_wasm.go files
+		// so it doesn't matter that the go file name is an *_gen at this point
 		goFileName := baseFileName + goFnameAppend + ".go"
 		compTypeName := fnameToGoTypeName(baseFileName)
 
 		// keep track of which files to scan for missing structs
-		missingFmap[fn] = goFileName
-
+		// BUT here we have to mangle the file name to insert the platform dependent parts to match the file name the parser will generate
+		missingFmap[fn] = baseFileName + goFnameAppend + "_notjs_notwasm" + ".go"
 		mergeFiles = append(mergeFiles, goFileName)
 
 		pg := &ParserGo{}
@@ -207,7 +211,7 @@ func (p *ParserGoPkg) Run() error {
 		}
 
 		// parse it
-		err = pg.Parse(bytes.NewReader(b), fn)
+		err = pg.Parse(bytes.NewReader(b), fn) // WARNING pg.Parse CREATES new *.go files
 		if err != nil {
 			return fmt.Errorf("error parsing %q: %v", fn, err)
 		}
@@ -420,7 +424,6 @@ func main() {
 	}
 
 	return nil
-
 }
 
 //nolint:golint,unused
@@ -452,7 +455,6 @@ func fnameToGoTypeName(s string) string {
 }
 
 func goGuessPkgName(pkgPath string) (ret string) {
-
 	// defer func() { log.Printf("goGuessPkgName returning %q", ret) }()
 
 	// see if the package already has a name and use it if so
@@ -489,13 +491,11 @@ checkMore:
 	// ...unless it makes no sense in which case we use "main"
 
 	return "main"
-
 }
 
 // goPkgCheckNames parses a package dir and looks for names, returning a map of what was
 // found.  Names like "A.B" mean a method of name "B" with receiver of type "*A"
 func goPkgCheckNames(pkgPath string, names []string) (map[string]interface{}, error) {
-
 	ret := make(map[string]interface{})
 
 	fset := token.NewFileSet()
@@ -551,7 +551,6 @@ func goPkgCheckNames(pkgPath string, names []string) (map[string]interface{}, er
 						// 		}
 						// 	}
 						// }
-
 					}
 				} else {
 					continue // don't care methods with no receiver - found them already above as single (no period) names
@@ -577,7 +576,6 @@ func goPkgCheckNames(pkgPath string, names []string) (map[string]interface{}, er
 }
 
 func nameParts(n string) (recv, method string) {
-
 	ret := strings.SplitN(n, ".", 2)
 	if len(ret) < 2 {
 		method = n
@@ -590,7 +588,6 @@ func nameParts(n string) (recv, method string) {
 
 // fileHashTimes will scan a directory and return a map of hashes and corresponding mod times
 func fileHashTimes(dir string) (map[uint64]time.Time, error) {
-
 	ret := make(map[uint64]time.Time)
 
 	f, err := os.Open(dir)
@@ -630,7 +627,6 @@ func fileHashTimes(dir string) (map[uint64]time.Time, error) {
 // workable for now - it's important for the developer experince we don't do unnecessary builds
 // in cases where things don't change
 func restoreFileHashTimes(dir string, hashTimes map[uint64]time.Time) error {
-
 	f, err := os.Open(dir)
 	if err != nil {
 		return err
