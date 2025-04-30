@@ -127,30 +127,22 @@ func (p *ParserGoPkg) Run() error {
 	// record the times of existing files, so we can restore after if the same
 	hashTimes, err := fileHashTimes(p.pkgPath)
 	if err != nil {
-		log.Printf("\t*** fileHashTimes Errors\n")
 		return err
 	}
 
-	log.Printf("\t*** opening %s\n", p.pkgPath)
 	pkgF, err := os.Open(p.pkgPath)
 	if err != nil {
-		log.Printf("\t*** os.Open Errors\n")
 		return err
 	}
 	defer pkgF.Close()
 
-	de, err := os.ReadDir(p.pkgPath)
+	_, err = os.ReadDir(p.pkgPath)
 	if err != nil {
-		log.Printf("\t*** failed to read dir: %s\n", p.pkgPath)
 		return err
-	}
-	for _, f := range de {
-		log.Printf("\t*** f: %s (dir: %t)", f.Name(), f.IsDir())
 	}
 
 	allFileNames, err := pkgF.Readdirnames(-1)
 	if err != nil {
-		log.Printf("\t*** pkgF.Readdirnames Errors\n")
 		return err
 	}
 
@@ -162,7 +154,6 @@ func (p *ParserGoPkg) Run() error {
 	}
 
 	if len(vuguFileNames) == 0 {
-		log.Printf("\t*** len(vuguFileNames) Errors\n")
 		return fmt.Errorf("no .vugu files found, please create one and try again")
 	}
 
@@ -184,31 +175,15 @@ func (p *ParserGoPkg) Run() error {
 
 	missingFmap := make(map[string]string, len(vuguFileNames))
 
-	de, err = os.ReadDir(p.pkgPath)
-	if err != nil {
-		log.Printf("\t****A failed to read dir: %s\n", p.pkgPath)
-		return err
-	}
-	for _, f := range de {
-		log.Printf("\t****A f: %s (dir: %t)", f.Name(), f.IsDir())
-	}
-
 	// run ParserGo on each file to generate the .go files
-	for count, fn := range vuguFileNames {
-		log.Printf("\t*** ParserGo wil run on Filename: %s\n", fn)
+	for _, fn := range vuguFileNames {
 		baseFileName := strings.TrimSuffix(fn, ".vugu")
-		log.Printf("\t*** basefilename: %s\n", baseFileName)
-		log.Printf("\t*** goFnameAppend: %s\n", goFnameAppend)
-		//goFileName := baseFileName + goFnameAppend + "_notjs_notwasm" + ".go"
 		// the pg.parse method will create the *_gen_notjs_notwasm.go and *_gen_js_wasm.go files
-		// so it doesn;' matter that the go file name is an *_gen at this point
+		// so it doesn't matter that the go file name is an *_gen at this point
 		goFileName := baseFileName + goFnameAppend + ".go"
-		log.Printf("\t*** goFileName: %s\n", goFileName)
 		compTypeName := fnameToGoTypeName(baseFileName)
-		log.Printf("\t*** compTypeName: %s\n", compTypeName)
 
 		// keep track of which files to scan for missing structs
-		//missingFmap[fn] = goFileName
 		// BUT here we have to mangle the file name to insert the platform dependent parts to match the file name the parser will generate
 		missingFmap[fn] = baseFileName + goFnameAppend + "_notjs_notwasm" + ".go"
 		mergeFiles = append(mergeFiles, goFileName)
@@ -232,35 +207,13 @@ func (p *ParserGoPkg) Run() error {
 		// read in source
 		b, err := os.ReadFile(filepath.Join(p.pkgPath, fn))
 		if err != nil {
-			log.Printf("\t*** os.Readfile Errors\n")
 			return err
 		}
 
-		de, err = os.ReadDir(p.pkgPath)
-		if err != nil {
-			log.Printf("\t****C failed to read dir: %s\n", p.pkgPath)
-			return err
-		}
-		for _, f := range de {
-			log.Printf("\t****C f: %s (dir: %t) (count: %d)", f.Name(), f.IsDir(), count)
-		}
-
-		log.Printf("\t****C fn: %s\n", fn)
-		log.Printf("\t****C read file: %s\n", filepath.Join(p.pkgPath, fn))
 		// parse it
 		err = pg.Parse(bytes.NewReader(b), fn) // WARNING pg.Parse CREATES new *.go files
 		if err != nil {
-			log.Printf("\t*** pg.Parse Errors\n")
 			return fmt.Errorf("error parsing %q: %v", fn, err)
-		}
-
-		de, err = os.ReadDir(p.pkgPath)
-		if err != nil {
-			log.Printf("\t****B failed to read dir: %s\n", p.pkgPath)
-			return err
-		}
-		for _, f := range de {
-			log.Printf("\t****B f: %s (dir: %t) (count: %d)", f.Name(), f.IsDir(), count)
 		}
 
 	}
@@ -269,19 +222,7 @@ func (p *ParserGoPkg) Run() error {
 	// what we need to generate
 	namesFound, err := goPkgCheckNames(p.pkgPath, namesToCheck)
 	if err != nil {
-		log.Printf("\t*** goPkgCheckNames Errors\n")
 		return err
-	}
-	log.Printf("\t*** namesToCheck: %+v\n", namesToCheck)
-	log.Printf("\t*** namesFound: %+v\n", namesFound)
-
-	de, err = os.ReadDir(p.pkgPath)
-	if err != nil {
-		log.Printf("\t**** failed to read dir: %s\n", p.pkgPath)
-		return err
-	}
-	for _, f := range de {
-		log.Printf("\t**** f: %s (dir: %t)", f.Name(), f.IsDir())
 	}
 
 	// if main package, generate main_wasm.go with default stuff if no main func in the package and no main_wasm.go
@@ -378,8 +319,6 @@ func main() {
 				log.Printf("WARNING: gofmt on main_wasm.go failed: %v", err)
 			}
 
-			log.Printf("\t*** os.WriteFile called. mainGoPath %s\n", mainGoPath)
-
 			err = os.WriteFile(mainGoPath, []byte(bufstr), 0644)
 			if err != nil {
 				return err
@@ -389,22 +328,10 @@ func main() {
 
 	}
 
-	de, err = os.ReadDir(p.pkgPath)
-	if err != nil {
-		log.Printf("\t***** failed to read dir: %s\n", p.pkgPath)
-		return err
-	}
-	for _, f := range de {
-		log.Printf("\t***** f: %s (dir: %t)", f.Name(), f.IsDir())
-	}
-
 	// write go.mod if it doesn't exist and not disabled - actually this really only makes sense for main,
 	// otherwise we really don't know what the right module name is
 	goModPath := filepath.Join(p.pkgPath, "go.mod")
 	if pkgName == "main" && !p.opts.SkipGoMod && !fileExists(goModPath) {
-
-		log.Printf("\t*** os.WriteFile called. goModPath %s\n", goModPath)
-
 		err := os.WriteFile(goModPath, []byte(`module `+pkgName+"\n"), 0644)
 		if err != nil {
 			return err
@@ -461,22 +388,10 @@ func main() {
 
 	// }
 
-	de, err = os.ReadDir(p.pkgPath)
-	if err != nil {
-		log.Printf("\t****** failed to read dir: %s\n", p.pkgPath)
-		return err
-	}
-	for _, f := range de {
-		log.Printf("\t****** f: %s (dir: %t)", f.Name(), f.IsDir())
-	}
-
-	log.Printf("\t*** before MissingFixer.run() missingFmap: %v\n", missingFmap)
-
 	// generate anything missing and process vugugen comments
 	mf := newMissingFixer(p.pkgPath, pkgName, missingFmap)
 	err = mf.run()
 	if err != nil {
-		log.Printf("\t*** MissingFixer.run() errors\n")
 		return fmt.Errorf("missing fixer error: %w", err)
 	}
 
