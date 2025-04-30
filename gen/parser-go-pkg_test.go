@@ -12,7 +12,6 @@ import (
 )
 
 func TestSimpleParseGoPkgRun(t *testing.T) {
-
 	assert := assert.New(t)
 
 	tmpDir, err := os.MkdirTemp("", "TestParseGoPkgRun")
@@ -35,7 +34,7 @@ func TestSimpleParseGoPkgRun(t *testing.T) {
 
 	assert.NoError(p.Run())
 
-	b, err := os.ReadFile(filepath.Join(tmpDir, "root_gen.go"))
+	b, err := os.ReadFile(filepath.Join(tmpDir, "root_gen_notjs_notwasm.go"))
 	assert.NoError(err)
 	// t.Logf("OUT FILE root_gen.go: %s", b)
 	// log.Printf("OUT FILE root_gen.go: %s", b)
@@ -50,11 +49,9 @@ func TestSimpleParseGoPkgRun(t *testing.T) {
 	if !bytes.Contains(b, []byte(`type Root struct`)) {
 		t.Errorf("failed to find Root struct definition")
 	}
-
 }
 
 func TestRun(t *testing.T) {
-
 	debug := false
 
 	pwd, err := filepath.Abs("..")
@@ -84,8 +81,8 @@ func TestRun(t *testing.T) {
 				"main.go":   "package main\nfunc main(){}",
 			},
 			out: map[string][]string{
-				"root_gen.go":      {`func \(c \*Root\) Build`},
-				"0_missing_gen.go": {`type Root struct`},
+				"root_gen_notjs_notwasm.go": {`//go:build !js || !wasm\n\npackage main\nfunc \(c \*Root\) Build`},
+				"0_missing_gen.go":          {`type Root struct`},
 			},
 			build: "default",
 		},
@@ -161,7 +158,6 @@ func TestRun(t *testing.T) {
 	for _, tc := range tcList {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-
 			tmpDir, err := os.MkdirTemp("", "TestRun")
 			if err != nil {
 				t.Fatal(err)
@@ -248,10 +244,8 @@ func TestRun(t *testing.T) {
 			if !t.Failed() {
 				os.RemoveAll(tmpDir)
 			}
-
 		})
 	}
-
 }
 
 // apparentally now unused????
@@ -263,7 +257,6 @@ func TestRun(t *testing.T) {
 // }
 
 func tstWriteFiles(dir string, m map[string]string) {
-
 	for name, contents := range m {
 		p := filepath.Join(dir, name)
 		err := os.MkdirAll(filepath.Dir(p), 0755)
@@ -275,5 +268,4 @@ func tstWriteFiles(dir string, m map[string]string) {
 			panic(err)
 		}
 	}
-
 }

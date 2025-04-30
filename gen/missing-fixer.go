@@ -57,7 +57,7 @@ func (mf *missingFixer) run() error {
 		return err
 	}
 
-	log.Printf("\t*** pkgMap: %v\n", pkgMap)
+	log.Printf("\t*** pkgMap: %+v\n", pkgMap)
 
 	pkg := pkgMap[mf.pkgName]
 	if pkg == nil {
@@ -70,8 +70,11 @@ func (mf *missingFixer) run() error {
 
 	// read each _gen.go file
 	for _, goFile := range mf.vuguComps {
-		log.Printf("\t*** mf.vuguComps gofile: %v\n", goFile)
+		log.Printf("\t*** mf.vuguComps gofile: %v ****\n", goFile)
+	}
 
+	for _, goFile := range mf.vuguComps {
+		log.Printf("\t*** mf.vuguComps gofile: %v\n", goFile)
 		// var ffset token.FileSet
 		// file, err := parser.ParseFile(&ffset, filepath.Join(mf.pkgPath, goFile), nil, 0)
 		// if err != nil {
@@ -335,8 +338,13 @@ func readVugugenComments(pkgPath string) (map[string][]string, error) {
 //nolint:staticcheck // ast.Package is deprecated as of Go 1.23
 func fileInPackage(pkg *ast.Package, fileName string) *ast.File {
 	log.Printf("\t*** fileInPackage package:%s filename to find :%s\n", pkg.Name, fileName)
+
+	for fpath, _ := range pkg.Files {
+		log.Printf("\t*** fileInPackage fpath: %s\n", fpath)
+	}
+
 	for fpath, file := range pkg.Files {
-		log.Printf("\t*** fileInPackage package:%s path: %s file:%s\n", pkg.Name, fpath, file.Name)
+		log.Printf("\t*** fileInPackage package:%s path: %s file:%s\n", pkg.Name, fpath, filepath.Base(fpath))
 		if filepath.Base(fpath) == fileName {
 			return file
 		}

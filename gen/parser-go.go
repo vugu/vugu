@@ -242,13 +242,13 @@ func writeNonJsPlatformFile(fileName, newContents string) error {
 	// removed to see if we can pass the tests again
 	// the generated file will be left with a "_gen.go" extension.
 	// for all platforms
-	// path := filepath.Dir(fileName)
-	// basename := filepath.Base(fileName)
-	// ext := filepath.Ext(fileName)
-	// filenameNoExt, _ := strings.CutSuffix(basename, ext)
-	// newFileName := path + string(filepath.Separator) + filenameNoExt + "_notjs_notwasm" + ext
+	path := filepath.Dir(fileName)
+	basename := filepath.Base(fileName)
+	ext := filepath.Ext(fileName)
+	filenameNoExt, _ := strings.CutSuffix(basename, ext)
+	newFileName := path + string(filepath.Separator) + filenameNoExt + "_notjs_notwasm" + ext
 
-	newFileName := fileName
+	//	newFileName := fileName
 	return os.WriteFile(newFileName, []byte(newContentsWithBuildTag), 0644)
 }
 
