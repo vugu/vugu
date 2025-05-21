@@ -40,7 +40,11 @@ func goBuildForLinuxAMD64(binaryName, pkgName string) error {
 
 func goBuildWithEnvs(envs map[string]string, binaryName, pkgName string) error {
 	return goCmdWithV(envs, "build", "-o", binaryName, pkgName)
+}
 
+func goBuildWithSetVariable(variable, value, binaryName, pkgName string) error {
+	linkerFlag := "-X " + variable + "=" + value // unlinke the command line this is not enclosed in double quotes
+	return goCmdV("build", "-ldflags", linkerFlag, "-o", binaryName, pkgName)
 }
 
 // Get the GOROOT for the standard go compiler via go env
@@ -73,7 +77,6 @@ func buildLegacyWasmTestSuiteServer() error {
 		"GOARCH":      "amd64",
 	}
 	return goCmdWithV(envs, "build", "-o", "./wasm-test-suite-srv", "github.com/vugu/vugu/legacy-wasm-test-suite/docker")
-
 }
 
 func testLegacyWasmTestSuite() error {

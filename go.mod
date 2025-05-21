@@ -4,6 +4,7 @@ require (
 	github.com/chromedp/cdproto v0.0.0-20240810084448-b931b754e476
 	github.com/chromedp/chromedp v0.10.0
 	github.com/stretchr/testify v1.10.0
+	github.com/urfave/cli/v3 v3.3.3
 	github.com/vugu/html v0.0.0-20190914200101-c62dc20b8289
 	github.com/vugu/vjson v0.0.0-20200505061711-f9cbed27d3d9
 	github.com/vugu/xxhash v0.0.0-20191111030615-ed24d0179019

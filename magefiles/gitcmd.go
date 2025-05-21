@@ -48,6 +48,14 @@ func gitDiffFile(f string) error {
 	return err
 }
 
+func gitDescribe() (string, error) {
+	ref, err := gitCmdCaptureOutput("describe", "--dirty")
+	if err != nil {
+		return "", err
+	}
+	return ref, nil
+}
+
 func gitCmdV(args ...string) error {
 	return sh.RunV("git", args...)
 }
