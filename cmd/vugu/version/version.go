@@ -43,6 +43,22 @@ var version string // this value should be set by Mage during the build process.
 //
 // [git describe]: https://git-scm.com/docs/git-describe
 func Version(ctx context.Context, cmd *cli.Command) error {
+	v, err := VersionString()
+	if err != nil {
+		return err
+	}
+	fmt.Println(v)
+	return nil
+}
+
+func versionNotSet() bool {
+	return version == ""
+}
+
+// Calculate and return the VersionString. If there is an error the returned string will be empty and
+// the error will be [FailedToReadBuildInfoError]. Otherwise the error is nil and the string contains
+// the version string. See also [Version]
+func VersionString() (string, error) {
 	if versionNotSet() {
 		// version was not set at build time so pull the rcs inform rom the binary to get the commit hash
 		var (
@@ -53,7 +69,7 @@ func Version(ctx context.Context, cmd *cli.Command) error {
 		// so we assume this binary was built outside of the magefile
 		buildInfo, ok := debug.ReadBuildInfo()
 		if !ok {
-			return FailedToReadBuildInfoError
+			return "", FailedToReadBuildInfoError
 		}
 		for _, v := range buildInfo.Settings {
 			if v.Key == "vcs.revision" {
@@ -68,15 +84,10 @@ func Version(ctx context.Context, cmd *cli.Command) error {
 		if modified {
 			rev = rev + dirtySuffix
 		}
-		fmt.Println(prefix + rev)
+		return prefix + rev, nil
 		// we have a version number set at built tiem but was the repo dirty?
 	} else {
 		// the version has been set at build tiem by mage so just print it
-		fmt.Println(prefix + version)
+		return prefix + version, nil
 	}
-	return nil
-}
-
-func versionNotSet() bool {
-	return version == ""
 }
