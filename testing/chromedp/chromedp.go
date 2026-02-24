@@ -43,7 +43,7 @@ func MustChromeCtx() (context.Context, context.CancelFunc) {
 
 	ctx, _ := chromedp.NewContext(allocCtx) // , chromedp.WithLogf(log.Printf))
 	// defer cancel()
-	ctx, cancel := context.WithTimeout(ctx, 2*60*time.Second) // 23/2/26 Currently seeing slow Github actions leading to a timeout/dealing exceeded, so soubling the timeout to try to account for this hopefully temporary behaviour
+	ctx, cancel := context.WithTimeout(ctx, 4*60*time.Second) // 23/2/26 Currently seeing slow Github actions leading to a timeout/dealing exceeded, so soubling the timeout to try to account for this hopefully temporary behaviour
 	// defer cancel()
 
 	return ctx, cancel
