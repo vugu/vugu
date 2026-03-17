@@ -36,7 +36,7 @@ func matchWasmFilename(fn string) (bool, error) {
 }
 
 func matchGeneratedFilename(fn string) (bool, error) {
-	return regexp.MatchString("^.*_gen[.]go$", fn)
+	return regexp.MatchString("^.*_gen.*[.]go$", fn)
 }
 
 type Matcher interface {

@@ -44,9 +44,7 @@ func (mf *missingFixer) run() error {
 	// parse the package
 	var fset token.FileSet
 	pkgMap, err := parser.ParseDir(&fset, mf.pkgPath, nil, 0)
-	if err != nil {
-		return err
-	}
+
 	pkg := pkgMap[mf.pkgName]
 	if pkg == nil {
 		return fmt.Errorf("unable to find package %q after parsing dir %s", mf.pkgName, mf.pkgPath)
@@ -57,7 +55,6 @@ func (mf *missingFixer) run() error {
 
 	// read each _gen.go file
 	for _, goFile := range mf.vuguComps {
-
 		// var ffset token.FileSet
 		// file, err := parser.ParseFile(&ffset, filepath.Join(mf.pkgPath, goFile), nil, 0)
 		// if err != nil {

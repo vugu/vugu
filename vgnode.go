@@ -5,8 +5,6 @@ import (
 	"html"
 	"reflect"
 	"strconv"
-
-	"github.com/vugu/vugu/js"
 )
 
 // VGNodeType is one of the valid node types (error, text, document, element, comment, doctype).
@@ -371,14 +369,3 @@ func (n *VGNode) SetInnerHTML(val interface{}) {
 
 	n.InnerHTML = &s
 }
-
-// JSValueHandler does something with a js.Value
-type JSValueHandler interface {
-	JSValueHandle(js.Value)
-}
-
-// JSValueFunc implements JSValueHandler as a function.
-type JSValueFunc func(js.Value)
-
-// JSValueHandle implements the JSValueHandler interface.
-func (f JSValueFunc) JSValueHandle(v js.Value) { f(v) }
