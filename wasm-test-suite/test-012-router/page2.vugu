@@ -1,0 +1,7 @@
+<div id="page2">
+    this is page 2
+    <a href="/test-012-router/#page1" id="page1_link">link to page1</a>
+    <button id="page1_button" @click='c.NavigateToPage("/#page1")'>button to page1</button>
+    <button id="page1_button_repl" @click='c.NavigateToPageWithReplace("/#page1")'>button to page (replace)</button>
+</div>
+

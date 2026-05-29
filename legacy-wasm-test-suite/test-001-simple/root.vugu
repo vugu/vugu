@@ -1,0 +1,25 @@
+<html>
+    <body>
+        <div id="testing">
+            <div id="t0">t0text</div>
+            <div id="t1" vg-html='"t1text"'></div>
+            <div id="t2" vg-content='"t2text"'></div>
+            <div id="t3" vg-content='amp'></div>
+            <div id="t4" vg-content='vugu.HTML(amp)'></div>
+            <div id="t5" vg-content='false'></div>
+            <div id="t6" vg-content='10'></div>
+            <div id="t7" vg-content='20.0'></div>
+            <div id="t8" vg-content='(*string)(nil)'></div>
+            <div id="t9" vg-content='S("blah")'></div>
+        </div>
+    </body>
+</html>
+
+<script type="application/x-go">
+
+const amp = "&amp;";
+
+type S string
+func (s S) String() string { return "S-HERE:"+string(s) }
+
+</script>
