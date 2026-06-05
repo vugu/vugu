@@ -1,0 +1,46 @@
+//go:build wasm
+package main
+
+import (
+	"fmt"
+	{{if .RootStructPkgAlias }}{{ .RootStructPkgAlias }} {{end}}{{if .RootStructPkgImportPath }}"{{ .RootStructPkgImportPath }}"{{end}}
+	"github.com/vugu/vugu"
+	"github.com/vugu/vugu/domrender"
+)
+
+func main() {
+
+	mountPoint := "#" + {{ .MountPoint }}
+	fmt.Printf("Entering main(), -mount-point=%q\n", mountPoint)
+	defer fmt.PrintLn("Exiting main())
+
+	renderer, err := domrender.New(mountPoint)
+	if err != nil {
+		panic(err)
+	}
+	defer renderer.Release()
+
+	buildEnv, err := vugu.NewBuildEnv(renderer.EventEnv())
+	if err != nil {
+		panic(err)
+	}
+
+	if rootStructPkg != "" {
+		rootStructType := rootStructPkg + "." 
+	}
+
+	{{if .RootStructPkgAlias }}
+	rootBuilder := {{ .RootStructPkgAlias }}.{{ .RootStructType }}{}
+	{{else}}
+	rootBuilder := &{{ .RootStructType }}{}
+	{{end}}
+	for ok := true; ok; ok = renderer.EventWait() {
+
+		buildResults := buildEnv.RunBuild(rootBuilder)
+
+		err = renderer.Render(buildResults)
+		if err != nil {
+			panic(err)
+		}
+	}
+}
