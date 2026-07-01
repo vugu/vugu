@@ -92,33 +92,39 @@ func Initialise(ctx context.Context, cmd *cli.Command) error {
 
 	moduleName := args[0]
 	fmt.Printf("ModuleName: %q\n", args[0])
-	fmt.Printf("Dir Option %q\n", Opts.Dir)
+	return doInitialise(ctx, moduleName, Opts)
+}
+
+func doInitialise(ctx context.Context, moduleName string, opts InitOpts) error {
+	// Opts is a package level variable
+	fmt.Printf("Dir Option %q\n", opts.Dir)
 
 	// CD to the dir specified
 	cwd, err := os.Getwd()
 	if err != nil {
 		return err
 	}
+	fmt.Printf("cwd: %s\n", cwd)
 	defer os.Chdir(cwd) // ignore an error
 
-	err = os.Chdir(Opts.Dir)
+	err = os.Chdir(opts.Dir)
 	if err != nil {
 		return err
 	}
 
-	Opts.cleanTemplateData()
+	opts.cleanTemplateData()
 
 	// create the index.html
-	if Opts.NoIndex == false { // use ==false test rather than !NoIndex to make the indent clear. The default is false.
-		err = createIndexHtml(content, Opts)
+	if opts.NoIndex == false { // use ==false test rather than !NoIndex to make the indent clear. The default is false.
+		err = createIndexHtml(content, opts)
 		if err != nil {
 			return err
 		}
 	}
 
 	// create the main_wasm.go in the package
-	if Opts.NoMain == false { // use ==false test rather than !NoIndex to make the indent clear. The default is false.
-		err = createMainWasmDotGo(content, Opts)
+	if opts.NoMain == false { // use ==false test rather than !NoIndex to make the indent clear. The default is false.
+		err = createMainWasmDotGo(content, opts)
 		if err != nil {
 			return err
 		}
@@ -127,13 +133,13 @@ func Initialise(ctx context.Context, cmd *cli.Command) error {
 	// create the root.vugu file
 	// if a user has supplied an import path for the root component we assume they know what they are doing and that the root
 	// components source (both .go and .vugu) are in the package
-	if Opts.RootStructPkgImportPath == "" { // No import prth set so we can generate a root.vugu and root.go files
-		err = createRootDotVugu(content, Opts)
+	if opts.RootStructPkgImportPath == "" { // No import prth set so we can generate a root.vugu and root.go files
+		err = createRootDotVugu(content, opts)
 		if err != nil {
 			return err
 		}
 		// create the root.go file
-		err = createRootDotGo(content, Opts)
+		err = createRootDotGo(content, opts)
 		if err != nil {
 			return err
 		}
