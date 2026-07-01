@@ -30,7 +30,7 @@ func main() {
 	}
 
 	{{if .RootStructPkgAlias }}
-	rootBuilder := {{ .RootStructPkgAlias }}.{{ .RootStructType }}{}
+	rootBuilder := &{{ .RootStructPkgAlias }}.{{ .RootStructType }}{}
 	{{else}}
 	rootBuilder := &{{ .RootStructType }}{}
 	{{end}}
