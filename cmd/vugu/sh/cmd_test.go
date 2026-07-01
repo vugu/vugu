@@ -27,10 +27,9 @@ func TestExitCode(t *testing.T) {
 	if !ran {
 		t.Error("ran returned as false, but should have been true")
 	}
-	code := ExitStatus(err)
-	if code != 99 {
-		t.Fatalf("expected exit status 99, but got %v", code)
-	}
+	// the updated (copied) code in github.com/vugu/vugu/cmd/vugu/sh no longer uses github.com/magefiles/mage/mg.FatalF
+	// and so does not use the mg/FatalF type.
+	// As a result we can no longer test the exit code in these tests.
 }
 
 func TestEnv(t *testing.T) {
@@ -96,13 +95,10 @@ func TestExitStatusNonExecError(t *testing.T) {
 	}
 }
 
-func TestExitStatusFromExec(t *testing.T) {
-	_, err := Exec(nil, nil, nil, os.Args[0], "-helper", "-exit", "42")
-	code := ExitStatus(err)
-	if code != 42 {
-		t.Fatalf("expected exit status 42, got %d", code)
-	}
-}
+// the updated (copied) code in github.com/vugu/vugu/cmd/vugu/sh no longer uses github.com/magefiles/mage/mg.FatalF
+// and so does not use the mg/FatalF type.
+// As a result we can no longer test the exit code in these tests.
+// As a result the test TestExitStatusFromExec has been removed
 
 func TestRunCmd(t *testing.T) {
 	echoHello := RunCmd("echo", "hello")
