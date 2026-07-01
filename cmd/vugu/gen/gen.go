@@ -17,8 +17,8 @@ var (
 // This function is a direct copy of cmd/vugugen/vugugen.go, no
 // functionality has been changed.
 func Gen(ctx context.Context, cmd *cli.Command) error {
-	// we need to get the argumets from the command as a slice.
-	// The only argumnt would be the directory to run in.
+	// we need to get the arguments from the command as a slice.
+	// The only argument would be the directory to run in.
 	args := cmd.Args().Slice()
 
 	// default to current directory
