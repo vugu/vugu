@@ -1,0 +1,5 @@
+<div class="demo-comp1">
+
+    <div class="demo-comp1-c" vg-html="c.NextCount()"></div>
+
+</div>

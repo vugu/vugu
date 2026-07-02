@@ -1,0 +1,10 @@
+<section class="section">
+    <div class="container">
+        <h1 class="title">Create a new product</h1>
+        <div id="content">
+            <form id="myform">
+              <!-- content here -->
+            </form>
+        </div>
+    </div>
+</section>
