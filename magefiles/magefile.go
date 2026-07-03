@@ -479,11 +479,11 @@ func singleExample(moduleName string, withGeneratedFilesCheck bool) error {
 // Builds, and serves a single wasm test using a local nginx container.
 // The usage is:
 //
-//	mage SingleWasmtest <wasm-test-module-name>
+//	mage SingleWasmTest <wasm-test-module-name>
 //
 // e.g.
 //
-//	mage SingleExample gtihub.com/vugu/vugu/wasm-test-suite/test-002-click
+//	mage SingleWasmTest gtihub.com/vugu/vugu/wasm-test-suite/test-002-click
 //
 // The examples will be served at
 //
@@ -505,7 +505,7 @@ func SingleWasmTestWithGeneratedFilesCheck(moduleName string) error {
 
 func singleWasmTest(moduleName string, withGeneratedFilesCheck bool) error {
 	mg.SerialDeps(Build, PullLatestNginxImage)
-	StartLocalNginxForExamples()
+	StartLocalNginxForWasmTestSuite()
 	return buildSingleModule(WasmTestSuiteDir, moduleName, withGeneratedFilesCheck)
 }
 
