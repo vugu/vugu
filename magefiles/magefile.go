@@ -128,7 +128,11 @@ func Build() error {
 	}
 	// install the vugufmt command by executing
 	err = goInstall("github.com/vugu/vugu/cmd/vugufmt@latest") // vugufmt can use the goimports tool
-	return err
+	if err != nil {
+		return err
+	}
+	// ensure we always build the vgform package - it contains generated code that may nee dto be rebuild
+	return buildVgForm("./vgform")
 }
 
 // Like Build but additionally confirm that the generated files in the `vgform` package that should have been committed are correct.
