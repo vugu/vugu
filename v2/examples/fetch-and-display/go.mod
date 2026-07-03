@@ -2,11 +2,11 @@ module github.com/vugu/vugu/v2/examples/fetch-and-display
 
 go 1.22.3
 
-replace github.com/vugu/vugu/v2 => ../../
+replace github.com/vugu/vugu/v2 => ../..
 
 require (
 	github.com/vugu/vjson v0.0.0-20200505061711-f9cbed27d3d9
-	github.com/vugu/vugu/v2 
+	github.com/vugu/vugu/v2 v2.0.0-00010101000000-000000000000
 )
 
 require (
