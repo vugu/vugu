@@ -4,12 +4,14 @@ go 1.23
 
 toolchain go1.23.5
 
-replace github.com/vugu/vugu/v2=> ../..
+replace github.com/vugu/vugu/v2 => ../..
+
+replace github.com/vugu/vugu/v2/vgform => ../../vgfrom
 
 require (
 	github.com/chromedp/chromedp v0.12.1
 	github.com/vugu/vjson v0.0.0-20200505061711-f9cbed27d3d9
-	github.com/vugu/vugu/v2
+	github.com/vugu/vugu/v2 v2.0.0-00010101000000-000000000000
 )
 
 require (

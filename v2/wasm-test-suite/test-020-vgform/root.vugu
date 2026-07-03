@@ -30,6 +30,6 @@
 
 <script type="application/x-go">
 
-import "github.com/vugu/vugu/vgform"
+import "github.com/vugu/vugu/v2/vgform"
 
 </script>
