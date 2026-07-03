@@ -1,0 +1,12 @@
+<div class="demo-comp">
+    <div vg-if='c.isLoading'>Loading...</div>
+    <div vg-if='len(c.bpi.BPI) > 0'>
+        <div>Updated: <span vg-html='c.bpi.Time.Updated'></span></div>
+        <ul>
+            <li vg-for='c.bpi.BPI'>
+                <span vg-html='key'></span> <span vg-html='fmt.Sprint(value.Symbol, value.RateFloat)'></span>
+            </li>
+        </ul>
+    </div>
+    <button @click="c.HandleClick(event)">Fetch Bitcoin Price Index</button>
+</div>
