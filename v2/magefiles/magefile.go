@@ -96,8 +96,8 @@ func AllGitHubAction() error {
 		//
 		// Given that we want to remove the legacy test suite this is not worth fixing.
 		// However Issues #278 and #279 now urgently need fixed:
-		// https://github.com/vugu/vugu/v2/issues/279
-		// https://github.com/vugu/vugu/v2/issues/278
+		// https://github.com/vugu/vugu/issues/279
+		// https://github.com/vugu/vugu/issues/278
 		//
 		//TestLegacyWasm,
 	)
@@ -128,7 +128,11 @@ func Build() error {
 	}
 	// install the vugufmt command by executing
 	err = goInstall("github.com/vugu/vugu/v2/cmd/vugufmt") // vugufmt can use the goimports tool
-	return err
+	if err != nil {
+		return err
+	}
+	// ensure we always build the vgform package - it contains generated code that may nee dto be rebuild
+	return buildVgForm("./vgform")
 }
 
 // Like Build but additionally confirm that the generated files in the `vgform` package that should have been committed are correct.
@@ -230,7 +234,7 @@ func testWasm(withGeneratedFilesCheck bool) error {
 //
 // e.g.
 //
-//	mage TestSingleWasmTest github.com/vugu/vugu/v2/wasm-test-suite/test-012-router
+//	mage TestSingleWasmTest github.com/vugu/vugu/wasm-test-suite/test-012-router
 //
 // to run the router test case.
 // The 'wasm' will be built with the standard Go compiler.
@@ -479,11 +483,11 @@ func singleExample(moduleName string, withGeneratedFilesCheck bool) error {
 // Builds, and serves a single wasm test using a local nginx container.
 // The usage is:
 //
-//	mage SingleWasmtest <wasm-test-module-name>
+//	mage SingleWasmTest <wasm-test-module-name>
 //
 // e.g.
 //
-//	mage SingleExample gtihub.com/vugu/vugu/wasm-test-suite/test-002-click
+//	mage SingleWasmTest gtihub.com/vugu/vugu/wasm-test-suite/test-002-click
 //
 // The examples will be served at
 //
@@ -505,7 +509,7 @@ func SingleWasmTestWithGeneratedFilesCheck(moduleName string) error {
 
 func singleWasmTest(moduleName string, withGeneratedFilesCheck bool) error {
 	mg.SerialDeps(Build, PullLatestNginxImage)
-	StartLocalNginxForExamples()
+	StartLocalNginxForWasmTestSuite()
 	return buildSingleModule(WasmTestSuiteDir, moduleName, withGeneratedFilesCheck)
 }
 
