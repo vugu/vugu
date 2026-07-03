@@ -1,6 +1,6 @@
 module github.com/vugu/vugu/v2/wasm-test-suite/test-002-click
 
-replace github.com/vugu/vugu/v2=> ../..
+replace github.com/vugu/vugu/v2 => ../..
 
 go 1.23
 
@@ -10,7 +10,7 @@ require (
 	github.com/chromedp/chromedp v0.12.1
 	github.com/stretchr/testify v1.10.0
 	github.com/vugu/vjson v0.0.0-20200505061711-f9cbed27d3d9
-	github.com/vugu/vugu/v2
+	github.com/vugu/vugu/v2 v2.0.0-00010101000000-000000000000
 )
 
 require (

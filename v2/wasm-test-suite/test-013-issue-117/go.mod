@@ -1,6 +1,6 @@
 module github.com/vugu/vugu/v2/wasm-test-suite/test-013-issue-117
 
-replace github.com/vugu/vugu/v2=> ../..
+replace github.com/vugu/vugu/v2 => ../..
 
 go 1.23
 
@@ -10,7 +10,7 @@ require (
 	github.com/chromedp/chromedp v0.12.1
 	github.com/vugu/vgrouter v0.0.0-20200725205318-eeb478c42e5d
 	github.com/vugu/vjson v0.0.0-20200505061711-f9cbed27d3d9
-	github.com/vugu/vugu/v2
+	github.com/vugu/vugu/v2 v2.0.0-00010101000000-000000000000
 )
 
 require (
@@ -21,6 +21,7 @@ require (
 	github.com/gobwas/ws v1.4.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/mailru/easyjson v0.9.0 // indirect
+	github.com/vugu/vugu v0.3.0 // indirect
 	github.com/vugu/xxhash v0.0.0-20191111030615-ed24d0179019 // indirect
 	golang.org/x/sys v0.29.0 // indirect
 )
