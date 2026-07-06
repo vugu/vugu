@@ -1,0 +1,50 @@
+name: v2 Vugu build using Go @ stable
+
+on:
+  push:
+    branches:
+      - master
+      - PR/** # Build on any branch named PR/<something> from https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#onpushbranchestagsbranches-ignoretags-ignore
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go: [ 'stable' ]
+    env:
+      GO111MODULE: "on"
+    timeout-minutes: 90
+
+    steps:
+    - uses: actions/checkout@v6
+      with:
+        fetch-tags: true
+        fetch-depth: 0
+
+    - name: Set up Go
+      uses: actions/setup-go@v6
+      with:
+        go-version: '${{ matrix.go }}'
+
+    - name: Print Go version
+      timeout-minutes: 1
+      run: go version
+
+    - name: Install mage
+      timeout-minutes: 5
+      run: |
+        git clone https://github.com/magefile/mage /tmp/mage
+        cd /tmp/mage && go run bootstrap.go
+        rm -rf /tmp/mage
+
+    - name: Print mage version
+      timeout-minutes: 5
+      run: mage --version
+
+    - name: Build and test vugu including the legacy wasm test suite
+      timeout-minutes: 30 # the entire mage build inc. all the wasm tests must complete in 30 minutes.
+      working-directory: ./v2
+      run: mage -v AllGithubAction
