@@ -14,7 +14,7 @@ First you must clone the `vugu` repository:
 
 Now `cd` into the cloned repository directory
 
-`cd vugu`
+`cd vugu/v2`
 
 The examples themselves are in the `examples` directory.
 
@@ -37,7 +37,7 @@ If you only want a specific example then the command is:
 
 for example to run the `vg-if` example the command is
 
-`mage SingleExample github.com/vugu/vugu/examples/vg-if`
+`mage SingleExample github.com/vugu/vugu/v2/examples/vg-if`
 
 Regardless of whether you run all the examples or just one you will then see this in message in the shell
 
@@ -55,7 +55,7 @@ So for example to see the `vg-if` example you would browse to:
 
 If you change an example then you need to rebuild it - using either `mage Examples` or `mage SingleExample <name of the example module to run>` and then browse to [http://localhost:8889/<example-test-directory-name>](http://localhost:8889/<example-test-directory-name>/) and refresh the browser to reload the Web Assembly file.
 
-The `mage SingleExample github.com/vugu/vugu/examples/vg-if` command will build the example in question, as well as all of the `vugu` tools. This ensures that the example is always built with the latest version of the `vugu` tools.
+The `mage SingleExample github.com/vugu/vugu/v2/examples/vg-if` command will build the example in question, as well as all of the `vugu` tools. This ensures that the example is always built with the latest version of the `vugu` tools.
 
 
 ## Building and running the examples without `mage`
@@ -80,7 +80,7 @@ vugugen
 # Now you have all of the *.go files you can build the web assembly. 
 # This results in the web assembly file main.wasm being generated in the current directory.
 # Note: we pass the module name and not the list of source files to the go build command
-GOOS=js GOARCH=wasm go build -o ./main.wasm github.com/vugu/vugu/examples/vg-if
+GOOS=js GOARCH=wasm go build -o ./main.wasm github.com/vugu/vugu/v2/examples/vg-if
 ```
 
 Now you have a web assembly binary you need to serve the web assembly file from a web server and the associated `index.html` and any other HTML and stylesheets.

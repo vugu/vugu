@@ -25,11 +25,11 @@ First you must clone the `vugu` repository:
 
 Now `cd` into the cloned repository directory
 
-`cd vugu`
+`cd vugu/v2`
 
 The `vugu` project uses `mage` as its preferred build tool, so building the example is simply
 
-`mage SingleExample github.com/vugu/vugu/examples/embed-and-translate`
+`mage SingleExample github.com/vugu/vugu/v2/examples/embed-and-translate`
 
 If that works then in the shell you will see:
 
@@ -41,7 +41,7 @@ To stop the local nginx container please run:
 	mage StopLocalNginxForExamples
 ```
 
-The `mage SingleExample github.com/vugu/vugu/examples/embed-and-translate` command will build the example in question, as well as all of the `vugu` tools. This ensures that the example is always built with the latest version of the `vugu` tools.
+The `mage SingleExample github.com/vugu/vugu/v2/examples/embed-and-translate` command will build the example in question, as well as all of the `vugu` tools. This ensures that the example is always built with the latest version of the `vugu` tools.
 
 ## Running the example
 
@@ -55,7 +55,7 @@ And the example will load and run.
 
 Changing the example is also easy.
 
-The general principle is that you should update the `root.go` or `root.vugu` files as needed and then rerun `mage SingleExample github.com/vugu/vugu/examples/embed-and-translate`, then refresh the browser so that it loads new `wasm` example binary. 
+The general principle is that you should update the `root.go` or `root.vugu` files as needed and then rerun `mage SingleExample github.com/vugu/vugu/v2/examples/embed-and-translate`, then refresh the browser so that it loads new `wasm` example binary. 
 
 So for example update the `Root.ListLength()` method from:
 
@@ -79,7 +79,7 @@ func (c *Root) ListLength() int {
 Then run
 
 ```
-mage SingleExample github.com/vugu/vugu/examples/embed-and-translate
+mage SingleExample github.com/vugu/vugu/v2/examples/embed-and-translate
 ```
 
 Again browse to [http://localhost:8889/embed-and-translate/](http://localhost:8889/embed-and-translate/) and refresh the browser.
