@@ -4,6 +4,7 @@ package main
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -154,7 +155,12 @@ func runFuncIn(module moduleData, f func() error) error {
 	if err != nil {
 		return err
 	}
-	return f()
+	// run the function
+	err = f()
+	if err != nil {
+		return fmt.Errorf("Failed in module %s (dir: %s) with %w\n", module.name, dir, err)
+	}
+	return nil
 
 }
 
@@ -224,11 +230,11 @@ func modulesUnderDir(dir string) ([]moduleData, error) {
 		// seems we need to call go list -m twice - once to get the module name (i.e. Path) and once to get the source code dir
 		moduleName, err := goCmdCaptureOutput("list", "-m", "-f", "{{.Path}}") // we only want to module path i.e. no replacement info required. This returns a single line
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed in directory %s with %w", subdir, err)
 		}
 		moduleDir, err := goCmdCaptureOutput("list", "-m", "-f", "{{.Dir}}") // we only want to module directory where the source code is located. This returns a single line
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed in directory %s with %w", subdir, err)
 		}
 
 		moduleName = strings.TrimSpace(moduleName)
