@@ -1,3 +1,25 @@
+# Vugu v2
+
+This is an **experimental** module, for a future v2 of vugu.
+
+Any v2 **will** include breaking changes, and is not backwards compatible with vugu v0.Y.Z
+
+This module is in development and in a high state fo flux. 
+
+**DO NOT USE THIS MODULE FOR YOUR DEVELOPMENT UNTIL SUCH TIME AS IT IS RELEASED (IF EVER)**
+
+
+## Changes
+
+The list of changes are:
+
+- [x] Delete `devutil` package
+
+
+The original v0.y.z Readme follows.
+
+-------------------------------------------------
+
 # Vugu
 
 [![Travis CI](https://travis-ci.org/vugu/vugu.svg?branch=master)](https://travis-ci.org/vugu/vugu)
