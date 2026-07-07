@@ -18,6 +18,8 @@ The list of changes are:
 - [x] Delete `tinygo-dev` package
 - [ ] remove support for tinygo in `gen` package
 - [x] Delete the `staticrenderer` package
+- [x] Delete the `simplehttp` package
+- [x] Delete the `fetch-and-display` example. This currently uses the `simplehttp` package (it shouldn't) but also used a `coinbase.com` API endpoint that no longer exists.
 
 The original v0.y.z Readme follows.
 
