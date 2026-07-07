@@ -15,6 +15,8 @@ The list of changes are:
 
 - [x] Delete `devutil` package
 - [x] Delete `distutil` package
+- [x] Delete `tinygo-dev` package
+- [ ] remove support for tinygo in `gen` package
 
 The original v0.y.z Readme follows.
 
