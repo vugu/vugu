@@ -14,7 +14,7 @@ This module is in development and in a high state fo flux.
 The list of changes are:
 
 - [x] Delete `devutil` package
-
+- [x] Delete `distutil` package
 
 The original v0.y.z Readme follows.
 
