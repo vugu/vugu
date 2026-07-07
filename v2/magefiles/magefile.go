@@ -67,16 +67,9 @@ func AllGitHubAction() error {
 		// temporally turn off the linter.
 		// golang-lint version 2.0.2 has the errcheck and static check tool enabled.
 		// These are now generating a large number of build failure in the
-		// cmd/vugufmt
-		// devutil
-		// distutil
 		// domrender
 		// gen
-		// legacy-wasm-test-suite
-		// simplehttp
-		// staticrender
 		// internal/htmlx
-		// vugufmt
 		// packages.
 		// Lint,
 		Test,
@@ -104,7 +97,7 @@ func AllGitHubAction() error {
 	return nil
 }
 
-// Build the 'vugu' package, the 'vugugen' and 'vugufmt' commands
+// Build the 'vugu' package, the 'vugugen' commands
 func Build() error {
 	mg.SerialDeps(InstallGoImports)
 	// install the vugu module by executing
@@ -123,11 +116,6 @@ func Build() error {
 		return err
 	}
 	err = goInstallWithSetVariable("github.com/vugu/vugu/v2/cmd/vugu/version.version", version, "github.com/vugu/vugu/v2/cmd/vugu")
-	if err != nil {
-		return err
-	}
-	// install the vugufmt command by executing
-	err = goInstall("github.com/vugu/vugu/v2/cmd/vugufmt") // vugufmt can use the goimports tool
 	if err != nil {
 		return err
 	}
