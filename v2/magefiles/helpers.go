@@ -93,14 +93,7 @@ func deleteGeneratedFiles(path string, d fs.DirEntry, err error) error {
 }
 
 func generatedFilesCheck(dir string) error {
-	if err := buildVgForm(dir); err != nil {
-		return err
-	}
-	// now check the generated files are identical
-	return gitDiffFiles()
-}
 
-func buildVgForm(dir string) error {
 	cwd, err := os.Getwd()
 	if err != nil {
 		return err
@@ -117,6 +110,6 @@ func buildVgForm(dir string) error {
 	if err != nil {
 		return err
 	}
-	// now run go mod tidy - is this strictly necessary? (vgfrom is a package)
-	return runGoModTidyInCurrentDir()
+	// now check the generated files are identical
+	return gitDiffFiles()
 }
