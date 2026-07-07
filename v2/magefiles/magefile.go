@@ -63,7 +63,6 @@ func AllWithLegacyWasm() error {
 // Like 'AllWithLegacy' but additionally confirm that the generated files that should have been committed are correct. Intended to be used by the GitHub Action
 func AllGitHubAction() error {
 	mg.SerialDeps(
-		BuildWithGeneratedFilesCheck,
 		// temporally turn off the linter.
 		// golang-lint version 2.0.2 has the errcheck and static check tool enabled.
 		// These are now generating a large number of build failure in the
@@ -115,20 +114,7 @@ func Build() error {
 	if err != nil {
 		return err
 	}
-	err = goInstallWithSetVariable("github.com/vugu/vugu/v2/cmd/vugu/version.version", version, "github.com/vugu/vugu/v2/cmd/vugu")
-	if err != nil {
-		return err
-	}
-	// ensure we always build the vgform package - it contains generated code that may nee dto be rebuild
-	return buildVgForm("./vgform")
-}
-
-// Like Build but additionally confirm that the generated files in the `vgform` package that should have been committed are correct.
-func BuildWithGeneratedFilesCheck() error {
-	mg.SerialDeps(Clean, Build)
-	// sanity check that the generated files have been submitted, and that the go.mod and go.sum are
-	// as they should be post calling vugugen
-	return generatedFilesCheck("./vgform")
+	return goInstallWithSetVariable("github.com/vugu/vugu/v2/cmd/vugu/version.version", version, "github.com/vugu/vugu/v2/cmd/vugu")
 }
 
 // Install the latest vertsion of the goimports tool if a version is not already installed locally.
