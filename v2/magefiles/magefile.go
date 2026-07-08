@@ -104,11 +104,6 @@ func Build() error {
 	if err != nil {
 		return err
 	}
-	// install the vugugen command by executing
-	err = goInstall("github.com/vugu/vugu/v2/cmd/vugugen")
-	if err != nil {
-		return err
-	}
 	// build the vugu cmd, ensuring we set the version number correctly
 	version, err := gitDescribe()
 	if err != nil {
