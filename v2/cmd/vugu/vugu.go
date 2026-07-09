@@ -62,12 +62,6 @@ func main() {
 						Destination: &gen.Opts.SkipGoMod,
 					},
 					&cli.BoolFlag{
-						Name:        "skip-main",
-						Value:       false,
-						Usage:       "Do not try to create main.go as needed",
-						Destination: &gen.Opts.SkipMainGo,
-					},
-					&cli.BoolFlag{
 						Name:        "tinygo",
 						Value:       false,
 						Usage:       "Generate code intended for compilation under Tinygo",

@@ -12,7 +12,6 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
-	"text/template"
 	"time"
 
 	"github.com/vugu/xxhash"
@@ -216,112 +215,9 @@ func (p *ParserGoPkg) Run() error {
 
 	// after the code generation is done, check the package for the various names in question to see
 	// what we need to generate
-	namesFound, err := goPkgCheckNames(p.pkgPath, namesToCheck)
+	_, err = goPkgCheckNames(p.pkgPath, namesToCheck)
 	if err != nil {
 		return err
-	}
-
-	// if main package, generate main_wasm.go with default stuff if no main func in the package and no main_wasm.go
-	if (!p.opts.SkipMainGo) && pkgName == "main" {
-
-		mainGoPath := filepath.Join(p.pkgPath, "main_wasm.go")
-		// log.Printf("namesFound: %#v", namesFound)
-		// log.Printf("maingo found: %v", fileExists(mainGoPath))
-		// if _, ok := namesFound["main"]; (!ok) && !fileExists(mainGoPath) {
-
-		// NOTE: For now we're disabling the "main" symbol name check, because in single-dir cases
-		// it's picking up the main_wasm.go in server.go (even though it's excluded via build tag).  This
-		// needs some more thought but for now this will work for the common cases.
-		if !fileExists(mainGoPath) {
-
-			// log.Printf("WRITING TO main_wasm.go STUFF")
-			var buf bytes.Buffer
-			t, err := template.New("_main_").Parse(`// +build wasm
-{{$opts := .Parser.Opts}}
-package main
-
-import (
-	"fmt"
-{{if not $opts.TinyGo}}
-	"flag"
-{{end}}
-
-	"github.com/vugu/vugu/v2"
-	"github.com/vugu/vugu/v2/domrender"
-)
-
-func main() {
-
-{{if $opts.TinyGo}}
-	var mountPoint *string
-	{
-		mp := "#vugu_mount_point"
-		mountPoint = &mp
-	}
-{{else}}
-	mountPoint := flag.String("mount-point", "#vugu_mount_point", "The query selector for the mount point for the root component, if it is not a full HTML component")
-	flag.Parse()
-{{end}}
-
-	fmt.Printf("Entering main(), -mount-point=%q\n", *mountPoint)
-	{{if not $opts.TinyGo}}defer fmt.Printf("Exiting main()\n")
-{{end}}
-
-	renderer, err := domrender.New(*mountPoint)
-	if err != nil {
-		panic(err)
-	}
-	{{if not $opts.TinyGo}}defer renderer.Release()
-{{end}}
-
-	buildEnv, err := vugu.NewBuildEnv(renderer.EventEnv())
-	if err != nil {
-		panic(err)
-	}
-
-{{if (index .NamesFound "vuguSetup")}}
-	rootBuilder := vuguSetup(buildEnv, renderer.EventEnv())
-{{else}}
-	rootBuilder := &Root{}
-{{end}}
-
-
-	for ok := true; ok; ok = renderer.EventWait() {
-
-		buildResults := buildEnv.RunBuild(rootBuilder)
-		
-		err = renderer.Render(buildResults)
-		if err != nil {
-			panic(err)
-		}
-	}
-	
-}
-`)
-			if err != nil {
-				return err
-			}
-			err = t.Execute(&buf, map[string]any{
-				"Parser":     p,
-				"NamesFound": namesFound,
-			})
-			if err != nil {
-				return err
-			}
-
-			bufstr := buf.String()
-			bufstr, err = gofmt(bufstr)
-			if err != nil {
-				log.Printf("WARNING: gofmt on main_wasm.go failed: %v", err)
-			}
-
-			err = os.WriteFile(mainGoPath, []byte(bufstr), 0644)
-			if err != nil {
-				return err
-			}
-
-		}
-
 	}
 
 	// write go.mod if it doesn't exist and not disabled - actually this really only makes sense for main,
