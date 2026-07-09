@@ -96,6 +96,7 @@ func TestRun(t *testing.T) {
 			infiles: map[string]string{
 				"root.vugu": `<div>root here</div>`,
 				"go.mod":    "module testcase\nreplace github.com/vugu/vugu/v2 => " + pwd + "\n",
+				"main.go":   "package main\nfunc main(){}",
 			},
 			out: map[string][]string{
 				"root_gen.go":      {`func \(c \*Root\) Build`},

@@ -23,6 +23,8 @@ The list of changes are:
 - [x] Delete the `vugufmt` package and the `vugufmt` command.
 - [x] Delete the `vgfrom` package and wasm test `test-020-vgform`
 - [x] Delete the `vuggen` command. Use `vugu gen` instead.
+- [x] Stop the `vugu gen` creating a `main_wasm.go`. This is a behaviour breaking change. Use `vugu init` to create the initial `main_wasm.go`.
+
 
 The original v0.y.z Readme follows.
 
