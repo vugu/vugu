@@ -1,10 +1,12 @@
+//go:build wasm && js
+
 package main
 
 import (
 	"fmt"
 	"time"
 
-	js "github.com/vugu/vugu/v2/js"
+	"syscall/js"
 )
 
 type Root struct {

@@ -22,7 +22,7 @@ type missingFixer struct {
 	pkgPath   string            // absolute path to package
 	pkgName   string            // short name of package from the `package` statement
 	vuguComps map[string]string // map of comp.vugu -> comp_gen.go (all just relative base name of file, no dir)
-	outfile   string            // file name of output file (relative), 0_missing_gen.go by default
+	outfile   string            // file name of output file (relative), 0_missing_gen_js_wasm.go by default
 }
 
 func newMissingFixer(pkgPath, pkgName string, vuguComps map[string]string) *missingFixer {
@@ -227,7 +227,7 @@ var _ %sHandler = %sFunc(nil)
 
 func (mf *missingFixer) fullOutfilePath() string {
 	if mf.outfile == "" {
-		return filepath.Join(mf.pkgPath, "0_missing_gen.go")
+		return filepath.Join(mf.pkgPath, "0_missing_gen_js_wasm.go")
 	}
 	return filepath.Join(mf.pkgPath, mf.outfile)
 }
@@ -242,7 +242,7 @@ func (mf *missingFixer) createOutfile() (*os.File, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to create missingFixer outfile %s: %w", p, err)
 	}
-	fmt.Fprintf(fout, "package %s\n\nimport \"github.com/vugu/vugu/v2\"\n\nvar _ vugu.DOMEvent // import fixer\n\n", mf.pkgName)
+	fmt.Fprintf(fout, "//go:build js && wasm\n\npackage %s\n\nimport \"github.com/vugu/vugu/v2\"\n\nvar _ vugu.DOMEvent // import fixer\n\n", mf.pkgName)
 	return fout, nil
 }
 
