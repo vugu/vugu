@@ -6,8 +6,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	// "github.com/vugu/vugu/v2/internal/htmlx"
-	// "golang.org/x/net/html"
 	"github.com/vugu/html"
 )
 

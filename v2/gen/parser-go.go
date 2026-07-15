@@ -12,11 +12,6 @@ import (
 	"strings"
 	"unicode"
 
-	// "github.com/vugu/vugu/v2/internal/htmlx"
-	// "github.com/vugu/vugu/v2/internal/htmlx/atom"
-	// "golang.org/x/net/html"
-	// "golang.org/x/net/html/atom"
-
 	"github.com/vugu/html"
 	"github.com/vugu/html/atom"
 	"github.com/vugu/vugu/v2"
