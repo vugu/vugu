@@ -6,8 +6,6 @@ import (
 	"strings"
 	"unicode"
 
-	// "github.com/vugu/vugu/v2/internal/html"
-	// "golang.org/x/net/html"
 	"github.com/vugu/html"
 )
 

@@ -68,7 +68,6 @@ func AllGitHubAction() error {
 		// These are now generating a large number of build failure in the
 		// domrender
 		// gen
-		// internal/htmlx
 		// packages.
 		// Lint,
 		Test,
