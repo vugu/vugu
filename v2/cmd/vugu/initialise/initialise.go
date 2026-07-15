@@ -64,8 +64,8 @@ func (d *InitOpts) cleanTemplateData() {
 
 const templateDirName = "templates"
 const indexHTMLTmplName = templateDirName + "/" + "index.html.tmpl"
-const mainWasmTmplName = templateDirName + "/" + "main_wasm.go.tmpl"
-const rootDotGoTmplName = templateDirName + "/" + "root.go.tmpl"
+const mainWasmTmplName = templateDirName + "/" + "main_wasm_js_wasm.go.tmpl"
+const rootDotGoTmplName = templateDirName + "/" + "root_js_wasm.go.tmpl"
 const rootDotVuguName = templateDirName + "/" + "root.vugu"
 
 const defaultWasmBinaryName = "main.wasm"

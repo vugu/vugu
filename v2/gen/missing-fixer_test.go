@@ -30,10 +30,10 @@ func TestMissingFixer(t *testing.T) {
 	must(os.WriteFile(filepath.Join(tmpDir, "go.mod"), []byte("module missingfixertest\n\nreplace github.com/vugu/vugu/v2 => "+vuguAbs+"\n"), 0644))
 	must(os.WriteFile(filepath.Join(tmpDir, "events.go"), []byte("package main\n\n//vugugen:event Something\n//vugugen:event SomeOtherThing\n//vugugen:event SomeOtherThing\n"), 0644))
 	must(os.WriteFile(filepath.Join(tmpDir, "root.vugu"), []byte("<div>root</div>"), 0644))
-	must(os.WriteFile(filepath.Join(tmpDir, "root_gen.go"), []byte("package main\n\nimport \"github.com/vugu/vugu/v2\"\n\nfunc (c *Root)Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {return nil}"), 0644))
+	must(os.WriteFile(filepath.Join(tmpDir, "root_gen.go"), []byte("//go:build js && wasm\n\npackage main\n\nimport \"github.com/vugu/vugu/v2\"\n\nfunc (c *Root)Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {return nil}"), 0644))
 	// a second component that does include it's own struct definition
 	must(os.WriteFile(filepath.Join(tmpDir, "comp1.vugu"), []byte("<div>comp1</div>"), 0644))
-	must(os.WriteFile(filepath.Join(tmpDir, "comp1_gen.go"), []byte("package main\n\nimport \"github.com/vugu/vugu/v2\"\n\ntype Comp1 struct{}\n\nfunc (c *Comp1)Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {return nil}"), 0644))
+	must(os.WriteFile(filepath.Join(tmpDir, "comp1_gen.go"), []byte("//go:build js && wasm\n\npackage main\n\nimport \"github.com/vugu/vugu/v2\"\n\ntype Comp1 struct{}\n\nfunc (c *Comp1)Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {return nil}"), 0644))
 	// a file with an event where the event type is declared but not the handler interface or func
 	must(os.WriteFile(filepath.Join(tmpDir, "epart.go"), []byte("package main\n\n//vugugen:event Part\ntype PartEvent struct { A string }\n"), 0644))
 
@@ -58,9 +58,9 @@ func TestMissingFixer(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	b, err := os.ReadFile(filepath.Join(tmpDir, "0_missing_gen.go"))
+	b, err := os.ReadFile(filepath.Join(tmpDir, "0_missing_gen_js_wasm.go"))
 	must(err)
-	t.Logf("0_missing_gen.go result:\n%s", b)
+	t.Logf("0_missing_gen_js_wasm.go result:\n%s", b)
 	s := string(b)
 	checks := []string{
 		"type Root struct",

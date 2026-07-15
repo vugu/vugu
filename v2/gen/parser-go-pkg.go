@@ -157,14 +157,14 @@ func (p *ParserGoPkg) Run() error {
 
 	namesToCheck := []string{"main"}
 
-	goFnameAppend := "_gen"
+	goFnameAppend := "_gen_js_wasm"
 	if p.opts.GoFileNameAppend != nil {
 		goFnameAppend = *p.opts.GoFileNameAppend
 	}
 
 	var mergeFiles []string
 
-	mergeSingleName := "0_components_gen.go"
+	mergeSingleName := "0_components_gen_js_wasm.go"
 	if p.opts.MergeSingleName != "" {
 		mergeSingleName = p.opts.MergeSingleName
 	}
@@ -291,9 +291,9 @@ func (p *ParserGoPkg) Run() error {
 	if p.opts.MergeSingle {
 
 		// if a missing fix file was produced include it in the list to be merged
-		_, err := os.Stat(filepath.Join(p.pkgPath, "0_missing_gen.go"))
+		_, err := os.Stat(filepath.Join(p.pkgPath, "0_missing_gen_js_wasm.go"))
 		if err == nil {
-			mergeFiles = append(mergeFiles, "0_missing_gen.go")
+			mergeFiles = append(mergeFiles, "0_missing_gen_js_wasm.go")
 		}
 
 		err = mergeGoFiles(p.pkgPath, mergeSingleName, mergeFiles...)

@@ -183,7 +183,7 @@ func (o *initOptsDummy) checkFilesAreGenerated(path string, d fs.DirEntry, err e
 	var rootGoFileName string
 	var rootVuguFileName string
 	if o.RootStructType != "Root" {
-		rootGoFileName = strings.ToLower(o.RootStructType) + ".go"
+		rootGoFileName = strings.ToLower(o.RootStructType) + "_js_wasm.go"
 		rootVuguFileName = strings.ToLower(o.RootStructType) + ".vugu"
 	}
 	if !d.IsDir() {

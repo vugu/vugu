@@ -1,3 +1,5 @@
+//go:build wasm && js
+
 package main
 
 import (
@@ -5,9 +7,10 @@ import (
 	"path"
 	"strings"
 
+	"syscall/js"
+
 	"github.com/vugu/vgrouter"
 	"github.com/vugu/vugu/v2"
-	"github.com/vugu/vugu/v2/js"
 )
 
 func vuguSetup(buildEnv *vugu.BuildEnv, eventEnv vugu.EventEnv) vugu.Builder {
