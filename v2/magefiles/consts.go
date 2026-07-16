@@ -6,7 +6,6 @@ const DockerCmdExeName = "docker"
 const GitCmdExeName = "git"
 
 const GoLangCiLintImageName = "golangci/golangci-lint:latest-alpine"
-const TinyGoImageName = "tinygo/tinygo:latest"
 const NginxImageName = "nginx:latest"
 const ChromeDpHeadlessShellImageName = "chromedp/headless-shell:latest"
 
