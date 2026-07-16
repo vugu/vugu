@@ -24,6 +24,13 @@ The list of changes are:
 - [x] Delete the `vgfrom` package and wasm test `test-020-vgform`
 - [x] Delete the `vuggen` command. Use `vugu gen` instead.
 - [x] Stop the `vugu gen` creating a `main_wasm.go`. This is a behaviour breaking change. Use `vugu init` to create the initial `main_wasm.go`.
+- [x] remove the `js` package by splitting the `VGNode` type. This removes the need to maintain a pseudo `syscall/js` type package for vugu.
+- [x] remove the unused `internal/htmlx` package
+- [x] remove mentions of the `legacytestsuite` from the magefiles
+- [x] remove any support of building the generated code with `tinygo`
+- [ ] remove support for `<script "application/x-go">` tags in teh `*.vugu` files. Use a proper component instead
+- [ ] remove auto generating a `0_missing_gen.go` file to clean up missing Go structs
+- [ ] remove auto generating a `0_component_gen.go` file to clean up missing components (????)
 
 
 The original v0.y.z Readme follows.
