@@ -1,6 +1,3 @@
-//go:build !tinygo
-// +build !tinygo
-
 package vugu
 
 // CompKey is the key used to identify and look up a component instance.
