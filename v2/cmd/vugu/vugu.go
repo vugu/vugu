@@ -62,12 +62,6 @@ func main() {
 						Destination: &gen.Opts.SkipGoMod,
 					},
 					&cli.BoolFlag{
-						Name:        "tinygo",
-						Value:       false,
-						Usage:       "Generate code intended for compilation under Tinygo",
-						Destination: &gen.Opts.TinyGo,
-					},
-					&cli.BoolFlag{
 						Name:        "s",
 						Value:       false,
 						Usage:       "Merge generated code for a package into a single file",
