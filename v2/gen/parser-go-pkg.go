@@ -30,7 +30,6 @@ type ParserGoPkg struct {
 type ParserGoPkgOpts struct {
 	SkipGoMod        bool    // do not try and create go.mod if it doesn't exist
 	SkipMainGo       bool    // do not try and create main_wasm.go if it doesn't exist in a main package
-	TinyGo           bool    // emit code intended for TinyGo compilation
 	GoFileNameAppend *string // suffix to append to file names, after base name plus .go, if nil then "_gen" is used
 	MergeSingle      bool    // merge all output files into a single one
 	MergeSingleName  string  // name of merged output file, only used if MergeSingle is true, defaults to "0_components_gen.go"
@@ -191,7 +190,6 @@ func (p *ParserGoPkg) Run() error {
 		// pg.DataType = pg.ComponentType + "Data"
 		pg.OutDir = p.pkgPath
 		pg.OutFile = goFileName
-		pg.TinyGo = p.opts.TinyGo
 
 		// add to our list of names to check after
 		namesToCheck = append(namesToCheck, pg.StructType)

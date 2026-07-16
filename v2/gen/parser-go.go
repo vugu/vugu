@@ -27,7 +27,6 @@ type ParserGo struct {
 	OutFile string // output file name with ".go" suffix
 
 	NoOptimizeStatic bool // set to true to disable optimization of static blocks of HTML into vg-html expressions
-	TinyGo           bool // set to true to enable TinyGo compatability changes to the generated code
 }
 
 func gofmt(pgm string) (string, error) {
