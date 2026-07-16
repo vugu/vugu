@@ -328,14 +328,6 @@ func StopLocalNginxForExamples() error {
 	return nil
 }
 
-// Pulls the latest version of the 'tinygo' Go compiler docker image. 'tinygo' is an alternative Go compiler used by the 'vugu' to generate the Web Assembly (wasm) files.
-// 'vugu' uses it only to ensure tha the 'wasm-test-suite' can be built using 'tinygo' compiler.
-// 'tinygo' DOES NOT support the full Go standard library, when compiling to wasm. As such you may not be able to compile your project using 'tinygo'. See: https://tinygo.org/docs/reference/lang-support/stdlib/
-func PullLatestTinyGoDockerImage() error {
-	mg.Deps(CheckRequiredCmdsExist)
-	return dockerPullImage(TinyGoImageName)
-}
-
 // Builds and serves all of the examples via a local nginx container.
 // The examples will be served at
 //
