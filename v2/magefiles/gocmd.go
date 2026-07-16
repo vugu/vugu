@@ -70,19 +70,6 @@ func goGetSemVer() (string, error) {
 	return goVersion, nil
 }
 
-func buildLegacyWasmTestSuiteServer() error {
-	envs := map[string]string{
-		"CGO_ENABLED": "0",
-		"GOOS":        "linux",
-		"GOARCH":      "amd64",
-	}
-	return goCmdWithV(envs, "build", "-o", "./wasm-test-suite-srv", "github.com/vugu/vugu/v2/legacy-wasm-test-suite/docker")
-}
-
-func testLegacyWasmTestSuite() error {
-	return goCmdV("test", "-v", "-timeout", "35m", "github.com/vugu/vugu/v2/legacy-wasm-test-suite")
-}
-
 func runGoModTidyInCurrentDir() error {
 	return goCmdV("mod", "tidy") // run in current dir
 }

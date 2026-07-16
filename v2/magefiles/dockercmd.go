@@ -81,18 +81,6 @@ func stopContainerForExamples() {
 	_ = cleanupContainer(VuguNginxExamplesContainerName)
 }
 
-func stopLegacyWasmTestSuiteContainer() {
-	_ = cleanupContainer(LegacyWasmTestSuiteContainerName)
-}
-
-func startLegacyWasmTestSuiteContainer() error {
-	return dockerCmdV("run", "-d", "-t", "-p", "9222:9222", "-p", "8846:8846", "--name", LegacyWasmTestSuiteContainerName, LegacyWasmTestSuiteImageName)
-}
-
-func buildLegacyWasmTestSuiteContainer() error {
-	return dockerCmdV("build", "-t", LegacyWasmTestSuiteImageName, ".")
-}
-
 func createContainerNetwork(networkName string) error {
 	return dockerCmdV("network", "create", "--driver", "bridge", networkName)
 }
