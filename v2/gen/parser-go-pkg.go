@@ -31,8 +31,6 @@ type ParserGoPkgOpts struct {
 	SkipGoMod        bool    // do not try and create go.mod if it doesn't exist
 	SkipMainGo       bool    // do not try and create main_wasm.go if it doesn't exist in a main package
 	GoFileNameAppend *string // suffix to append to file names, after base name plus .go, if nil then "_gen" is used
-	MergeSingle      bool    // merge all output files into a single one
-	MergeSingleName  string  // name of merged output file, only used if MergeSingle is true, defaults to "0_components_gen.go"
 }
 
 // TODO: CallVuguSetup bool // always call vuguSetup instead of trying to auto-detect it's existence
@@ -163,11 +161,6 @@ func (p *ParserGoPkg) Run() error {
 
 	var mergeFiles []string
 
-	mergeSingleName := "0_components_gen_js_wasm.go"
-	if p.opts.MergeSingleName != "" {
-		mergeSingleName = p.opts.MergeSingleName
-	}
-
 	missingFmap := make(map[string]string, len(vuguFileNames))
 
 	// run ParserGo on each file to generate the .go files
@@ -228,11 +221,6 @@ func (p *ParserGoPkg) Run() error {
 		}
 	}
 
-	// remove the merged file so it doesn't mess with detection
-	if p.opts.MergeSingle {
-		os.Remove(filepath.Join(p.pkgPath, mergeSingleName))
-	}
-
 	// for _, fn := range vuguFileNames {
 
 	// 	goFileName := strings.TrimSuffix(fn, ".vugu") + goFnameAppend + ".go"
@@ -277,36 +265,6 @@ func (p *ParserGoPkg) Run() error {
 	// 	}
 
 	// }
-
-	// generate anything missing and process vugugen comments
-	mf := newMissingFixer(p.pkgPath, pkgName, missingFmap)
-	err = mf.run()
-	if err != nil {
-		return fmt.Errorf("missing fixer error: %w", err)
-	}
-
-	// if requested, do merge
-	if p.opts.MergeSingle {
-
-		// if a missing fix file was produced include it in the list to be merged
-		_, err := os.Stat(filepath.Join(p.pkgPath, "0_missing_gen_js_wasm.go"))
-		if err == nil {
-			mergeFiles = append(mergeFiles, "0_missing_gen_js_wasm.go")
-		}
-
-		err = mergeGoFiles(p.pkgPath, mergeSingleName, mergeFiles...)
-		if err != nil {
-			return err
-		}
-		// remove files if merge worked
-		for _, mf := range mergeFiles {
-			err := os.Remove(filepath.Join(p.pkgPath, mf))
-			if err != nil {
-				return err
-			}
-		}
-
-	}
 
 	err = restoreFileHashTimes(p.pkgPath, hashTimes)
 	if err != nil {

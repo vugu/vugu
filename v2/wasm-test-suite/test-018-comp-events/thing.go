@@ -2,24 +2,25 @@
 
 package main
 
-import "github.com/vugu/vugu/v2"
+import (
+	"fmt"
+
+	"github.com/vugu/vugu/v2"
+)
 
 type Thing struct {
-	Click ClickHandler
+	Parent *Root
+}
+
+type clickEvt struct {
+	e vugu.DOMEvent
 }
 
 func (c *Thing) HandleButtonClick(event vugu.DOMEvent) {
-	if c.Click != nil {
-		c.Click.ClickHandle(ClickEvent{DOMEvent: event})
-	}
+	clickEvt := clickEvt{e: event}
+	c.Parent.ShowText = fmt.Sprintf("%s", clickEvt)
 }
 
-//vugugen:event Click
-
-type ClickEvent struct {
-	vugu.DOMEvent
-}
-
-func (e ClickEvent) String() string {
+func (e clickEvt) String() string {
 	return "This is the ClickEvent"
 }
