@@ -62,12 +62,6 @@ func main() {
 						Destination: &gen.Opts.SkipGoMod,
 					},
 					&cli.BoolFlag{
-						Name:        "s",
-						Value:       false,
-						Usage:       "Merge generated code for a package into a single file",
-						Destination: &gen.Opts.MergeSingle,
-					},
-					&cli.BoolFlag{
 						Name:        "r",
 						Value:       false,
 						Usage:       "Run recursively on specified path and subdirectories.",

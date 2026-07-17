@@ -16,7 +16,7 @@ The list of changes are:
 - [x] Delete `devutil` package
 - [x] Delete `distutil` package
 - [x] Delete `tinygo-dev` package
-- [ ] remove support for tinygo in `gen` package
+- [x] remove support for tinygo in `gen` package
 - [x] Delete the `staticrenderer` package
 - [x] Delete the `simplehttp` package
 - [x] Delete the `fetch-and-display` example. This currently uses the `simplehttp` package (it shouldn't) but also used a `coinbase.com` API endpoint that no longer exists.
@@ -27,10 +27,10 @@ The list of changes are:
 - [x] remove the `js` package by splitting the `VGNode` type. This removes the need to maintain a pseudo `syscall/js` type package for vugu.
 - [x] remove the unused `internal/htmlx` package
 - [x] remove mentions of the `legacytestsuite` from the magefiles
-- [x] remove any support of building the generated code with `tinygo`
-- [ ] remove support for `<script "application/x-go">` tags in teh `*.vugu` files. Use a proper component instead
-- [ ] remove auto generating a `0_missing_gen.go` file to clean up missing Go structs
-- [ ] remove auto generating a `0_component_gen.go` file to clean up missing components (????)
+- [x] remove any support of building the generated code with `tinygo`. This removes the `--tinygo` option from `vugu gen`
+- [ ] remove support for `<script "application/x-go">` tags in the `*.vugu` files. Use a proper component instead
+- [x] remove auto generating a `0_missing_gen.go` file that contains "missing" Go structs i.e. vugu components. This is unnecessary. ***This is a breaking change***
+- [x] remove support for producing a single merged file with all components. This removes the `-s` option from `vugu gen`
 
 
 The original v0.y.z Readme follows.

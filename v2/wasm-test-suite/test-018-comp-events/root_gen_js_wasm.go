@@ -36,7 +36,7 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 				vgin.BuildEnv.WireComponent(vgcomp)
 			}
 			vgin.BuildEnv.UseComponent(vgcompKey, vgcomp)	// ensure we can use this in the cache next time around
-			vgcomp.Click = ClickFunc(func(event ClickEvent) { c.ShowText = fmt.Sprintf("%s", event) })
+			vgcomp.Parent = c
 			vgout.Components = append(vgout.Components, vgcomp)
 			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Component: vgcomp}}
 			vgparent.AppendChild(vgn)
