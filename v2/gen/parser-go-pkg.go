@@ -7,31 +7,24 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
-	"log"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
-	"time"
-
-	"github.com/vugu/xxhash"
 )
 
 // ParserGoPkg knows how to perform source file generation in relation to a package folder.
 // Whereas ParserGo handles converting a single template, ParserGoPkg is a higher level interface
-// and provides the functionality of the vugugen command line tool.  It will scan a package
+// and provides the functionality of the vugu gen command line tool.  It will scan a package
 // folder for .vugu files and convert them to .go, with the appropriate defaults and logic.
 type ParserGoPkg struct {
 	pkgPath string
 }
 
-// TODO: CallVuguSetup bool // always call vuguSetup instead of trying to auto-detect it's existence
-
 var errNoVuguFile = errors.New("no .vugu file(s) found")
 
 // RunRecursive will create a new ParserGoPkg and call Run on it recursively for each
-// directory under pkgPath.  The opts will be modified for subfolders to disable go.mod and main.go
-// logic.  If pkgPath does not contain a .vugu file this function will return an error.
+// directory under pkgPath. If pkgPath does not contain a .vugu file this function will return an error.
 func RunRecursive(pkgPath string) error {
 
 	dirf, err := os.Open(pkgPath)
@@ -39,14 +32,19 @@ func RunRecursive(pkgPath string) error {
 		return err
 	}
 
-	fis, err := dirf.Readdir(-1)
+	fis, err := dirf.ReadDir(-1) // -1 returns all file names in the directory
 	if err != nil {
 		return err
 	}
 	hasVugu := false
 	var subDirList []string
 	for _, fi := range fis {
-		if fi.IsDir() && !strings.HasPrefix(fi.Name(), ".") {
+		// add sub dirs to a list, if they are not hidden sub dirs - needs a windows version!
+		hidden, err := isHidden(fi.Name())
+		if err != nil {
+			return err
+		}
+		if fi.IsDir() && !hidden {
 			subDirList = append(subDirList, fi.Name())
 			continue
 		}
@@ -58,8 +56,7 @@ func RunRecursive(pkgPath string) error {
 		return errNoVuguFile
 	}
 
-	p := NewParserGoPkg(pkgPath)
-	err = p.Run()
+	err = Run(pkgPath)
 	if err != nil {
 		return err
 	}
@@ -96,12 +93,6 @@ func NewParserGoPkg(pkgPath string) *ParserGoPkg {
 // if package already has file with package name something other than main).
 // Per-file code generation is performed by ParserGo.
 func (p *ParserGoPkg) Run() error {
-
-	// record the times of existing files, so we can restore after if the same
-	hashTimes, err := fileHashTimes(p.pkgPath)
-	if err != nil {
-		return err
-	}
 
 	pkgF, err := os.Open(p.pkgPath)
 	if err != nil {
@@ -183,73 +174,8 @@ func (p *ParserGoPkg) Run() error {
 		return err
 	}
 
-	// for _, fn := range vuguFileNames {
-
-	// 	goFileName := strings.TrimSuffix(fn, ".vugu") + goFnameAppend + ".go"
-	// 	goFilePath := filepath.Join(p.pkgPath, goFileName)
-
-	// 	err := func() error {
-	// 		// get ready to append to file
-	// 		f, err := os.OpenFile(goFilePath, os.O_WRONLY|os.O_APPEND, 0644)
-	// 		if err != nil {
-	// 			return err
-	// 		}
-	// 		defer f.Close()
-
-	// 		// TODO: would be nice to clean this up and get a better grip on how we do this filename -> struct name mapping, but this works for now
-	// 		compTypeName := fnameToGoTypeName(strings.TrimSuffix(goFileName, goFnameAppend+".go"))
-
-	// 		// create CompName struct if it doesn't exist in the package
-	// 		if _, ok := namesFound[compTypeName]; !ok {
-	// 			fmt.Fprintf(f, "\ntype %s struct {}\n", compTypeName)
-	// 		}
-
-	// 		// // create CompNameData struct if it doesn't exist in the package
-	// 		// if _, ok := namesFound[compTypeName+"Data"]; !ok {
-	// 		// 	fmt.Fprintf(f, "\ntype %s struct {}\n", compTypeName+"Data")
-	// 		// }
-
-	// 		// create CompName.NewData with defaults if it doesn't exist in the package
-	// 		// if _, ok := namesFound[compTypeName+".NewData"]; !ok {
-	// 		// 	fmt.Fprintf(f, "\nfunc (ct *%s) NewData(props vugu.Props) (interface{}, error) { return &%s{}, nil }\n",
-	// 		// 		compTypeName, compTypeName+"Data")
-	// 		// }
-
-	// 		// // register component unless disabled - nope, no more component registry
-	// 		// if !p.opts.SkipRegisterComponentTypes && !fileHasInitFunc(goFilePath) {
-	// 		// 	fmt.Fprintf(f, "\nfunc init() { vugu.RegisterComponentType(%q, &%s{}) }\n", strings.TrimSuffix(goFileName, ".go"), compTypeName)
-	// 		// }
-
-	// 		return nil
-	// 	}()
-	// 	if err != nil {
-	// 		return err
-	// 	}
-
-	// }
-
-	err = restoreFileHashTimes(p.pkgPath, hashTimes)
-	if err != nil {
-		return err
-	}
-
 	return nil
 
-}
-
-//nolint:golint,unused
-func fileHasInitFunc(p string) bool {
-	b, err := os.ReadFile(p)
-	if err != nil {
-		return false
-	}
-	// hacky but workable for now
-	return regexp.MustCompile(`^func init\(`).Match(b)
-}
-
-func fileExists(p string) bool {
-	_, err := os.Stat(p)
-	return !os.IsNotExist(err)
 }
 
 func fnameToGoTypeName(s string) string {
@@ -400,83 +326,4 @@ func nameParts(n string) (recv, method string) {
 	recv = ret[0]
 	method = ret[1]
 	return
-}
-
-// fileHashTimes will scan a directory and return a map of hashes and corresponding mod times
-func fileHashTimes(dir string) (map[uint64]time.Time, error) {
-
-	ret := make(map[uint64]time.Time)
-
-	f, err := os.Open(dir)
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-
-	fis, err := f.Readdir(-1)
-	if err != nil {
-		return nil, err
-	}
-	for _, fi := range fis {
-		if fi.IsDir() {
-			continue
-		}
-		h := xxhash.New()
-		fmt.Fprint(h, fi.Name()) // hash the name too so we don't confuse different files with the same contents
-		b, err := os.ReadFile(filepath.Join(dir, fi.Name()))
-		if err != nil {
-			return nil, err
-		}
-		_, err = h.Write(b)
-		if err != nil {
-			return nil, err
-		}
-		ret[h.Sum64()] = fi.ModTime()
-	}
-
-	return ret, nil
-}
-
-// restoreFileHashTimes takes the map returned by fileHashTimes and for any files where the hash
-// matches we restore the mod time - this way we can clobber files during code generation but
-// then if the resulting output is byte for byte the same we can just change the mod time back and
-// things that look at timestamps will see the file as unchanged; somewhat hacky, but simple and
-// workable for now - it's important for the developer experince we don't do unnecessary builds
-// in cases where things don't change
-func restoreFileHashTimes(dir string, hashTimes map[uint64]time.Time) error {
-
-	f, err := os.Open(dir)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
-	fis, err := f.Readdir(-1)
-	if err != nil {
-		return err
-	}
-	for _, fi := range fis {
-		if fi.IsDir() {
-			continue
-		}
-		fiPath := filepath.Join(dir, fi.Name())
-		h := xxhash.New()
-		fmt.Fprint(h, fi.Name()) // hash the name too so we don't confuse different files with the same contents
-		b, err := os.ReadFile(fiPath)
-		if err != nil {
-			return err
-		}
-		_, err = h.Write(b)
-		if err != nil {
-			return err
-		}
-		if t, ok := hashTimes[h.Sum64()]; ok {
-			err := os.Chtimes(fiPath, time.Now(), t)
-			if err != nil {
-				log.Printf("Error in os.Chtimes(%q, now, %q): %v", fiPath, t, err)
-			}
-		}
-	}
-
-	return nil
 }
