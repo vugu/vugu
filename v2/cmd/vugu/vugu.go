@@ -56,12 +56,6 @@ func main() {
 				ArgsUsage: "[OPTIONS] DIRECTORY",
 				Flags: []cli.Flag{
 					&cli.BoolFlag{
-						Name:        "skip-go-mod",
-						Value:       false,
-						Usage:       "Do not try to create go.mod as needed",
-						Destination: &gen.Opts.SkipGoMod,
-					},
-					&cli.BoolFlag{
 						Name:        "r",
 						Value:       false,
 						Usage:       "Run recursively on specified path and subdirectories.",

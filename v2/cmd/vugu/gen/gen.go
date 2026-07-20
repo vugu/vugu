@@ -9,7 +9,6 @@ import (
 )
 
 var (
-	Opts      gen.ParserGoPkgOpts
 	Recursive bool
 )
 
@@ -36,9 +35,9 @@ func Gen(ctx context.Context, cmd *cli.Command) error {
 		}
 
 		if Recursive {
-			err = gen.RunRecursive(pkgPath, &Opts)
+			err = gen.RunRecursive(pkgPath)
 		} else {
-			err = gen.Run(pkgPath, &Opts)
+			err = gen.Run(pkgPath)
 		}
 		if err != nil {
 			return err
