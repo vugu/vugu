@@ -39,7 +39,7 @@ func TestSimpleParseGoPkgRun(t *testing.T) {
 </div>
 `), 0644))
 
-	p := NewParserGoPkg(tmpDir, nil)
+	p := NewParserGoPkg(tmpDir)
 
 	assert.NoError(p.Run())
 
@@ -69,7 +69,6 @@ func TestRun(t *testing.T) {
 
 	type tcase struct {
 		name      string
-		opts      ParserGoPkgOpts
 		recursive bool
 		infiles   map[string]string              // file structure to start with
 		out       map[string][]string            // regexps to match in output files
@@ -81,7 +80,6 @@ func TestRun(t *testing.T) {
 	tcList := []tcase{
 		{
 			name:      "simple",
-			opts:      ParserGoPkgOpts{},
 			recursive: false,
 			infiles: map[string]string{
 				"root.vugu": `<div>root here</div>`,
@@ -96,7 +94,6 @@ func TestRun(t *testing.T) {
 		},
 		{
 			name:      "simple-wasm",
-			opts:      ParserGoPkgOpts{},
 			recursive: false,
 			infiles: map[string]string{
 				"root.vugu": `<div>root here</div>`,
@@ -111,7 +108,6 @@ func TestRun(t *testing.T) {
 		},
 		{
 			name:      "recursive",
-			opts:      ParserGoPkgOpts{},
 			recursive: true,
 			infiles: map[string]string{
 				"root.vugu":            `<div>root here</div>`,
@@ -128,7 +124,6 @@ func TestRun(t *testing.T) {
 		},
 		{
 			name:      "recursive-single",
-			opts:      ParserGoPkgOpts{},
 			recursive: true,
 			infiles: map[string]string{
 				"root.vugu":            `<div>root here</div>`,
@@ -166,9 +161,9 @@ func TestRun(t *testing.T) {
 			tstWriteFiles(tmpDir, tc.infiles)
 
 			if tc.recursive {
-				err = RunRecursive(tmpDir, &tc.opts)
+				err = RunRecursive(tmpDir)
 			} else {
-				err = Run(tmpDir, &tc.opts)
+				err = Run(tmpDir)
 			}
 			if err != nil {
 				t.Fatal(err)

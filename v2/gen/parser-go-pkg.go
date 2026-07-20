@@ -23,14 +23,6 @@ import (
 // folder for .vugu files and convert them to .go, with the appropriate defaults and logic.
 type ParserGoPkg struct {
 	pkgPath string
-	opts    ParserGoPkgOpts
-}
-
-// ParserGoPkgOpts is the options for ParserGoPkg.
-type ParserGoPkgOpts struct {
-	SkipGoMod        bool    // do not try and create go.mod if it doesn't exist
-	SkipMainGo       bool    // do not try and create main_wasm.go if it doesn't exist in a main package
-	GoFileNameAppend *string // suffix to append to file names, after base name plus .go, if nil then "_gen" is used
 }
 
 // TODO: CallVuguSetup bool // always call vuguSetup instead of trying to auto-detect it's existence
@@ -40,11 +32,7 @@ var errNoVuguFile = errors.New("no .vugu file(s) found")
 // RunRecursive will create a new ParserGoPkg and call Run on it recursively for each
 // directory under pkgPath.  The opts will be modified for subfolders to disable go.mod and main.go
 // logic.  If pkgPath does not contain a .vugu file this function will return an error.
-func RunRecursive(pkgPath string, opts *ParserGoPkgOpts) error {
-
-	if opts == nil {
-		opts = &ParserGoPkgOpts{}
-	}
+func RunRecursive(pkgPath string) error {
 
 	dirf, err := os.Open(pkgPath)
 	if err != nil {
@@ -70,7 +58,7 @@ func RunRecursive(pkgPath string, opts *ParserGoPkgOpts) error {
 		return errNoVuguFile
 	}
 
-	p := NewParserGoPkg(pkgPath, opts)
+	p := NewParserGoPkg(pkgPath)
 	err = p.Run()
 	if err != nil {
 		return err
@@ -78,11 +66,7 @@ func RunRecursive(pkgPath string, opts *ParserGoPkgOpts) error {
 
 	for _, subDir := range subDirList {
 		subPath := filepath.Join(pkgPath, subDir)
-		opts2 := *opts
-		// sub folders should never get these behaviors
-		opts2.SkipGoMod = true
-		opts2.SkipMainGo = true
-		err := RunRecursive(subPath, &opts2)
+		err := RunRecursive(subPath)
 		if err == errNoVuguFile {
 			continue
 		}
@@ -95,29 +79,20 @@ func RunRecursive(pkgPath string, opts *ParserGoPkgOpts) error {
 }
 
 // Run will create a new ParserGoPkg and call Run on it.
-func Run(pkgPath string, opts *ParserGoPkgOpts) error {
-	p := NewParserGoPkg(pkgPath, opts)
+func Run(pkgPath string) error {
+	p := NewParserGoPkg(pkgPath)
 	return p.Run()
 }
 
 // NewParserGoPkg returns a new ParserGoPkg with the specified options or default if nil.  The pkgPath is required and must be an absolute path.
-func NewParserGoPkg(pkgPath string, opts *ParserGoPkgOpts) *ParserGoPkg {
+func NewParserGoPkg(pkgPath string) *ParserGoPkg {
 	ret := &ParserGoPkg{
 		pkgPath: pkgPath,
-	}
-	if opts != nil {
-		ret.opts = *opts
 	}
 	return ret
 }
 
-// Opts returns the options.
-func (p *ParserGoPkg) Opts() ParserGoPkgOpts {
-	return p.opts
-}
-
 // Run does the work and generates the appropriate .go files from .vugu files.
-// It will also create a go.mod file if not present and not SkipGoMod.  Same for main.go and SkipMainGo (will also skip
 // if package already has file with package name something other than main).
 // Per-file code generation is performed by ParserGo.
 func (p *ParserGoPkg) Run() error {
@@ -155,9 +130,6 @@ func (p *ParserGoPkg) Run() error {
 	namesToCheck := []string{"main"}
 
 	goFnameAppend := "_gen_js_wasm"
-	if p.opts.GoFileNameAppend != nil {
-		goFnameAppend = *p.opts.GoFileNameAppend
-	}
 
 	var mergeFiles []string
 
@@ -209,16 +181,6 @@ func (p *ParserGoPkg) Run() error {
 	_, err = goPkgCheckNames(p.pkgPath, namesToCheck)
 	if err != nil {
 		return err
-	}
-
-	// write go.mod if it doesn't exist and not disabled - actually this really only makes sense for main,
-	// otherwise we really don't know what the right module name is
-	goModPath := filepath.Join(p.pkgPath, "go.mod")
-	if pkgName == "main" && !p.opts.SkipGoMod && !fileExists(goModPath) {
-		err := os.WriteFile(goModPath, []byte(`module `+pkgName+"\n"), 0644)
-		if err != nil {
-			return err
-		}
 	}
 
 	// for _, fn := range vuguFileNames {
