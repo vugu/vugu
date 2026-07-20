@@ -31,7 +31,7 @@ The list of changes are:
 - [ ] remove support for `<script "application/x-go">` tags in the `*.vugu` files. Use a proper component instead
 - [x] remove auto generating a `0_missing_gen.go` file that contains "missing" Go structs i.e. vugu components. This is unnecessary. ***This is a breaking change***
 - [x] remove support for producing a single merged file with all components. This removes the `-s` option from `vugu gen`
-
+- [x] remove support for the `--skip-go-mod` option from `vugu gen`.
 
 The original v0.y.z Readme follows.
 
