@@ -12,14 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// OW - this test makes absolutely no sense.
-// There are no components used in the root.vugu.
-// Removing the generation of the "missing" components just breaks this - but it made no sense to begin with.
-// Vugu should not generate things that a developer should reasonable be expected to provide.
 func TestSimpleParseGoPkgRun(t *testing.T) {
-
-	t.Skip("** Skipped TestSimpleParseGoPkgRun makes no sense at all. The vugu files don't reference a component. Skipped pending a resolution or removal.")
-
 	assert := assert.New(t)
 
 	tmpDir, err := os.MkdirTemp("", "TestParseGoPkgRun")
@@ -27,16 +20,19 @@ func TestSimpleParseGoPkgRun(t *testing.T) {
 		t.Fatal(err)
 	}
 	fmt.Printf("Dir: %s\n", tmpDir)
-	//defer os.RemoveAll(tmpDir)
-
-	// 	assert.NoError(os.WriteFile(filepath.Join(tmpDir, "go.mod"), []byte(`
-	// module main
-	// `), 0644))
+	defer os.RemoveAll(tmpDir)
 
 	assert.NoError(os.WriteFile(filepath.Join(tmpDir, "root.vugu"), []byte(`
 <div id="root_comp">
 	<h1>Hello!</h1>
 </div>
+`), 0644))
+
+	assert.NoError(os.WriteFile(filepath.Join(tmpDir, "root.go"), []byte(`
+package main
+
+type Root struct {
+}
 `), 0644))
 
 	p := NewParserGoPkg(tmpDir)
@@ -45,21 +41,13 @@ func TestSimpleParseGoPkgRun(t *testing.T) {
 
 	b, err := os.ReadFile(filepath.Join(tmpDir, "root_gen_js_wasm.go"))
 	assert.NoError(err)
-	// t.Logf("OUT FILE root_gen.go: %s", b)
-	// log.Printf("OUT FILE root_gen.go: %s", b)
 
 	if !bytes.Contains(b, []byte(`func (c *Root) Build`)) {
 		t.Errorf("failed to find Build method signature")
 	}
-
-	if !bytes.Contains(b, []byte(`type Root struct`)) {
-		t.Errorf("failed to find Root struct definition")
-	}
-
 }
 
 func TestRun(t *testing.T) {
-	t.Skip("** Skipped TestRun makes no sense at all. The vugu files don't reference a component. Skipped pending a resolution or removal.")
 	debug := true
 
 	pwd, err := filepath.Abs("..")
@@ -83,12 +71,12 @@ func TestRun(t *testing.T) {
 			recursive: false,
 			infiles: map[string]string{
 				"root.vugu": `<div>root here</div>`,
+				"root.go":   "package main\ntype Root struct {\n}\n",
 				"go.mod":    "module testcase\nreplace github.com/vugu/vugu/v2 => " + pwd + "\n",
 				"main.go":   "//go:build js && wasm\n\npackage main\nfunc main(){}",
 			},
 			out: map[string][]string{
 				"root_gen_js_wasm.go": {`func \(c \*Root\) Build`},
-				//"0_missing_gen_js_wasm.go": {`type Root struct`},
 			},
 			build: "wasm",
 		},
@@ -97,12 +85,12 @@ func TestRun(t *testing.T) {
 			recursive: false,
 			infiles: map[string]string{
 				"root.vugu": `<div>root here</div>`,
+				"root.go":   "package main\ntype Root struct {\n}\n",
 				"go.mod":    "module testcase\nreplace github.com/vugu/vugu/v2 => " + pwd + "\n",
 				"main.go":   "//go:build js && wasm\n\npackage main\nfunc main(){}",
 			},
 			out: map[string][]string{
 				"root_gen_js_wasm.go": {`func \(c \*Root\) Build`},
-				//"0_missing_gen_js_wasm.go": {"type Root struct"},
 			},
 			build: "wasm",
 		},
@@ -111,13 +99,13 @@ func TestRun(t *testing.T) {
 			recursive: true,
 			infiles: map[string]string{
 				"root.vugu":            `<div>root here</div>`,
+				"root.go":              "package main\ntype Root struct {\n}\n",
 				"go.mod":               "module testcase\nreplace github.com/vugu/vugu/v2 => " + pwd + "\n",
 				"main.go":              "//go:build js && wasm\n\npackage main\nfunc main(){}",
 				"subdir1/example.vugu": "<div>Example Here</div>",
 			},
 			out: map[string][]string{
-				"root_gen_js_wasm.go": {`func \(c \*Root\) Build`, `root here`},
-				//"0_missing_gen_js_wasm.go":       {"type Root struct"},
+				"root_gen_js_wasm.go":            {`func \(c \*Root\) Build`, `root here`},
 				"subdir1/example_gen_js_wasm.go": {"Example Here"},
 			},
 			build: "wasm",
@@ -127,18 +115,17 @@ func TestRun(t *testing.T) {
 			recursive: true,
 			infiles: map[string]string{
 				"root.vugu":            `<div>root here</div>`,
+				"root.go":              "package main\ntype Root struct {\n}\n",
 				"go.mod":               "module testcase\nreplace github.com/vugu/vugu/v2 => " + pwd + "\n",
 				"main.go":              "//go:build js && wasm\n\npackage main\nfunc main(){}",
 				"subdir1/example.vugu": "<div>Example Here</div>",
+				"subdir1/example.go":   "package main\ntype Example struct {\n}\n",
 			},
 			out: map[string][]string{
-				"root_gen_js_wasm.go":            {`func \(c \*Root\) Build`, `type Root struct`},
-				"subdir1/example_gen_js_wasm.go": {"Example Here"},
+				"root_gen_js_wasm.go":            {`func \(c \*Root\) Build`},
+				"subdir1/example_gen_js_wasm.go": {`func \(c \*Example\) Build`, "Example Here"},
 				"root.vugu":                      {`root here`}, // make sure vugu files didn't get nuked
 				"subdir1/example.vugu":           {`Example Here`},
-			},
-			afterRun: func(dir string, t *testing.T) {
-				noFile(filepath.Join(dir, "subdir1/example_gen_js_wasm.go"), t)
 			},
 			build: "wasm",
 		},
@@ -209,31 +196,16 @@ func TestRun(t *testing.T) {
 					t.Fatalf("build error: %s; OUTPUT:\n%s", err, b)
 				}
 
-			case "default":
-				cmd := exec.Command("go", "build", "-o", "main.out", ".")
-				cmd.Dir = tmpDir
-				b, err := cmd.CombinedOutput()
-				if err != nil {
-					t.Fatalf("build error: %s; OUTPUT:\n%s", err, b)
-				}
-
-				cmd = exec.Command(filepath.Join(tmpDir, "main.out"))
-				cmd.Dir = tmpDir
-				b, err = cmd.CombinedOutput()
-				if err != nil {
-					t.Fatalf("run error: %s; OUTPUT:\n%s", err, b)
-				}
-
 			case "none":
 
 			default:
 				t.Errorf("unknown build value %q", tc.build)
 			}
 
-			// only if everthing is golden do we remove
-			// if !t.Failed() {
-			// 	os.RemoveAll(tmpDir)
-			// }
+			// only if everything is golden do we remove
+			if !t.Failed() {
+				os.RemoveAll(tmpDir)
+			}
 
 		})
 	}
