@@ -1,0 +1,20 @@
+<!-- This is the HTML form with all of the sub components -->
+<!-- When the submit event occurs we call the 'Submit' method on the 'Simpleform struct'  -->
+<form  @submit='c.Submit(event)'>
+    <!-- Add an text input box, we do this via a sub component -->
+    <!-- Note the inversion onf control in each of the sub components -->
+    <!-- in this case 'c' is the Sampleform component and NOT the Parent component -->
+    <main:Nameinput :Form='c'></main:Nameinput>
+    <!-- Add an email input box -->
+    <main:Emailinput :Form='c'></main:Emailinput>
+    <!-- Add some radio buttons -->
+    <!-- This has been extended so that it now uses the new Language Radio Button component -->
+    <!-- which can manage default selections without duplication between the vugu anf Go sides. -->
+    <main:Radiobuttons :Form='c' SelectionDefault="german"></main:Radiobuttons>
+    <!-- Add a select from a static list -->
+    <main:Staticselect :Form='c'></main:StaticSelect>
+    <!-- Add a select from a dynamically generated list -->
+    <main:Dynamicselect :Form='c'></main:Dynamicselect>
+    <!-- Add the "Submit" button to the form -->
+    <input type=submit value="Submit Form"></input>
+</form>

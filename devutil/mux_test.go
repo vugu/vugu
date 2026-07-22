@@ -1,7 +1,6 @@
 package devutil
 
 import (
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -10,9 +9,9 @@ import (
 
 func TestMux(t *testing.T) {
 
-	tmpFile, err := ioutil.TempFile("", "TestMux")
+	tmpFile, err := os.CreateTemp("", "TestMux")
 	must(err)
-	tmpFile.Write([]byte("<html><body>contents of temp file</body></html>"))
+	_, _ = tmpFile.Write([]byte("<html><body>contents of temp file</body></html>"))
 	tmpFile.Close()
 	defer os.Remove(tmpFile.Name())
 
@@ -54,7 +53,7 @@ func TestMux(t *testing.T) {
 
 	// default
 	m.Default(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("<html><body>default overridden</body></body>"))
+		_, _ = w.Write([]byte("<html><body>default overridden</body></body>"))
 	}))
 	wr = httptest.NewRecorder()
 	r, _ = http.NewRequest("GET", "/aintthere.css", nil)

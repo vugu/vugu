@@ -1,0 +1,329 @@
+package gen
+
+import (
+	"bytes"
+	"errors"
+	"fmt"
+	"go/ast"
+	"go/parser"
+	"go/token"
+	"os"
+	"path/filepath"
+	"regexp"
+	"strings"
+)
+
+// ParserGoPkg knows how to perform source file generation in relation to a package folder.
+// Whereas ParserGo handles converting a single template, ParserGoPkg is a higher level interface
+// and provides the functionality of the vugu gen command line tool.  It will scan a package
+// folder for .vugu files and convert them to .go, with the appropriate defaults and logic.
+type ParserGoPkg struct {
+	pkgPath string
+}
+
+var errNoVuguFile = errors.New("no .vugu file(s) found")
+
+// RunRecursive will create a new ParserGoPkg and call Run on it recursively for each
+// directory under pkgPath. If pkgPath does not contain a .vugu file this function will return an error.
+func RunRecursive(pkgPath string) error {
+
+	dirf, err := os.Open(pkgPath)
+	if err != nil {
+		return err
+	}
+
+	fis, err := dirf.ReadDir(-1) // -1 returns all file names in the directory
+	if err != nil {
+		return err
+	}
+	hasVugu := false
+	var subDirList []string
+	for _, fi := range fis {
+		// add sub dirs to a list, if they are not hidden sub dirs - needs a windows version!
+		hidden, err := isHidden(fi.Name())
+		if err != nil {
+			return err
+		}
+		if fi.IsDir() && !hidden {
+			subDirList = append(subDirList, fi.Name())
+			continue
+		}
+		if filepath.Ext(fi.Name()) == ".vugu" {
+			hasVugu = true
+		}
+	}
+	if !hasVugu {
+		return errNoVuguFile
+	}
+
+	err = Run(pkgPath)
+	if err != nil {
+		return err
+	}
+
+	for _, subDir := range subDirList {
+		subPath := filepath.Join(pkgPath, subDir)
+		err := RunRecursive(subPath)
+		if err == errNoVuguFile {
+			continue
+		}
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// Run will create a new ParserGoPkg and call Run on it.
+func Run(pkgPath string) error {
+	p := NewParserGoPkg(pkgPath)
+	return p.Run()
+}
+
+// NewParserGoPkg returns a new ParserGoPkg with the specified options or default if nil.  The pkgPath is required and must be an absolute path.
+func NewParserGoPkg(pkgPath string) *ParserGoPkg {
+	ret := &ParserGoPkg{
+		pkgPath: pkgPath,
+	}
+	return ret
+}
+
+// Run does the work and generates the appropriate .go files from .vugu files.
+// if package already has file with package name something other than main).
+// Per-file code generation is performed by ParserGo.
+func (p *ParserGoPkg) Run() error {
+
+	pkgF, err := os.Open(p.pkgPath)
+	if err != nil {
+		return err
+	}
+	defer pkgF.Close()
+
+	allFileNames, err := pkgF.Readdirnames(-1)
+	if err != nil {
+		return err
+	}
+
+	var vuguFileNames []string
+	for _, fn := range allFileNames {
+		if filepath.Ext(fn) == ".vugu" {
+			vuguFileNames = append(vuguFileNames, fn)
+		}
+	}
+
+	if len(vuguFileNames) == 0 {
+		return fmt.Errorf("no .vugu files found, please create one and try again")
+	}
+
+	pkgName := goGuessPkgName(p.pkgPath)
+
+	namesToCheck := []string{"main"}
+
+	goFnameAppend := "_gen_js_wasm"
+
+	var mergeFiles []string
+
+	missingFmap := make(map[string]string, len(vuguFileNames))
+
+	// run ParserGo on each file to generate the .go files
+	for _, fn := range vuguFileNames {
+
+		baseFileName := strings.TrimSuffix(fn, ".vugu")
+		goFileName := baseFileName + goFnameAppend + ".go"
+		compTypeName := fnameToGoTypeName(baseFileName)
+
+		// keep track of which files to scan for missing structs
+		missingFmap[fn] = goFileName
+
+		mergeFiles = append(mergeFiles, goFileName)
+
+		pg := &ParserGo{}
+
+		pg.PackageName = pkgName
+		// pg.ComponentType = compTypeName
+		pg.StructType = compTypeName
+		// pg.DataType = pg.ComponentType + "Data"
+		pg.OutDir = p.pkgPath
+		pg.OutFile = goFileName
+
+		// add to our list of names to check after
+		namesToCheck = append(namesToCheck, pg.StructType)
+		// namesToCheck = append(namesToCheck, pg.ComponentType+".NewData")
+		// namesToCheck = append(namesToCheck, pg.DataType)
+		namesToCheck = append(namesToCheck, "vuguSetup")
+
+		// read in source
+		b, err := os.ReadFile(filepath.Join(p.pkgPath, fn))
+		if err != nil {
+			return err
+		}
+
+		// parse it
+		err = pg.Parse(bytes.NewReader(b), fn)
+		if err != nil {
+			return fmt.Errorf("error parsing %q: %v", fn, err)
+		}
+
+	}
+
+	// after the code generation is done, check the package for the various names in question to see
+	// what we need to generate
+	_, err = goPkgCheckNames(p.pkgPath, namesToCheck)
+	if err != nil {
+		return err
+	}
+
+	return nil
+
+}
+
+func fnameToGoTypeName(s string) string {
+	s = strings.Split(s, ".")[0] // remove file extension if present
+	parts := strings.Split(s, "-")
+	for i := range parts {
+		p := parts[i]
+		if len(p) > 0 {
+			p = strings.ToUpper(p[:1]) + p[1:]
+		}
+		parts[i] = p
+	}
+	return strings.Join(parts, "")
+}
+
+func goGuessPkgName(pkgPath string) (ret string) {
+
+	// defer func() { log.Printf("goGuessPkgName returning %q", ret) }()
+
+	// see if the package already has a name and use it if so
+	fset := token.NewFileSet()
+	pkgs, err := parser.ParseDir(fset, pkgPath, nil, parser.PackageClauseOnly) // just get the package name
+	if err != nil {
+		goto checkMore
+	}
+	if len(pkgs) != 1 {
+		goto checkMore
+	}
+	{
+		var pkg *ast.Package //nolint:staticcheck // ast.Package is deprecated as of Go 1.23
+		for _, pkg1 := range pkgs {
+			pkg = pkg1
+		}
+		return pkg.Name
+	}
+
+checkMore:
+
+	// check for a root.vugu file, in which case we assume "main"
+	_, err = os.Stat(filepath.Join(pkgPath, "root.vugu"))
+	if err == nil {
+		return "main"
+	}
+
+	// otherwise we use the name of the folder...
+	dirBase := filepath.Base(pkgPath)
+	if regexp.MustCompile(`^[a-z0-9]+$`).MatchString(dirBase) {
+		return dirBase
+	}
+
+	// ...unless it makes no sense in which case we use "main"
+
+	return "main"
+
+}
+
+// goPkgCheckNames parses a package dir and looks for names, returning a map of what was
+// found.  Names like "A.B" mean a method of name "B" with receiver of type "*A"
+func goPkgCheckNames(pkgPath string, names []string) (map[string]any, error) {
+
+	ret := make(map[string]any)
+
+	fset := token.NewFileSet()
+	pkgs, err := parser.ParseDir(fset, pkgPath, nil, 0)
+	if err != nil {
+		return ret, err
+	}
+
+	if len(pkgs) != 1 {
+		return ret, fmt.Errorf("unexpected package count after parsing, expected 1 and got this: %#v", pkgs)
+	}
+	var pkg *ast.Package //nolint:staticcheck // ast.Package is deprecated as of Go 1.23
+	for _, pkg1 := range pkgs {
+		pkg = pkg1
+	}
+
+	for _, file := range pkg.Files {
+
+		if file.Scope != nil {
+			for _, n := range names {
+				if v, ok := file.Scope.Objects[n]; ok {
+					ret[n] = v
+				}
+			}
+		}
+
+		// log.Printf("file: %#v", file)
+		// log.Printf("file.Scope.Objects: %#v", file.Scope.Objects)
+		// log.Printf("next: %#v", file.Scope.Objects["Example1"])
+		// e1 := file.Scope.Objects["Example1"]
+		// if e1.Kind == ast.Typ {
+		// e1.Decl
+		// }
+		for _, d := range file.Decls {
+			if fd, ok := d.(*ast.FuncDecl); ok {
+
+				var drecv, dmethod string
+				if fd.Recv != nil {
+					for _, f := range fd.Recv.List {
+						// log.Printf("f.Type: %#v", f.Type)
+						if tstar, ok := f.Type.(*ast.StarExpr); ok {
+							// log.Printf("tstar.X: %#v", tstar.X)
+							if tstarXi, ok := tstar.X.(*ast.Ident); ok && tstarXi != nil {
+								// log.Printf("namenamenamename: %#v", tstarXi.Name)
+								drecv = tstarXi.Name
+							}
+						}
+						// log.Printf("f.Names: %#v", f.Names)
+						// for _, fn := range f.Names {
+						// 	if fn != nil {
+						// 		log.Printf("NAMENAME: %#v", fn.Name)
+						// 		if fni, ok := fn.Name.(*ast.Ident); ok && fni != nil {
+						// 		}
+						// 	}
+						// }
+
+					}
+				} else {
+					continue // don't care methods with no receiver - found them already above as single (no period) names
+				}
+
+				// log.Printf("fd.Name: %#v", fd.Name)
+				if fd.Name != nil {
+					dmethod = fd.Name.Name
+				}
+
+				for _, n := range names {
+					recv, method := nameParts(n)
+					if drecv == recv && dmethod == method {
+						ret[n] = d
+					}
+				}
+			}
+		}
+	}
+	// log.Printf("Objects: %#v", pkg.Scope.Objects)
+
+	return ret, nil
+}
+
+func nameParts(n string) (recv, method string) {
+
+	ret := strings.SplitN(n, ".", 2)
+	if len(ret) < 2 {
+		method = n
+		return
+	}
+	recv = ret[0]
+	method = ret[1]
+	return
+}

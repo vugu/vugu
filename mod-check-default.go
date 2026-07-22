@@ -1,4 +1,4 @@
-// +build !tinygo
+//go:build !tinygo
 
 package vugu
 
@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"slices"
 	"strings"
 	"unsafe"
 
@@ -19,8 +20,8 @@ import (
 
 // ModTracker tracks modifications and maintains the appropriate state for this.
 type ModTracker struct {
-	old map[interface{}]mtResult
-	cur map[interface{}]mtResult
+	old map[any]mtResult
+	cur map[any]mtResult
 }
 
 // TrackNext moves the "current" information to the "old" position - starting a new round of change tracking.
@@ -31,10 +32,10 @@ func (mt *ModTracker) TrackNext() {
 
 	// lazy initialize
 	if mt.old == nil {
-		mt.old = make(map[interface{}]mtResult)
+		mt.old = make(map[any]mtResult)
 	}
 	if mt.cur == nil {
-		mt.cur = make(map[interface{}]mtResult)
+		mt.cur = make(map[any]mtResult)
 	}
 
 	// remove all elements from old map
@@ -47,6 +48,7 @@ func (mt *ModTracker) TrackNext() {
 
 }
 
+//nolint:golint,unused
 func (mt *ModTracker) dump() []byte {
 	var buf bytes.Buffer
 	fmt.Fprintf(&buf, "-- cur (len=%d): --\n", len(mt.cur))
@@ -81,7 +83,7 @@ func (mt *ModTracker) dump() []byte {
 // Maps are not supported at this time.
 // Other weird and wonderful things like channels and funcs are not supported.
 // Passing an unsupported type will result in a panic.
-func (mt *ModTracker) ModCheckAll(values ...interface{}) (ret bool) {
+func (mt *ModTracker) ModCheckAll(values ...any) (ret bool) {
 
 	for _, v := range values {
 
@@ -97,7 +99,7 @@ func (mt *ModTracker) ModCheckAll(values ...interface{}) (ret bool) {
 
 		// the result of the mod check on v goes here
 		var mod bool
-		var newdata interface{}
+		var newdata any
 
 		{
 			// see if it implements the ModChecker interface
@@ -221,7 +223,7 @@ func (mt *ModTracker) ModCheckAll(values ...interface{}) (ret bool) {
 			rv := reflect.ValueOf(v)
 
 			// check pointer and deref
-			if rv.Kind() != reflect.Ptr {
+			if rv.Kind() != reflect.Pointer {
 				panic(errors.New("type not implemented (pointer required): " + rv.String()))
 			}
 			rvv := rv.Elem()
@@ -240,7 +242,8 @@ func (mt *ModTracker) ModCheckAll(values ...interface{}) (ret bool) {
 				if l > 0 {
 					// use the unsafe package to make a byte slice corresponding to the raw slice contents
 					var bs []byte
-					bsh := (*reflect.SliceHeader)(unsafe.Pointer(&bs))
+					// TODO: need to be fix later
+					bsh := (*reflect.SliceHeader)(unsafe.Pointer(&bs)) //nolint:staticcheck
 
 					el0 := rvv.Index(0)
 					el0t = el0.Type()
@@ -250,7 +253,10 @@ func (mt *ModTracker) ModCheckAll(values ...interface{}) (ret bool) {
 					bsh.Cap = bsh.Len
 
 					// hash it
-					ha.Write(bs)
+					_, err := ha.Write(bs)
+					if err != nil {
+						panic(err)
+					}
 				}
 
 				hashval := ha.Sum64()
@@ -279,7 +285,7 @@ func (mt *ModTracker) ModCheckAll(values ...interface{}) (ret bool) {
 				// true, otherwise we'll never call ModCheckAll on these children and
 				// never get an unmodified response
 
-				for i := 0; i < l; i++ {
+				for i := range l {
 
 					// get pointer to the individual element and recurse into it
 					elv := rvv.Index(i).Addr().Interface()
@@ -296,7 +302,7 @@ func (mt *ModTracker) ModCheckAll(values ...interface{}) (ret bool) {
 				// just use bool(true) as the data value for a struct - this way it will always be modified the first time,
 				// but every subsequent check will solely depend on the checks on it's fields
 				oldval, ok := oldres.data.(bool)
-				mod = !ok || oldval != true
+				mod = !ok || !oldval
 				newdata = true
 
 				rvvt := rvv.Type()
@@ -325,7 +331,7 @@ func (mt *ModTracker) ModCheckAll(values ...interface{}) (ret bool) {
 			// Pointers to pointers will probably come up first, and is likely why you are reading this comment.
 
 			// pointer (meaning we were originally passed a pointer to a pointer)
-			if rvv.Kind() == reflect.Ptr {
+			if rvv.Kind() == reflect.Pointer {
 
 				// use pointer value as data...
 				vv := rvv.Pointer()
@@ -368,10 +374,5 @@ func (mt *ModTracker) ModCheckAll(values ...interface{}) (ret bool) {
 // and so can be deduplicated.
 
 func hasTagPart(tagstr, part string) bool {
-	for _, p := range strings.Split(tagstr, ",") {
-		if p == part {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(strings.Split(tagstr, ","), part)
 }

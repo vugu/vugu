@@ -5,7 +5,6 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -61,7 +60,10 @@ func vugufmtMain() {
 }
 
 func walkDir(path string) {
-	filepath.Walk(path, visitFile)
+	err := filepath.Walk(path, visitFile)
+	if err != nil {
+		report(err)
+	}
 }
 
 func visitFile(path string, f os.FileInfo, err error) error {
@@ -108,7 +110,7 @@ func processFile(filename string, in io.Reader, out io.Writer) error {
 		perm = fi.Mode().Perm()
 	}
 
-	src, err := ioutil.ReadAll(in)
+	src, err := io.ReadAll(in)
 	if err != nil {
 		return err
 	}
@@ -134,9 +136,9 @@ func processFile(filename string, in io.Reader, out io.Writer) error {
 			if err != nil {
 				return err
 			}
-			err = ioutil.WriteFile(filename, res, perm)
+			err = os.WriteFile(filename, res, perm)
 			if err != nil {
-				os.Rename(bakname, filename)
+				err = os.Rename(bakname, filename)
 				return err
 			}
 			err = os.Remove(bakname)
@@ -146,6 +148,9 @@ func processFile(filename string, in io.Reader, out io.Writer) error {
 		} else {
 			// just write to stdout
 			_, err = out.Write(res)
+			if err != nil {
+				return err
+			}
 		}
 	} else {
 		different, err := formatter.Diff(filename, bytes.NewReader(src), &resBuff)
@@ -157,7 +162,10 @@ func processFile(filename string, in io.Reader, out io.Writer) error {
 				fmt.Fprintln(out, filename)
 			}
 		} else if *doDiff {
-			out.Write(resBuff.Bytes())
+			_, err := out.Write(resBuff.Bytes())
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -172,7 +180,7 @@ const chmodSupported = runtime.GOOS != "windows"
 func backupFile(filename string, data []byte, perm os.FileMode) (string, error) {
 
 	// create backup file
-	f, err := ioutil.TempFile(filepath.Dir(filename), filepath.Base(filename))
+	f, err := os.CreateTemp(filepath.Dir(filename), filepath.Base(filename))
 	if err != nil {
 		return "", err
 	}

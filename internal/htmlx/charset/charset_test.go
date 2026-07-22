@@ -7,7 +7,8 @@ package charset
 import (
 	"bytes"
 	"encoding/xml"
-	"io/ioutil"
+	"io"
+	"os"
 	"runtime"
 	"strings"
 	"testing"
@@ -17,7 +18,7 @@ import (
 
 func transformString(t transform.Transformer, s string) (string, error) {
 	r := transform.NewReader(strings.NewReader(s), t)
-	b, err := ioutil.ReadAll(r)
+	b, err := io.ReadAll(r)
 	return string(b), err
 }
 
@@ -142,7 +143,7 @@ func TestSniff(t *testing.T) {
 	}
 
 	for _, tc := range sniffTestCases {
-		content, err := ioutil.ReadFile("testdata/" + tc.filename)
+		content, err := os.ReadFile("testdata/" + tc.filename)
 		if err != nil {
 			t.Errorf("%s: error reading file: %v", tc.filename, err)
 			continue
@@ -163,7 +164,7 @@ func TestReader(t *testing.T) {
 	}
 
 	for _, tc := range sniffTestCases {
-		content, err := ioutil.ReadFile("testdata/" + tc.filename)
+		content, err := os.ReadFile("testdata/" + tc.filename)
 		if err != nil {
 			t.Errorf("%s: error reading file: %v", tc.filename, err)
 			continue
@@ -175,14 +176,14 @@ func TestReader(t *testing.T) {
 			continue
 		}
 
-		got, err := ioutil.ReadAll(r)
+		got, err := io.ReadAll(r)
 		if err != nil {
 			t.Errorf("%s: error reading from charset.NewReader: %v", tc.filename, err)
 			continue
 		}
 
 		e, _ := Lookup(tc.want)
-		want, err := ioutil.ReadAll(transform.NewReader(bytes.NewReader(content), e.NewDecoder()))
+		want, err := io.ReadAll(transform.NewReader(bytes.NewReader(content), e.NewDecoder()))
 		if err != nil {
 			t.Errorf("%s: error decoding with hard-coded charset name: %v", tc.filename, err)
 			continue

@@ -1,0 +1,6 @@
+main_wasm.go
+main.wasm
+go.sum
+wasm_exec.js
+index.html
+*_vgen.go
