@@ -7,7 +7,6 @@ import (
 	"io"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"sort"
 	"strings"
 	"unicode"
@@ -23,7 +22,6 @@ type ParserGo struct {
 	StructType  string // just the struct name, no "*" (replaces ComponentType and DataType)
 	// ComponentType string // just the struct name, no "*"
 	// DataType      string // just the struct name, no "*"
-	OutDir  string // output dir
 	OutFile string // output file name with ".go" suffix
 
 	NoOptimizeStatic bool // set to true to disable optimization of static blocks of HTML into vg-html expressions
@@ -76,6 +74,7 @@ func (p *ParserGo) Parse(r io.Reader, fname string) error {
 
 	inRaw, err := io.ReadAll(r)
 	if err != nil {
+		fmt.Printf("ReadAll filename: %s, Error: %s\n", fname, err)
 		return err
 	}
 
@@ -85,6 +84,8 @@ func (p *ParserGo) Parse(r io.Reader, fname string) error {
 	for {
 		tt := tmpZ.Next()
 		if tt == html.ErrorToken {
+			fmt.Printf("Tokenizer called with: \n%s\n", inRaw)
+			fmt.Printf("tmpZ token error: %s\n", tmpZ.Err())
 			return tmpZ.Err()
 		}
 		if tt != html.StartTagToken { // skip over non-tags
@@ -104,6 +105,7 @@ func (p *ParserGo) Parse(r io.Reader, fname string) error {
 
 		n, err := html.Parse(bytes.NewReader(inRaw))
 		if err != nil {
+			fmt.Printf("html.Parse error: %s\n", err)
 			return err
 		}
 		state.docNodeList = append(state.docNodeList, n) // docNodeList is just this one item
@@ -116,6 +118,7 @@ func (p *ParserGo) Parse(r io.Reader, fname string) error {
 			Data:     "div",
 		})
 		if err != nil {
+			fmt.Printf("html.ParseFragment error %s\n", err)
 			return err
 		}
 
@@ -136,6 +139,7 @@ func (p *ParserGo) Parse(r io.Reader, fname string) error {
 		for _, n := range state.docNodeList {
 			err = compactNodeTree(n)
 			if err != nil {
+				fmt.Printf("compact node tree error: %s\n", err)
 				return err
 			}
 		}
@@ -153,6 +157,7 @@ func (p *ParserGo) Parse(r io.Reader, fname string) error {
 
 	err = p.visitOverall(state)
 	if err != nil {
+		fmt.Printf("visitOverall error: %s\n", err)
 		return err
 	}
 
@@ -162,11 +167,11 @@ func (p *ParserGo) Parse(r io.Reader, fname string) error {
 	buf.Write(state.buildBuf.Bytes())
 	buf.Write(state.goBufBottom.Bytes())
 
-	outPath := filepath.Join(p.OutDir, p.OutFile)
+	outPath := p.OutFile
 
 	fo, err := gofmt(buf.String())
 	if err != nil {
-
+		fmt.Printf("GO FMT ERRORS WITH %s\n", err)
 		// if the gofmt errors, we still attempt to write out the non-fmt'ed output to the file, to assist in debugging
 		_ = os.WriteFile(outPath, buf.Bytes(), 0644)
 
@@ -177,16 +182,19 @@ func (p *ParserGo) Parse(r io.Reader, fname string) error {
 	var dedupedBuf bytes.Buffer
 	err = dedupImports(bytes.NewReader([]byte(fo)), &dedupedBuf, p.OutFile)
 	if err != nil {
+		fmt.Printf("failed to dedup: %s\n", err)
 		return err
 	}
 
 	// write to final output file
 	err = os.WriteFile(outPath, dedupedBuf.Bytes(), 0644)
 	if err != nil {
+		fmt.Printf("failed to write file: %s Error: %s\n", outPath, err)
 		return err
 	}
 	err = removeRedundantDefinitions(outPath)
 	if err != nil {
+		fmt.Printf("removeRedundantDefinitions error: %s\n", err)
 		return err
 	}
 	return nil

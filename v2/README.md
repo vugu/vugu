@@ -24,14 +24,15 @@ The list of changes are:
 - [x] Delete the `vgfrom` package and wasm test `test-020-vgform`
 - [x] Delete the `vuggen` command. Use `vugu gen` instead.
 - [x] Stop the `vugu gen` creating a `main_wasm.go`. This is a behaviour breaking change. Use `vugu init` to create the initial `main_wasm.go`.
-- [x] remove the `js` package by splitting the `VGNode` type. This removes the need to maintain a pseudo `syscall/js` type package for vugu.
-- [x] remove the unused `internal/htmlx` package
-- [x] remove mentions of the `legacytestsuite` from the magefiles
-- [x] remove any support of building the generated code with `tinygo`. This removes the `--tinygo` option from `vugu gen`
-- [ ] remove support for `<script "application/x-go">` tags in the `*.vugu` files. Use a proper component instead
-- [x] remove auto generating a `0_missing_gen.go` file that contains "missing" Go structs i.e. vugu components. This is unnecessary. ***This is a breaking change***
-- [x] remove support for producing a single merged file with all components. This removes the `-s` option from `vugu gen`
-- [x] remove support for the `--skip-go-mod` option from `vugu gen`.
+- [x] Remove the `js` package by splitting the `VGNode` type. This removes the need to maintain a pseudo `syscall/js` type package for vugu.
+- [x] Remove the unused `internal/htmlx` package
+- [x] Remove mentions of the `legacytestsuite` from the magefiles
+- [x] Remove any support of building the generated code with `tinygo`. This removes the `--tinygo` option from `vugu gen`
+- [ ] Remove support for `<script "application/x-go">` tags in the `*.vugu` files. Use a proper component instead
+- [x] Remove auto generating a `0_missing_gen.go` file that contains "missing" Go structs i.e. vugu components. This is unnecessary. ***This is a breaking change***
+- [x] Remove support for producing a single merged file with all components. This removes the `-s` option from `vugu gen`
+- [x] Remove support for the `--skip-go-mod` option from `vugu gen`.
+- [x] Completely rewrite `gen/parser-go-pkg.go` and associated tests to simplify the code. Flow changes into the `vugu gen` command. This removes the recursive `-r` switch from `vugu gen`. ***This is a breaking change***. `vugu gen` will now (re)generate a `*_gen_js_was,.go` file for every pair of `component.go` and `component.vugu` files that it finds, starting from the current directory.
 
 The original v0.y.z Readme follows.
 

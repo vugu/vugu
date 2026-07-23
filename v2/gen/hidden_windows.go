@@ -3,11 +3,14 @@
 package gen
 
 import (
+	"path/filepath"
 	"syscall"
 )
 
 func isHidden(filename string) (bool, error) {
-	pointer, err := syscall.UTF16PtrFromString(filename)
+	// strip any path so we just look at the base filename (including any extension)
+	base := filepath.Base(filename)
+	pointer, err := syscall.UTF16PtrFromString(base)
 	if err != nil {
 		return false, err
 	}

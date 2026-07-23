@@ -52,17 +52,9 @@ func main() {
 			{
 				Name:      "gen",
 				Aliases:   []string{"g"},
-				Usage:     "Generate the Go code from the .vugu files in the directory",
+				Usage:     "Recursively generate the Go code from all of the .vugu files rooted in this directory",
 				ArgsUsage: "[OPTIONS] DIRECTORY",
-				Flags: []cli.Flag{
-					&cli.BoolFlag{
-						Name:        "r",
-						Value:       false,
-						Usage:       "Run recursively on specified path and subdirectories.",
-						Destination: &gen.Recursive,
-					},
-				},
-				Action: gen.Gen,
+				Action:    gen.Gen,
 			},
 			{
 				Name:      "init",

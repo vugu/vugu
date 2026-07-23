@@ -2,7 +2,7 @@ module github.com/vugu/vugu/v2/examples/vg-for
 
 replace github.com/vugu/vugu/v2 => ../..
 
-go 1.23
+go 1.25.0
 
 require (
 	github.com/vugu/vjson v0.0.0-20200505061711-f9cbed27d3d9

@@ -2,7 +2,7 @@ module github.com/vugu/vugu/v2/examples/embed-and-translate
 
 replace github.com/vugu/vugu/v2 => ../..
 
-go 1.22.3
+go 1.25.0
 
 require (
 	github.com/nicksnyder/go-i18n/v2 v2.5.1

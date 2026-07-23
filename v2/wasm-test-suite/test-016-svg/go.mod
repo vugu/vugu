@@ -1,8 +1,6 @@
 module github.com/vugu/vugu/v2/wasm-test-suite/test-016-svg
 
-go 1.23
-
-toolchain go1.23.5
+go 1.25.0
 
 replace github.com/vugu/vugu/v2 => ../..
 
