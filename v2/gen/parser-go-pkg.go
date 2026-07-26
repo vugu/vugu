@@ -4,181 +4,126 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"go/ast"
 	"go/parser"
 	"go/token"
+	"io/fs"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 )
 
-// ParserGoPkg knows how to perform source file generation in relation to a package folder.
-// Whereas ParserGo handles converting a single template, ParserGoPkg is a higher level interface
-// and provides the functionality of the vugu gen command line tool.  It will scan a package
-// folder for .vugu files and convert them to .go, with the appropriate defaults and logic.
-type ParserGoPkg struct {
-	pkgPath string
+const vuguExt = ".vugu"
+const goExt = ".go"
+const genExt = "_gen_js_wasm.go"
+
+// A ErrNoComponentGoFile error is returned when the corresponding <component>.go file cannot be found in the same directory
+// as the <component>.vugu file.
+var ErrNoComponentGoFile = errors.New("no corresponding go file found")
+
+// A ErrCouldNotParseVuguFile is returned when the <component>.vugu file cannot be parsed for any reason
+var ErrCouldNotParseVuguFile = errors.New("could not parse .vugu file")
+
+// A ErrCouldNotDeterminePackage is returned when the <component.go> file has been found but does not contain a valid package statement.
+var ErrCouldNotDeterminePackage = errors.New("could not determine package from .go file")
+
+// Generate will recursively turn each <component>.vugu file it finds into it's corresponding <component>_gen_js_wasm.go file
+// starting from the directory supplied in the pkgPath parameter. Generate expects to find a <component>.go file in the same directory as the
+// <component>.vugu file, and will place the <component>_gen_js_wasm.go file in the same directory.
+//
+// Any errors in this process are returned.
+// If no vugu files are found no changes will be made. This is not considered an error condition.
+//
+// Generate will return any error returned by walkFunc.
+// If a <component>.go file cannot be found [ErrNoComponentGoFile] will be returned
+// If a <component>.vugu file cannot be parsed successfully [ErrCouldNotParseVuguFile] will be returned
+// If the package cannot be determined from the <component>.go ErrCouldNotDeterminePackage will be returned.
+// Any other error i.e. [os.PathError] comes from the underlying OS.
+func Generate(pkgPath string) error {
+	return filepath.WalkDir(pkgPath, walkFunc)
 }
 
-var errNoVuguFile = errors.New("no .vugu file(s) found")
-
-// RunRecursive will create a new ParserGoPkg and call Run on it recursively for each
-// directory under pkgPath. If pkgPath does not contain a .vugu file this function will return an error.
-func RunRecursive(pkgPath string) error {
-
-	dirf, err := os.Open(pkgPath)
+// walkFunc is called by [Generate] for each file starting
+// As per [fs.WalkDirFunc] path is the full path filename (inc. directory(s) and file extension if any)
+func walkFunc(path string, d fs.DirEntry, err error) error {
+	// As per [fs.WalkDirFunc] walkFunc is called, with an error it is treated as a fatal error
 	if err != nil {
-		return err
+		return fmt.Errorf("could not read directory: %w\n", err)
 	}
 
-	fis, err := dirf.ReadDir(-1) // -1 returns all file names in the directory
-	if err != nil {
-		return err
+	// check if we are called with a hidden file or directory
+	hidden, herr := isHidden(path)
+	if herr != nil {
+		return herr
 	}
-	hasVugu := false
-	var subDirList []string
-	for _, fi := range fis {
-		// add sub dirs to a list, if they are not hidden sub dirs - needs a windows version!
-		hidden, err := isHidden(fi.Name())
-		if err != nil {
-			return err
-		}
-		if fi.IsDir() && !hidden {
-			subDirList = append(subDirList, fi.Name())
-			continue
-		}
-		if filepath.Ext(fi.Name()) == ".vugu" {
-			hasVugu = true
-		}
+	// skip hidden directories completely
+	if d.IsDir() && hidden {
+		return fs.SkipDir
 	}
-	if !hasVugu {
-		return errNoVuguFile
+	// skip hidden files
+	if hidden {
+		return nil
 	}
-
-	err = Run(pkgPath)
-	if err != nil {
-		return err
-	}
-
-	for _, subDir := range subDirList {
-		subPath := filepath.Join(pkgPath, subDir)
-		err := RunRecursive(subPath)
-		if err == errNoVuguFile {
-			continue
+	// do we have a *.vugu file
+	if !d.IsDir() && filepath.Ext(path) == vuguExt {
+		// we do. Now we need to find a *.go file in the same place
+		filenameNoExt := strings.TrimSuffix(path, vuguExt)
+		goFilename := filenameNoExt + goExt
+		// stat it to check it exists
+		_, serr := os.Stat(goFilename)
+		if serr != nil {
+			return fmt.Errorf("%v: %w", path, ErrNoComponentGoFile)
 		}
-		if err != nil {
-			return err
+		// at this point we know the component.go file must exist this means ParseFile CANNOT fail because of a missing component.go file
+		// generate the *_gen_js_wasm.go" filename by parsing it
+		genFileName := filenameNoExt + genExt
+		perr := ParseFile(path, goFilename, genFileName)
+		if perr != nil {
+			return fmt.Errorf("%v: %w\n", path, perr)
 		}
 	}
-
 	return nil
 }
 
-// Run will create a new ParserGoPkg and call Run on it.
-func Run(pkgPath string) error {
-	p := NewParserGoPkg(pkgPath)
-	return p.Run()
-}
-
-// NewParserGoPkg returns a new ParserGoPkg with the specified options or default if nil.  The pkgPath is required and must be an absolute path.
-func NewParserGoPkg(pkgPath string) *ParserGoPkg {
-	ret := &ParserGoPkg{
-		pkgPath: pkgPath,
-	}
-	return ret
-}
-
-// Run does the work and generates the appropriate .go files from .vugu files.
-// if package already has file with package name something other than main).
+// Run does the work and generates the appropriate _gen_js_wasm.go files from .vugu files.
 // Per-file code generation is performed by ParserGo.
-func (p *ParserGoPkg) Run() error {
-
-	pkgF, err := os.Open(p.pkgPath)
+func ParseFile(vuguFilename, goFilename, genFilename string) error {
+	// read the package name form the corresponding .go file
+	// the .go file already exists because [walkFunc] stat'd it
+	pkgName, err := findPackage(goFilename)
 	if err != nil {
-		return err
+		return fmt.Errorf("%w: %w", ErrCouldNotDeterminePackage, err)
 	}
-	defer pkgF.Close()
 
-	allFileNames, err := pkgF.Readdirnames(-1)
+	compTypeName := fnameToGoTypeName(filepath.Base(vuguFilename))
+
+	pg := &ParserGo{}
+
+	pg.PackageName = pkgName
+	// pg.ComponentType = compTypeName
+	pg.StructType = compTypeName
+	// pg.DataType = pg.ComponentType + "Data"
+	pg.OutFile = genFilename
+
+	// read in source vugu file
+	b, err := os.ReadFile(vuguFilename)
 	if err != nil {
-		return err
-	}
-
-	var vuguFileNames []string
-	for _, fn := range allFileNames {
-		if filepath.Ext(fn) == ".vugu" {
-			vuguFileNames = append(vuguFileNames, fn)
-		}
-	}
-
-	if len(vuguFileNames) == 0 {
-		return fmt.Errorf("no .vugu files found, please create one and try again")
-	}
-
-	pkgName := goGuessPkgName(p.pkgPath)
-
-	namesToCheck := []string{"main"}
-
-	goFnameAppend := "_gen_js_wasm"
-
-	var mergeFiles []string
-
-	missingFmap := make(map[string]string, len(vuguFileNames))
-
-	// run ParserGo on each file to generate the .go files
-	for _, fn := range vuguFileNames {
-
-		baseFileName := strings.TrimSuffix(fn, ".vugu")
-		goFileName := baseFileName + goFnameAppend + ".go"
-		compTypeName := fnameToGoTypeName(baseFileName)
-
-		// keep track of which files to scan for missing structs
-		missingFmap[fn] = goFileName
-
-		mergeFiles = append(mergeFiles, goFileName)
-
-		pg := &ParserGo{}
-
-		pg.PackageName = pkgName
-		// pg.ComponentType = compTypeName
-		pg.StructType = compTypeName
-		// pg.DataType = pg.ComponentType + "Data"
-		pg.OutDir = p.pkgPath
-		pg.OutFile = goFileName
-
-		// add to our list of names to check after
-		namesToCheck = append(namesToCheck, pg.StructType)
-		// namesToCheck = append(namesToCheck, pg.ComponentType+".NewData")
-		// namesToCheck = append(namesToCheck, pg.DataType)
-		namesToCheck = append(namesToCheck, "vuguSetup")
-
-		// read in source
-		b, err := os.ReadFile(filepath.Join(p.pkgPath, fn))
-		if err != nil {
-			return err
-		}
-
-		// parse it
-		err = pg.Parse(bytes.NewReader(b), fn)
-		if err != nil {
-			return fmt.Errorf("error parsing %q: %v", fn, err)
-		}
-
-	}
-
-	// after the code generation is done, check the package for the various names in question to see
-	// what we need to generate
-	_, err = goPkgCheckNames(p.pkgPath, namesToCheck)
-	if err != nil {
+		fmt.Printf("ParserGoPkg.Run ReadFile error: %s\n", err)
 		return err
 	}
 
-	return nil
-
+	// parse the vugu file
+	err = pg.Parse(bytes.NewReader(b), vuguFilename)
+	if err != nil {
+		fmt.Printf("Parse returned: %v\n", err)
+		return fmt.Errorf("%w: %w\n", ErrCouldNotParseVuguFile, err)
+	}
+	return err
 }
 
 func fnameToGoTypeName(s string) string {
+	// Careful: this is making an assumption that we only take the portion of the filename up to the first period.
+	// so file.name.vugu will turn into a Go struct name of "File"
+	// This probally needs to be made clear in any docs.
 	s = strings.Split(s, ".")[0] // remove file extension if present
 	parts := strings.Split(s, "-")
 	for i := range parts {
@@ -191,139 +136,19 @@ func fnameToGoTypeName(s string) string {
 	return strings.Join(parts, "")
 }
 
-func goGuessPkgName(pkgPath string) (ret string) {
+func findPackage(goFile string) (string, error) {
+	// the *.vugu and the *.go should exist in the same directory. [walkFunc] will have confirmed the later already.
+	// The *.go contains the package name in the package statement, so use the Go ast to parse it out.
+	fset := token.NewFileSet() // positions are relative to fset
 
-	// defer func() { log.Printf("goGuessPkgName returning %q", ret) }()
-
-	// see if the package already has a name and use it if so
-	fset := token.NewFileSet()
-	pkgs, err := parser.ParseDir(fset, pkgPath, nil, parser.PackageClauseOnly) // just get the package name
+	// Parse src but stop after processing the imports.
+	// As per the [parser.ParseFile] docs, we will never see the case where f is nil and err is not nil because
+	// we know for sure that the goFile exists already. This means that any error returned by [parser.ParseFile]
+	// must relate to a syntax error (and by implication f will be non nil).
+	f, err := parser.ParseFile(fset, goFile, nil, parser.PackageClauseOnly|parser.SkipObjectResolution)
 	if err != nil {
-		goto checkMore
-	}
-	if len(pkgs) != 1 {
-		goto checkMore
-	}
-	{
-		var pkg *ast.Package //nolint:staticcheck // ast.Package is deprecated as of Go 1.23
-		for _, pkg1 := range pkgs {
-			pkg = pkg1
-		}
-		return pkg.Name
+		return "", err
 	}
 
-checkMore:
-
-	// check for a root.vugu file, in which case we assume "main"
-	_, err = os.Stat(filepath.Join(pkgPath, "root.vugu"))
-	if err == nil {
-		return "main"
-	}
-
-	// otherwise we use the name of the folder...
-	dirBase := filepath.Base(pkgPath)
-	if regexp.MustCompile(`^[a-z0-9]+$`).MatchString(dirBase) {
-		return dirBase
-	}
-
-	// ...unless it makes no sense in which case we use "main"
-
-	return "main"
-
-}
-
-// goPkgCheckNames parses a package dir and looks for names, returning a map of what was
-// found.  Names like "A.B" mean a method of name "B" with receiver of type "*A"
-func goPkgCheckNames(pkgPath string, names []string) (map[string]any, error) {
-
-	ret := make(map[string]any)
-
-	fset := token.NewFileSet()
-	pkgs, err := parser.ParseDir(fset, pkgPath, nil, 0)
-	if err != nil {
-		return ret, err
-	}
-
-	if len(pkgs) != 1 {
-		return ret, fmt.Errorf("unexpected package count after parsing, expected 1 and got this: %#v", pkgs)
-	}
-	var pkg *ast.Package //nolint:staticcheck // ast.Package is deprecated as of Go 1.23
-	for _, pkg1 := range pkgs {
-		pkg = pkg1
-	}
-
-	for _, file := range pkg.Files {
-
-		if file.Scope != nil {
-			for _, n := range names {
-				if v, ok := file.Scope.Objects[n]; ok {
-					ret[n] = v
-				}
-			}
-		}
-
-		// log.Printf("file: %#v", file)
-		// log.Printf("file.Scope.Objects: %#v", file.Scope.Objects)
-		// log.Printf("next: %#v", file.Scope.Objects["Example1"])
-		// e1 := file.Scope.Objects["Example1"]
-		// if e1.Kind == ast.Typ {
-		// e1.Decl
-		// }
-		for _, d := range file.Decls {
-			if fd, ok := d.(*ast.FuncDecl); ok {
-
-				var drecv, dmethod string
-				if fd.Recv != nil {
-					for _, f := range fd.Recv.List {
-						// log.Printf("f.Type: %#v", f.Type)
-						if tstar, ok := f.Type.(*ast.StarExpr); ok {
-							// log.Printf("tstar.X: %#v", tstar.X)
-							if tstarXi, ok := tstar.X.(*ast.Ident); ok && tstarXi != nil {
-								// log.Printf("namenamenamename: %#v", tstarXi.Name)
-								drecv = tstarXi.Name
-							}
-						}
-						// log.Printf("f.Names: %#v", f.Names)
-						// for _, fn := range f.Names {
-						// 	if fn != nil {
-						// 		log.Printf("NAMENAME: %#v", fn.Name)
-						// 		if fni, ok := fn.Name.(*ast.Ident); ok && fni != nil {
-						// 		}
-						// 	}
-						// }
-
-					}
-				} else {
-					continue // don't care methods with no receiver - found them already above as single (no period) names
-				}
-
-				// log.Printf("fd.Name: %#v", fd.Name)
-				if fd.Name != nil {
-					dmethod = fd.Name.Name
-				}
-
-				for _, n := range names {
-					recv, method := nameParts(n)
-					if drecv == recv && dmethod == method {
-						ret[n] = d
-					}
-				}
-			}
-		}
-	}
-	// log.Printf("Objects: %#v", pkg.Scope.Objects)
-
-	return ret, nil
-}
-
-func nameParts(n string) (recv, method string) {
-
-	ret := strings.SplitN(n, ".", 2)
-	if len(ret) < 2 {
-		method = n
-		return
-	}
-	recv = ret[0]
-	method = ret[1]
-	return
+	return f.Name.Name, nil
 }

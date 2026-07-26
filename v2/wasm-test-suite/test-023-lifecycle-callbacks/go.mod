@@ -1,8 +1,6 @@
 module github.com/vugu/vugu/v2/wasm-test-suite/test-023-lifecycle-callbacks
 
-go 1.23
-
-toolchain go1.23.5
+go 1.25.0
 
 replace github.com/vugu/vugu/v2 => ../..
 

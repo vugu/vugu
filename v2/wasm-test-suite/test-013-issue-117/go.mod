@@ -2,9 +2,7 @@ module github.com/vugu/vugu/v2/wasm-test-suite/test-013-issue-117
 
 replace github.com/vugu/vugu/v2 => ../..
 
-go 1.23
-
-toolchain go1.23.5
+go 1.25.0
 
 require (
 	github.com/chromedp/chromedp v0.12.1
