@@ -43,6 +43,9 @@ type Root struct {
 	if !bytes.Contains(b, []byte(`func (c *Root) Build`)) {
 		t.Errorf("failed to find Build method signature")
 	}
+	if !t.Failed() {
+		os.RemoveAll(tmpDir)
+	}
 }
 
 func TestRun(t *testing.T) {
@@ -192,7 +195,7 @@ func TestMissingComponentGoFile(t *testing.T) {
 	for _, tc := range tcList {
 		t.Run(tc.name, func(t *testing.T) {
 
-			tmpDir, err := os.MkdirTemp("", "TestRun")
+			tmpDir, err := os.MkdirTemp("", "TestMissingComponentGoFile")
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -248,7 +251,7 @@ func TestParserErrors(t *testing.T) {
 	for _, tc := range tcList {
 		t.Run(tc.name, func(t *testing.T) {
 
-			tmpDir, err := os.MkdirTemp("", "TestRun")
+			tmpDir, err := os.MkdirTemp("", "TestParserErrors")
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -281,14 +284,11 @@ func tstWriteFiles(dir string, m map[string]string) {
 		p := filepath.Join(dir, name)
 		err := os.MkdirAll(filepath.Dir(p), 0755)
 		if err != nil {
-			fmt.Printf("BEFORE PANIC new dir: %s\n", p)
 			panic(err)
 		}
 		err = os.WriteFile(p, []byte(contents), 0644)
 		if err != nil {
-			fmt.Printf("BEFORE PANIC new file %s contents %s\n", p, contents)
 			panic(err)
 		}
 	}
-
 }
