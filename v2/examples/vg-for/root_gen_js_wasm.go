@@ -20,20 +20,20 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 	_ = vgiterkey
 	var vgn *vugu.VGNode
 	vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute(nil)}}
-	vgout.Out = append(vgout.Out, vgn)	// root for output
+	vgout.Out = append(vgout.Out, vgn) // root for output
 	{
 		vgparent := vgn
 		_ = vgparent
 		vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n    "}}
 		vgparent.AppendChild(vgn)
-		vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "main", Attr: []vugu.VGAttribute{{Namespace: "", Key: "role", Val: "main"}, vugu.VGAttribute{Namespace: "", Key: "class", Val: "container text-center"}}}}
+		vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "main", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "role", Val: "main"}, vugu.VGAttribute{Namespace: "", Key: "class", Val: "container text-center"}}}}
 		vgparent.AppendChild(vgn)
 		{
 			vgparent := vgn
 			_ = vgparent
 			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n        "}}
 			vgparent.AppendChild(vgn)
-			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute{{Namespace: "", Key: "class", Val: "mt-5"}}}}
+			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "class", Val: "mt-5"}}}}
 			vgparent.AppendChild(vgn)
 			{
 				vgparent := vgn
@@ -60,8 +60,8 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 				vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "button", Attr: []vugu.VGAttribute(nil)}}
 				vgparent.AppendChild(vgn)
 				vgn.DOMEventHandlerSpecList = append(vgn.DOMEventHandlerSpecList, vugu.DOMEventHandlerSpec{
-					EventType:	"click",
-					Func:		func(event vugu.DOMEvent) { c.ToggleForILoop() },
+					EventType: "click",
+					Func:      func(event vugu.DOMEvent) { c.ToggleForILoop() },
 					// TODO: implement capture, etc. mostly need to decide syntax
 				})
 				{
@@ -75,8 +75,8 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 				vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "button", Attr: []vugu.VGAttribute(nil)}}
 				vgparent.AppendChild(vgn)
 				vgn.DOMEventHandlerSpecList = append(vgn.DOMEventHandlerSpecList, vugu.DOMEventHandlerSpec{
-					EventType:	"click",
-					Func:		func(event vugu.DOMEvent) { c.ToggleKVLoop() },
+					EventType: "click",
+					Func:      func(event vugu.DOMEvent) { c.ToggleKVLoop() },
 					// TODO: implement capture, etc. mostly need to decide syntax
 				})
 				{
@@ -90,8 +90,8 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 				vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "button", Attr: []vugu.VGAttribute(nil)}}
 				vgparent.AppendChild(vgn)
 				vgn.DOMEventHandlerSpecList = append(vgn.DOMEventHandlerSpecList, vugu.DOMEventHandlerSpec{
-					EventType:	"click",
-					Func:		func(event vugu.DOMEvent) { c.ToggleShortCutLoop() },
+					EventType: "click",
+					Func:      func(event vugu.DOMEvent) { c.ToggleShortCutLoop() },
 					// TODO: implement capture, etc. mostly need to decide syntax
 				})
 				{
@@ -105,8 +105,8 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 				vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "button", Attr: []vugu.VGAttribute(nil)}}
 				vgparent.AppendChild(vgn)
 				vgn.DOMEventHandlerSpecList = append(vgn.DOMEventHandlerSpecList, vugu.DOMEventHandlerSpec{
-					EventType:	"click",
-					Func:		func(event vugu.DOMEvent) { c.ToggleSortedLoop() },
+					EventType: "click",
+					Func:      func(event vugu.DOMEvent) { c.ToggleSortedLoop() },
 					// TODO: implement capture, etc. mostly need to decide syntax
 				})
 				{
@@ -120,8 +120,8 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 				vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "button", Attr: []vugu.VGAttribute(nil)}}
 				vgparent.AppendChild(vgn)
 				vgn.DOMEventHandlerSpecList = append(vgn.DOMEventHandlerSpecList, vugu.DOMEventHandlerSpec{
-					EventType:	"click",
-					Func:		func(event vugu.DOMEvent) { c.ToggleIteratorLoop() },
+					EventType: "click",
+					Func:      func(event vugu.DOMEvent) { c.ToggleIteratorLoop() },
 					// TODO: implement capture, etc. mostly need to decide syntax
 				})
 				{
@@ -137,7 +137,7 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 				vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n                "}}
 				vgparent.AppendChild(vgn)
 				if c.ShowForILoop() {
-					vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute{{Namespace: "", Key: "id", Val: "for_i_loop"}}}}
+					vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "id", Val: "for_i_loop"}}}}
 					vgparent.AppendChild(vgn)
 					{
 						vgparent := vgn
@@ -198,7 +198,7 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 				vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n\n                "}}
 				vgparent.AppendChild(vgn)
 				if c.ShowKVLoop() {
-					vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute{{Namespace: "", Key: "id", Val: "for_kv_loop"}}}}
+					vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "id", Val: "for_kv_loop"}}}}
 					vgparent.AppendChild(vgn)
 					{
 						vgparent := vgn
@@ -265,7 +265,7 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 				vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n\n                "}}
 				vgparent.AppendChild(vgn)
 				if c.ShowShortCutLoop() {
-					vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute{{Namespace: "", Key: "id", Val: "for_shortcut_loop"}}}}
+					vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "id", Val: "for_shortcut_loop"}}}}
 					vgparent.AppendChild(vgn)
 					{
 						vgparent := vgn
@@ -351,7 +351,7 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 				vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n\n                "}}
 				vgparent.AppendChild(vgn)
 				if c.ShowSortedLoop() {
-					vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute{{Namespace: "", Key: "id", Val: "for_sorted_loop"}}}}
+					vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "id", Val: "for_sorted_loop"}}}}
 					vgparent.AppendChild(vgn)
 					{
 						vgparent := vgn
@@ -418,7 +418,7 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 				vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n\n                "}}
 				vgparent.AppendChild(vgn)
 				if c.ShowIteratorLoop() {
-					vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute{{Namespace: "", Key: "id", Val: "for_iterator_loop"}}}}
+					vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "id", Val: "for_iterator_loop"}}}}
 					vgparent.AppendChild(vgn)
 					{
 						vgparent := vgn

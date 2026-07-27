@@ -19,24 +19,24 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 	var vgiterkey interface{}
 	_ = vgiterkey
 	var vgn *vugu.VGNode
-	vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute{{Namespace: "", Key: "id", Val: "testdiv"}}}}
-	vgout.Out = append(vgout.Out, vgn)	// root for output
+	vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "id", Val: "testdiv"}}}}
+	vgout.Out = append(vgout.Out, vgn) // root for output
 	{
 		vgparent := vgn
 		_ = vgparent
 		vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n    "}}
 		vgparent.AppendChild(vgn)
-		vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute{{Namespace: "", Key: "id", Val: "t1"}}}}
+		vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "id", Val: "t1"}}}}
 		vgparent.AppendChild(vgn)
 		vgn.SetInnerHTML(vugu.HTML("This is a test."))
 		vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n    "}}
 		vgparent.AppendChild(vgn)
-		vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "button", Attr: []vugu.VGAttribute{{Namespace: "", Key: "id", Val: "run1"}}}}
+		vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "button", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "id", Val: "run1"}}}}
 		vgparent.AppendChild(vgn)
 		vgn.AddAttrInterface("data-whatever", c.Something)
 		vgn.DOMEventHandlerSpecList = append(vgn.DOMEventHandlerSpecList, vugu.DOMEventHandlerSpec{
-			EventType:	"click",
-			Func:		func(event vugu.DOMEvent) { c.OnClickRun(event, 2) },
+			EventType: "click",
+			Func:      func(event vugu.DOMEvent) { c.OnClickRun(event, 2) },
 			// TODO: implement capture, etc. mostly need to decide syntax
 		})
 		{
@@ -48,7 +48,7 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 		vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n    "}}
 		vgparent.AppendChild(vgn)
 		if c.Success {
-			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute{{Namespace: "", Key: "id", Val: "success"}}}}
+			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "id", Val: "success"}}}}
 			vgparent.AppendChild(vgn)
 			{
 				vgparent := vgn

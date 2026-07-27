@@ -19,33 +19,33 @@ func (c *Create) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 	var vgiterkey interface{}
 	_ = vgiterkey
 	var vgn *vugu.VGNode
-	vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "section", Attr: []vugu.VGAttribute{{Namespace: "", Key: "class", Val: "section"}}}}
-	vgout.Out = append(vgout.Out, vgn)	// root for output
+	vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "section", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "class", Val: "section"}}}}
+	vgout.Out = append(vgout.Out, vgn) // root for output
 	{
 		vgparent := vgn
 		_ = vgparent
 		vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n    "}}
 		vgparent.AppendChild(vgn)
-		vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute{{Namespace: "", Key: "class", Val: "container"}}}}
+		vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "class", Val: "container"}}}}
 		vgparent.AppendChild(vgn)
 		{
 			vgparent := vgn
 			_ = vgparent
 			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n        "}}
 			vgparent.AppendChild(vgn)
-			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "h1", Attr: []vugu.VGAttribute{{Namespace: "", Key: "class", Val: "title"}}}}
+			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "h1", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "class", Val: "title"}}}}
 			vgparent.AppendChild(vgn)
 			vgn.SetInnerHTML(vugu.HTML("Create a new product"))
 			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n        "}}
 			vgparent.AppendChild(vgn)
-			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute{{Namespace: "", Key: "id", Val: "content"}}}}
+			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "id", Val: "content"}}}}
 			vgparent.AppendChild(vgn)
 			{
 				vgparent := vgn
 				_ = vgparent
 				vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n            "}}
 				vgparent.AppendChild(vgn)
-				vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "form", Attr: []vugu.VGAttribute{{Namespace: "", Key: "id", Val: "myform"}}}}
+				vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "form", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "id", Val: "myform"}}}}
 				vgparent.AppendChild(vgn)
 				{
 					vgparent := vgn

@@ -20,20 +20,20 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 	_ = vgiterkey
 	var vgn *vugu.VGNode
 	vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute(nil)}}
-	vgout.Out = append(vgout.Out, vgn)	// root for output
+	vgout.Out = append(vgout.Out, vgn) // root for output
 	{
 		vgparent := vgn
 		_ = vgparent
 		vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n    "}}
 		vgparent.AppendChild(vgn)
-		vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "main", Attr: []vugu.VGAttribute{{Namespace: "", Key: "role", Val: "main"}, vugu.VGAttribute{Namespace: "", Key: "class", Val: "container text-center"}}}}
+		vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "main", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "role", Val: "main"}, vugu.VGAttribute{Namespace: "", Key: "class", Val: "container text-center"}}}}
 		vgparent.AppendChild(vgn)
 		{
 			vgparent := vgn
 			_ = vgparent
 			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n        "}}
 			vgparent.AppendChild(vgn)
-			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute{{Namespace: "", Key: "class", Val: "mt-5"}}}}
+			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "class", Val: "mt-5"}}}}
 			vgparent.AppendChild(vgn)
 			{
 				vgparent := vgn
@@ -86,7 +86,7 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 				}
 				vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n            "}}
 				vgparent.AppendChild(vgn)
-				vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute{{Namespace: "", Key: "id", Val: "radioboxes"}}}}
+				vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "id", Val: "radioboxes"}}}}
 				vgparent.AppendChild(vgn)
 				{
 					vgparent := vgn
@@ -98,16 +98,16 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 					vgn.SetInnerHTML(vugu.HTML("Select a language:"))
 					vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n                "}}
 					vgparent.AppendChild(vgn)
-					vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "input", Attr: []vugu.VGAttribute{{Namespace: "", Key: "type", Val: "radio"}, vugu.VGAttribute{Namespace: "", Key: "id", Val: "english"}, vugu.VGAttribute{Namespace: "", Key: "name", Val: "language"}, vugu.VGAttribute{Namespace: "", Key: "value", Val: "English"}, vugu.VGAttribute{Namespace: "", Key: "checked", Val: "checked"}}}}
+					vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "input", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "type", Val: "radio"}, vugu.VGAttribute{Namespace: "", Key: "id", Val: "english"}, vugu.VGAttribute{Namespace: "", Key: "name", Val: "language"}, vugu.VGAttribute{Namespace: "", Key: "value", Val: "English"}, vugu.VGAttribute{Namespace: "", Key: "checked", Val: "checked"}}}}
 					vgparent.AppendChild(vgn)
 					vgn.DOMEventHandlerSpecList = append(vgn.DOMEventHandlerSpecList, vugu.DOMEventHandlerSpec{
-						EventType:	"change",
-						Func:		func(event vugu.DOMEvent) { c.Change(event) },
+						EventType: "change",
+						Func:      func(event vugu.DOMEvent) { c.Change(event) },
 						// TODO: implement capture, etc. mostly need to decide syntax
 					})
 					vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n                "}}
 					vgparent.AppendChild(vgn)
-					vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "label", Attr: []vugu.VGAttribute{{Namespace: "", Key: "for", Val: "english"}}}}
+					vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "label", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "for", Val: "english"}}}}
 					vgparent.AppendChild(vgn)
 					vgn.SetInnerHTML(vugu.HTML("English"))
 					vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "br", Attr: []vugu.VGAttribute(nil)}}
@@ -115,16 +115,16 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 					vgn.SetInnerHTML(vugu.HTML(""))
 					vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n                "}}
 					vgparent.AppendChild(vgn)
-					vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "input", Attr: []vugu.VGAttribute{{Namespace: "", Key: "type", Val: "radio"}, vugu.VGAttribute{Namespace: "", Key: "id", Val: "french"}, vugu.VGAttribute{Namespace: "", Key: "name", Val: "language"}, vugu.VGAttribute{Namespace: "", Key: "value", Val: "Français"}}}}
+					vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "input", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "type", Val: "radio"}, vugu.VGAttribute{Namespace: "", Key: "id", Val: "french"}, vugu.VGAttribute{Namespace: "", Key: "name", Val: "language"}, vugu.VGAttribute{Namespace: "", Key: "value", Val: "Français"}}}}
 					vgparent.AppendChild(vgn)
 					vgn.DOMEventHandlerSpecList = append(vgn.DOMEventHandlerSpecList, vugu.DOMEventHandlerSpec{
-						EventType:	"change",
-						Func:		func(event vugu.DOMEvent) { c.Change(event) },
+						EventType: "change",
+						Func:      func(event vugu.DOMEvent) { c.Change(event) },
 						// TODO: implement capture, etc. mostly need to decide syntax
 					})
 					vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n                "}}
 					vgparent.AppendChild(vgn)
-					vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "label", Attr: []vugu.VGAttribute{{Namespace: "", Key: "for", Val: "french"}}}}
+					vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "label", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "for", Val: "french"}}}}
 					vgparent.AppendChild(vgn)
 					vgn.SetInnerHTML(vugu.HTML("Français"))
 					vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "br", Attr: []vugu.VGAttribute(nil)}}
@@ -132,16 +132,16 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 					vgn.SetInnerHTML(vugu.HTML(""))
 					vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n                "}}
 					vgparent.AppendChild(vgn)
-					vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "input", Attr: []vugu.VGAttribute{{Namespace: "", Key: "type", Val: "radio"}, vugu.VGAttribute{Namespace: "", Key: "id", Val: "italian"}, vugu.VGAttribute{Namespace: "", Key: "name", Val: "language"}, vugu.VGAttribute{Namespace: "", Key: "value", Val: "Italiano"}}}}
+					vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "input", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "type", Val: "radio"}, vugu.VGAttribute{Namespace: "", Key: "id", Val: "italian"}, vugu.VGAttribute{Namespace: "", Key: "name", Val: "language"}, vugu.VGAttribute{Namespace: "", Key: "value", Val: "Italiano"}}}}
 					vgparent.AppendChild(vgn)
 					vgn.DOMEventHandlerSpecList = append(vgn.DOMEventHandlerSpecList, vugu.DOMEventHandlerSpec{
-						EventType:	"change",
-						Func:		func(event vugu.DOMEvent) { c.Change(event) },
+						EventType: "change",
+						Func:      func(event vugu.DOMEvent) { c.Change(event) },
 						// TODO: implement capture, etc. mostly need to decide syntax
 					})
 					vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n                "}}
 					vgparent.AppendChild(vgn)
-					vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "label", Attr: []vugu.VGAttribute{{Namespace: "", Key: "for", Val: "italian"}}}}
+					vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "label", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "for", Val: "italian"}}}}
 					vgparent.AppendChild(vgn)
 					vgn.SetInnerHTML(vugu.HTML("Italiano"))
 					vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "br", Attr: []vugu.VGAttribute(nil)}}

@@ -20,7 +20,7 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 	_ = vgiterkey
 	var vgn *vugu.VGNode
 	vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "html", Attr: []vugu.VGAttribute(nil)}}
-	vgout.Out = append(vgout.Out, vgn)	// root for output
+	vgout.Out = append(vgout.Out, vgn) // root for output
 	{
 		vgparent := vgn
 		_ = vgparent
@@ -41,7 +41,7 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 			}
 			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n        "}}
 			vgparent.AppendChild(vgn)
-			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Data: "link", Attr: []vugu.VGAttribute{{Namespace: "", Key: "rel", Val: "stylesheet"}, vugu.VGAttribute{Namespace: "", Key: "href", Val: "https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"}, vugu.VGAttribute{Namespace: "", Key: "integrity", Val: "sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T"}, vugu.VGAttribute{Namespace: "", Key: "crossorigin", Val: "anonymous"}}}}
+			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Data: "link", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "rel", Val: "stylesheet"}, vugu.VGAttribute{Namespace: "", Key: "href", Val: "https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"}, vugu.VGAttribute{Namespace: "", Key: "integrity", Val: "sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T"}, vugu.VGAttribute{Namespace: "", Key: "crossorigin", Val: "anonymous"}}}}
 			vgout.AppendCSS(vgn)
 			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n    "}}
 			vgparent.AppendChild(vgn)
@@ -51,7 +51,7 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 		{
 			vgparent := vgn
 			_ = vgparent
-			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute{{Namespace: "", Key: "class", Val: "test-div"}, vugu.VGAttribute{Namespace: "", Key: "id", Val: "testdiv"}}}}
+			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "class", Val: "test-div"}, vugu.VGAttribute{Namespace: "", Key: "id", Val: "testdiv"}}}}
 			vgparent.AppendChild(vgn)
 			{
 				vgparent := vgn
@@ -75,7 +75,7 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 								vgcomp = new(DemoLine)
 								vgin.BuildEnv.WireComponent(vgcomp)
 							}
-							vgin.BuildEnv.UseComponent(vgcompKey, vgcomp)	// ensure we can use this in the cache next time around
+							vgin.BuildEnv.UseComponent(vgcompKey, vgcomp) // ensure we can use this in the cache next time around
 							vgcomp.Num = i
 							vgout.Components = append(vgout.Components, vgcomp)
 							vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Component: vgcomp}}
@@ -87,11 +87,11 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 				}
 				vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n\n            "}}
 				vgparent.AppendChild(vgn)
-				vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "button", Attr: []vugu.VGAttribute{{Namespace: "", Key: "id", Val: "addbtn"}}}}
+				vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "button", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "id", Val: "addbtn"}}}}
 				vgparent.AppendChild(vgn)
 				vgn.DOMEventHandlerSpecList = append(vgn.DOMEventHandlerSpecList, vugu.DOMEventHandlerSpec{
-					EventType:	"click",
-					Func:		func(event vugu.DOMEvent) { c.OnAdd() },
+					EventType: "click",
+					Func:      func(event vugu.DOMEvent) { c.OnAdd() },
 					// TODO: implement capture, etc. mostly need to decide syntax
 				})
 				{

@@ -20,7 +20,7 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 	_ = vgiterkey
 	var vgn *vugu.VGNode
 	vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "html", Attr: []vugu.VGAttribute(nil)}}
-	vgout.Out = append(vgout.Out, vgn)	// root for output
+	vgout.Out = append(vgout.Out, vgn) // root for output
 	{
 		vgparent := vgn
 		_ = vgparent
@@ -35,7 +35,7 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 		{
 			vgparent := vgn
 			_ = vgparent
-			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute{{Namespace: "", Key: "id", Val: "content"}}}}
+			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "id", Val: "content"}}}}
 			vgparent.AppendChild(vgn)
 			{
 				vgparent := vgn
@@ -51,7 +51,7 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 						vgcomp = new(Comp)
 						vgin.BuildEnv.WireComponent(vgcomp)
 					}
-					vgin.BuildEnv.UseComponent(vgcompKey, vgcomp)	// ensure we can use this in the cache next time around
+					vgin.BuildEnv.UseComponent(vgcompKey, vgcomp) // ensure we can use this in the cache next time around
 					vgcomp.Key = "value"
 					vgout.Components = append(vgout.Components, vgcomp)
 					vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Component: vgcomp}}

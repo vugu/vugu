@@ -19,8 +19,8 @@ func (c *Thing) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 	var vgiterkey interface{}
 	_ = vgiterkey
 	var vgn *vugu.VGNode
-	vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute{{Namespace: "", Key: "class", Val: "thing"}}}}
-	vgout.Out = append(vgout.Out, vgn)	// root for output
+	vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "class", Val: "thing"}}}}
+	vgout.Out = append(vgout.Out, vgn) // root for output
 	vgn.JSCreateHandler = vugu.JSValueFunc(func(value js.Value) { c.handleJSCreate(value) })
 	vgn.JSPopulateHandler = vugu.JSValueFunc(func(value js.Value) { c.handleJSPopulate(value) })
 	{
@@ -28,11 +28,11 @@ func (c *Thing) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 		_ = vgparent
 		vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n    "}}
 		vgparent.AppendChild(vgn)
-		vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "button", Attr: []vugu.VGAttribute{{Namespace: "", Key: "id", Val: "the_button"}}}}
+		vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "button", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "id", Val: "the_button"}}}}
 		vgparent.AppendChild(vgn)
 		vgn.DOMEventHandlerSpecList = append(vgn.DOMEventHandlerSpecList, vugu.DOMEventHandlerSpec{
-			EventType:	"click",
-			Func:		func(event vugu.DOMEvent) { c.handleButtonClick(event) },
+			EventType: "click",
+			Func:      func(event vugu.DOMEvent) { c.handleButtonClick(event) },
 			// TODO: implement capture, etc. mostly need to decide syntax
 		})
 		{
@@ -44,7 +44,7 @@ func (c *Thing) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 		vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n    "}}
 		vgparent.AppendChild(vgn)
 		if len(c.Log) > 0 {
-			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute{{Namespace: "", Key: "id", Val: "log"}}}}
+			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "id", Val: "log"}}}}
 			vgparent.AppendChild(vgn)
 			{
 				vgparent := vgn

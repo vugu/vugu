@@ -19,8 +19,8 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 	var vgiterkey interface{}
 	_ = vgiterkey
 	var vgn *vugu.VGNode
-	vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute{{Namespace: "", Key: "id", Val: "top"}}}}
-	vgout.Out = append(vgout.Out, vgn)	// root for output
+	vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "id", Val: "top"}}}}
+	vgout.Out = append(vgout.Out, vgn) // root for output
 	{
 		vgparent := vgn
 		_ = vgparent
@@ -29,8 +29,8 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 		vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "select", Attr: []vugu.VGAttribute(nil)}}
 		vgparent.AppendChild(vgn)
 		vgn.DOMEventHandlerSpecList = append(vgn.DOMEventHandlerSpecList, vugu.DOMEventHandlerSpec{
-			EventType:	"change",
-			Func:		func(event vugu.DOMEvent) { c.OutputEvent(event) },
+			EventType: "change",
+			Func:      func(event vugu.DOMEvent) { c.OutputEvent(event) },
 			// TODO: implement capture, etc. mostly need to decide syntax
 		})
 		{

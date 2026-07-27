@@ -19,8 +19,8 @@ func (c *DemoLine) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 	var vgiterkey interface{}
 	_ = vgiterkey
 	var vgn *vugu.VGNode
-	vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "li", Attr: []vugu.VGAttribute{{Namespace: "", Key: "class", Val: "demo-line"}}}}
-	vgout.Out = append(vgout.Out, vgn)	// root for output
+	vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "li", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "class", Val: "demo-line"}}}}
+	vgout.Out = append(vgout.Out, vgn) // root for output
 	{
 		vgparent := vgn
 		_ = vgparent

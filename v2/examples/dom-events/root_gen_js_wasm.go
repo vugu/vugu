@@ -20,20 +20,20 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 	_ = vgiterkey
 	var vgn *vugu.VGNode
 	vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute(nil)}}
-	vgout.Out = append(vgout.Out, vgn)	// root for output
+	vgout.Out = append(vgout.Out, vgn) // root for output
 	{
 		vgparent := vgn
 		_ = vgparent
 		vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n    "}}
 		vgparent.AppendChild(vgn)
-		vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "main", Attr: []vugu.VGAttribute{{Namespace: "", Key: "role", Val: "main"}, vugu.VGAttribute{Namespace: "", Key: "class", Val: "container text-center"}}}}
+		vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "main", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "role", Val: "main"}, vugu.VGAttribute{Namespace: "", Key: "class", Val: "container text-center"}}}}
 		vgparent.AppendChild(vgn)
 		{
 			vgparent := vgn
 			_ = vgparent
 			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n        "}}
 			vgparent.AppendChild(vgn)
-			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute{{Namespace: "", Key: "class", Val: "mt-5"}}}}
+			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "class", Val: "mt-5"}}}}
 			vgparent.AppendChild(vgn)
 			{
 				vgparent := vgn
@@ -49,21 +49,21 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 				vgparent.AppendChild(vgn)
 				vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "               \n                "}}
 				vgparent.AppendChild(vgn)
-				vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute{{Namespace: "", Key: "id", Val: "redBlock"}, vugu.VGAttribute{Namespace: "", Key: "style", Val: "background-color:#D94A38;width:120px;height:20px;padding:40px;"}}}}
+				vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "id", Val: "redBlock"}, vugu.VGAttribute{Namespace: "", Key: "style", Val: "background-color:#D94A38;width:120px;height:20px;padding:40px;"}}}}
 				vgparent.AppendChild(vgn)
 				vgn.DOMEventHandlerSpecList = append(vgn.DOMEventHandlerSpecList, vugu.DOMEventHandlerSpec{
-					EventType:	"mouseover",
-					Func:		func(event vugu.DOMEvent) { c.MouseOver(event) },
+					EventType: "mouseover",
+					Func:      func(event vugu.DOMEvent) { c.MouseOver(event) },
 					// TODO: implement capture, etc. mostly need to decide syntax
 				})
 				vgn.DOMEventHandlerSpecList = append(vgn.DOMEventHandlerSpecList, vugu.DOMEventHandlerSpec{
-					EventType:	"mouseout",
-					Func:		func(event vugu.DOMEvent) { c.MouseOut(event) },
+					EventType: "mouseout",
+					Func:      func(event vugu.DOMEvent) { c.MouseOut(event) },
 					// TODO: implement capture, etc. mostly need to decide syntax
 				})
 				vgn.DOMEventHandlerSpecList = append(vgn.DOMEventHandlerSpecList, vugu.DOMEventHandlerSpec{
-					EventType:	"click",
-					Func:		func(event vugu.DOMEvent) { c.RedBoxClick(event) },
+					EventType: "click",
+					Func:      func(event vugu.DOMEvent) { c.RedBoxClick(event) },
 					// TODO: implement capture, etc. mostly need to decide syntax
 				})
 				{
@@ -92,7 +92,7 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 				vgparent.AppendChild(vgn)
 				vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: " \n                "}}
 				vgparent.AppendChild(vgn)
-				vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute{{Namespace: "", Key: "id", Val: "textarea"}}}}
+				vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "id", Val: "textarea"}}}}
 				vgparent.AppendChild(vgn)
 				{
 					vgparent := vgn
@@ -102,8 +102,8 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 					vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "textarea", Attr: []vugu.VGAttribute(nil)}}
 					vgparent.AppendChild(vgn)
 					vgn.DOMEventHandlerSpecList = append(vgn.DOMEventHandlerSpecList, vugu.DOMEventHandlerSpec{
-						EventType:	"keydown",
-						Func:		func(event vugu.DOMEvent) { c.KeyDown(event) },
+						EventType: "keydown",
+						Func:      func(event vugu.DOMEvent) { c.KeyDown(event) },
 						// TODO: implement capture, etc. mostly need to decide syntax
 					})
 					{
@@ -133,18 +133,18 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 				vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "button", Attr: []vugu.VGAttribute(nil)}}
 				vgparent.AppendChild(vgn)
 				vgn.DOMEventHandlerSpecList = append(vgn.DOMEventHandlerSpecList, vugu.DOMEventHandlerSpec{
-					EventType:	"click",
-					Func:		func(event vugu.DOMEvent) { c.ButtonLeftClick(event) },
+					EventType: "click",
+					Func:      func(event vugu.DOMEvent) { c.ButtonLeftClick(event) },
 					// TODO: implement capture, etc. mostly need to decide syntax
 				})
 				vgn.DOMEventHandlerSpecList = append(vgn.DOMEventHandlerSpecList, vugu.DOMEventHandlerSpec{
-					EventType:	"contextmenu",
-					Func:		func(event vugu.DOMEvent) { c.ButtonRightClick(event) },
+					EventType: "contextmenu",
+					Func:      func(event vugu.DOMEvent) { c.ButtonRightClick(event) },
 					// TODO: implement capture, etc. mostly need to decide syntax
 				})
 				vgn.DOMEventHandlerSpecList = append(vgn.DOMEventHandlerSpecList, vugu.DOMEventHandlerSpec{
-					EventType:	"dblclick",
-					Func:		func(event vugu.DOMEvent) { c.ButtonDoubleClick(event) },
+					EventType: "dblclick",
+					Func:      func(event vugu.DOMEvent) { c.ButtonDoubleClick(event) },
 					// TODO: implement capture, etc. mostly need to decide syntax
 				})
 				{

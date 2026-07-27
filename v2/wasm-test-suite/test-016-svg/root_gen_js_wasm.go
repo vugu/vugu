@@ -19,19 +19,19 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 	var vgiterkey interface{}
 	_ = vgiterkey
 	var vgn *vugu.VGNode
-	vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute{{Namespace: "", Key: "id", Val: "container"}}}}
-	vgout.Out = append(vgout.Out, vgn)	// root for output
+	vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "id", Val: "container"}}}}
+	vgout.Out = append(vgout.Out, vgn) // root for output
 	{
 		vgparent := vgn
 		_ = vgparent
 		vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n    "}}
 		vgparent.AppendChild(vgn)
-		vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "svg", Data: "svg", Attr: []vugu.VGAttribute{{Namespace: "", Key: "id", Val: "icon"}, vugu.VGAttribute{Namespace: "", Key: "xmlns", Val: "http://www.w3.org/2000/svg"}, vugu.VGAttribute{Namespace: "", Key: "width", Val: "24"}, vugu.VGAttribute{Namespace: "", Key: "height", Val: "24"}, vugu.VGAttribute{Namespace: "", Key: "viewBox", Val: "0 0 24 24"}, vugu.VGAttribute{Namespace: "", Key: "fill", Val: "none"}, vugu.VGAttribute{Namespace: "", Key: "stroke", Val: "currentColor"}, vugu.VGAttribute{Namespace: "", Key: "stroke-width", Val: "2"}, vugu.VGAttribute{Namespace: "", Key: "stroke-linecap", Val: "round"}, vugu.VGAttribute{Namespace: "", Key: "stroke-linejoin", Val: "round"}}}}
+		vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "svg", Data: "svg", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "id", Val: "icon"}, vugu.VGAttribute{Namespace: "", Key: "xmlns", Val: "http://www.w3.org/2000/svg"}, vugu.VGAttribute{Namespace: "", Key: "width", Val: "24"}, vugu.VGAttribute{Namespace: "", Key: "height", Val: "24"}, vugu.VGAttribute{Namespace: "", Key: "viewBox", Val: "0 0 24 24"}, vugu.VGAttribute{Namespace: "", Key: "fill", Val: "none"}, vugu.VGAttribute{Namespace: "", Key: "stroke", Val: "currentColor"}, vugu.VGAttribute{Namespace: "", Key: "stroke-width", Val: "2"}, vugu.VGAttribute{Namespace: "", Key: "stroke-linecap", Val: "round"}, vugu.VGAttribute{Namespace: "", Key: "stroke-linejoin", Val: "round"}}}}
 		vgparent.AppendChild(vgn)
 		vgn.SetInnerHTML(vugu.HTML("\n        \x3Cpolyline points=\"20 6 9 17 4 12\"\x3E\x3C/polyline\x3E\n    "))
 		vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n\n    "}}
 		vgparent.AppendChild(vgn)
-		vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "svg", Data: "svg", Attr: []vugu.VGAttribute{{Namespace: "", Key: "id", Val: "external"}, vugu.VGAttribute{Namespace: "", Key: "width", Val: "24"}, vugu.VGAttribute{Namespace: "", Key: "height", Val: "24"}, vugu.VGAttribute{Namespace: "", Key: "fill", Val: "none"}, vugu.VGAttribute{Namespace: "", Key: "stroke", Val: "currentColor"}, vugu.VGAttribute{Namespace: "", Key: "stroke-width", Val: "2"}, vugu.VGAttribute{Namespace: "", Key: "stroke-linecap", Val: "round"}, vugu.VGAttribute{Namespace: "", Key: "stroke-linejoin", Val: "round"}}}}
+		vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "svg", Data: "svg", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "id", Val: "external"}, vugu.VGAttribute{Namespace: "", Key: "width", Val: "24"}, vugu.VGAttribute{Namespace: "", Key: "height", Val: "24"}, vugu.VGAttribute{Namespace: "", Key: "fill", Val: "none"}, vugu.VGAttribute{Namespace: "", Key: "stroke", Val: "currentColor"}, vugu.VGAttribute{Namespace: "", Key: "stroke-width", Val: "2"}, vugu.VGAttribute{Namespace: "", Key: "stroke-linecap", Val: "round"}, vugu.VGAttribute{Namespace: "", Key: "stroke-linejoin", Val: "round"}}}}
 		vgparent.AppendChild(vgn)
 		{
 			vgparent := vgn
@@ -42,7 +42,7 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 			vgparent.AppendChild(vgn)
 			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n        "}}
 			vgparent.AppendChild(vgn)
-			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "svg", Data: "use", Attr: []vugu.VGAttribute{{Namespace: "xlink", Key: "xlink:href", Val: "https://unpkg.com/feather-icons/dist/feather-sprite.svg#circle"}}}}
+			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "svg", Data: "use", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "xlink", Key: "xlink:href", Val: "https://unpkg.com/feather-icons/dist/feather-sprite.svg#circle"}}}}
 			vgparent.AppendChild(vgn)
 			vgn.SetInnerHTML(vugu.HTML(""))
 			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n    "}}

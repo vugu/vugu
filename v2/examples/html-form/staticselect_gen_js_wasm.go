@@ -19,14 +19,14 @@ func (c *Staticselect) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 	var vgiterkey interface{}
 	_ = vgiterkey
 	var vgn *vugu.VGNode
-	vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute{{Namespace: "", Key: "id", Val: "cards"}}}}
-	vgout.Out = append(vgout.Out, vgn)	// root for output
+	vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "id", Val: "cards"}}}}
+	vgout.Out = append(vgout.Out, vgn) // root for output
 	{
 		vgparent := vgn
 		_ = vgparent
 		vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n    "}}
 		vgparent.AppendChild(vgn)
-		vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "label", Attr: []vugu.VGAttribute{{Namespace: "", Key: "for", Val: "cars"}}}}
+		vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "label", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "for", Val: "cars"}}}}
 		vgparent.AppendChild(vgn)
 		vgn.SetInnerHTML(vugu.HTML("Choose a car:"))
 		vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n    "}}
@@ -39,11 +39,11 @@ func (c *Staticselect) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 		vgparent.AppendChild(vgn)
 		vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n    "}}
 		vgparent.AppendChild(vgn)
-		vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "select", Attr: []vugu.VGAttribute{{Namespace: "", Key: "name", Val: "cars"}, vugu.VGAttribute{Namespace: "", Key: "id", Val: "cars"}}}}
+		vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "select", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "name", Val: "cars"}, vugu.VGAttribute{Namespace: "", Key: "id", Val: "cars"}}}}
 		vgparent.AppendChild(vgn)
 		vgn.DOMEventHandlerSpecList = append(vgn.DOMEventHandlerSpecList, vugu.DOMEventHandlerSpec{
-			EventType:	"change",
-			Func:		func(event vugu.DOMEvent) { c.Change(event) },
+			EventType: "change",
+			Func:      func(event vugu.DOMEvent) { c.Change(event) },
 			// TODO: implement capture, etc. mostly need to decide syntax
 		})
 		{
@@ -51,22 +51,22 @@ func (c *Staticselect) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 			_ = vgparent
 			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n    "}}
 			vgparent.AppendChild(vgn)
-			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "option", Attr: []vugu.VGAttribute{{Namespace: "", Key: "value", Val: "volvo"}}}}
+			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "option", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "value", Val: "volvo"}}}}
 			vgparent.AppendChild(vgn)
 			vgn.SetInnerHTML(vugu.HTML("Volvo"))
 			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n    "}}
 			vgparent.AppendChild(vgn)
-			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "option", Attr: []vugu.VGAttribute{{Namespace: "", Key: "value", Val: "saab"}}}}
+			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "option", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "value", Val: "saab"}}}}
 			vgparent.AppendChild(vgn)
 			vgn.SetInnerHTML(vugu.HTML("Saab"))
 			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n    "}}
 			vgparent.AppendChild(vgn)
-			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "option", Attr: []vugu.VGAttribute{{Namespace: "", Key: "value", Val: "mercedes"}}}}
+			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "option", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "value", Val: "mercedes"}}}}
 			vgparent.AppendChild(vgn)
 			vgn.SetInnerHTML(vugu.HTML("Mercedes"))
 			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n    "}}
 			vgparent.AppendChild(vgn)
-			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "option", Attr: []vugu.VGAttribute{{Namespace: "", Key: "value", Val: "audi"}, vugu.VGAttribute{Namespace: "", Key: "selected", Val: "true"}}}}
+			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "option", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "value", Val: "audi"}, vugu.VGAttribute{Namespace: "", Key: "selected", Val: "true"}}}}
 			vgparent.AppendChild(vgn)
 			vgn.SetInnerHTML(vugu.HTML("Audi"))
 			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: " "}}

@@ -19,8 +19,8 @@ func (c *Helper) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 	var vgiterkey interface{}
 	_ = vgiterkey
 	var vgn *vugu.VGNode
-	vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute{{Namespace: "", Key: "class", Val: "helper"}}}}
-	vgout.Out = append(vgout.Out, vgn)	// root for output
+	vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "class", Val: "helper"}}}}
+	vgout.Out = append(vgout.Out, vgn) // root for output
 	{
 		vgparent := vgn
 		_ = vgparent
@@ -35,7 +35,7 @@ func (c *Helper) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 				vgcomp = new(Final)
 				vgin.BuildEnv.WireComponent(vgcomp)
 			}
-			vgin.BuildEnv.UseComponent(vgcompKey, vgcomp)	// ensure we can use this in the cache next time around
+			vgin.BuildEnv.UseComponent(vgcompKey, vgcomp) // ensure we can use this in the cache next time around
 			vgcomp.ID = c.ID
 			vgout.Components = append(vgout.Components, vgcomp)
 			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Component: vgcomp}}
