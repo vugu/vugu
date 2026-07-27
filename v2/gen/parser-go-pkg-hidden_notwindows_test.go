@@ -73,7 +73,7 @@ func TestParserHidden(t *testing.T) {
 	for _, tc := range tcList {
 		t.Run(tc.name, func(t *testing.T) {
 
-			tmpDir, err := os.MkdirTemp("", "TestRun")
+			tmpDir, err := os.MkdirTemp("", "TestParserHidden")
 			if err != nil {
 				t.Fatal(err)
 			}
