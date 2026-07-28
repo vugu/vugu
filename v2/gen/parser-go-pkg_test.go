@@ -278,6 +278,59 @@ func TestParserErrors(t *testing.T) {
 
 }
 
+func TestParserGoScriptTags(t *testing.T) {
+	debug := true
+
+	pwd, err := filepath.Abs("..")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	type tcase struct {
+		name    string
+		infiles map[string]string   // file structure to start with
+		out     map[string][]string // regexps to match in output files
+		bfiles  map[string]string   // additional files to write before building
+	}
+
+	tcList := []tcase{
+		{
+			name: "Go-script-tags",
+			infiles: map[string]string{
+				"root.vugu": "<div>root here</div>\n<script type=\"application/x-go\">\nimport \"fmt\"\n</script>", // include a no longer supported script type="application/x-go> tag
+				"root.go":   "package main\ntype Root struct {\n}\n",
+				"go.mod":    "module testcase\nreplace github.com/vugu/vugu/v2 => " + pwd + "\n",
+				"main.go":   "//go:build js && wasm\n\npackage main\nfunc main(){}",
+			},
+		},
+	}
+
+	for _, tc := range tcList {
+		t.Run(tc.name, func(t *testing.T) {
+
+			tmpDir, err := os.MkdirTemp("", "TestParserGoScriptTag")
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if debug {
+				t.Logf("Test %q using tmpDir: %s", tc.name, tmpDir)
+			} else {
+				t.Parallel()
+			}
+
+			tstWriteFiles(tmpDir, tc.infiles)
+
+			err = Generate(tmpDir)
+
+			if !errors.Is(err, ErrGoInScriptTag) {
+				t.Fatalf("Expected a ErrGoInScriptTag but got %s", err)
+			}
+		})
+	}
+
+}
+
 func tstWriteFiles(dir string, m map[string]string) {
 
 	for name, contents := range m {

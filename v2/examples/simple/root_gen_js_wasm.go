@@ -12,12 +12,6 @@ import "github.com/vugu/vugu/v2"
 import "syscall/js"
 import "log"
 
-// this import and enclosing <script> block ate BOTH necessary.
-// The HTML above calls time.Now().Year() directly.
-// So we must explicitly import the time package in the .vugu file.
-// otherwise the compilation will fail due to an unknown import.
-import "time"
-
 func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 
 	vgout = &vugu.BuildOut{}
@@ -183,7 +177,7 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 						vgn.SetInnerHTML(vugu.HTML("Vugu"))
 						vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: " is a modern web UI library for Go+WebAssembly.\n                It is written in pure Go, works well in most modern browsers and supports \n                "}}
 						vgparent.AppendChild(vgn)
-						if time.Now().Year() >= 2020 {
+						if c.After2020() {
 							vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "span", Attr: []vugu.VGAttribute(nil)}}
 							vgparent.AppendChild(vgn)
 							{
