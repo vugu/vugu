@@ -28,7 +28,7 @@ The list of changes are:
 - [x] Remove the unused `internal/htmlx` package
 - [x] Remove mentions of the `legacytestsuite` from the magefiles
 - [x] Remove any support of building the generated code with `tinygo`. This removes the `--tinygo` option from `vugu gen`
-- [ ] Remove support for `<script "application/x-go">` tags in the `*.vugu` files. Use a proper component instead
+- [x] Remove support for `<script type="application/x-go">` tags in the `*.vugu` files. ***This is a breaking change***. All Go code should be in the `*.go` file that relates to the component. The `simple` example that used a `<script type="application/x-go">` has been updated to remove the use of the `<script type="application/x-go">` block. See the new `Root.After2020` function in the `simple` example.
 - [x] Remove auto generating a `0_missing_gen.go` file that contains "missing" Go structs i.e. vugu components. This is unnecessary. ***This is a breaking change***
 - [x] Remove support for producing a single merged file with all components. This removes the `-s` option from `vugu gen`
 - [x] Remove support for the `--skip-go-mod` option from `vugu gen`.
