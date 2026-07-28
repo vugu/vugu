@@ -33,6 +33,7 @@ The list of changes are:
 - [x] Remove support for producing a single merged file with all components. This removes the `-s` option from `vugu gen`
 - [x] Remove support for the `--skip-go-mod` option from `vugu gen`.
 - [x] Completely rewrite `gen/parser-go-pkg.go` and associated tests to simplify the code. Flow changes into the `vugu gen` command. This removes the recursive `-r` switch from `vugu gen`. ***This is a breaking change***. `vugu gen` will now (re)generate a `*_gen_js_was,.go` file for every pair of `component.go` and `component.vugu` files that it finds, starting from the current directory.
+- [x] Refactor `gen/parser-go.go` so that `ParserGo.Parse` becomes stateless. `ParserGo.Parse` not accepts a `[]byte` that is the contents of the `*.vugu` file and returns a `[]byte` that is the contents of the `*_gen_js_wasm.go` file. The writing of the `*_gen_js_wasm.go` file has now been pulled up into `ParseFile` in `gen/parser-go-pkg.go`.
 
 The original v0.y.z Readme follows.
 

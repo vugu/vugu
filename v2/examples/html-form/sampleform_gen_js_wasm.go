@@ -20,10 +20,10 @@ func (c *Sampleform) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 	_ = vgiterkey
 	var vgn *vugu.VGNode
 	vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "form", Attr: []vugu.VGAttribute(nil)}}
-	vgout.Out = append(vgout.Out, vgn)	// root for output
+	vgout.Out = append(vgout.Out, vgn) // root for output
 	vgn.DOMEventHandlerSpecList = append(vgn.DOMEventHandlerSpecList, vugu.DOMEventHandlerSpec{
-		EventType:	"submit",
-		Func:		func(event vugu.DOMEvent) { c.Submit(event) },
+		EventType: "submit",
+		Func:      func(event vugu.DOMEvent) { c.Submit(event) },
 		// TODO: implement capture, etc. mostly need to decide syntax
 	})
 	{
@@ -52,7 +52,7 @@ func (c *Sampleform) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 				vgcomp = new(Nameinput)
 				vgin.BuildEnv.WireComponent(vgcomp)
 			}
-			vgin.BuildEnv.UseComponent(vgcompKey, vgcomp)	// ensure we can use this in the cache next time around
+			vgin.BuildEnv.UseComponent(vgcompKey, vgcomp) // ensure we can use this in the cache next time around
 			vgcomp.Form = c
 			vgout.Components = append(vgout.Components, vgcomp)
 			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Component: vgcomp}}
@@ -73,7 +73,7 @@ func (c *Sampleform) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 				vgcomp = new(Emailinput)
 				vgin.BuildEnv.WireComponent(vgcomp)
 			}
-			vgin.BuildEnv.UseComponent(vgcompKey, vgcomp)	// ensure we can use this in the cache next time around
+			vgin.BuildEnv.UseComponent(vgcompKey, vgcomp) // ensure we can use this in the cache next time around
 			vgcomp.Form = c
 			vgout.Components = append(vgout.Components, vgcomp)
 			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Component: vgcomp}}
@@ -102,7 +102,7 @@ func (c *Sampleform) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 				vgcomp = new(Radiobuttons)
 				vgin.BuildEnv.WireComponent(vgcomp)
 			}
-			vgin.BuildEnv.UseComponent(vgcompKey, vgcomp)	// ensure we can use this in the cache next time around
+			vgin.BuildEnv.UseComponent(vgcompKey, vgcomp) // ensure we can use this in the cache next time around
 			vgcomp.Form = c
 			vgcomp.SelectionDefault = "german"
 			vgout.Components = append(vgout.Components, vgcomp)
@@ -124,7 +124,7 @@ func (c *Sampleform) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 				vgcomp = new(Staticselect)
 				vgin.BuildEnv.WireComponent(vgcomp)
 			}
-			vgin.BuildEnv.UseComponent(vgcompKey, vgcomp)	// ensure we can use this in the cache next time around
+			vgin.BuildEnv.UseComponent(vgcompKey, vgcomp) // ensure we can use this in the cache next time around
 			vgcomp.Form = c
 			vgout.Components = append(vgout.Components, vgcomp)
 			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Component: vgcomp}}
@@ -145,7 +145,7 @@ func (c *Sampleform) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 				vgcomp = new(Dynamicselect)
 				vgin.BuildEnv.WireComponent(vgcomp)
 			}
-			vgin.BuildEnv.UseComponent(vgcompKey, vgcomp)	// ensure we can use this in the cache next time around
+			vgin.BuildEnv.UseComponent(vgcompKey, vgcomp) // ensure we can use this in the cache next time around
 			vgcomp.Form = c
 			vgout.Components = append(vgout.Components, vgcomp)
 			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Component: vgcomp}}
@@ -157,7 +157,7 @@ func (c *Sampleform) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 		vgparent.AppendChild(vgn)
 		vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n    "}}
 		vgparent.AppendChild(vgn)
-		vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "input", Attr: []vugu.VGAttribute{{Namespace: "", Key: "type", Val: "submit"}, vugu.VGAttribute{Namespace: "", Key: "value", Val: "Submit Form"}}}}
+		vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "input", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "type", Val: "submit"}, vugu.VGAttribute{Namespace: "", Key: "value", Val: "Submit Form"}}}}
 		vgparent.AppendChild(vgn)
 		vgn.SetInnerHTML(vugu.HTML(""))
 		vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n"}}

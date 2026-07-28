@@ -4,9 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"io"
-	"os"
-	"os/exec"
 	"sort"
 	"strings"
 	"unicode"
@@ -22,71 +19,24 @@ type ParserGo struct {
 	StructType  string // just the struct name, no "*" (replaces ComponentType and DataType)
 	// ComponentType string // just the struct name, no "*"
 	// DataType      string // just the struct name, no "*"
-	OutFile string // output file name with ".go" suffix
 
 	NoOptimizeStatic bool // set to true to disable optimization of static blocks of HTML into vg-html expressions
 }
 
-func gofmt(pgm string) (string, error) {
-	// build up command to run
-	cmd := exec.Command("gofmt")
-
-	// I need to capture output
-	var fmtOutput bytes.Buffer
-	cmd.Stderr = &fmtOutput
-	cmd.Stdout = &fmtOutput
-
-	// also set up input pipe
-	read, write := io.Pipe()
-	defer write.Close() // make sure this always gets closed, it is safe to call more than once
-	cmd.Stdin = read
-
-	// copy down environment variables
-	cmd.Env = os.Environ()
-	// force wasm,js target
-	cmd.Env = append(cmd.Env, "GOOS=js")
-	cmd.Env = append(cmd.Env, "GOARCH=wasm")
-
-	// start gofmt
-	if err := cmd.Start(); err != nil {
-		return pgm, fmt.Errorf("can't run gofmt: %v", err)
-	}
-
-	// stream in the raw source
-	if _, err := write.Write([]byte(pgm)); err != nil && err != io.ErrClosedPipe {
-		return pgm, fmt.Errorf("gofmt failed: %v", err)
-	}
-
-	write.Close()
-
-	// wait until gofmt is done
-	if err := cmd.Wait(); err != nil {
-		return pgm, fmt.Errorf("go fmt error %v; full output: %s", err, fmtOutput.String())
-	}
-
-	return fmtOutput.String(), nil
-}
-
 // Parse is an experiment...
 // r is the actual input, fname is only used to emit line directives
-func (p *ParserGo) Parse(r io.Reader, fname string) error {
+func (p *ParserGo) Parse(b []byte, fname string) ([]byte, error) {
 	state := &parseGoState{}
-
-	inRaw, err := io.ReadAll(r)
-	if err != nil {
-		fmt.Printf("ReadAll filename: %s, Error: %s\n", fname, err)
-		return err
-	}
 
 	// use a tokenizer to peek at the first element and see if it's an HTML tag
 	state.isFullHTML = false
-	tmpZ := html.NewTokenizer(bytes.NewReader(inRaw))
+	tmpZ := html.NewTokenizer(bytes.NewReader(b))
 	for {
 		tt := tmpZ.Next()
 		if tt == html.ErrorToken {
-			fmt.Printf("Tokenizer called with: \n%s\n", inRaw)
+			fmt.Printf("Tokenizer called with: \n%s\n", string(b))
 			fmt.Printf("tmpZ token error: %s\n", tmpZ.Err())
-			return tmpZ.Err()
+			return nil, tmpZ.Err()
 		}
 		if tt != html.StartTagToken { // skip over non-tags
 			continue
@@ -103,23 +53,23 @@ func (p *ParserGo) Parse(r io.Reader, fname string) error {
 
 	if state.isFullHTML {
 
-		n, err := html.Parse(bytes.NewReader(inRaw))
+		n, err := html.Parse(bytes.NewReader(b))
 		if err != nil {
 			fmt.Printf("html.Parse error: %s\n", err)
-			return err
+			return nil, err
 		}
 		state.docNodeList = append(state.docNodeList, n) // docNodeList is just this one item
 
 	} else {
 
-		nlist, err := html.ParseFragment(bytes.NewReader(inRaw), &html.Node{
+		nlist, err := html.ParseFragment(bytes.NewReader(b), &html.Node{
 			Type:     html.ElementNode,
 			DataAtom: atom.Div,
 			Data:     "div",
 		})
 		if err != nil {
 			fmt.Printf("html.ParseFragment error %s\n", err)
-			return err
+			return nil, err
 		}
 
 		// only add elements
@@ -133,6 +83,7 @@ func (p *ParserGo) Parse(r io.Reader, fname string) error {
 
 	}
 
+	var err error
 	// run n through the optimizer and convert large chunks of static elements into
 	// vg-html attributes, this should provide a significiant performance boost for static HTML
 	if !p.NoOptimizeStatic {
@@ -140,7 +91,7 @@ func (p *ParserGo) Parse(r io.Reader, fname string) error {
 			err = compactNodeTree(n)
 			if err != nil {
 				fmt.Printf("compact node tree error: %s\n", err)
-				return err
+				return nil, err
 			}
 		}
 	}
@@ -158,7 +109,7 @@ func (p *ParserGo) Parse(r io.Reader, fname string) error {
 	err = p.visitOverall(state)
 	if err != nil {
 		fmt.Printf("visitOverall error: %s\n", err)
-		return err
+		return nil, err
 	}
 
 	var buf bytes.Buffer
@@ -167,72 +118,14 @@ func (p *ParserGo) Parse(r io.Reader, fname string) error {
 	buf.Write(state.buildBuf.Bytes())
 	buf.Write(state.goBufBottom.Bytes())
 
-	outPath := p.OutFile
-
 	fo, err := gofmt(buf.String())
 	if err != nil {
-		fmt.Printf("GO FMT ERRORS WITH %s\n", err)
-		// if the gofmt errors, we still attempt to write out the non-fmt'ed output to the file, to assist in debugging
-		_ = os.WriteFile(outPath, buf.Bytes(), 0644)
-
-		return err
+		// if the gofmt errors, we still attempt to write out the non-fmt'ed output to the stdout, to assist in debugging
+		fmt.Printf("GO FMT ERRORS WITH %s\n%s\n", buf.String(), err)
+		return nil, err
 	}
 
-	// run the import deduplicator
-	var dedupedBuf bytes.Buffer
-	err = dedupImports(bytes.NewReader([]byte(fo)), &dedupedBuf, p.OutFile)
-	if err != nil {
-		fmt.Printf("failed to dedup: %s\n", err)
-		return err
-	}
-
-	// write to final output file
-	err = os.WriteFile(outPath, dedupedBuf.Bytes(), 0644)
-	if err != nil {
-		fmt.Printf("failed to write file: %s Error: %s\n", outPath, err)
-		return err
-	}
-	err = removeRedundantDefinitions(outPath)
-	if err != nil {
-		fmt.Printf("removeRedundantDefinitions error: %s\n", err)
-		return err
-	}
-	return nil
-}
-
-func removeRedundantDefinitions(fileName string) error {
-	type definitions struct {
-		old, new string
-	}
-	r := []definitions{
-		{
-			old: "vugu.VGAttribute{vugu.VGAttribute",
-			new: "vugu.VGAttribute{",
-		},
-	}
-
-	content, err := os.ReadFile(fileName)
-	if err != nil {
-		return err
-	}
-
-	var newContents string
-	for _, v := range r {
-		newContents = strings.Replace(string(content), v.old, v.new, -1)
-	}
-
-	err = os.WriteFile(fileName, []byte(newContents), 0644)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-//nolint:golint,unused
-type codeChunk struct {
-	Line   int
-	Column int
-	Code   string
+	return []byte(fo), nil
 }
 
 type parseGoState struct {

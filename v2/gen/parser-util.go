@@ -2,11 +2,6 @@ package gen
 
 import (
 	"fmt"
-	"go/ast"
-	"go/parser"
-	"go/printer"
-	"go/token"
-	"io"
 	"sort"
 	"strings"
 
@@ -257,73 +252,3 @@ func vgEventExprs(n *html.Node) (ret map[string]string, retKeys []string) {
 // }
 
 // ^([a-zA-Z0-9_.]+)\((.*)\)$
-
-// dedupImports reads Go source and removes duplicate import statements.
-func dedupImports(r io.Reader, w io.Writer, fname string) error {
-	fset := token.NewFileSet() // positions are relative to fset
-	f, err := parser.ParseFile(fset, fname, r, parser.AllErrors|parser.ParseComments)
-	if err != nil {
-		return err
-	}
-
-	// ast.Print(fset, f)
-	// ast.Print(fset, f)
-
-	// ast.Print(fset, f.Decls)
-	// f.Decls = f.Decls[1:]
-	dedupAstFileImports(f)
-	ast.SortImports(fset, f)
-
-	err = printer.Fprint(w, fset, f)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func dedupAstFileImports(f *ast.File) {
-	imap := make(map[string]bool, len(f.Imports)+10)
-
-	outdecls := make([]ast.Decl, 0, len(f.Decls))
-	for _, decl := range f.Decls {
-
-		// check for import declaration
-		genDecl, _ := decl.(*ast.GenDecl)
-		// not an import declaration, just copy and continue
-		if genDecl == nil || genDecl.Tok != token.IMPORT {
-			outdecls = append(outdecls, decl)
-			continue
-		}
-
-		// for imports, we loop over each ImportSpec (each package, regardless of which form of import statement)
-		outspecs := make([]ast.Spec, 0, len(genDecl.Specs))
-		for _, spec := range genDecl.Specs {
-			ispec := spec.(*ast.ImportSpec)
-			// always use path
-			key := ispec.Path.Value
-			// if name is present, prepend
-			if ispec.Name != nil {
-				key = ispec.Name.Name + " " + key
-			}
-
-			// if we've seen this import before, then just move to the next
-			if imap[key] {
-				continue
-			}
-			imap[key] = true // mark this import as having been seen
-
-			// keep the import
-			outspecs = append(outspecs, ispec)
-		}
-
-		// use outspecs for this import decl, unless it's empty in which case we remove/skip the whole import decl
-		if len(outspecs) == 0 {
-			continue
-		}
-		genDecl.Specs = outspecs
-		outdecls = append(outdecls, genDecl)
-
-	}
-	f.Decls = outdecls
-}

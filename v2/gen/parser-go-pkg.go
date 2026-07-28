@@ -1,7 +1,6 @@
 package gen
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"go/parser"
@@ -102,7 +101,6 @@ func ParseFile(vuguFilename, goFilename, genFilename string) error {
 	// pg.ComponentType = compTypeName
 	pg.StructType = compTypeName
 	// pg.DataType = pg.ComponentType + "Data"
-	pg.OutFile = genFilename
 
 	// read in source vugu file
 	b, err := os.ReadFile(vuguFilename)
@@ -112,10 +110,17 @@ func ParseFile(vuguFilename, goFilename, genFilename string) error {
 	}
 
 	// parse the vugu file
-	err = pg.Parse(bytes.NewReader(b), vuguFilename)
+	b, err = pg.Parse(b, vuguFilename)
 	if err != nil {
 		fmt.Printf("Parse returned: %v\n", err)
 		return fmt.Errorf("%w: %w\n", ErrCouldNotParseVuguFile, err)
+	}
+
+	// write to final output file
+	err = os.WriteFile(genFilename, b, 0644)
+	if err != nil {
+		fmt.Printf("failed to write file: %s Error: %s\n", genFilename, err)
+		return err
 	}
 	return err
 }

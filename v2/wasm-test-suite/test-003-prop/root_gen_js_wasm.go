@@ -20,7 +20,7 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 	_ = vgiterkey
 	var vgn *vugu.VGNode
 	vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "html", Attr: []vugu.VGAttribute(nil)}}
-	vgout.Out = append(vgout.Out, vgn)	// root for output
+	vgout.Out = append(vgout.Out, vgn) // root for output
 	{
 		vgparent := vgn
 		_ = vgparent
@@ -41,19 +41,19 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 			}
 			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n        "}}
 			vgparent.AppendChild(vgn)
-			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Data: "link", Attr: []vugu.VGAttribute{{Namespace: "", Key: "rel", Val: "stylesheet"}, vugu.VGAttribute{Namespace: "", Key: "href", Val: "https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"}, vugu.VGAttribute{Namespace: "", Key: "integrity", Val: "sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T"}, vugu.VGAttribute{Namespace: "", Key: "crossorigin", Val: "anonymous"}}}}
+			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Data: "link", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "rel", Val: "stylesheet"}, vugu.VGAttribute{Namespace: "", Key: "href", Val: "https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"}, vugu.VGAttribute{Namespace: "", Key: "integrity", Val: "sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T"}, vugu.VGAttribute{Namespace: "", Key: "crossorigin", Val: "anonymous"}}}}
 			vgout.AppendCSS(vgn)
 			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n        "}}
 			vgparent.AppendChild(vgn)
-			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Data: "script", Attr: []vugu.VGAttribute{{Namespace: "", Key: "src", Val: "https://code.jquery.com/jquery-3.3.1.slim.min.js"}, vugu.VGAttribute{Namespace: "", Key: "integrity", Val: "sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"}, vugu.VGAttribute{Namespace: "", Key: "crossorigin", Val: "anonymous"}}}}
+			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Data: "script", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "src", Val: "https://code.jquery.com/jquery-3.3.1.slim.min.js"}, vugu.VGAttribute{Namespace: "", Key: "integrity", Val: "sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"}, vugu.VGAttribute{Namespace: "", Key: "crossorigin", Val: "anonymous"}}}}
 			vgout.AppendJS(vgn)
 			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n        "}}
 			vgparent.AppendChild(vgn)
-			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Data: "script", Attr: []vugu.VGAttribute{{Namespace: "", Key: "src", Val: "https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"}, vugu.VGAttribute{Namespace: "", Key: "integrity", Val: "sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"}, vugu.VGAttribute{Namespace: "", Key: "crossorigin", Val: "anonymous"}}}}
+			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Data: "script", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "src", Val: "https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"}, vugu.VGAttribute{Namespace: "", Key: "integrity", Val: "sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"}, vugu.VGAttribute{Namespace: "", Key: "crossorigin", Val: "anonymous"}}}}
 			vgout.AppendJS(vgn)
 			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n        "}}
 			vgparent.AppendChild(vgn)
-			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Data: "script", Attr: []vugu.VGAttribute{{Namespace: "", Key: "src", Val: "https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"}, vugu.VGAttribute{Namespace: "", Key: "integrity", Val: "sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"}, vugu.VGAttribute{Namespace: "", Key: "crossorigin", Val: "anonymous"}}}}
+			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Data: "script", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "src", Val: "https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"}, vugu.VGAttribute{Namespace: "", Key: "integrity", Val: "sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"}, vugu.VGAttribute{Namespace: "", Key: "crossorigin", Val: "anonymous"}}}}
 			vgout.AppendJS(vgn)
 			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n    "}}
 			vgparent.AppendChild(vgn)
@@ -63,14 +63,14 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 		{
 			vgparent := vgn
 			_ = vgparent
-			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute{{Namespace: "", Key: "id", Val: "testdiv"}}}}
+			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "id", Val: "testdiv"}}}}
 			vgparent.AppendChild(vgn)
 			{
 				vgparent := vgn
 				_ = vgparent
 				vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n            "}}
 				vgparent.AppendChild(vgn)
-				vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute{{Namespace: "", Key: "class", Val: "container"}}}}
+				vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "class", Val: "container"}}}}
 				vgparent.AppendChild(vgn)
 				{
 					vgparent := vgn
@@ -84,19 +84,19 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 						_ = vgparent
 						vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n                    "}}
 						vgparent.AppendChild(vgn)
-						vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute{{Namespace: "", Key: "class", Val: "form-group"}}}}
+						vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "class", Val: "form-group"}}}}
 						vgparent.AppendChild(vgn)
 						{
 							vgparent := vgn
 							_ = vgparent
 							vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n                        "}}
 							vgparent.AppendChild(vgn)
-							vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "label", Attr: []vugu.VGAttribute{{Namespace: "", Key: "for", Val: "exampleInputEmail1"}}}}
+							vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "label", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "for", Val: "exampleInputEmail1"}}}}
 							vgparent.AppendChild(vgn)
 							vgn.SetInnerHTML(vugu.HTML("Email address"))
 							vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n                        "}}
 							vgparent.AppendChild(vgn)
-							vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "input", Attr: []vugu.VGAttribute{{Namespace: "", Key: "type", Val: "email"}, vugu.VGAttribute{Namespace: "", Key: "class", Val: "form-control"}, vugu.VGAttribute{Namespace: "", Key: "id", Val: "email"}, vugu.VGAttribute{Namespace: "", Key: "aria-describedby", Val: "emailHelp"}, vugu.VGAttribute{Namespace: "", Key: "placeholder", Val: "Enter email"}}}}
+							vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "input", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "type", Val: "email"}, vugu.VGAttribute{Namespace: "", Key: "class", Val: "form-control"}, vugu.VGAttribute{Namespace: "", Key: "id", Val: "email"}, vugu.VGAttribute{Namespace: "", Key: "aria-describedby", Val: "emailHelp"}, vugu.VGAttribute{Namespace: "", Key: "placeholder", Val: "Enter email"}}}}
 							vgparent.AppendChild(vgn)
 							{
 								b, err := vjson.Marshal(c.EmailValue)
@@ -106,13 +106,13 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 								vgn.Prop = append(vgn.Prop, vugu.VGProperty{Key: "value", JSONVal: vjson.RawMessage(b)})
 							}
 							vgn.DOMEventHandlerSpecList = append(vgn.DOMEventHandlerSpecList, vugu.DOMEventHandlerSpec{
-								EventType:	"change",
-								Func:		func(event vugu.DOMEvent) { c.EmailChanged(event) },
+								EventType: "change",
+								Func:      func(event vugu.DOMEvent) { c.EmailChanged(event) },
 								// TODO: implement capture, etc. mostly need to decide syntax
 							})
 							vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n                        "}}
 							vgparent.AppendChild(vgn)
-							vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "small", Attr: []vugu.VGAttribute{{Namespace: "", Key: "id", Val: "emailHelp"}, vugu.VGAttribute{Namespace: "", Key: "class", Val: "form-text text-muted"}}}}
+							vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "small", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "id", Val: "emailHelp"}, vugu.VGAttribute{Namespace: "", Key: "class", Val: "form-text text-muted"}}}}
 							vgparent.AppendChild(vgn)
 							vgn.SetInnerHTML(vugu.HTML("We\x26#39;ll never share your email with anyone else, unless we get subpoenaed."))
 							vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n                    "}}
@@ -120,18 +120,18 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 						}
 						vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n                    "}}
 						vgparent.AppendChild(vgn)
-						vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute{{Namespace: "", Key: "class", Val: "form-group"}}}}
+						vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "class", Val: "form-group"}}}}
 						vgparent.AppendChild(vgn)
 						{
 							vgparent := vgn
 							_ = vgparent
 							vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n                        "}}
 							vgparent.AppendChild(vgn)
-							vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "button", Attr: []vugu.VGAttribute{{Namespace: "", Key: "id", Val: "resetbtn"}}}}
+							vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "button", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "id", Val: "resetbtn"}}}}
 							vgparent.AppendChild(vgn)
 							vgn.DOMEventHandlerSpecList = append(vgn.DOMEventHandlerSpecList, vugu.DOMEventHandlerSpec{
-								EventType:	"click",
-								Func:		func(event vugu.DOMEvent) { c.InitEmail(event) },
+								EventType: "click",
+								Func:      func(event vugu.DOMEvent) { c.InitEmail(event) },
 								// TODO: implement capture, etc. mostly need to decide syntax
 							})
 							{
@@ -157,7 +157,7 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 					{
 						vgparent := vgn
 						_ = vgparent
-						vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "em", Attr: []vugu.VGAttribute{{Namespace: "", Key: "id", Val: "emailout"}}}}
+						vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "em", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "id", Val: "emailout"}}}}
 						vgparent.AppendChild(vgn)
 						vgn.SetInnerHTML(c.EmailValue)
 					}

@@ -26,20 +26,20 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 	_ = vgiterkey
 	var vgn *vugu.VGNode
 	vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute(nil)}}
-	vgout.Out = append(vgout.Out, vgn)	// root for output
+	vgout.Out = append(vgout.Out, vgn) // root for output
 	{
 		vgparent := vgn
 		_ = vgparent
 		vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n    "}}
 		vgparent.AppendChild(vgn)
-		vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "main", Attr: []vugu.VGAttribute{{Namespace: "", Key: "role", Val: "main"}, vugu.VGAttribute{Namespace: "", Key: "class", Val: "container text-center"}}}}
+		vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "main", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "role", Val: "main"}, vugu.VGAttribute{Namespace: "", Key: "class", Val: "container text-center"}}}}
 		vgparent.AppendChild(vgn)
 		{
 			vgparent := vgn
 			_ = vgparent
 			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n\n        "}}
 			vgparent.AppendChild(vgn)
-			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute{{Namespace: "", Key: "class", Val: "mt-5"}}}}
+			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "class", Val: "mt-5"}}}}
 			vgparent.AppendChild(vgn)
 			{
 				vgparent := vgn
@@ -51,18 +51,18 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 				vgn.SetInnerHTML(vugu.HTML("Welcome to Vugu"))
 				vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n            "}}
 				vgparent.AppendChild(vgn)
-				vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "p", Attr: []vugu.VGAttribute{{Namespace: "", Key: "class", Val: "lead"}}}}
+				vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "p", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "class", Val: "lead"}}}}
 				vgparent.AppendChild(vgn)
 				{
 					vgparent := vgn
 					_ = vgparent
 					vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "This page is being rendered via \n                "}}
 					vgparent.AppendChild(vgn)
-					vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "a", Attr: []vugu.VGAttribute{{Namespace: "", Key: "href", Val: "https://webassembly.org/"}}}}
+					vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "a", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "href", Val: "https://webassembly.org/"}}}}
 					vgparent.AppendChild(vgn)
 					vgn.DOMEventHandlerSpecList = append(vgn.DOMEventHandlerSpecList, vugu.DOMEventHandlerSpec{
-						EventType:	"click",
-						Func:		func(event vugu.DOMEvent) { event.PreventDefault(); c.ShowWasm = !c.ShowWasm },
+						EventType: "click",
+						Func:      func(event vugu.DOMEvent) { event.PreventDefault(); c.ShowWasm = !c.ShowWasm },
 						// TODO: implement capture, etc. mostly need to decide syntax
 					})
 					{
@@ -73,11 +73,11 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 					}
 					vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: ",\n                written in\n                "}}
 					vgparent.AppendChild(vgn)
-					vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "a", Attr: []vugu.VGAttribute{{Namespace: "", Key: "href", Val: "https://golang.org/"}}}}
+					vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "a", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "href", Val: "https://golang.org/"}}}}
 					vgparent.AppendChild(vgn)
 					vgn.DOMEventHandlerSpecList = append(vgn.DOMEventHandlerSpecList, vugu.DOMEventHandlerSpec{
-						EventType:	"click",
-						Func:		func(event vugu.DOMEvent) { event.PreventDefault(); c.ShowGo = !c.ShowGo },
+						EventType: "click",
+						Func:      func(event vugu.DOMEvent) { event.PreventDefault(); c.ShowGo = !c.ShowGo },
 						// TODO: implement capture, etc. mostly need to decide syntax
 					})
 					{
@@ -88,11 +88,11 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 					}
 					vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n                using\n                "}}
 					vgparent.AppendChild(vgn)
-					vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "a", Attr: []vugu.VGAttribute{{Namespace: "", Key: "href", Val: "https://vugu.org/"}}}}
+					vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "a", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "href", Val: "https://vugu.org/"}}}}
 					vgparent.AppendChild(vgn)
 					vgn.DOMEventHandlerSpecList = append(vgn.DOMEventHandlerSpecList, vugu.DOMEventHandlerSpec{
-						EventType:	"click",
-						Func:		func(event vugu.DOMEvent) { event.PreventDefault(); c.ShowVugu = !c.ShowVugu },
+						EventType: "click",
+						Func:      func(event vugu.DOMEvent) { event.PreventDefault(); c.ShowVugu = !c.ShowVugu },
 						// TODO: implement capture, etc. mostly need to decide syntax
 					})
 					{
@@ -107,7 +107,7 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 				vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n\n            "}}
 				vgparent.AppendChild(vgn)
 				if c.ShowWasm {
-					vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute{{Namespace: "", Key: "class", Val: "alert alert-primary"}, vugu.VGAttribute{Namespace: "", Key: "role", Val: "alert"}}}}
+					vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "class", Val: "alert alert-primary"}, vugu.VGAttribute{Namespace: "", Key: "role", Val: "alert"}}}}
 					vgparent.AppendChild(vgn)
 					{
 						vgparent := vgn
@@ -124,7 +124,7 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 						}
 						vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: " (abbreviated Wasm) is a binary instruction format.\n                It is designed as a portable target for compilation of high-level languages like Go/C/C++/Rust, \n                enabling deployment on the web for client and server applications.\n                "}}
 						vgparent.AppendChild(vgn)
-						vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "a", Attr: []vugu.VGAttribute{{Namespace: "", Key: "target", Val: "_blank"}, vugu.VGAttribute{Namespace: "", Key: "href", Val: "https://webassembly.org/"}}}}
+						vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "a", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "target", Val: "_blank"}, vugu.VGAttribute{Namespace: "", Key: "href", Val: "https://webassembly.org/"}}}}
 						vgparent.AppendChild(vgn)
 						{
 							vgparent := vgn
@@ -139,7 +139,7 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 				vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n\n            "}}
 				vgparent.AppendChild(vgn)
 				if c.ShowGo {
-					vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute{{Namespace: "", Key: "class", Val: "alert alert-primary"}, vugu.VGAttribute{Namespace: "", Key: "role", Val: "alert"}}}}
+					vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "class", Val: "alert alert-primary"}, vugu.VGAttribute{Namespace: "", Key: "role", Val: "alert"}}}}
 					vgparent.AppendChild(vgn)
 					{
 						vgparent := vgn
@@ -156,7 +156,7 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 						}
 						vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: " is an open source programming language that makes it easy to build simple, reliable, and efficient software.\n                "}}
 						vgparent.AppendChild(vgn)
-						vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "a", Attr: []vugu.VGAttribute{{Namespace: "", Key: "target", Val: "_blank"}, vugu.VGAttribute{Namespace: "", Key: "href", Val: "https://golang.org/"}}}}
+						vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "a", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "target", Val: "_blank"}, vugu.VGAttribute{Namespace: "", Key: "href", Val: "https://golang.org/"}}}}
 						vgparent.AppendChild(vgn)
 						{
 							vgparent := vgn
@@ -171,7 +171,7 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 				vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n\n            "}}
 				vgparent.AppendChild(vgn)
 				if c.ShowVugu {
-					vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute{{Namespace: "", Key: "class", Val: "alert alert-primary"}, vugu.VGAttribute{Namespace: "", Key: "role", Val: "alert"}}}}
+					vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "class", Val: "alert alert-primary"}, vugu.VGAttribute{Namespace: "", Key: "role", Val: "alert"}}}}
 					vgparent.AppendChild(vgn)
 					{
 						vgparent := vgn
@@ -195,7 +195,7 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 						}
 						vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: " features one would expect from\n                a web framework.  It also makes a point of attempting to apply best practices \n                from Go to web application UI development and prefers idiomatic solutions over\n                techniques that follow patterns from JavaScript wherever possible.\n                "}}
 						vgparent.AppendChild(vgn)
-						vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "a", Attr: []vugu.VGAttribute{{Namespace: "", Key: "target", Val: "_blank"}, vugu.VGAttribute{Namespace: "", Key: "href", Val: "https://vugu.org/"}}}}
+						vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "a", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "target", Val: "_blank"}, vugu.VGAttribute{Namespace: "", Key: "href", Val: "https://vugu.org/"}}}}
 						vgparent.AppendChild(vgn)
 						vgn.SetInnerHTML(vugu.HTML("Read more at vugu.org »"))
 						vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n            "}}
