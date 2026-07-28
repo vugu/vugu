@@ -13,6 +13,8 @@ import (
 	"github.com/vugu/vugu/v2"
 )
 
+var ErrGoInScriptTag = errors.New("\"<script application/x-go>\" tags are no longer supported in a .vugu file.")
+
 // ParserGo is a template parser that emits Go source code that will construct the appropriately wired VGNodes.
 type ParserGo struct {
 	PackageName string // name of package to use at top of files
@@ -408,13 +410,10 @@ func (p *ParserGo) visitScriptOrStyle(state *parseGoState, n *html.Node) error {
 			mt = strings.Split(strings.TrimSpace(ty.Val), ";")[0]
 		}
 
-		// go code
+		// go code in script tags is now banned. Any code that was in a <script application/x-go> tag needs to be moved to the
+		// corresponding <component>.go file
 		if mt == "application/x-go" {
-			err := p.visitGo(state, n)
-			if err != nil {
-				return err
-			}
-			return nil
+			return fmt.Errorf("%w", ErrGoInScriptTag)
 		}
 
 		// component js (type attr omitted okay - means it is JS)
@@ -591,20 +590,6 @@ func (p *ParserGo) visitCSS(state *parseGoState, n *html.Node) error {
 
 	// dynamic attrs
 	writeDynamicAttributes(state, n)
-
-	return nil
-}
-
-func (p *ParserGo) visitGo(state *parseGoState, n *html.Node) error {
-	for childN := n.FirstChild; childN != nil; childN = childN.NextSibling {
-		if childN.Type != html.TextNode {
-			return fmt.Errorf("unexpected node type %v inside of script tag", childN.Type)
-		}
-		// if childN.Line > 0 {
-		// 	fmt.Fprintf(&goBuf, "//line %s:%d\n", fname, childN.Line)
-		// }
-		state.goBuf.WriteString(childN.Data)
-	}
 
 	return nil
 }
