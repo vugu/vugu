@@ -1,5 +1,3 @@
-<html>
-<body>
 <div id="testing">
     <div id="plain_string" :attr='"string"'></div>
     <div id="string_var" :attr='c.StringVar'></div>
@@ -14,5 +12,3 @@
     <div id="stringer" :attr='c.Stringer'></div>
     <div id="stringer_nil_ptr" :attr='c.StringerNilPtr'></div>
 </div>
-</body>
-</html>

@@ -14,6 +14,7 @@ import (
 )
 
 var ErrGoInScriptTag = errors.New("\"<script application/x-go>\" tags are no longer supported in a .vugu file.")
+var ErrUnexpectedTopLevelTag = errors.New("unexpected top level tag found.")
 
 // ParserGo is a template parser that emits Go source code that will construct the appropriately wired VGNodes.
 type ParserGo struct {
@@ -30,62 +31,37 @@ type ParserGo struct {
 func (p *ParserGo) Parse(b []byte, fname string) ([]byte, error) {
 	state := &parseGoState{}
 
-	// use a tokenizer to peek at the first element and see if it's an HTML tag
-	state.isFullHTML = false
-	tmpZ := html.NewTokenizer(bytes.NewReader(b))
-	for {
-		tt := tmpZ.Next()
-		if tt == html.ErrorToken {
-			fmt.Printf("Tokenizer called with: \n%s\n", string(b))
-			fmt.Printf("tmpZ token error: %s\n", tmpZ.Err())
-			return nil, tmpZ.Err()
-		}
-		if tt != html.StartTagToken { // skip over non-tags
-			continue
-		}
-		t := tmpZ.Token()
-		if t.Data == "html" {
-			state.isFullHTML = true
-			break
-		}
-		break
-	}
-
 	// log.Printf("isFullHTML: %v", state.isFullHTML)
 
-	if state.isFullHTML {
-
-		n, err := html.Parse(bytes.NewReader(b))
-		if err != nil {
-			fmt.Printf("html.Parse error: %s\n", err)
-			return nil, err
-		}
-		state.docNodeList = append(state.docNodeList, n) // docNodeList is just this one item
-
-	} else {
-
-		nlist, err := html.ParseFragment(bytes.NewReader(b), &html.Node{
-			Type:     html.ElementNode,
-			DataAtom: atom.Div,
-			Data:     "div",
-		})
-		if err != nil {
-			fmt.Printf("html.ParseFragment error %s\n", err)
-			return nil, err
-		}
-
-		// only add elements
-		for _, n := range nlist {
-			if n.Type != html.ElementNode {
-				continue
-			}
-			// log.Printf("FRAGMENT: %#v", n)
-			state.docNodeList = append(state.docNodeList, n)
-		}
-
+	// The html parser will parse the contents of the supplied *.vugu file
+	// STARTING from the top most <div> tag (which is not including in the parsing)
+	// and returns a *Node tree from that point downwards.
+	// as a result it is impossible to for the top node to be a
+	// <html> <head> or <body> node (or any node other then <div>)
+	// So full HTML mode makes no sense. Any <html> etc. tag inside a <div>
+	// will be ignored by the parser. However in ignored tags contents will not be
+	// ignored if they are valid HTML at that point (after the tag is ignored)
+	// So a nested <html> containing a <p> will ignore the <html> tag but respect the <p> tag.
+	nlist, err := html.ParseFragment(bytes.NewReader(b), &html.Node{
+		Type:     html.ElementNode,
+		DataAtom: atom.Div,
+		Data:     "div",
+	})
+	if err != nil {
+		fmt.Printf("html.ParseFragment error %s\n", err)
+		return nil, err
 	}
 
-	var err error
+	// only add elements
+	for _, n := range nlist {
+		if n.Type != html.ElementNode {
+			continue
+		}
+		// log.Printf("FRAGMENT: %#v", n)
+		state.docNodeList = append(state.docNodeList, n)
+	}
+
+	//var err error
 	// run n through the optimizer and convert large chunks of static elements into
 	// vg-html attributes, this should provide a significiant performance boost for static HTML
 	if !p.NoOptimizeStatic {
@@ -181,74 +157,66 @@ func (p *ParserGo) visitOverall(state *parseGoState) error {
 		state.docNodeList = []*html.Node{state.docNodeList[0].FirstChild}
 	}
 
-	if state.isFullHTML {
+	gotTopNode := false
 
-		if len(state.docNodeList) != 1 {
-			return fmt.Errorf("full HTML mode but not exactly 1 node found (found %d)", len(state.docNodeList))
+	for _, n := range state.docNodeList {
+
+		// ignore comments
+		if n.Type == html.CommentNode {
+			continue
 		}
-		err := p.visitHTML(state, state.docNodeList[0])
-		if err != nil {
-			return err
-		}
 
-	} else {
+		if n.Type == html.TextNode {
 
-		gotTopNode := false
-
-		for _, n := range state.docNodeList {
-
-			// ignore comments
-			if n.Type == html.CommentNode {
+			// ignore whitespace text
+			if strings.TrimSpace(n.Data) == "" {
 				continue
 			}
 
-			if n.Type == html.TextNode {
+			// error on non-whitespace text
+			return fmt.Errorf("unexpected text outside any element: %q", n.Data)
 
-				// ignore whitespace text
-				if strings.TrimSpace(n.Data) == "" {
-					continue
-				}
+		}
 
-				// error on non-whitespace text
-				return fmt.Errorf("unexpected text outside any element: %q", n.Data)
+		// must be an element at this point
+		if n.Type != html.ElementNode {
+			return fmt.Errorf("unexpected node type %v; node=%#v", n.Type, n)
+		}
 
-			}
+		if isScriptOrStyle(n) {
 
-			// must be an element at this point
-			if n.Type != html.ElementNode {
-				return fmt.Errorf("unexpected node type %v; node=%#v", n.Type, n)
-			}
-
-			if isScriptOrStyle(n) {
-
-				err := p.visitScriptOrStyle(state, n)
-				if err != nil {
-					return err
-				}
-				continue
-			}
-
-			if gotTopNode {
-				return fmt.Errorf("Found more than one top level element: %s", n.Data)
-			}
-			gotTopNode = true
-
-			// handle top node
-
-			// check for forbidden top level tags
-			nodeName := strings.ToLower(n.Data)
-			if nodeName == "head" ||
-				nodeName == "body" {
-				return fmt.Errorf("component cannot use %q as top level tag", nodeName)
-			}
-
-			err := p.visitTopNode(state, n)
+			err := p.visitScriptOrStyle(state, n)
 			if err != nil {
 				return err
 			}
 			continue
-
 		}
+
+		if gotTopNode {
+			return fmt.Errorf("Found more than one top level element: %s", n.Data)
+		}
+		gotTopNode = true
+
+		// handle top node
+		// check for forbidden top level tags
+		// Commented out for clarity -as this code may reappear.
+		// But.....
+		// html.ParseFragment is set to start from the first <div> element it sees in the supplied file.
+		// Any extra top level tags e.g. <head> will have already been stripped by html.ParseFragment
+		// As a result this if test is ALWAYS false.
+		// Test TestParserTopLevelTag confirms this as it should never fail
+		nodeName := strings.ToLower(n.Data)
+		if nodeName == "head" ||
+			nodeName == "body" ||
+			nodeName == "html" {
+			return fmt.Errorf("%v: %w", nodeName, ErrUnexpectedTopLevelTag)
+		}
+
+		err := p.visitTopNode(state, n)
+		if err != nil {
+			return err
+		}
+		continue
 
 	}
 

@@ -19,57 +19,39 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 	var vgiterkey interface{}
 	_ = vgiterkey
 	var vgn *vugu.VGNode
-	vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "html", Attr: []vugu.VGAttribute(nil)}}
+	vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "id", Val: "content"}}}}
 	vgout.Out = append(vgout.Out, vgn) // root for output
 	{
 		vgparent := vgn
 		_ = vgparent
-		vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "head", Attr: []vugu.VGAttribute(nil)}}
+		vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n  "}}
 		vgparent.AppendChild(vgn)
-		{
-			vgparent := vgn
-			_ = vgparent
-		}
-		vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "body", Attr: []vugu.VGAttribute(nil)}}
-		vgparent.AppendChild(vgn)
-		{
-			vgparent := vgn
-			_ = vgparent
-			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "div", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "id", Val: "content"}}}}
+		for k, v := range c.Items() {
+			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "span", Attr: []vugu.VGAttribute(nil)}}
 			vgparent.AppendChild(vgn)
+			vgn.AddAttrInterface("id", fmt.Sprintf("id%d", k))
+			vgn.SetInnerHTML(fmt.Sprintf("%d-%s", k, v))
+			vgn.DOMEventHandlerSpecList = append(vgn.DOMEventHandlerSpecList, vugu.DOMEventHandlerSpec{
+				EventType: "click",
+				Func:      func(event vugu.DOMEvent) { c.Clicked = fmt.Sprintf("%d-%s", k, v) },
+				// TODO: implement capture, etc. mostly need to decide syntax
+			})
 			{
 				vgparent := vgn
 				_ = vgparent
-				vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n      "}}
-				vgparent.AppendChild(vgn)
-				for k, v := range c.Items() {
-					vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "span", Attr: []vugu.VGAttribute(nil)}}
-					vgparent.AppendChild(vgn)
-					vgn.AddAttrInterface("id", fmt.Sprintf("id%d", k))
-					vgn.SetInnerHTML(fmt.Sprintf("%d-%s", k, v))
-					vgn.DOMEventHandlerSpecList = append(vgn.DOMEventHandlerSpecList, vugu.DOMEventHandlerSpec{
-						EventType: "click",
-						Func:      func(event vugu.DOMEvent) { c.Clicked = fmt.Sprintf("%d-%s", k, v) },
-						// TODO: implement capture, etc. mostly need to decide syntax
-					})
-					{
-						vgparent := vgn
-						_ = vgparent
-						vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n      "}}
-						vgparent.AppendChild(vgn)
-					}
-				}
-				vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n      "}}
-				vgparent.AppendChild(vgn)
-				if c.Clicked != "" {
-					vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "p", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "id", Val: "clicked"}}}}
-					vgparent.AppendChild(vgn)
-					vgn.SetInnerHTML(c.Clicked + " clicked!")
-				}
-				vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n    "}}
+				vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n  "}}
 				vgparent.AppendChild(vgn)
 			}
 		}
+		vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n  "}}
+		vgparent.AppendChild(vgn)
+		if c.Clicked != "" {
+			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(3), Namespace: "", Data: "p", Attr: []vugu.VGAttribute{vugu.VGAttribute{Namespace: "", Key: "id", Val: "clicked"}}}}
+			vgparent.AppendChild(vgn)
+			vgn.SetInnerHTML(c.Clicked + " clicked!")
+		}
+		vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n"}}
+		vgparent.AppendChild(vgn)
 	}
 	return vgout
 }
