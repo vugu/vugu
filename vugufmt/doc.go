@@ -1,2 +1,2 @@
-//Package vugufmt provides gofmt-like functionality for vugu files.
+// Package vugufmt provides gofmt-like functionality for vugu files.
 package vugufmt

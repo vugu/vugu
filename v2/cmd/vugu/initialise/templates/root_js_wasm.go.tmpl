@@ -1,0 +1,31 @@
+//go:build js && wasm
+
+package main
+
+type {{ .RootStructType }} struct {
+	ShowWasm bool `vugu:"data"`
+	ShowGo   bool `vugu:"data"`
+	ShowVugu bool `vugu:"data"`
+}
+
+func (c *{{ .RootStructType }}) ShowWasmParagraph(event vugu.DOMEvent) {
+	event.PreventDefault()
+	c.ShowWasm=!c.ShowWasm
+}
+
+
+func (c *{{ .RootStructType }}) ShowGoParagraph(event vugu.DOMEvent) {
+	event.PreventDefault()
+	c.ShowGo=!c.ShowGo
+}
+
+
+func (c *{{ .RootStructType }}) ShowVuguParagraph(event vugu.DOMEvent) {
+	event.PreventDefault()
+	c.ShowVugu=!c.ShowVugu
+}
+
+func (c *{{ .RootStructType }}) Recent() bool {
+{
+	return time.Now().Year()>=2020
+}

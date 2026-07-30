@@ -1,0 +1,17 @@
+<div class="final" :id='fmt.Sprintf("final%d", c.ID)'>
+	<div class="clicker" @click='c.Clicked=true;log.Printf("CLICKED: %p",c)'>Click me</div>
+	<div class="clicked-true" vg-if='c.Clicked'>
+		<p>You clicked me!</p>
+	</div>
+	<div class="clicked-false" vg-if='!c.Clicked'>
+		<p>I haven't been clicked!</p>
+	</div>
+</div>
+
+<script type="application/x-go">
+	import "log"
+	type Final struct {
+		ID int `vugu:"data"`
+		Clicked bool `vugu:"data"`
+	}
+</script>

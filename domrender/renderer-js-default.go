@@ -1,10 +1,7 @@
-// +build !tinygo
-
 package domrender
 
 import (
 	"fmt"
-	"runtime/debug"
 
 	"github.com/vugu/vugu"
 )
@@ -13,7 +10,7 @@ func (r *JSRenderer) sendEventWaitCh() {
 
 	if panicr := recover(); panicr != nil {
 		fmt.Println("handleRawDOMEvent caught panic", panicr)
-		debug.PrintStack()
+		//		debug.PrintStack()
 
 		// in error case send false to tell event loop to exit
 		select {

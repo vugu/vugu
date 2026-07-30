@@ -6,7 +6,25 @@ import (
 
 // BuildIn is the input to a Build call.
 type BuildIn struct {
+
+	// the overall build environment
 	BuildEnv *BuildEnv
+
+	// a stack of position hashes, the last one can be used by a component to get a unique hash for overall position
+	PositionHashList []uint64
+}
+
+// CurrentPositionHash returns the hash value that can be used by a component to
+// mix into it's own hash values to achieve uniqueness based on overall position
+// in the output tree.  Basically you should XOR this with whatever unique reference
+// ID within the component itself used during Build.  The purpose is to ensure
+// that we use the same ID for the same component in the same position within
+// the overall tree but a different one for the same component in a different position.
+func (bi *BuildIn) CurrentPositionHash() uint64 {
+	if len(bi.PositionHashList) == 0 {
+		return 0
+	}
+	return bi.PositionHashList[len(bi.PositionHashList)-1]
 }
 
 // BuildOut is the output from a Build call.  It includes Out as the DOM elements
@@ -133,99 +151,24 @@ type Builder interface {
 	Build(in *BuildIn) (out *BuildOut)
 }
 
-// BuilderFunc is a Build-like function that implements Builder.
-type BuilderFunc func(in *BuildIn) (out *BuildOut)
+// builderFunc is a Build-like function that implements Builder.
+type builderFunc func(in *BuildIn) (out *BuildOut)
 
 // Build implements Builder.
-func (f BuilderFunc) Build(in *BuildIn) (out *BuildOut) { return f(in) }
+func (f builderFunc) Build(in *BuildIn) (out *BuildOut) { return f(in) }
 
-// BeforeBuilder can be implemented by components that need a chance to compute internal values
-// after properties have been set but before Build is called.
+// NewBuilderFunc returns a Builder from a function that is called for Build.
+func NewBuilderFunc(f func(in *BuildIn) (out *BuildOut)) Builder {
+	// NOTE: for now, all components have to be struct pointers, so we wrap
+	// this function in a struct pointer.  Would be nice to fix this at some point.
+	return &struct {
+		Builder
+	}{
+		Builder: builderFunc(f),
+	}
+}
+
+// BeforeBuilder is deprecated.  It is replaced by the Compute lifecycle callback.
 type BeforeBuilder interface {
 	BeforeBuild()
 }
-
-// // RegisteredComponentTypes returns a copy of the map of registered component types.
-// func RegisteredComponentTypes() ComponentTypeMap {
-// 	// make a copy
-// 	ret := make(ComponentTypeMap, len(globalComponentTypeMap))
-// 	for k, v := range globalComponentTypeMap {
-// 		ret[k] = v
-// 	}
-// 	return ret
-// }
-
-// // RegisterComponentType can be called during init to register a component and make it available by default to the rest of the application.
-// // A program may retrieved these by calling RegisteredComponentTypes() or it may choose to form its own set.  RegisterComponentType() just
-// // makes it available in case that's useful.  It is good practice for components to register themselves in an init function.
-// func RegisterComponentType(tagName string, ct ComponentType) {
-// 	globalComponentTypeMap[tagName] = ct
-// }
-
-// var globalComponentTypeMap = make(ComponentTypeMap)
-
-// // ComponentTypeMap is a map of the component tag name to a ComponentType.
-// type ComponentTypeMap map[string]ComponentType
-
-// // Props is a map that corresponds to property names and values.  The name
-// // can correspond to an HTML attribute, or a property being passed in
-// // during component instantiation, depending on the context.
-// type Props map[string]interface{}
-
-// // OrderedKeys returns the keys sorted alphabetically.
-// func (p Props) OrderedKeys() []string {
-// 	if p == nil {
-// 		return nil
-// 	}
-// 	ret := make([]string, len(p))
-// 	for k := range p {
-// 		ret = append(ret, k)
-// 	}
-// 	sort.Strings(ret)
-// 	return ret
-// }
-
-// // Clone makes a copy of the Props map, distinct from the original.
-// func (p Props) Clone() Props {
-// 	ret := make(Props, len(p))
-// 	for k, v := range p {
-// 		ret[k] = v
-// 	}
-// 	return ret
-// }
-
-// // Merge will copy everything from p2 into p and return p for ease of use.  Does not copy p.
-// func (p Props) Merge(p2 Props) Props {
-// 	for k, v := range p2 {
-// 		p[k] = v
-// 	}
-// 	return p
-// }
-
-// // ComponentType is implemented by any type that wants to be a component.
-// // The BuildVDOM method is called to generate the virtual DOM for a component; and this method
-// // is usually code generated (by ParserGo) from a .vugu file.
-// // NewData provides for specific behavior when a component is initialized.
-// type ComponentType interface {
-// 	BuildVDOM(data interface{}) (vdom *VGNode, css *VGNode, reterr error) // based on the given data, build the VGNode tree
-// 	NewData(props Props) (interface{}, error)                             // initial data when component is instanciated
-// }
-
-// // New instantiates a component based on its ComponentType and a set of Props.
-// // It essentially just calls NewData and returns a ComponentInst.
-// func New(ct ComponentType, props Props) (*ComponentInst, error) {
-// 	data, err := ct.NewData(props)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	return &ComponentInst{
-// 		Type: ct,
-// 		Data: data,
-// 	}, nil
-// }
-
-// // ComponentInst corresponds to a ComponentType that has been instantiated.
-// type ComponentInst struct {
-// 	Type ComponentType // type of component
-// 	Data interface{}   // data as returned by NewData
-// }

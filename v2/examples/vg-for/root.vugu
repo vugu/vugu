@@ -1,0 +1,89 @@
+<div>
+    <main role="main" class="container text-center">
+        <div class="mt-5">
+            <h1>vg-for Loop Examples</h1>
+                <!-- Add some buttons that trigger methods on the component when clicked -->
+                <!-- The methods toggle the vidsibility of each of the 4 different loop examples -->
+                <!-- 'c' is an instance of the `Root` structure. The methods are attached to the Root stucture as normal in the Go code -->
+                <button @click='c.ToggleForILoop()'>Toggle "for i" loop</button>
+                <button @click='c.ToggleKVLoop()'>Togglle "key value" loop</button>
+                <button @click='c.ToggleShortCutLoop()'>Togglle "shortcut" loop</button>
+                <button @click='c.ToggleSortedLoop()'>Toggle "sorted" loop</button>
+                <button @click='c.ToggleIteratorLoop()'>Toggle "iterator based" loop</button>
+
+                <!-- Use an vg-if test to see if we should show this <div> at all. -->
+                <div id="for_i_loop" vg-if='c.ShowForILoop()'>
+                    <h3> for i style for loop example </h3>
+                    <ul>
+                        <!-- use the "for i" (for initilizer; condition; increment) form of a  `vg-for` to loop over the days in the week -->
+                        <li vg-for='i:=0;i<c.DaysInWeek();i++'>
+                            <!-- Use a vg-content to set the content of this div -->
+                            <!-- Use the DayOfWeek(int) string method of the (Root) component to return the day of the week -->
+                            <div vg-content='fmt.Sprintf("%s is day number %d", c.DayOfWeek(i),i+1)'></div>
+                        </li>
+                    </ul>
+                    <hr>
+                </div>
+
+                <div id="for_kv_loop" vg-if='c.ShowKVLoop()'>
+                    <h3> key value style for loop example </h3>
+                    <p>The order of the following list is intended to be random! The loop iterates over a Go map which is always in a random order, as per the Go spec.</p>
+                    <p>If you toggle the Key Value loop you will get a different order.</p>
+                    <ul>
+                        <!-- Use the explicit key value form of a vg-for loop to iterate over a map -->
+                        <!-- The method on the (root) component, c, DaysInWeekIth returns a map[string]string --> 
+                        <li vg-for='k, v := range c.DaysInWeekIth()'>
+                            <div vg-content='fmt.Sprintf("The %s day of the week is %s", k, v)'></div>
+                        </li>
+                    </ul>
+                    <hr>
+                </div>
+
+                <div id="for_shortcut_loop" vg-if='c.ShowShortCutLoop()'>
+                    <h3> shortcut version of the key value style for loop example </h3>
+                    <p>This time the list is generated using a shortcut version of the <code>vg-for</code> loop.</p>
+                    <p>The order of the following list is intended to be random! The loop iterates over a Go map which is always in a random order, as per the Go spec.</p>
+                    <p>If you toggle the Key Value loop you will get a different order.</p>
+                    <ul>
+                        <!-- vg-for supports a special case that can act as a shortcut -->
+                        <!-- if the string following the vg-for= DOES NOT CONTAIN WHITESPACE then it will be expanded to: -->
+                        <!-- for key, value := range expr  -->
+                        <!-- the expr should return two values and can be a method, in this case the DayInWeekIth method on the component c -->
+                        <li vg-for='c.DaysInWeekIth()'>
+                            <!-- When using the vg-content we can reference the variables "key" and "value" that will implicitly be defined bu the shortcut -->
+                            <div vg-content='fmt.Sprintf("The %s day of the week is %s", key, value)'></div>
+                        </li>
+                    </ul>
+                    <hr>
+                </div>
+
+                <div id="for_sorted_loop" vg-if='c.ShowSortedLoop()'>
+                    <h3> sorted key value style for loop example </h3>
+                    <p>The order of the following list is sorted based on the alphabetical order of the list keys.</p>
+                    <p>This example uses the new Go <code>iter</code>, <code>maps</code> and <code>slices</code> packages</p>
+                    <ul>
+                        <!-- This example uses the explicit form of the vg-for -->
+                        <!-- This time the methods c.DaysInWeekIthSorted uses the new iter, sllice and maps package internally -->
+                        <li vg-for='index, value := range c.DaysInWeekIthSorted()'>
+                            <div vg-content='fmt.Sprintf("The %s day of the week is  %s", value, c.DayOfWeek(index))'></div>
+                        </li>
+                    </ul>
+                    <hr>
+                </div>
+
+                <div id="for_iterator_loop" vg-if='c.ShowIteratorLoop()'>
+                    <h3> for loop using an Go 1.23 iterator example </h3>
+                    <p>This example uses the Go range over an iterator style of for loop. The <code>c.DaysInWeekIterator()</code> returns a <code>iter.Seq[T1, T2]</code></p>
+                    <ul>
+                        <!-- This example uses the explicit form of the vg-for -->
+                        <!-- This time the methods c.DaysInWeekIthSorted uses the new iter, sllice and maps package internally -->
+                        <li vg-for='index := range c.DaysInWeekIterator()'>
+                            <div vg-content='fmt.Sprintf("The day of the week at index %d is %s", index, c.DayOfWeek(index))'></div>
+                        </li>
+                    </ul>
+                    <hr>
+                </div>
+
+        </div>
+    </main>
+</div>

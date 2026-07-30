@@ -1,0 +1,5 @@
+<div id="top">
+    <main:Thing @Click='c.ShowText = fmt.Sprintf("%s",event)'></main:Thing>
+    <div vg-if="len(c.ShowText)>0" id="show_text" vg-html="c.ShowText"></div>
+</div>
+

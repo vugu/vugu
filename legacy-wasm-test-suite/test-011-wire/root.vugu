@@ -1,0 +1,16 @@
+<div>
+
+    <ul>
+        <li><main:DemoComp1></main:DemoComp1></li>
+        <li><main:DemoComp2></main:DemoComp2></li>
+    </ul>
+
+</div>
+
+<script type="application/x-go">
+
+type Root struct {
+    CounterRef
+}
+
+</script>

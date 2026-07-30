@@ -1,6 +1,6 @@
 language: go
 go:
-  - 1.14.x
+  - 1.21.x
 
 os:
   - linux
@@ -14,22 +14,27 @@ env:
   - GO111MODULE=on
 
 script:
+  - go install ./cmd/vugugen
   - go test .
-  - go test ./gen
+  - go test ./devutil
+  - go test ./distutil
   - go test ./domrender
+  - go test ./gen
+  - go test ./js
   - go test ./staticrender
   - go test ./simplehttp
+  - go test ./vgform
   - go test ./wasm-test-suite
-  - go install ./cmd/vugugen
 
 notifications:
   email: true
 
 before_install:
   - go get golang.org/x/tools/cmd/goimports && go install golang.org/x/tools/cmd/goimports
-  - docker pull vugu/wasm-test-suite:latest
+  - cd wasm-test-suite/docker && ./make-docker.sh
   - docker run -d -t -p 9222:9222 -p 8846:8846 --name wasm-test-suite vugu/wasm-test-suite:latest
 
 services:
   - docker
+
 

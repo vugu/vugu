@@ -1,0 +1,18 @@
+<html>
+<body>
+<div id="testing">
+    <div id="plain_string" :attr='"string"'></div>
+    <div id="string_var" :attr='c.StringVar'></div>
+    <div id="string_ptr" :attr='&c.StringVar'></div>
+    <div id="int_var" :attr='c.IntVar'></div>
+    <div id="int_ptr" :attr='&c.IntVar'></div>
+    <div id="true_var" :attr='c.TrueVar'></div>
+    <div id="false_var" :attr='c.FalseVar'></div>
+    <div id="true_ptr" :attr='&c.TrueVar'></div>
+    <div id="false_ptr" :attr='&c.FalseVar'></div>
+    <div id="string_nil_ptr" :attr='c.StringNilPtr'></div>
+    <div id="stringer" :attr='c.Stringer'></div>
+    <div id="stringer_nil_ptr" :attr='c.StringerNilPtr'></div>
+</div>
+</body>
+</html>

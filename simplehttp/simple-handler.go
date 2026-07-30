@@ -7,7 +7,6 @@ in one place.   If you require more functionality than simplehttp provides, near
 it does is available in the github.com/vugu/vugu package and you can construct what you
 need from its parts.  That said, simplehttp should make it easy to start:
 
-
 	// dev flag enables most common development features
 	// including rebuild your .wasm upon page reload
 	dev := true
@@ -22,7 +21,6 @@ After creation, some flags are available for tuning, e.g.:
 Since it's just a regular http.Handler, starting a webserver is as simple as:
 
 	log.Fatal(http.ListenAndServe("127.0.0.1:5678", h))
-
 */
 package simplehttp
 
@@ -32,7 +30,6 @@ import (
 	"fmt"
 	"html/template"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -201,7 +198,7 @@ doBuild:
 			}
 		}
 
-		f, err := ioutil.TempFile("", "main_wasm_")
+		f, err := os.CreateTemp("", "main_wasm_")
 		if err != nil {
 			panic(err)
 		}
@@ -209,8 +206,6 @@ doBuild:
 		f.Close()
 		os.Remove(f.Name())
 		defer os.Remove(f.Name())
-
-		var cmd *exec.Cmd
 
 		startTime := time.Now()
 		if h.EnableGenerate {
@@ -229,11 +224,18 @@ doBuild:
 
 		// GOOS=js GOARCH=wasm go build -o main.wasm .
 		startTime = time.Now()
-		cmd = exec.Command("go", "build", "-o", fpath, ".")
-		cmd.Dir = h.Dir
-		cmd.Env = append(cmd.Env, os.Environ()...)
-		cmd.Env = append(cmd.Env, "GOOS=js", "GOARCH=wasm")
-		b, err := cmd.CombinedOutput()
+		runCommand := func(args ...string) ([]byte, error) {
+			cmd := exec.Command(args[0], args[1:]...)
+			cmd.Dir = h.Dir
+			cmd.Env = append(cmd.Env, os.Environ()...)
+			cmd.Env = append(cmd.Env, "GOOS=js", "GOARCH=wasm")
+			b, err := cmd.CombinedOutput()
+			return b, err
+		}
+		b, err := runCommand("go", "mod", "tidy")
+		if err == nil {
+			b, err = runCommand("go", "build", "-o", fpath, ".")
+		}
 		w.Header().Set("X-Go-Build-Duration", time.Since(startTime).String())
 		if err != nil {
 			msg := fmt.Sprintf("Error from compile: %v (out path=%q); Output:\n%s", err, fpath, b)
@@ -300,22 +302,19 @@ serveBuiltFile:
 	if err != nil {
 		log.Print(err)
 	}
-	return
-
 }
 
 func (h *SimpleHandler) serveGoEnvWasmExecJs(w http.ResponseWriter, r *http.Request) {
-
-	b, err := exec.Command("go", "env", "GOROOT").CombinedOutput()
+	goRoot, err := exec.Command("go", "env", "GOROOT").CombinedOutput()
 	if err != nil {
 		http.Error(w, "failed to run `go env GOROOT`: "+err.Error(), 500)
 		return
 	}
 
 	h.wasmExecJsOnce.Do(func() {
-		h.wasmExecJsContent, err = ioutil.ReadFile(filepath.Join(strings.TrimSpace(string(b)), "misc/wasm/wasm_exec.js"))
+		h.wasmExecJsContent, err = os.ReadFile(filepath.Join(strings.TrimSpace(string(goRoot)), "lib/wasm/wasm_exec.js"))
 		if err != nil {
-			http.Error(w, "failed to run `go env GOROOT`: "+err.Error(), 500)
+			http.Error(w, "failed to read \"lib/wasm/wasm_exec.js\" file: "+err.Error(), 500)
 			return
 		}
 		h.wasmExecJsTs = time.Now() // hack but whatever for now
@@ -426,17 +425,17 @@ if (wasmSupported) {
 // PageHandler executes a Go template and responsds with the page.
 type PageHandler struct {
 	Template         *template.Template
-	TemplateDataFunc func(r *http.Request) interface{}
+	TemplateDataFunc func(r *http.Request) any
 }
 
 // DefaultStaticData is a map of static things added to the return value of DefaultTemplateDataFunc.
 // Provides a quick and dirty way to do things like add CSS files to every page.
-var DefaultStaticData = make(map[string]interface{}, 4)
+var DefaultStaticData = make(map[string]any, 4)
 
 // DefaultTemplateDataFunc is the default behavior for making template data.  It
 // returns a map with "Request" set to r and all elements of DefaultStaticData added to it.
-var DefaultTemplateDataFunc = func(r *http.Request) interface{} {
-	ret := map[string]interface{}{
+var DefaultTemplateDataFunc = func(r *http.Request) any {
+	ret := map[string]any{
 		"Request": r,
 	}
 	for k, v := range DefaultStaticData {

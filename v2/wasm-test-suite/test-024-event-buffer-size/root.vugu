@@ -1,0 +1,5 @@
+<div id='top'>
+	<select @change='c.OutputEvent(event)'>
+		<option vg-for="_, v := range c.OptionsList" :value="v.value" vg-content="v.output">
+	</select>
+</div>

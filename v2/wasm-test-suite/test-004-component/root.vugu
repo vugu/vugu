@@ -1,0 +1,15 @@
+<div class="test-div" id="testdiv">
+
+    <ul>
+        <main:DemoLine vg-for="i := 0; i < c.ItemCount; i++" vg-key="i" :Num="i"></main:DemoLine>
+    </ul>
+
+    <button id="addbtn" @click="c.OnAdd()">Add</button>
+
+</div>
+
+<style>
+#test_div_id {
+    background: #ddd;
+}
+</style>

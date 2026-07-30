@@ -1,0 +1,24 @@
+<div>
+    <main role="main" class="container text-center">
+        <div class="mt-5">
+            <h1>Compound Component Example</h1>
+            <div id="parent-component">
+                <!-- This is the parent control, so... -->
+                <p>This is the Parent control</p>
+                <!-- we can call c.Msg() to get the message from the parent compent -->
+                <p vg-content='c.Msg()'>
+                </p>
+                <hr>
+                <!-- Now we create the two buttons, oen for hello and one for goodbye -->
+                <!-- Each is defined in the main package but in a separate vugu and go files -->
+                <!-- In both cases we set the "Parent" exported field from the button component, dynamically using ":FieldName" syntax -->
+                <!-- We have to set the field directly, and it must be exported from the button struct -->
+                <!-- We can't use a method to do this. --> 
+                <!-- The Parent field will be set correctly for us when the button is created and before the buttons Init() method is called -->
+                <!-- At this point 'c' is still the parent component. -->
+                <main:Hellobutton :Parent='c'></main:Hellobutton> <!-- references hellobutton.go and hellobutton.vugu -->
+                <main:Byebutton :Parent='c'></main:Byebutton> <!-- references byebutton.go and byebutton.vugu -->
+            </div>
+        </div>
+    </main>
+</div>
