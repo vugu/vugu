@@ -331,6 +331,85 @@ func TestParserGoScriptTags(t *testing.T) {
 
 }
 
+func TestParserTopLevelTag(t *testing.T) {
+	debug := true
+
+	pwd, err := filepath.Abs("..")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	type tcase struct {
+		name    string
+		infiles map[string]string   // file structure to start with
+		out     map[string][]string // regexps to match in output files
+		bfiles  map[string]string   // additional files to write before building
+	}
+
+	tcList := []tcase{
+		{
+			name: "html-tag",
+			infiles: map[string]string{
+				"root.vugu": "<div><html><p>respected</p></html>root here</div>\n", // include a no longer supported script type="application/x-go> tag
+				"root.go":   "package main\ntype Root struct {\n}\n",
+				"go.mod":    "module testcase\nreplace github.com/vugu/vugu/v2 => " + pwd + "\n",
+				"main.go":   "//go:build js && wasm\n\npackage main\nfunc main(){}",
+			},
+		},
+		{
+			name: "head-tag",
+			infiles: map[string]string{
+				"root.vugu": "<div><head><p>respected</p></head>root here</div>\n", // include a no longer supported script type="application/x-go> tag
+				"root.go":   "package main\ntype Root struct {\n}\n",
+				"go.mod":    "module testcase\nreplace github.com/vugu/vugu/v2 => " + pwd + "\n",
+				"main.go":   "//go:build js && wasm\n\npackage main\nfunc main(){}",
+			},
+		},
+		{
+			name: "body-tag",
+			infiles: map[string]string{
+				"root.vugu": "<div><body><p>respected</p></body>root here</div>\n", // include a no longer supported script type="application/x-go> tag
+				"root.go":   "package main\ntype Root struct {\n}\n",
+				"go.mod":    "module testcase\nreplace github.com/vugu/vugu/v2 => " + pwd + "\n",
+				"main.go":   "//go:build js && wasm\n\npackage main\nfunc main(){}",
+			},
+		},
+		{
+			name: "composite-tags",
+			infiles: map[string]string{
+				"root.vugu": "<div><html><head><body><p>respected</p></body></head></html>root here</div>\n", // include a no longer supported script type="application/x-go> tag
+				"root.go":   "package main\ntype Root struct {\n}\n",
+				"go.mod":    "module testcase\nreplace github.com/vugu/vugu/v2 => " + pwd + "\n",
+				"main.go":   "//go:build js && wasm\n\npackage main\nfunc main(){}",
+			},
+		},
+	}
+
+	for _, tc := range tcList {
+		t.Run(tc.name, func(t *testing.T) {
+
+			tmpDir, err := os.MkdirTemp("", "TestParserTopLevelTag")
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if debug {
+				t.Logf("Test %q using tmpDir: %s", tc.name, tmpDir)
+			} else {
+				t.Parallel()
+			}
+
+			tstWriteFiles(tmpDir, tc.infiles)
+
+			err = Generate(tmpDir)
+			if errors.Is(err, ErrUnexpectedTopLevelTag) {
+				t.Fatalf("Got an unexpected top level tag error. This should never happen. %s", err)
+			}
+		})
+	}
+
+}
+
 func tstWriteFiles(dir string, m map[string]string) {
 
 	for name, contents := range m {
