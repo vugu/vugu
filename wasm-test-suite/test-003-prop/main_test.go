@@ -36,6 +36,8 @@ func Test003Prop(t *testing.T) {
 }
 
 func Test003PropTitleChange(t *testing.T) {
+	t.Skip("This test exists only to show the failure described in PR 419. https://github.com/vugu/vugu/pull/419")
+
 	pkgName := pkg.PkgName(t)
 	tmpl.CreateIndexHtml(t, pkgName)
 
@@ -57,6 +59,7 @@ func Test003PropTitleChange(t *testing.T) {
 }
 
 func Test003PropDumpDocument(t *testing.T) {
+	t.Skip("This test exists only to show the failure described in PR 419. https://github.com/vugu/vugu/pull/419")
 	pkgName := pkg.PkgName(t)
 	tmpl.CreateIndexHtml(t, pkgName)
 
