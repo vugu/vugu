@@ -24,12 +24,7 @@ func MakeCompKeyIDTimeHash(t time.Time, b []byte) uint64 {
 	return MakeCompKeyID(t, uint32(h.Sum64()))
 }
 
-var compKeyRand *rand.Rand
-
 // MakeCompKeyIDNowRand generates a value for CompKey.ID using the newer v2 version of the math/rand package
 func MakeCompKeyIDNowRand() uint64 {
-	if compKeyRand == nil {
-		compKeyRand = rand.New(rand.NewPCG(uint64(time.Now().UnixNano()), uint64(time.Now().UnixNano())))
-	}
-	return compKeyRand.Uint64()
+	return rand.Uint64()
 }
