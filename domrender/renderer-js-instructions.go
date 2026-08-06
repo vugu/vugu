@@ -122,10 +122,16 @@ func (il *instructionList) flush() error {
 // checkLenAndFlush calls checkLen(), if it fails attempts to flush the buffer and checkLen again, at which point any error is returned.
 func (il *instructionList) checkLenAndFlush(l int) error {
 
-	err := il.checkLen(l)
-	if err != nil {
-
-		if err == errDoesNotFit {
+		err = il.checkLen(l)
+		if err != nil {
+			for len(il.buf) < l {
+				n := len(il.buf)
+				if n == 0 {
+					n = l
+				}
+				il.buf = append(il.buf, make([]byte, n)...)
+			}
+		}
 			err = il.flush()
 			if err != nil {
 				return err
