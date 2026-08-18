@@ -39,7 +39,7 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 				vgparent := vgn
 				_ = vgparent
 				{
-					vgcompKey := vugu.MakeCompKey(0xEAA2321F813543CB^vgin.CurrentPositionHash(), vgiterkey)
+					vgcompKey := vugu.MakeCompKey(0x9880F736472B2AB8^vgin.CurrentPositionHash(), vgiterkey)
 					// ask BuildEnv for prior instance of this specific component
 					vgcomp, _ := vgin.BuildEnv.CachedComponent(vgcompKey).(*DemoComp1)
 					if vgcomp == nil {
@@ -61,7 +61,7 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 				vgparent := vgn
 				_ = vgparent
 				{
-					vgcompKey := vugu.MakeCompKey(0xB36A247F1D4AEB99^vgin.CurrentPositionHash(), vgiterkey)
+					vgcompKey := vugu.MakeCompKey(0x215C39BA44F3F7FD^vgin.CurrentPositionHash(), vgiterkey)
 					// ask BuildEnv for prior instance of this specific component
 					vgcomp, _ := vgin.BuildEnv.CachedComponent(vgcompKey).(*DemoComp2)
 					if vgcomp == nil {

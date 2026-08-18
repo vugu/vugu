@@ -53,7 +53,7 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 		vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n\n    "}}
 		vgparent.AppendChild(vgn)
 		{
-			vgcompKey := vugu.MakeCompKey(0x20F93558E2DE1A3B^vgin.CurrentPositionHash(), vgiterkey)
+			vgcompKey := vugu.MakeCompKey(0x9880F736472B2AB8^vgin.CurrentPositionHash(), vgiterkey)
 			// ask BuildEnv for prior instance of this specific component
 			vgcomp, _ := vgin.BuildEnv.CachedComponent(vgcompKey).(*MyDataTable)
 			if vgcomp == nil {
@@ -99,7 +99,7 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 		vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n\n    "}}
 		vgparent.AppendChild(vgn)
 		{
-			vgcompKey := vugu.MakeCompKey(0xC9595912B0BE3ED0^vgin.CurrentPositionHash(), vgiterkey)
+			vgcompKey := vugu.MakeCompKey(0x215C39BA44F3F7FD^vgin.CurrentPositionHash(), vgiterkey)
 			// ask BuildEnv for prior instance of this specific component
 			vgcomp, _ := vgin.BuildEnv.CachedComponent(vgcompKey).(*MyDataTable)
 			if vgcomp == nil {

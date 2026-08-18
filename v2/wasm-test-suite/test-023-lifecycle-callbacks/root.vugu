@@ -1,6 +1,6 @@
 <div id="top">
-    <main:C1 :Parent='c' vg-if="c.ShowC1"></main:C1>
-    <main:C2 :Parent='c' vg-if="c.ShowC2"></main:C2>
+    <vg-type vg-pkg="main" vg-struct="C1" vg-field="Parent=c" vg-if="c.ShowC1"></vg-type>
+    <vg-type vg-pkg="main" vg-struct="C2" vg-field="Parent=c" vg-if="c.ShowC2"></vg-type>
     <button id="refresh" @click="return">Refresh</button>
     <button id="togglec1" @click="c.ShowC1=!c.ShowC1">Toggle C1</button>
     <button id="togglec2" @click="c.ShowC2=!c.ShowC2">Toggle C2</button>

@@ -16,8 +16,8 @@
                 <!-- We can't use a method to do this. --> 
                 <!-- The Parent field will be set correctly for us when the button is created and before the buttons Init() method is called -->
                 <!-- At this point 'c' is still the parent component. -->
-                <main:Hellobutton :Parent='c'></main:Hellobutton> <!-- references hellobutton.go and hellobutton.vugu -->
-                <main:Byebutton :Parent='c'></main:Byebutton> <!-- references byebutton.go and byebutton.vugu -->
+                <vg-type vg-pkg="main" vg-struct="Hellobutton" vg-field="Parent=c"></vg-type> <!-- references hellobutton.go and hellobutton.vugu -->
+                <vg-type vg-pkg="main" vg-struct="Byebutton" vg-field="Parent=c"></vg-type> <!-- references byebutton.go and byebutton.vugu -->
             </div>
         </div>
     </main>

@@ -43,7 +43,7 @@ func (c *Radiobuttons) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 		vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n    "}}
 		vgparent.AppendChild(vgn)
 		{
-			vgcompKey := vugu.MakeCompKey(0x8C585497C929C8D0^vgin.CurrentPositionHash(), vgiterkey)
+			vgcompKey := vugu.MakeCompKey(0x384A6757399E759C^vgin.CurrentPositionHash(), vgiterkey)
 			// ask BuildEnv for prior instance of this specific component
 			vgcomp, _ := vgin.BuildEnv.CachedComponent(vgcompKey).(*Languageradiobutton)
 			if vgcomp == nil {
@@ -52,6 +52,7 @@ func (c *Radiobuttons) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 				vgin.BuildEnv.WireComponent(vgcomp)
 			}
 			vgin.BuildEnv.UseComponent(vgcompKey, vgcomp) // ensure we can use this in the cache next time around
+			// vg-field = "Group=c"
 			vgcomp.Group = c
 			vgcomp.Id = "english"
 			vgcomp.Value = "English"
@@ -62,7 +63,7 @@ func (c *Radiobuttons) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 		vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n    "}}
 		vgparent.AppendChild(vgn)
 		{
-			vgcompKey := vugu.MakeCompKey(0x543FED92C55D9DB7^vgin.CurrentPositionHash(), vgiterkey)
+			vgcompKey := vugu.MakeCompKey(0x681C96DAC00D87^vgin.CurrentPositionHash(), vgiterkey)
 			// ask BuildEnv for prior instance of this specific component
 			vgcomp, _ := vgin.BuildEnv.CachedComponent(vgcompKey).(*Languageradiobutton)
 			if vgcomp == nil {
@@ -71,6 +72,7 @@ func (c *Radiobuttons) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 				vgin.BuildEnv.WireComponent(vgcomp)
 			}
 			vgin.BuildEnv.UseComponent(vgcompKey, vgcomp) // ensure we can use this in the cache next time around
+			// vg-field = "Group=c"
 			vgcomp.Group = c
 			vgcomp.Id = "french"
 			vgcomp.Value = "Français"
@@ -81,7 +83,7 @@ func (c *Radiobuttons) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 		vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n    "}}
 		vgparent.AppendChild(vgn)
 		{
-			vgcompKey := vugu.MakeCompKey(0x6C5F66EA4BDFA5E7^vgin.CurrentPositionHash(), vgiterkey)
+			vgcompKey := vugu.MakeCompKey(0x8572281BC9C26CD8^vgin.CurrentPositionHash(), vgiterkey)
 			// ask BuildEnv for prior instance of this specific component
 			vgcomp, _ := vgin.BuildEnv.CachedComponent(vgcompKey).(*Languageradiobutton)
 			if vgcomp == nil {
@@ -90,6 +92,7 @@ func (c *Radiobuttons) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 				vgin.BuildEnv.WireComponent(vgcomp)
 			}
 			vgin.BuildEnv.UseComponent(vgcompKey, vgcomp) // ensure we can use this in the cache next time around
+			// vg-field = "Group=c"
 			vgcomp.Group = c
 			vgcomp.Id = "italian"
 			vgcomp.Value = "Italiano"
@@ -100,7 +103,7 @@ func (c *Radiobuttons) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 		vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n    "}}
 		vgparent.AppendChild(vgn)
 		{
-			vgcompKey := vugu.MakeCompKey(0x4AE3FCEC446ADEF5^vgin.CurrentPositionHash(), vgiterkey)
+			vgcompKey := vugu.MakeCompKey(0xC654B618B6455589^vgin.CurrentPositionHash(), vgiterkey)
 			// ask BuildEnv for prior instance of this specific component
 			vgcomp, _ := vgin.BuildEnv.CachedComponent(vgcompKey).(*Languageradiobutton)
 			if vgcomp == nil {
@@ -109,6 +112,7 @@ func (c *Radiobuttons) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 				vgin.BuildEnv.WireComponent(vgcomp)
 			}
 			vgin.BuildEnv.UseComponent(vgcompKey, vgcomp) // ensure we can use this in the cache next time around
+			// vg-field = "Group=c"
 			vgcomp.Group = c
 			vgcomp.Id = "german"
 			vgcomp.Value = "Deutsch"

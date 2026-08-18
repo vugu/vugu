@@ -27,7 +27,7 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 		vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n    "}}
 		vgparent.AppendChild(vgn)
 		{
-			vgcompKey := vugu.MakeCompKey(0xB93D38595BDA76DE^vgin.CurrentPositionHash(), vgiterkey)
+			vgcompKey := vugu.MakeCompKey(0x9880F736472B2AB8^vgin.CurrentPositionHash(), vgiterkey)
 			// ask BuildEnv for prior instance of this specific component
 			vgcomp, _ := vgin.BuildEnv.CachedComponent(vgcompKey).(*Thing)
 			if vgcomp == nil {

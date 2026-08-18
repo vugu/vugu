@@ -44,7 +44,7 @@ func (c *Sampleform) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 		vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n    "}}
 		vgparent.AppendChild(vgn)
 		{
-			vgcompKey := vugu.MakeCompKey(0xEF6EC669734DD6FF^vgin.CurrentPositionHash(), vgiterkey)
+			vgcompKey := vugu.MakeCompKey(0x8B6355D429D83E11^vgin.CurrentPositionHash(), vgiterkey)
 			// ask BuildEnv for prior instance of this specific component
 			vgcomp, _ := vgin.BuildEnv.CachedComponent(vgcompKey).(*Nameinput)
 			if vgcomp == nil {
@@ -53,6 +53,7 @@ func (c *Sampleform) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 				vgin.BuildEnv.WireComponent(vgcomp)
 			}
 			vgin.BuildEnv.UseComponent(vgcompKey, vgcomp) // ensure we can use this in the cache next time around
+			// vg-field = "Form=c"
 			vgcomp.Form = c
 			vgout.Components = append(vgout.Components, vgcomp)
 			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Component: vgcomp}}
@@ -65,7 +66,7 @@ func (c *Sampleform) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 		vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n    "}}
 		vgparent.AppendChild(vgn)
 		{
-			vgcompKey := vugu.MakeCompKey(0x5C76A6F1331E84A6^vgin.CurrentPositionHash(), vgiterkey)
+			vgcompKey := vugu.MakeCompKey(0x530CAC945FD2DC99^vgin.CurrentPositionHash(), vgiterkey)
 			// ask BuildEnv for prior instance of this specific component
 			vgcomp, _ := vgin.BuildEnv.CachedComponent(vgcompKey).(*Emailinput)
 			if vgcomp == nil {
@@ -74,6 +75,7 @@ func (c *Sampleform) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 				vgin.BuildEnv.WireComponent(vgcomp)
 			}
 			vgin.BuildEnv.UseComponent(vgcompKey, vgcomp) // ensure we can use this in the cache next time around
+			// vg-field = "Form=c"
 			vgcomp.Form = c
 			vgout.Components = append(vgout.Components, vgcomp)
 			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Component: vgcomp}}
@@ -94,7 +96,7 @@ func (c *Sampleform) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 		vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n    "}}
 		vgparent.AppendChild(vgn)
 		{
-			vgcompKey := vugu.MakeCompKey(0x2F83E693BC19BD7^vgin.CurrentPositionHash(), vgiterkey)
+			vgcompKey := vugu.MakeCompKey(0x231C353BA975B041^vgin.CurrentPositionHash(), vgiterkey)
 			// ask BuildEnv for prior instance of this specific component
 			vgcomp, _ := vgin.BuildEnv.CachedComponent(vgcompKey).(*Radiobuttons)
 			if vgcomp == nil {
@@ -103,6 +105,7 @@ func (c *Sampleform) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 				vgin.BuildEnv.WireComponent(vgcomp)
 			}
 			vgin.BuildEnv.UseComponent(vgcompKey, vgcomp) // ensure we can use this in the cache next time around
+			// vg-field = "Form=c"
 			vgcomp.Form = c
 			vgcomp.SelectionDefault = "german"
 			vgout.Components = append(vgout.Components, vgcomp)
@@ -116,7 +119,7 @@ func (c *Sampleform) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 		vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n    "}}
 		vgparent.AppendChild(vgn)
 		{
-			vgcompKey := vugu.MakeCompKey(0x5DECC76AC9929BD1^vgin.CurrentPositionHash(), vgiterkey)
+			vgcompKey := vugu.MakeCompKey(0x1E8AC2977CF4F97^vgin.CurrentPositionHash(), vgiterkey)
 			// ask BuildEnv for prior instance of this specific component
 			vgcomp, _ := vgin.BuildEnv.CachedComponent(vgcompKey).(*Staticselect)
 			if vgcomp == nil {
@@ -125,6 +128,7 @@ func (c *Sampleform) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 				vgin.BuildEnv.WireComponent(vgcomp)
 			}
 			vgin.BuildEnv.UseComponent(vgcompKey, vgcomp) // ensure we can use this in the cache next time around
+			// vg-field = "Form=c"
 			vgcomp.Form = c
 			vgout.Components = append(vgout.Components, vgcomp)
 			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Component: vgcomp}}
@@ -137,7 +141,7 @@ func (c *Sampleform) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 		vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n    "}}
 		vgparent.AppendChild(vgn)
 		{
-			vgcompKey := vugu.MakeCompKey(0x59ECC269DC5DCB9D^vgin.CurrentPositionHash(), vgiterkey)
+			vgcompKey := vugu.MakeCompKey(0xD2D6D02A355267F7^vgin.CurrentPositionHash(), vgiterkey)
 			// ask BuildEnv for prior instance of this specific component
 			vgcomp, _ := vgin.BuildEnv.CachedComponent(vgcompKey).(*Dynamicselect)
 			if vgcomp == nil {
@@ -146,6 +150,7 @@ func (c *Sampleform) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 				vgin.BuildEnv.WireComponent(vgcomp)
 			}
 			vgin.BuildEnv.UseComponent(vgcompKey, vgcomp) // ensure we can use this in the cache next time around
+			// vg-field = "Form=c"
 			vgcomp.Form = c
 			vgout.Components = append(vgout.Components, vgcomp)
 			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Component: vgcomp}}

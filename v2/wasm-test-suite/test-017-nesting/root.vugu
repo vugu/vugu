@@ -1,8 +1,8 @@
 <div>
 
-	<main:Helper :ID="1"></main:Helper>
+	<vg-type vg-pkg="main" vg-struct="Helper" vg-field="ID=1"></vg-type>
 	<br>
 	<br>
-	<main:Helper :ID="2"></main:Helper>
+	<vg-type vg-pkg="main" vg-struct="Helper" vg-field="ID=2"></vg-type>
 
 </div>

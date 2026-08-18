@@ -27,7 +27,7 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 		vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n\n\t"}}
 		vgparent.AppendChild(vgn)
 		{
-			vgcompKey := vugu.MakeCompKey(0x12FECB9819E01AA6^vgin.CurrentPositionHash(), vgiterkey)
+			vgcompKey := vugu.MakeCompKey(0x9880F736472B2AB8^vgin.CurrentPositionHash(), vgiterkey)
 			// ask BuildEnv for prior instance of this specific component
 			vgcomp, _ := vgin.BuildEnv.CachedComponent(vgcompKey).(*Helper)
 			if vgcomp == nil {
@@ -36,6 +36,7 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 				vgin.BuildEnv.WireComponent(vgcomp)
 			}
 			vgin.BuildEnv.UseComponent(vgcompKey, vgcomp) // ensure we can use this in the cache next time around
+			// vg-field = "ID=1"
 			vgcomp.ID = 1
 			vgout.Components = append(vgout.Components, vgcomp)
 			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Component: vgcomp}}
@@ -54,7 +55,7 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 		vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n\t"}}
 		vgparent.AppendChild(vgn)
 		{
-			vgcompKey := vugu.MakeCompKey(0x4C84D37B8DE1362^vgin.CurrentPositionHash(), vgiterkey)
+			vgcompKey := vugu.MakeCompKey(0x215C39BA44F3F7FD^vgin.CurrentPositionHash(), vgiterkey)
 			// ask BuildEnv for prior instance of this specific component
 			vgcomp, _ := vgin.BuildEnv.CachedComponent(vgcompKey).(*Helper)
 			if vgcomp == nil {
@@ -63,6 +64,7 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 				vgin.BuildEnv.WireComponent(vgcomp)
 			}
 			vgin.BuildEnv.UseComponent(vgcompKey, vgcomp) // ensure we can use this in the cache next time around
+			// vg-field = "ID=2"
 			vgcomp.ID = 2
 			vgout.Components = append(vgout.Components, vgcomp)
 			vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Component: vgcomp}}
