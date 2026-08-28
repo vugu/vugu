@@ -6,7 +6,7 @@
                 <!-- "c" is the Parent control that containts the form -->
                 <!-- Note the inversion of control - we pass the Parent control, 'c' to the the Simpleform as its 'Parent' attribute -->
                 <!-- We need the Simpleform to be able to call into the Parent to set state in the parent in response to DOM events that the form handles -->
-                <main:Sampleform :Parent='c'></main:Sampleform>
+                <vg-type vg-pkg="main" vg-struct="Sampleform" vg-field="Parent=c"></vg-type>
                 <br>
                 <hr>
                 <!-- Note: there is a way to remove the repeated 'vg-if' statements. See the 'vg-template' example -->

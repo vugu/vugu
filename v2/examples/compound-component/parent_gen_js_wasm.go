@@ -110,7 +110,7 @@ func (c *Parent) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 					vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n                "}}
 					vgparent.AppendChild(vgn)
 					{
-						vgcompKey := vugu.MakeCompKey(0x6C88872DE0B2FE83^vgin.CurrentPositionHash(), vgiterkey)
+						vgcompKey := vugu.MakeCompKey(0x1B90855CA522FCE^vgin.CurrentPositionHash(), vgiterkey)
 						// ask BuildEnv for prior instance of this specific component
 						vgcomp, _ := vgin.BuildEnv.CachedComponent(vgcompKey).(*Hellobutton)
 						if vgcomp == nil {
@@ -119,6 +119,7 @@ func (c *Parent) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 							vgin.BuildEnv.WireComponent(vgcomp)
 						}
 						vgin.BuildEnv.UseComponent(vgcompKey, vgcomp) // ensure we can use this in the cache next time around
+						// vg-field = "Parent=c"
 						vgcomp.Parent = c
 						vgout.Components = append(vgout.Components, vgcomp)
 						vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Component: vgcomp}}
@@ -131,7 +132,7 @@ func (c *Parent) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 					vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(1), Data: "\n                "}}
 					vgparent.AppendChild(vgn)
 					{
-						vgcompKey := vugu.MakeCompKey(0xF4120D3E64FF8982^vgin.CurrentPositionHash(), vgiterkey)
+						vgcompKey := vugu.MakeCompKey(0xB9FB106EBC458590^vgin.CurrentPositionHash(), vgiterkey)
 						// ask BuildEnv for prior instance of this specific component
 						vgcomp, _ := vgin.BuildEnv.CachedComponent(vgcompKey).(*Byebutton)
 						if vgcomp == nil {
@@ -140,6 +141,7 @@ func (c *Parent) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 							vgin.BuildEnv.WireComponent(vgcomp)
 						}
 						vgin.BuildEnv.UseComponent(vgcompKey, vgcomp) // ensure we can use this in the cache next time around
+						// vg-field = "Parent=c"
 						vgcomp.Parent = c
 						vgout.Components = append(vgout.Components, vgcomp)
 						vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Component: vgcomp}}

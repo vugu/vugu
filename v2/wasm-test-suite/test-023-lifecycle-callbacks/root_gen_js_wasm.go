@@ -28,7 +28,7 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 		vgparent.AppendChild(vgn)
 		if c.ShowC1 {
 			{
-				vgcompKey := vugu.MakeCompKey(0x3CECCF0215ECF348^vgin.CurrentPositionHash(), vgiterkey)
+				vgcompKey := vugu.MakeCompKey(0x9880F736472B2AB8^vgin.CurrentPositionHash(), vgiterkey)
 				// ask BuildEnv for prior instance of this specific component
 				vgcomp, _ := vgin.BuildEnv.CachedComponent(vgcompKey).(*C1)
 				if vgcomp == nil {
@@ -37,6 +37,7 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 					vgin.BuildEnv.WireComponent(vgcomp)
 				}
 				vgin.BuildEnv.UseComponent(vgcompKey, vgcomp) // ensure we can use this in the cache next time around
+				// vg-field = "Parent=c"
 				vgcomp.Parent = c
 				vgout.Components = append(vgout.Components, vgcomp)
 				vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Component: vgcomp}}
@@ -47,7 +48,7 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 		vgparent.AppendChild(vgn)
 		if c.ShowC2 {
 			{
-				vgcompKey := vugu.MakeCompKey(0x4DCF0A6E773A5A5F^vgin.CurrentPositionHash(), vgiterkey)
+				vgcompKey := vugu.MakeCompKey(0x215C39BA44F3F7FD^vgin.CurrentPositionHash(), vgiterkey)
 				// ask BuildEnv for prior instance of this specific component
 				vgcomp, _ := vgin.BuildEnv.CachedComponent(vgcompKey).(*C2)
 				if vgcomp == nil {
@@ -56,6 +57,7 @@ func (c *Root) Build(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {
 					vgin.BuildEnv.WireComponent(vgcomp)
 				}
 				vgin.BuildEnv.UseComponent(vgcompKey, vgcomp) // ensure we can use this in the cache next time around
+				// vg-field = "Parent=c"
 				vgcomp.Parent = c
 				vgout.Components = append(vgout.Components, vgcomp)
 				vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Component: vgcomp}}

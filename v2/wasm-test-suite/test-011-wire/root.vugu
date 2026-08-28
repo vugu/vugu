@@ -1,8 +1,8 @@
 <div>
 
     <ul>
-        <li><main:DemoComp1></main:DemoComp1></li>
-        <li><main:DemoComp2></main:DemoComp2></li>
+        <li><vg-type vg-pkg="main" vg-struct="DemoComp1"></vg-type></li>
+        <li><vg-type vg-pkg="main" vg-struct="DemoComp2"></vg-type></li>
     </ul>
 
 </div>

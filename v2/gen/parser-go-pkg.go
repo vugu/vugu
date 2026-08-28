@@ -1,6 +1,7 @@
 package gen
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"go/parser"
@@ -110,7 +111,7 @@ func ParseFile(vuguFilename, goFilename, genFilename string) error {
 	}
 
 	// parse the vugu file
-	b, err = pg.Parse(b, vuguFilename)
+	b, err = pg.Parse(bytes.NewReader(b))
 	if err != nil {
 		fmt.Printf("Parse returned: %v\n", err)
 		return fmt.Errorf("%w: %w\n", ErrCouldNotParseVuguFile, err)

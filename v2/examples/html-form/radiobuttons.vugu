@@ -4,9 +4,9 @@
     <!-- fields in the underlying Go struct. The Language Radio Button can then read these fields to determine -->
     <!-- if it is the selected default option. -->
     <!-- In this case 'c' is the containing radio buttons not the language radio button itself -->
-    <main:Languageradiobutton :Group='c' Id="english" Value="English"></main:Languageradiobutton>
-    <main:Languageradiobutton :Group='c' Id="french" Value="Français"></main:Languageradiobutton>
-    <main:Languageradiobutton :Group='c' Id="italian" Value="Italiano"></main:Languageradiobutton>
-    <main:Languageradiobutton :Group='c' Id="german" Value="Deutsch"></main:Languageradiobutton>
+    <vg-type vg-pkg="main" vg-struct="Languageradiobutton" vg-field="Group=c" Id="english" Value="English"></vg-type>
+    <vg-type vg-pkg="main" vg-struct="Languageradiobutton" vg-field="Group=c" Id="french" Value="Français"></vg-type>
+    <vg-type vg-pkg="main" vg-struct="Languageradiobutton" vg-field="Group=c" Id="italian" Value="Italiano"></vg-type>
+    <vg-type vg-pkg="main" vg-struct="Languageradiobutton" vg-field="Group=c" Id="german" Value="Deutsch"></vg-type>
 
 </div>
