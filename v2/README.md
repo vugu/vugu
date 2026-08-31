@@ -37,6 +37,7 @@ The list of changes are:
 - [x] Remove support for "Full HTML" mode. All `*.vugu` files must now start with a a top level `<div>` (which will be ignored). All content must then be placed inside this `<div>`. ***This is a breaking change***. See also issue #420 (https://github.com/vugu/vugu/issues/420) which describes a bug in "Full HTML" which means it doesn't do what you think! (and really doesn't work).
 - [x] Change how components are defined. v2 no longer supports component defined as `<pkg:Struct...>`. This is replaced with the new `<vg-type vg-pkg="..." vg-struct="..."> tag. ***This is a breaking change***
 - [x] Change how a component field is assigned. v2 no longer supports assigning to a component field via `:Field='....'`. This is replaced with the new `vg-field="...."` attribute. ***This is a breaking change***. This and the previous `<vg-type....>` change are a prelude to replacing the custom HTML parser used by `vugu` with the Go standard HTML parser in `golang.org/x/net/html` The new behaviour matches the standard html5 behaviour for both tags and attributes.
+- [x] Add support for package imports to the `vg-pkg` attribute of a `<vg-type...> tag, including support for package aliases. Additionally two new wasm-tests have been added to validate the change. The change is not as extensive as first thought.
 
 The original v0.y.z Readme follows.
 
