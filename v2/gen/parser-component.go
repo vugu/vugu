@@ -1,6 +1,7 @@
 package gen
 
 import (
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
@@ -8,6 +9,9 @@ import (
 	"github.com/vugu/html"
 	"github.com/vugu/vugu/v2"
 )
+
+// A ErrCouldNotDeterminePackage is returned when the <component.go> file has been found but does not contain a valid package statement.
+var ErrInvalidVgPkgAttribute = errors.New("vg-pkg attribute contains an invalid import statement")
 
 // visitNodeComponentElement handles an element that is a call to a component
 func (p *ParserGo) visitNodeComponentElement(state *parseGoState, n *html.Node) error {
@@ -46,18 +50,58 @@ func (p *ParserGo) visitNodeComponentElement(state *parseGoState, n *html.Node) 
 	typeExpr := ""
 	pkgPrefix := ""
 	var vgStructFound bool
-	fmt.Printf("OrigData = %s\n", n.OrigData)
 	if n.OrigData == "vg-type" { // ths will need reworked once vugu/html is removed
-		fmt.Printf("vg-type found\n")
+
 		for _, a := range n.Attr {
 			// vg-pkg is optional - we can infer the current package
 			if a.Key == "vg-pkg" {
-				if a.Val == p.PackageName { // vg-pkg matches the current package so there is prefix
-					pkgPrefix = ""
+				// imports are not straight forward.
+				// an import with an alas can have any amount of white space between the alias and the import.
+				// The white space could be spaces, or it could be tabs, or it could have been tabs that the editor has replaced with spaces.
+				// We need to filter these out
+
+				// see if the pkg was specified as an import, possibly with an alias
+				attrKey := strings.ReplaceAll(a.Val, string(`\t`), " ") // replace any tabs with spaces
+				origImportDef := strings.Split(attrKey, " ")
+				importDef := make([]string, 0, 2)
+				// if we had multiple spaces these will be returned as elements containing a empty string.
+				// so we need to filter these out
+				for _, v := range origImportDef {
+					if v == "" {
+						continue
+					}
+					importDef = append(importDef, v)
+				}
+				// if we find more then 2 components then we have a problem.
+				// this would represent a invalid import line, so we need to error
+				if len(importDef) > 2 {
+					return fmt.Errorf("%w", ErrInvalidVgPkgAttribute)
+				}
+				// do we have an alias?
+				if len(importDef) == 2 {
+					// we do
+					// so the alias is the first part, and that's what we use as the pkgPrefix
+					pkgPrefix = importDef[0] + "."
+					// then we emit both parts as an import line
+					fmt.Fprintf(&state.goBuf, "import %s %q\n", importDef[0], importDef[1])
+				} else if a.Val != p.PackageName && len(importDef) == 1 { // the len check is a sanity check there should be one string
+					// no we are in a different package so we need an import
+					fmt.Fprintf(&state.goBuf, "import %q\n", importDef[0])
+					// and a prefix - which should be the last part of the import line
+					// This is an assumption as the package statement in the import can say something different...
+					importParts := strings.Split(importDef[0], "/")
+					if len(importParts) > 1 {
+						pkgPrefix = importParts[len(importParts)-1] + "."
+					} else {
+						// this is should be an error!
+					}
 				} else {
-					pkgPrefix = a.Val + "."
+					// vg-pkg matches the current package so there is no prefix
+					// and we don't need an import line in this case either
+					pkgPrefix = ""
 				}
 			}
+			// if there was no vg-pkg attribute then the pkgPrefix is an empty tring - the zero string value
 			// vg-struct is mandatory
 			if a.Key == "vg-struct" {
 				typeExpr = a.Val
@@ -67,7 +111,6 @@ func (p *ParserGo) visitNodeComponentElement(state *parseGoState, n *html.Node) 
 		if !vgStructFound {
 			return fmt.Errorf("vg-type found but no vg-struct attribute")
 		}
-		fmt.Printf("vg-pkg = %s vg-struct = %s\n", pkgPrefix, typeExpr)
 	}
 
 	compKeyID := compHashCounted(p.StructType + "." + n.OrigData)
@@ -82,10 +125,10 @@ func (p *ParserGo) visitNodeComponentElement(state *parseGoState, n *html.Node) 
 		fmt.Fprintf(&state.buildBuf, "vgcompKey := vugu.MakeCompKey(0x%X^vgin.CurrentPositionHash(), vgiterkey)\n", compKeyID)
 	}
 	fmt.Fprintf(&state.buildBuf, "// ask BuildEnv for prior instance of this specific component\n")
-	fmt.Fprintf(&state.buildBuf, "vgcomp, _ := vgin.BuildEnv.CachedComponent(vgcompKey).(*%s)\n", typeExpr)
+	fmt.Fprintf(&state.buildBuf, "vgcomp, _ := vgin.BuildEnv.CachedComponent(vgcompKey).(*%s%s)\n", pkgPrefix, typeExpr)
 	fmt.Fprintf(&state.buildBuf, "if vgcomp == nil {\n")
 	fmt.Fprintf(&state.buildBuf, "// create new one if needed\n")
-	fmt.Fprintf(&state.buildBuf, "vgcomp = new(%s)\n", typeExpr)
+	fmt.Fprintf(&state.buildBuf, "vgcomp = new(%s%s)\n", pkgPrefix, typeExpr)
 	fmt.Fprintf(&state.buildBuf, "vgin.BuildEnv.WireComponent(vgcomp)\n")
 	fmt.Fprintf(&state.buildBuf, "}\n")
 	fmt.Fprintf(&state.buildBuf, "vgin.BuildEnv.UseComponent(vgcompKey, vgcomp) // ensure we can use this in the cache next time around\n")
