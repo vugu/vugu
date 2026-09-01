@@ -9,7 +9,7 @@ import (
 
 // visitScriptOrStyle calls visitJS, visitCSS or visitGo accordingly,
 // will error if the node does not correspond to one of those
-func (p *ParserGo) visitScriptOrStyle(state *parseGoState, n *html.Node) error {
+func (p *ParserGo) visitScriptOrStyle(n *html.Node) error {
 	nodeName := strings.ToLower(n.Data)
 
 	// script tag
@@ -35,7 +35,7 @@ func (p *ParserGo) visitScriptOrStyle(state *parseGoState, n *html.Node) error {
 
 		// component js (type attr omitted okay - means it is JS)
 		if mt == "text/javascript" || mt == "application/javascript" || mt == "" {
-			err := p.visitJS(state, n)
+			err := p.visitJS(n)
 			if err != nil {
 				return err
 			}
@@ -48,7 +48,7 @@ func (p *ParserGo) visitScriptOrStyle(state *parseGoState, n *html.Node) error {
 
 	// component css
 	if nodeName == "style" || nodeName == "link" {
-		err := p.visitCSS(state, n)
+		err := p.visitCSS(n)
 		if err != nil {
 			return err
 		}
@@ -58,7 +58,7 @@ func (p *ParserGo) visitScriptOrStyle(state *parseGoState, n *html.Node) error {
 	return fmt.Errorf("element %q is not a valid script or style - %#v", n.Data, n)
 }
 
-func (p *ParserGo) visitJS(state *parseGoState, n *html.Node) error {
+func (p *ParserGo) visitJS(n *html.Node) error {
 	if n.Type != html.ElementNode {
 		return fmt.Errorf("visitJS, not an element node %#v", n)
 	}
@@ -99,41 +99,41 @@ func (p *ParserGo) visitJS(state *parseGoState, n *html.Node) error {
 
 	// vg-for
 	if v, _ := vgForExpr(n); v.expr != "" {
-		if err := p.emitForExpr(state, n); err != nil {
+		if err := p.emitForExpr(n); err != nil {
 			return err
 		}
-		defer fmt.Fprintf(&state.buildBuf, "}\n")
+		defer fmt.Fprintf(&p.buildBuf, "}\n")
 	}
 
 	// vg-if
 	ife := vgIfExpr(n)
 	if ife != "" {
-		fmt.Fprintf(&state.buildBuf, "if %s {\n", ife)
-		defer fmt.Fprintf(&state.buildBuf, "}\n")
+		fmt.Fprintf(&p.buildBuf, "if %s {\n", ife)
+		defer fmt.Fprintf(&p.buildBuf, "}\n")
 	}
 
 	// but then for the actual output, we append to vgout.JS, instead of parentNode
-	fmt.Fprintf(&state.buildBuf, "vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type:vugu.VGNodeType(%d),Data:%q,Attr:%#v}}\n", n.Type, n.Data, staticVGAttr(n.Attr))
+	fmt.Fprintf(&p.buildBuf, "vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type:vugu.VGNodeType(%d),Data:%q,Attr:%#v}}\n", n.Type, n.Data, staticVGAttr(n.Attr))
 
 	// output any text children
 	if n.FirstChild != nil {
-		fmt.Fprintf(&state.buildBuf, "{\n")
+		fmt.Fprintf(&p.buildBuf, "{\n")
 		for childN := n.FirstChild; childN != nil; childN = childN.NextSibling {
 			// NOTE: we already verified above that these are just text nodes
-			fmt.Fprintf(&state.buildBuf, "vgn.AppendChild(&vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type:vugu.VGNodeType(%d),Data:%q,Attr:%#v}})\n", childN.Type, childN.Data, staticVGAttr(childN.Attr))
+			fmt.Fprintf(&p.buildBuf, "vgn.AppendChild(&vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type:vugu.VGNodeType(%d),Data:%q,Attr:%#v}})\n", childN.Type, childN.Data, staticVGAttr(childN.Attr))
 		}
-		fmt.Fprintf(&state.buildBuf, "}\n")
+		fmt.Fprintf(&p.buildBuf, "}\n")
 	}
 
-	fmt.Fprintf(&state.buildBuf, "vgout.AppendJS(vgn)\n")
+	fmt.Fprintf(&p.buildBuf, "vgout.AppendJS(vgn)\n")
 
 	// dynamic attrs
-	writeDynamicAttributes(state, n)
+	p.writeDynamicAttributes(n)
 
 	return nil
 }
 
-func (p *ParserGo) visitCSS(state *parseGoState, n *html.Node) error {
+func (p *ParserGo) visitCSS(n *html.Node) error {
 	if n.Type != html.ElementNode {
 		return fmt.Errorf("visitCSS, not an element node %#v", n)
 	}
@@ -177,36 +177,36 @@ func (p *ParserGo) visitCSS(state *parseGoState, n *html.Node) error {
 
 	// vg-for
 	if v, _ := vgForExpr(n); v.expr != "" {
-		if err := p.emitForExpr(state, n); err != nil {
+		if err := p.emitForExpr(n); err != nil {
 			return err
 		}
-		defer fmt.Fprintf(&state.buildBuf, "}\n")
+		defer fmt.Fprintf(&p.buildBuf, "}\n")
 	}
 
 	// vg-if
 	ife := vgIfExpr(n)
 	if ife != "" {
-		fmt.Fprintf(&state.buildBuf, "if %s {\n", ife)
-		defer fmt.Fprintf(&state.buildBuf, "}\n")
+		fmt.Fprintf(&p.buildBuf, "if %s {\n", ife)
+		defer fmt.Fprintf(&p.buildBuf, "}\n")
 	}
 
 	// but then for the actual output, we append to vgout.CSS, instead of parentNode
-	fmt.Fprintf(&state.buildBuf, "vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type:vugu.VGNodeType(%d),Data:%q,Attr:%#v}}\n", n.Type, n.Data, staticVGAttr(n.Attr))
+	fmt.Fprintf(&p.buildBuf, "vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type:vugu.VGNodeType(%d),Data:%q,Attr:%#v}}\n", n.Type, n.Data, staticVGAttr(n.Attr))
 
 	// output any text children
 	if n.FirstChild != nil {
-		fmt.Fprintf(&state.buildBuf, "{\n")
+		fmt.Fprintf(&p.buildBuf, "{\n")
 		for childN := n.FirstChild; childN != nil; childN = childN.NextSibling {
 			// NOTE: we already verified above that these are just text nodes
-			fmt.Fprintf(&state.buildBuf, "vgn.AppendChild(&vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type:vugu.VGNodeType(%d),Data:%q,Attr:%#v}})\n", childN.Type, childN.Data, staticVGAttr(childN.Attr))
+			fmt.Fprintf(&p.buildBuf, "vgn.AppendChild(&vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type:vugu.VGNodeType(%d),Data:%q,Attr:%#v}})\n", childN.Type, childN.Data, staticVGAttr(childN.Attr))
 		}
-		fmt.Fprintf(&state.buildBuf, "}\n")
+		fmt.Fprintf(&p.buildBuf, "}\n")
 	}
 
-	fmt.Fprintf(&state.buildBuf, "vgout.AppendCSS(vgn)\n")
+	fmt.Fprintf(&p.buildBuf, "vgout.AppendCSS(vgn)\n")
 
 	// dynamic attrs
-	writeDynamicAttributes(state, n)
+	p.writeDynamicAttributes(n)
 
 	return nil
 }
