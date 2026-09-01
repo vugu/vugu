@@ -14,22 +14,22 @@ import (
 var ErrInvalidVgPkgAttribute = errors.New("vg-pkg attribute contains an invalid import statement")
 
 // visitNodeComponentElement handles an element that is a call to a component
-func (p *ParserGo) visitNodeComponentElement(state *parseGoState, n *html.Node) error {
+func (p *ParserGo) visitNodeComponentElement(n *html.Node) error {
 	// components are just different so we handle all of our own vg-for vg-if and everything else
 
 	// vg-for
 	if v, _ := vgForExpr(n); v.expr != "" {
-		if err := p.emitForExpr(state, n); err != nil {
+		if err := p.emitForExpr(n); err != nil {
 			return err
 		}
-		defer fmt.Fprintf(&state.buildBuf, "}\n")
+		defer fmt.Fprintf(&p.buildBuf, "}\n")
 	}
 
 	// vg-if
 	ife := vgIfExpr(n)
 	if ife != "" {
-		fmt.Fprintf(&state.buildBuf, "if %s {\n", ife)
-		defer fmt.Fprintf(&state.buildBuf, "}\n")
+		fmt.Fprintf(&p.buildBuf, "if %s {\n", ife)
+		defer fmt.Fprintf(&p.buildBuf, "}\n")
 	}
 
 	// nodeName := n.OrigData // use original case of element
@@ -83,10 +83,10 @@ func (p *ParserGo) visitNodeComponentElement(state *parseGoState, n *html.Node) 
 					// so the alias is the first part, and that's what we use as the pkgPrefix
 					pkgPrefix = importDef[0] + "."
 					// then we emit both parts as an import line
-					fmt.Fprintf(&state.goBuf, "import %s %q\n", importDef[0], importDef[1])
+					fmt.Fprintf(&p.goBuf, "import %s %q\n", importDef[0], importDef[1])
 				} else if a.Val != p.PackageName && len(importDef) == 1 { // the len check is a sanity check there should be one string
 					// no we are in a different package so we need an import
-					fmt.Fprintf(&state.goBuf, "import %q\n", importDef[0])
+					fmt.Fprintf(&p.goBuf, "import %q\n", importDef[0])
 					// and a prefix - which should be the last part of the import line
 					// This is an assumption as the package statement in the import can say something different...
 					importParts := strings.Split(importDef[0], "/")
@@ -115,32 +115,32 @@ func (p *ParserGo) visitNodeComponentElement(state *parseGoState, n *html.Node) 
 
 	compKeyID := compHashCounted(p.StructType + "." + n.OrigData)
 
-	fmt.Fprintf(&state.buildBuf, "{\n")
-	defer fmt.Fprintf(&state.buildBuf, "}\n")
+	fmt.Fprintf(&p.buildBuf, "{\n")
+	defer fmt.Fprintf(&p.buildBuf, "}\n")
 
 	keyExpr := vgKeyExpr(n)
 	if keyExpr != "" {
-		fmt.Fprintf(&state.buildBuf, "vgcompKey := vugu.MakeCompKey(0x%X^vgin.CurrentPositionHash(), %s)\n", compKeyID, keyExpr)
+		fmt.Fprintf(&p.buildBuf, "vgcompKey := vugu.MakeCompKey(0x%X^vgin.CurrentPositionHash(), %s)\n", compKeyID, keyExpr)
 	} else {
-		fmt.Fprintf(&state.buildBuf, "vgcompKey := vugu.MakeCompKey(0x%X^vgin.CurrentPositionHash(), vgiterkey)\n", compKeyID)
+		fmt.Fprintf(&p.buildBuf, "vgcompKey := vugu.MakeCompKey(0x%X^vgin.CurrentPositionHash(), vgiterkey)\n", compKeyID)
 	}
-	fmt.Fprintf(&state.buildBuf, "// ask BuildEnv for prior instance of this specific component\n")
-	fmt.Fprintf(&state.buildBuf, "vgcomp, _ := vgin.BuildEnv.CachedComponent(vgcompKey).(*%s%s)\n", pkgPrefix, typeExpr)
-	fmt.Fprintf(&state.buildBuf, "if vgcomp == nil {\n")
-	fmt.Fprintf(&state.buildBuf, "// create new one if needed\n")
-	fmt.Fprintf(&state.buildBuf, "vgcomp = new(%s%s)\n", pkgPrefix, typeExpr)
-	fmt.Fprintf(&state.buildBuf, "vgin.BuildEnv.WireComponent(vgcomp)\n")
-	fmt.Fprintf(&state.buildBuf, "}\n")
-	fmt.Fprintf(&state.buildBuf, "vgin.BuildEnv.UseComponent(vgcompKey, vgcomp) // ensure we can use this in the cache next time around\n")
+	fmt.Fprintf(&p.buildBuf, "// ask BuildEnv for prior instance of this specific component\n")
+	fmt.Fprintf(&p.buildBuf, "vgcomp, _ := vgin.BuildEnv.CachedComponent(vgcompKey).(*%s%s)\n", pkgPrefix, typeExpr)
+	fmt.Fprintf(&p.buildBuf, "if vgcomp == nil {\n")
+	fmt.Fprintf(&p.buildBuf, "// create new one if needed\n")
+	fmt.Fprintf(&p.buildBuf, "vgcomp = new(%s%s)\n", pkgPrefix, typeExpr)
+	fmt.Fprintf(&p.buildBuf, "vgin.BuildEnv.WireComponent(vgcomp)\n")
+	fmt.Fprintf(&p.buildBuf, "}\n")
+	fmt.Fprintf(&p.buildBuf, "vgin.BuildEnv.UseComponent(vgcompKey, vgcomp) // ensure we can use this in the cache next time around\n")
 
 	// now that we have vgcomp with the right type and a correct value, we can declare the vg-var if specified
 	if vgv := vgVarExpr(n); vgv != "" {
-		fmt.Fprintf(&state.buildBuf, "var %s = vgcomp // vg-var\n", vgv)
+		fmt.Fprintf(&p.buildBuf, "var %s = vgcomp // vg-var\n", vgv)
 
 		// NOTE: It's a bit too much to have "unused variable" errors coming from a Vugu code-generated file,
 		// too far off the beaten path of making "type-safe HTML templates with Go".  It makes sense with
 		// hand-written Go code but I don't think so here.
-		fmt.Fprintf(&state.buildBuf, "_ = %s\n", vgv) // avoid unused var error
+		fmt.Fprintf(&p.buildBuf, "_ = %s\n", vgv) // avoid unused var error
 	}
 
 	didAttrMap := false
@@ -150,8 +150,8 @@ func (p *ParserGo) visitNodeComponentElement(state *parseGoState, n *html.Node) 
 	var vgFieldFound bool
 	for _, a := range n.Attr {
 		if a.Key == "vg-field" {
-			fmt.Fprintf(&state.buildBuf, "// %s = \"%s\"\n", a.Key, a.Val)
-			fmt.Fprintf(&state.buildBuf, "vgcomp.%s\n", a.Val)
+			fmt.Fprintf(&p.buildBuf, "// %s = \"%s\"\n", a.Key, a.Val)
+			fmt.Fprintf(&p.buildBuf, "vgcomp.%s\n", a.Val)
 			vgFieldFound = true
 			break
 		}
@@ -171,14 +171,14 @@ func (p *ParserGo) visitNodeComponentElement(state *parseGoState, n *html.Node) 
 			// if starts with upper case, it's a field name
 			if hasUpperFirst(k) {
 				// we now ignore this - its replaced by vg-field
-				// fmt.Fprintf(&state.buildBuf, "vgcomp.%s = %s\n", k, valExpr)
+				// fmt.Fprintf(&p.buildBuf, "vgcomp.%s = %s\n", k, valExpr)
 			} else {
 				// otherwise we use an "AttrMap"
 				if !didAttrMap {
 					didAttrMap = true
-					fmt.Fprintf(&state.buildBuf, "vgcomp.AttrMap = make(map[string]interface{}, 8)\n")
+					fmt.Fprintf(&p.buildBuf, "vgcomp.AttrMap = make(map[string]interface{}, 8)\n")
 				}
-				fmt.Fprintf(&state.buildBuf, "vgcomp.AttrMap[%q] = %s\n", k, valExpr)
+				fmt.Fprintf(&p.buildBuf, "vgcomp.AttrMap[%q] = %s\n", k, valExpr)
 			}
 
 		}
@@ -190,14 +190,14 @@ func (p *ParserGo) visitNodeComponentElement(state *parseGoState, n *html.Node) 
 		fmt.Printf("STATIC ATTR\n")
 		// if starts with upper case, it's a field name
 		if hasUpperFirst(a.Key) {
-			fmt.Fprintf(&state.buildBuf, "vgcomp.%s = %q\n", a.Key, a.Val)
+			fmt.Fprintf(&p.buildBuf, "vgcomp.%s = %q\n", a.Key, a.Val)
 		} else {
 			// otherwise we use an "AttrMap"
 			if !didAttrMap {
 				didAttrMap = true
-				fmt.Fprintf(&state.buildBuf, "vgcomp.AttrMap = make(map[string]interface{}, 8)\n")
+				fmt.Fprintf(&p.buildBuf, "vgcomp.AttrMap = make(map[string]interface{}, 8)\n")
 			}
-			fmt.Fprintf(&state.buildBuf, "vgcomp.AttrMap[%q] = %q\n", a.Key, a.Val)
+			fmt.Fprintf(&p.buildBuf, "vgcomp.AttrMap[%q] = %q\n", a.Key, a.Val)
 		}
 	}
 
@@ -223,9 +223,9 @@ func (p *ParserGo) visitNodeComponentElement(state *parseGoState, n *html.Node) 
 	eventMap, eventKeys := vgEventExprs(n)
 	for _, k := range eventKeys {
 		expr := eventMap[k]
-		// fmt.Fprintf(&state.buildBuf, "vgcomp.%s = func(event %s%sEvent){%s}\n", k, pkgPrefix, k, expr)
+		// fmt.Fprintf(&p.buildBuf, "vgcomp.%s = func(event %s%sEvent){%s}\n", k, pkgPrefix, k, expr)
 		// switched to using interfaces
-		fmt.Fprintf(&state.buildBuf, "vgcomp.%s = %s%sFunc(func(event %s%sEvent){%s})\n", k, pkgPrefix, k, pkgPrefix, k, expr)
+		fmt.Fprintf(&p.buildBuf, "vgcomp.%s = %s%sFunc(func(event %s%sEvent){%s})\n", k, pkgPrefix, k, pkgPrefix, k, expr)
 	}
 
 	// NOTE: vugugen:slot might come in really handy, have to work out the types involved - update: as it stands, this won't be needed.
@@ -290,11 +290,11 @@ func (p *ParserGo) visitNodeComponentElement(state *parseGoState, n *html.Node) 
 				slotMapInited[slotNameParts[0]] = true
 
 				// if nil create map, otherwise reuse
-				fmt.Fprintf(&state.buildBuf, "if vgcomp.%s == nil {\n", slotNameParts[0])
-				fmt.Fprintf(&state.buildBuf, "    vgcomp.%s = make(map[string]vugu.Builder)\n", slotNameParts[0])
-				fmt.Fprintf(&state.buildBuf, "} else {\n")
-				fmt.Fprintf(&state.buildBuf, "    for k := range vgcomp.%s { delete(vgcomp.%s, k) }\n", slotNameParts[0], slotNameParts[0])
-				fmt.Fprintf(&state.buildBuf, "}\n")
+				fmt.Fprintf(&p.buildBuf, "if vgcomp.%s == nil {\n", slotNameParts[0])
+				fmt.Fprintf(&p.buildBuf, "    vgcomp.%s = make(map[string]vugu.Builder)\n", slotNameParts[0])
+				fmt.Fprintf(&p.buildBuf, "} else {\n")
+				fmt.Fprintf(&p.buildBuf, "    for k := range vgcomp.%s { delete(vgcomp.%s, k) }\n", slotNameParts[0], slotNameParts[0])
+				fmt.Fprintf(&p.buildBuf, "}\n")
 			}
 		}
 
@@ -320,45 +320,45 @@ func (p *ParserGo) visitNodeComponentElement(state *parseGoState, n *html.Node) 
 				return fmt.Errorf("found vg-slot tag without a 'name' attribute, the name is required")
 			}
 
-			fmt.Fprintf(&state.buildBuf, "vgcomp.%s = vugu.NewBuilderFunc(func(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {\n", slotName)
-			fmt.Fprintf(&state.buildBuf, "vgn := &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type:vugu.VGNodeType(%d)}}\n", vugu.ElementNode)
-			fmt.Fprintf(&state.buildBuf, "vgout = &vugu.BuildOut{}\n")
-			fmt.Fprintf(&state.buildBuf, "vgout.Out = append(vgout.Out, vgn)\n")
-			fmt.Fprintf(&state.buildBuf, "vgparent := vgn; _ = vgparent\n")
-			fmt.Fprintf(&state.buildBuf, "\n")
+			fmt.Fprintf(&p.buildBuf, "vgcomp.%s = vugu.NewBuilderFunc(func(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {\n", slotName)
+			fmt.Fprintf(&p.buildBuf, "vgn := &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type:vugu.VGNodeType(%d)}}\n", vugu.ElementNode)
+			fmt.Fprintf(&p.buildBuf, "vgout = &vugu.BuildOut{}\n")
+			fmt.Fprintf(&p.buildBuf, "vgout.Out = append(vgout.Out, vgn)\n")
+			fmt.Fprintf(&p.buildBuf, "vgparent := vgn; _ = vgparent\n")
+			fmt.Fprintf(&p.buildBuf, "\n")
 
 			// iterate over children and do the usual with each one
 			for innerChildN := childN.FirstChild; innerChildN != nil; innerChildN = innerChildN.NextSibling {
-				err := p.visitDefaultByType(state, innerChildN)
+				err := p.visitDefaultByType(innerChildN)
 				if err != nil {
 					return err
 				}
 			}
 
-			fmt.Fprintf(&state.buildBuf, "return\n")
-			fmt.Fprintf(&state.buildBuf, "})\n")
+			fmt.Fprintf(&p.buildBuf, "return\n")
+			fmt.Fprintf(&p.buildBuf, "})\n")
 
 		}
 
 	case foundDefSlot:
-		fmt.Fprintf(&state.buildBuf, "vgcomp.DefaultSlot = vugu.NewBuilderFunc(func(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {\n")
+		fmt.Fprintf(&p.buildBuf, "vgcomp.DefaultSlot = vugu.NewBuilderFunc(func(vgin *vugu.BuildIn) (vgout *vugu.BuildOut) {\n")
 		// vgn is the equivalent of a vg-template tag and becomes the contents of vgout.Out and the vgparent
-		fmt.Fprintf(&state.buildBuf, "vgn := &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(%d)}}\n", vugu.ElementNode)
-		fmt.Fprintf(&state.buildBuf, "vgout = &vugu.BuildOut{}\n")
-		fmt.Fprintf(&state.buildBuf, "vgout.Out = append(vgout.Out, vgn)\n")
-		fmt.Fprintf(&state.buildBuf, "vgparent := vgn; _ = vgparent\n")
-		fmt.Fprintf(&state.buildBuf, "\n")
+		fmt.Fprintf(&p.buildBuf, "vgn := &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Type: vugu.VGNodeType(%d)}}\n", vugu.ElementNode)
+		fmt.Fprintf(&p.buildBuf, "vgout = &vugu.BuildOut{}\n")
+		fmt.Fprintf(&p.buildBuf, "vgout.Out = append(vgout.Out, vgn)\n")
+		fmt.Fprintf(&p.buildBuf, "vgparent := vgn; _ = vgparent\n")
+		fmt.Fprintf(&p.buildBuf, "\n")
 
 		// iterate over children and do the usual with each one
 		for childN := n.FirstChild; childN != nil; childN = childN.NextSibling {
-			err := p.visitDefaultByType(state, childN)
+			err := p.visitDefaultByType(childN)
 			if err != nil {
 				return err
 			}
 		}
 
-		fmt.Fprintf(&state.buildBuf, "return\n")
-		fmt.Fprintf(&state.buildBuf, "})\n")
+		fmt.Fprintf(&p.buildBuf, "return\n")
+		fmt.Fprintf(&p.buildBuf, "})\n")
 
 	default:
 		// nothing meaningful inside this component tag
@@ -396,9 +396,9 @@ func (p *ParserGo) visitNodeComponentElement(state *parseGoState, n *html.Node) 
 	// emit vgcomp.SlotName = vugu.NewBuilderFunc(func(vgin *vugu.BuildIn) (vgout *BuildOut, vgerr error) { ... })
 	// and descend into children
 
-	fmt.Fprintf(&state.buildBuf, "vgout.Components = append(vgout.Components, vgcomp)\n")
-	fmt.Fprintf(&state.buildBuf, "vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Component:vgcomp}}\n")
-	fmt.Fprintf(&state.buildBuf, "vgparent.AppendChild(vgn)\n")
+	fmt.Fprintf(&p.buildBuf, "vgout.Components = append(vgout.Components, vgcomp)\n")
+	fmt.Fprintf(&p.buildBuf, "vgn = &vugu.VGNode{VGNodeCommonCore: vugu.VGNodeCommonCore{Component:vgcomp}}\n")
+	fmt.Fprintf(&p.buildBuf, "vgparent.AppendChild(vgn)\n")
 
 	return nil
 	// return fmt.Errorf("component tag not yet supported (%q)", nodeName)

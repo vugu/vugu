@@ -136,16 +136,15 @@ _ = value
 			assert := assert.New(t)
 			require := require.New(t)
 			pg := &ParserGo{}
-			state := &parseGoState{}
 
-			err := pg.emitForExpr(state, tt.node)
+			err := pg.emitForExpr(tt.node)
 
 			if tt.expectedError != "" {
 				require.EqualError(err, tt.expectedError)
 				return
 			}
 			require.NoError(err)
-			assert.Exactly(tt.expectedResult, state.buildBuf.String())
+			assert.Exactly(tt.expectedResult, pg.buildBuf.String())
 		})
 	}
 }
