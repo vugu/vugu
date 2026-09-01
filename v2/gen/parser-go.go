@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"go/format"
 	"io"
 	"strings"
 	"unicode"
@@ -96,14 +97,15 @@ func (p *ParserGo) Parse(r io.Reader) ([]byte, error) {
 	buf.Write(state.buildBuf.Bytes())
 	buf.Write(state.goBufBottom.Bytes())
 
-	fo, err := gofmt(buf.String())
+	// use the go/format package rather than call 'gofmt'
+	fo, err := format.Source(buf.Bytes())
 	if err != nil {
 		// if the gofmt errors, we still attempt to write out the non-fmt'ed output to the stdout, to assist in debugging
 		fmt.Printf("GO FMT ERRORS WITH %s\n%s\n", buf.String(), err)
 		return nil, err
 	}
 
-	return []byte(fo), nil
+	return fo, nil
 }
 
 type parseGoState struct {
