@@ -188,8 +188,6 @@ func createMainWasmDotGo(fs fs.FS, opts InitOpts) error {
 	}
 	// now we need the just the package name from the full import path.
 	// we can use filepath.Base for this
-	fmt.Printf("Before %q\n", opts.RootStructPkgAlias)
-
 	if opts.RootStructPkgAlias == "" {
 		// the package has not been aliased so we need to get the package name from the import path
 		opts.RootStructPkgAlias = filepath.Base(opts.RootStructPkgImportPath)
@@ -198,7 +196,6 @@ func createMainWasmDotGo(fs fs.FS, opts InitOpts) error {
 			opts.RootStructPkgAlias = ""
 		}
 	}
-	fmt.Printf("After %q\n", opts.RootStructPkgAlias)
 
 	err = tmpl.Execute(mainWasm, opts)
 	if err != nil {
