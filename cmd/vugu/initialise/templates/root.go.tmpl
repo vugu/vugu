@@ -1,5 +1,10 @@
 package main
 
+import (
+	"time"
+	"github.com/vugu/vugu"
+)
+
 type {{ .RootStructType }} struct {
 	ShowWasm bool `vugu:"data"`
 	ShowGo   bool `vugu:"data"`
@@ -24,6 +29,5 @@ func (c *{{ .RootStructType }}) ShowVuguParagraph(event vugu.DOMEvent) {
 }
 
 func (c *{{ .RootStructType }}) Recent() bool {
-{
 	return time.Now().Year()>=2020
 }

@@ -10,11 +10,13 @@ package main
 import (
 	"fmt"
 	"log"
+	"maps"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/magefile/mage/mg"
+	"github.com/magefile/mage/sh"
 )
 
 // All builds, lints and tests vugu and the vugu examples.
@@ -27,6 +29,7 @@ func All() error {
 		Build,
 		Lint, // we can't run golangci-lint in parallel with the Build as that calls "go generate"
 		Test,
+		TestVuguInit,
 		TestWasm,
 		Examples,
 		StopLocalNginxForExamples,
@@ -39,6 +42,7 @@ func AllNoLint() error {
 	mg.SerialDeps(
 		Build,
 		Test,
+		TestVuguInit,
 		TestWasm,
 		Examples,
 		StopLocalNginxForExamples,
@@ -52,6 +56,7 @@ func AllWithLegacyWasm() error {
 		Build,
 		Lint,
 		Test,
+		TestVuguInit,
 		TestWasm,
 		Examples,
 		StopLocalNginxForExamples,
@@ -80,6 +85,7 @@ func AllGitHubAction() error {
 		// packages.
 		// Lint,
 		Test,
+		TestVuguInit,
 		TestWasmWithGeneratedFilesCheck,
 		Examples,
 		StopLocalNginxForExamples,
@@ -618,4 +624,169 @@ func UpgradeWasmTestSuiteDependencies() error {
 // Like UpgradeAllDependencies but only for the examples modules
 func UpgradeExampleDependencies() error {
 	return upgradeModuleDependencies(ExamplesDir)
+}
+
+type vuguGenOpts struct {
+	// The name of the wasm binary
+	WasmBinaryName string
+	// the name of the Go source file that containts the main function
+	WasmGoFilename string
+	// The name of the base/root type. This struct is the man entry point for the wasm code. This must be a valid, exported type in the RootStructPkg
+	RootStructType string
+}
+
+// Test 'vugu init' by calling `vugu gen` to ensure the generated Go code is valid
+func TestVuguInit() error {
+	mg.SerialDeps(Build)
+	opts := vuguGenOpts{}
+	err := TestVuguInitWithOpts(opts)
+	if err != nil {
+		return fmt.Errorf("vugu gen with default options failed with %w", err)
+	}
+
+	// set a Root struct name
+	opts.RootStructType = "Banana"
+	err = TestVuguInitWithOpts(opts)
+	if err != nil {
+		return fmt.Errorf("vugu gen with RootSturctType set to %q failed with %w", opts.RootStructType, err)
+	}
+	// set a binary name in addition
+	opts.WasmBinaryName = "goldfish.wasm"
+	err = TestVuguInitWithOpts(opts)
+	if err != nil {
+		return fmt.Errorf("vugu gen with WasmBinaryName set to %q failed with %w", opts.WasmBinaryName, err)
+	}
+	//now set the main go filename
+	opts.WasmGoFilename = "cherry.go"
+	err = TestVuguInitWithOpts(opts)
+	if err != nil {
+		return fmt.Errorf("vugu gen with WasmGoFileName set to %q failed with %w", opts.WasmGoFilename, err)
+	}
+	// no errors at this point
+	return nil
+}
+
+func TestVuguInitWithOpts(opts vuguGenOpts) error {
+	mg.SerialDeps(Build)
+	pkgName := "example.com/vugu/gentest" // this is fixed for th each tess, as its just the name of the module
+	rootFileName := ""
+	wasmGoFilenameDefault := "main_wasm.go"
+	foundMap := make(map[string]bool, 5)
+
+	// get the cwd
+	cwd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	defer os.Chdir(cwd) // ignore the error and ensure we go back to the cwd on exit
+
+	// create a temp dir
+	d, err := os.MkdirTemp("", "-vugu-gen-test-")
+	if err != nil {
+		return err
+	}
+	defer os.RemoveAll(d) // we ignore any error but delete the temp dir and contents
+	err = os.Chdir(d)
+
+	// build the args list
+	args := make([]string, 0)
+
+	// "init" comes first
+	args = append(args, "init")
+
+	// then "--wasmbinaryname" is supplied
+	if opts.WasmBinaryName != "" {
+		args = append(args, "--wasmbinaryname", opts.WasmBinaryName)
+	} else {
+		opts.WasmBinaryName = "main.wasm" // match the default of the vugu init command
+	}
+	foundMap[opts.WasmBinaryName] = false
+
+	// then "--wasmgofilename" if supplied
+	if opts.WasmGoFilename != "" {
+		args = append(args, "--wasmgofilename", opts.WasmGoFilename)
+	} else {
+		opts.WasmGoFilename = wasmGoFilenameDefault // match the default of the vugu init command
+	}
+	foundMap[opts.WasmBinaryName] = false
+
+	// then "--rootstructtype" if supplied
+	if opts.RootStructType != "" {
+		args = append(args, "--rootstructtype", opts.RootStructType)
+	} else {
+		opts.RootStructType = "Root"
+	}
+	rootFileName = opts.RootStructType + ".go"
+	foundMap[rootFileName] = false
+
+	// the pkgname (really the module name) is always the last argument
+	args = append(args, pkgName)
+
+	// now add the missing files ot the found map - these are both derived from the RootStructType name
+	genFileName := opts.RootStructType + "_gen.go"
+	rootVuguFileName := opts.RootStructType + ".vugu"
+	foundMap[genFileName] = false
+	foundMap[rootVuguFileName] = false
+
+	// run vugu init with arguments
+	err = sh.RunV("vugu", args...)
+	if err != nil {
+		return err
+	}
+	// run vugu gen
+	// In v0.Y.Z this is a bit of a mess. Basically, the `vugu init` cmd above will generate a main funciton in a file
+	// called either "main_wasm.go" or the filename that was specified in opts.WasmGoFilename
+	// But, 'vugu gen` will be default generate a file called main_wasm.go unless the "--skip-main" option
+	// is specified. So we need to check for this condition and pass the "--skip-main" as appropiate
+	if opts.WasmGoFilename != wasmGoFilenameDefault {
+		err = runVugugenInCurrentDirSkipMain()
+		if err != nil {
+			return err
+		}
+	} else {
+		err = runVugugenInCurrentDir()
+		if err != nil {
+			return err
+		}
+	}
+	// run go mod tidy
+	err = runGoModTidyInCurrentDir()
+	if err != nil {
+		return err
+	}
+	// now build
+	envs := map[string]string{
+		"GOOS":   "js",
+		"GOARCH": "wasm",
+	}
+	err = goBuildWithEnvs(envs, opts.WasmBinaryName, pkgName)
+	if err != nil {
+		return err
+	}
+	// as a sanity check list the files
+	files, err := os.ReadDir(d)
+	if err != nil {
+		return err
+	}
+	for _, file := range files {
+		switch file.Name() {
+		case opts.WasmBinaryName:
+			foundMap[opts.WasmBinaryName] = true
+		case genFileName:
+			foundMap[genFileName] = true
+		case rootFileName:
+			foundMap[rootFileName] = true
+		case rootVuguFileName:
+			foundMap[rootVuguFileName] = true
+		case opts.WasmGoFilename:
+			foundMap[opts.WasmGoFilename] = true
+		}
+	}
+	// check we found everythig
+	for k := range maps.Keys(foundMap) {
+		if foundMap[k] == false {
+			return fmt.Errorf("vugu init test: failed to find the expected file %s", k)
+		}
+	}
+	return err // will be nil at this point
 }
