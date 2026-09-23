@@ -245,7 +245,7 @@ func (o *initOptsDummy) checkWasmGoContents(filename string) error {
 		return err
 	}
 	// check the mount point
-	mp := "mountPoint := \"#\" + " + o.MountPoint // the paces are significant as this is matching a generated go variable declaration
+	mp := "mountPoint := \"#\"" + "\"" + o.MountPoint + "\"" // the paces are significant as this is matching a generated go variable declaration
 	found := bytes.Contains(b, []byte(mp))
 	if !found {
 		return fmt.Errorf("Could not find Mount Point (%q) in the %s searched for %q", o.MountPoint, o.WasmGoFilename, mp)
