@@ -1,9 +1,9 @@
 # Vugu
 
 [![Travis CI](https://travis-ci.org/vugu/vugu.svg?branch=master)](https://travis-ci.org/vugu/vugu)
-[![Go Report Card](https://goreportcard.com/badge/github.com/vugu/vugu)](https://goreportcard.com/report/github.com/vugu/vugu)
 [![GoDoc](https://godoc.org/github.com/vugu/vugu?status.svg)](https://godoc.org/github.com/vugu/vugu)
 [![stability-experimental](https://img.shields.io/badge/stability-experimental-orange.svg)](https://github.com/emersion/stability-badges#experimental)
+<!-- [![Go Report Card](https://goreportcard.com/badge/github.com/vugu/vugu)](https://goreportcard.com/report/github.com/vugu/vugu) -->
 
 Vugu is an experimental library for web UIs written in Go and targeting webassembly.  Guide and docs at https://www.vugu.org.
 Godoc at https://godoc.org/github.com/vugu/vugu.
@@ -16,29 +16,7 @@ No node. No JS. No npm. No node_modules folder competing with your music library
 
 ## Updates ♨
 
-* 2020-04-06 v0.2.0 released. vugu.org and playground ported over to it; vugugen now supports recursive and merge-single modes and output files end with _vgen.go; improved tests; various documentation updates; vgrgen route generator supports recursive and clean options
-* 2020-03-29 Vugu URL router is now functional (https://github.com/vugu/vgrouter). Features include optional fragment support, client and server-side use, two-way data binding for query and path parameters, and automatic route generation based on folder structure. The `vg-comp` tag now allows programmatic component selection. A pattern for wiring large applications with lots of components is in place and will be tested further as dev moves forward. Next steps include just a bit more dev and testing on the router and then updating vugu.org to use these new features and bring the documentation up to date.
-* 2019-12-08 First Vugu program successfully compiles with Tinygo.  Testing and a bit more alternate implementation is still required but at least the compilation works now.
-* 2019-11-24 WASM test suite now working in Travis CI; getting closer on TinyGo support and merged refactor into master.
-* 2019-11-10 Support for tinygo is in-progress on the tinygo branch.  No known blocking issues as yet, some minor refactor required but looks promising.
-* 2019-09-29 Router is work-in-progress.  Will use radix tree to efficiently combine common prefixes.  Struct tags will usable to two-way-bind path and query params, or it can be done manually.  Some similarities to Angular and Vue routers but will be less declarative and more functional (instead of a big tree of objects with various config, you write path handler functions to set whatever properties need to be set, establish binding, etc).  Plan is to get the bulk of this coded by next week.
-* 2019-09-22 Static HTML renderer (re)implemented. EventEnv bug fix and added it to to JS renderer to allow background requests at startup.  Some initial work on a router: https://github.com/vugu/vgrouter
-* 2019-09-15 Refactor changes merged into master. Includes: updated sample code, component resolution at code-generation time, type-safe component params, optional component param map, BeforeBuild lifecycle callback, modification tracking system, JS property assignment syntax, "full HTML" support, improved DOM event handling, Go 1.13 support, import deduplication, and a brand new rendering pipeline!  Initial documentation at https://github.com/vugu/vugu/wiki/Refactor-Notes---Sep-2019
-* 2019-09-08 Implemented ModTracker to keep track of changes to components and their data (this is also the beginning of Vuex-like functionality but without wrappers or events). Worked out the lifecycle of components in much more detail and work in progress on nested components implementation (component-refactor branch currently broken, but finally the core nested component functionality is going in - hopefully will finish next week).
-* 2019-09-07 Updated everything for Go 1.13, including both master and component-refactor branches, Vugu's js wrapper package, site documentation.
-* 2019-09-01 On component-refactor branch: Form element values and other related data now available on DOMEvent, `.prop=` syntax implemented, various cleanup, imports are deduplicated automatically now, started on nested component implementation and all of that craziness.
-* 2019-08-25 CSS now supported on component-refactor branch, including in full-HTML mode, working sample that pulls in Bootstrap CSS.  Vugu's [js wrapper package](https://godoc.org/github.com/vugu/vugu/js) copied to master and made available.
-* 2019-08-18 Full HTML (root component can start with `<html>` tag) now supported on component-refactor branch, updated CSS and JS support figured out and implementation in-progress
-* 2019-08-12 Refactored DOM event listener code in-progress, event registration/deregistration works(-ish), filling out the remaining functionality to provide event summary, calls like preventDefault(), etc.
-* 2019-08-04 Some basic stuff in there on the DOM syncing rewrite and the new instruction workflow from VGNode -> binary encoded to raw bytes in Go -> read with DataView in JS -> DOM tree manipulation.  With the pattern in place the rest should get easier.
-* 2019-07-28 Making some hard choices on how to do DOM syncing in a performant and reliable way.  https://github.com/vugu/vugu/wiki/DOM-Syncing-Instructions
-* 2019-07-20 Some design info on how "data binding" (hashing actually) will work in Vugu: https://github.com/vugu/vugu/wiki/Data-Hashing-vs-Binding
-* 2019-07-16 Vugu has a logo! https://www.instagram.com/p/Bz3zmtYAYcM/  Good things are in the works, the plan is to get a bunch of much-awaited updates pushed to master before the end of the month.
-* 2019-05-19 Refactor still in progress - this is the cleaned-up architecture concept: https://github.com/vugu/vugu/wiki/Architecture-Overview
-* 2019-04-07 The Vugu Playground is up at: https://play.vugu.org/
-* 2019-04-05 Thanks to @erinpentecost, **vugufmt is now available** and provides gofmt-like functionality on your .vugu files. ("go get github.com/vugu/vugu/cmd/vugufmt && go install github.com/vugu/vugu/cmd/vugufmt")
-* 2019-04-05 The component playground should be available soon; followed by some internal work to properly handle nested components in a type-safe way; then probably a router...
-
+* 2024-05-25 Move to a [mage](https://magefile.org/) based build process
 <img src="https://cdnjs.cloudflare.com/ajax/libs/ionicons/4.5.6/collection/build/ionicons/svg/logo-slack.svg" width="17" height="17"> Join the conversation: [Gophers on Slack](https://invite.slack.golangbridge.org/), channel #vugu
 
 ## Highlights
@@ -51,17 +29,156 @@ No node. No JS. No npm. No node_modules folder competing with your music library
 * ~3 minute setup
 * Standard Go build tools
 
+
 ## Start
 
 Get started: http://www.vugu.org/doc/start
 
 Still a work in progress, but a lot of things are already functional. Some work really well.
 
+**You must have Go v1.22.3 as a minimum to use `vugu`. We require the for loop changes that were introduced in Go v1.22, and v1.22.3 was the lastest at the time writing.**
+
+
+## Building `vugu` for Contributors
+
+`vugu` now uses [mage](https://magefile.org/) to manage the build of the `vugu` tools - `vugugen`, `vugufmt` and `vgfrom`.
+[Mage](https://magefile.org/) is also used to manage the testing process.
+
+Please see the updated build instruction in the [Contributors Guide](https://github.com/vugu/vugu/blob/master/CONTRIBUTING.md)
+
+
+## Running the examples
+
+To run the examples you must have the [`mage`](https://magefile.org/) tool, `docker` and `goimports` installed. `vugu` uses `mage` to manage the build process.
+
+The simplest way to install `mage` is:
+
+```
+git clone https://github.com/magefile/mage
+cd mage
+go run bootstrap.go
+```
+
+You must run `mage` from the module root of `vugu`, this is the directory where the top level `go.mod` exists.
+
+You will also need the [`goimports`](https://pkg.go.dev/golang.org/x/tools/cmd/goimports) tool installed. It is very likely that you have this installed already, normally as part of an editor plugin. If not then the it can be installed with:
+
+```
+go install golang.org/x/tools/cmd/goimports@latest
+```
+
+In order to run the examples you will also need `docker` installed. If you don't have `docker` installed then follow the [docker install instructions](https://docs.docker.com/engine/install/#licensing). Each example will be served by a local `nginx` container.
+
+All of the examples are in the `examples` directory. Each sub-directory of `examples` contains a single example. Each example is it own Go module.
+
+Building and serving all of the examples is a simple as:
+
+```
+cd path/to/vugu
+mage examples
+```
+
+or
+
+```
+cd path/to/vugu
+mage -v examples
+```
+
+Each example will be served at a URL of the form
+
+```
+http://localhost:8888/<name-of-example-directory>
+```
+
+For example to see the `fetch-and-display` example the URL would be:
+
+```
+http://localhost:8888/fetch-and-display
+```
+
+Or if you only want to run a single example use:
+
+```
+cd path/to/vugu
+mage singleExample <name-of-example-module>
+```
+
+For example to serve just the `fetch-and-display` example the command would be:
+
+```
+cd path/to/vugu
+mage singleExample github.com/vugu/vugu/example/fetch-and-display
+```
+
+### Creating a new example
+
+If you need to create a new example the process is fairly straight forward. The critical point is to base it on a working example.
+
+For example
+
+```
+cd /path/to/vugu
+cp -r ./examples/fetch-and-display/ ./examples/my-new-example
+
+```
+
+The `cp` will copy everything in the directory including the critical local `.gitignore` file to the new example directory. Please make sire the `.gitignore` is present to ensure that vugu generated files are not submitted to the repository.
+
+You then need to edit the `./examples/my-new-example/go.mod` to change the module name. ***This step is critical.***
+
+The module name must be changed to match the example, so in this case the module name would be changed to `github.com/vugu/vugu/examples/my-new-example`
+
+You can then edit the `root.vugu`, `root.go` as needed to support the example, or add more `*.vugu` and `*.go` files as necessary.
+
+The files `main_wasm.go` and `wasm_exec.js` should not be edited.
+
+The examples `index.html` file will need to edited in two distinct places. The first is circa line 11
+
+```
+<script src="/fetch-and-display/wasm_exec.js"></script>
+```
+
+To change the path to reflect the name of the example. In this case:
+
+```
+<script src="/my-new-example/wasm_exec.js"></script>
+```
+
+
+The second change is similar but reflects the path of the `main.wasm` binary. This is circa line 29
+
+```
+WebAssembly.instantiateStreaming(fetch("/fetch-and-display/main.wasm"), go.importObject).then((result) => {
+```
+
+which in this case would be changed to:
+
+```
+WebAssembly.instantiateStreaming(fetch("/my-new-example/main.wasm"), go.importObject).then((result) => {
+```
+
+The new example can then be built and served with:
+
+```
+cd /path/to/vugu
+mage examples
+```
+
+Or individually like this:
+
+```
+cd /path/to/vugu
+mage singleExample github.com/vugu/vugu/example/my-new-example
+```
+
+
 ## Abbreviated Roadmap
 
+- [x] Move to a Mage based build
 - [x] Single-file components (looks similar to .vue); .vugu -> .go code generation.
 - [x] Includes CSS in components.
-- [x] Basic flow control with vg-if, vg-for and output with vg-html.
+- [x] Basic flow control with vg-if, vg-for and output with vg-content.
 - [x] Dynamic attributes with `<tag :prop='expr'>`.
 - [x] Nested components with dynamic properties
 - [x] Efficiently syncs to browser DOM.
@@ -70,13 +187,13 @@ Still a work in progress, but a lot of things are already functional. Some work 
 - [x] Modification tracking to avoid unnecessary computation where possible.
 - [x] Basic dev and prod server tooling, easy to get started
 - [x] Rewrite everything so it is not so terrible internally
-- [ ] URL Router (in-progress)
-- [ ] Tinygo compilation support
-- [ ] Server-side rendering (HTML generation works, needs URL Router to make it usable)
+- [x] URL Router (in-progress)
+- [x] Tinygo compilation support
+- [x] Server-side rendering (works, needs more documentation and examples)
+- [x] Go-only component events
+- [x] Slots
+- [ ] Component library(s) (wip!)
 - [ ] Performance optimizations
-- [ ] Go-only component events
-- [ ] Slots
-- [ ] Component library(s)
 - And much more...
 
 ## Notes
@@ -98,3 +215,12 @@ via `go generate`. There are many small decisions in Vugu which follow this phil
 just use the existing mechanism instead of inventing anew.  And keep doing that until there's proof that something
 else is really needed.  So far it's been working well.  And it allows Vugu to focus on the specific things it 
 brings to the table.
+
+## Examples
+
+Examples of implementations can be found into [examples repositories](https://github.com/orgs/vugu-examples/repositories)
+
+## VSCode plugin
+
+As most of your code will be in `.vugu` files, you will need to install [vscode-vugu](https://marketplace.visualstudio.com/items?itemName=binhonglee.vscode-vugu)
+Credits goes to @binhonglee.

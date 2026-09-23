@@ -1,0 +1,27 @@
+<div>
+
+    <p>Some root stuff here</p>
+
+    <div id="tmplparent"><vg-template>simple template test</vg-template></div>
+
+    <div id="aftertmpl">after the template</div>
+
+    <vg-type vg-pkg="main" vg-struct="MyDataTable" vg-var="mydt" id="table1">
+        <div id="default1">some default slot content here</div>
+    </vg-type>
+
+    <div>---</div>
+
+    <vg-type vg-pkg="main" vg-struct="MyDataTable" vg-var="mydt2" id="table2">
+        <vg-slot name="DefaultSlot">
+            <div id="default2">default slot</div>
+        </vg-slot>
+        <vg-slot name="AnotherSlot">
+            <div>another slot</div>
+        </vg-slot>
+        <vg-slot name='SlotMap["mapidx"]'>
+            <div>mapidx slot</div>
+        </vg-slot>
+    </vg-type>
+
+</div>

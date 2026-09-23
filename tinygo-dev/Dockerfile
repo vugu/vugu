@@ -6,8 +6,7 @@ FROM tinygo/tinygo-dev:latest
 
 RUN apt-get update && apt-get install -y curl git
 
-#RUN wget https://dl.google.com/go/go1.13.4.linux-amd64.tar.gz -O /root/go.tar.gz
-RUN curl https://dl.google.com/go/go1.13.4.linux-amd64.tar.gz -o /root/go.tar.gz
+RUN curl https://dl.google.com/go/go1.21.4.linux-amd64.tar.gz -o /root/go.tar.gz
 RUN mkdir -p /opt && cd /opt && tar -xzvf /root/go.tar.gz
 
 #RUN tinygo version

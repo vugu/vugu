@@ -1,0 +1,19 @@
+<div>
+
+    <h1>Test App</h1>
+
+    <vg-comp expr="c.Body"/>
+
+</div>
+
+<script type="application/x-go">
+
+import "github.com/vugu/vgrouter"
+
+type Root struct {
+    vgrouter.NavigatorRef
+
+    Body vugu.Builder
+}
+
+</script>

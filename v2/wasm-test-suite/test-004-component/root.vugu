@@ -1,0 +1,16 @@
+<div class="test-div" id="testdiv">
+
+    <ul>
+        <vg-type vg-pkg="main" vg-struct="DemoLine" vg-for="i := 0; i < c.ItemCount; i++" vg-key="i" vg-field="Num=i"></vg-type>
+        
+    </ul>
+
+    <button id="addbtn" @click="c.OnAdd()">Add</button>
+
+</div>
+
+<style>
+#test_div_id {
+    background: #ddd;
+}
+</style>

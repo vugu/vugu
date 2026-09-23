@@ -1,0 +1,49 @@
+<div>
+    <main role="main" class="container text-center">
+
+        <div class="mt-5">
+            <h1>Welcome to Vugu</h1>
+            <p class="lead">This page is being rendered via 
+                <a @click='event.PreventDefault();c.ShowWasm=!c.ShowWasm' href="https://webassembly.org/">WebAssembly</a>,
+                written in
+                <a @click='event.PreventDefault();c.ShowGo=!c.ShowGo' href="https://golang.org/">Go</a>
+                using
+                <a @click='event.PreventDefault();c.ShowVugu=!c.ShowVugu' href="https://vugu.org/">Vugu</a>.
+            </p>
+
+            <div vg-if='c.ShowWasm' class="alert alert-primary" role="alert">
+                <strong>WebAssembly</strong> (abbreviated Wasm) is a binary instruction format.
+                It is designed as a portable target for compilation of high-level languages like Go/C/C++/Rust, 
+                enabling deployment on the web for client and server applications.
+                <a target="_blank" href="https://webassembly.org/">Read more at webassembly.org &raquo;</a>
+            </div>
+
+            <div vg-if='c.ShowGo' class="alert alert-primary" role="alert">
+                <strong>Go</strong> is an open source programming language that makes it easy to build simple, reliable, and efficient software.
+                <a target="_blank" href="https://golang.org/">Read more at golang.org &raquo;</a>
+            </div>
+
+            <div vg-if='c.ShowVugu' class="alert alert-primary" role="alert">
+                <strong>Vugu</strong> is a modern web UI library for Go+WebAssembly.
+                It is written in pure Go, works well in most modern browsers and supports 
+                <span vg-if='time.Now().Year()>=2020'>most</span> features one would expect from
+                a web framework.  It also makes a point of attempting to apply best practices 
+                from Go to web application UI development and prefers idiomatic solutions over
+                techniques that follow patterns from JavaScript wherever possible.
+                <a target="_blank" href="https://vugu.org/">Read more at vugu.org &raquo;</a>
+            </div>
+
+        </div>
+
+    </main>
+</div>
+
+<script type="application/x-go">
+
+// this import and enclosing <script> block ate BOTH necessary.
+// The HTML above calls time.Now().Year() directly.
+// So we must explicitly import the time package in the .vugu file.
+// otherwise the compilation will fail due to an unknown import.
+import "time"
+    
+</script>

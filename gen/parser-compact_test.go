@@ -41,7 +41,7 @@ func TestCompactNodeTree(t *testing.T) {
 
 	log.Printf("OUT:\n%s", buf.String())
 
-	assert.Contains(buf.String(), "<p vg-html=\"&#34;")
+	assert.Contains(buf.String(), "<p vg-html=\"vugu.HTML(&#34;")
 
 	// log.Printf("HERE: %#v", n.FirstChild.FirstChild.NextSibling.FirstChild.FirstChild)
 	// log.Printf("HERE: %#v", n.FirstChild.FirstChild.NextSibling.NextSibling.FirstChild.FirstChild.NextSibling.NextSibling)

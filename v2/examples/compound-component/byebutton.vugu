@@ -1,0 +1,4 @@
+<!-- This is the Byebutton. It is just a button with a 'Click' method associated with the 'onclick' DOM event -->
+<!-- At this point 'c' is now a ByeButton component and NOT a Parent component, so the '@click' -->
+<!-- refers to the button and not the parents component -->
+<button @click='c.Click(event)'>No, click me instead.</button>

@@ -35,7 +35,7 @@ type bpi struct {
 	} `json:"bpi"`
 }
 
-func (data *RootData) HandleClick(event *vugu.DOMEvent) {
+func (data *RootData) HandleClick(event vugu.DOMEvent) {
 
 	data.bpi = bpi{}
 

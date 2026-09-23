@@ -1,0 +1,8 @@
+main_wasm.go
+main.wasm
+root.go
+comp.go
+go.sum
+wasm_exec.js
+index.html
+*_vgen.go

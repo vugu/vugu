@@ -1,0 +1,35 @@
+<div id="content">
+    <button @click='c.Make(2, event)' id="make2">Make 2</button>
+    <button @click='c.Make(6, event)' id="make6">Make 6</button>
+
+    <div vg-for='_,n := range c.Numbers' vg-key='n' vg-html='n' :id='n'></div>
+
+</div>
+
+<script type="application/x-go">
+import(
+    "fmt"
+    "log"    
+
+    "github.com/vugu/vugu"
+)
+
+type Root struct {       
+    Numbers []string `vugu:"data"`
+}
+
+func (c *Root) Make(cnt int, event vugu.DOMEvent) {
+        event.PreventDefault()	
+	go func() {        
+		ee := event.EventEnv()
+		ee.Lock()
+		defer ee.UnlockRender()
+
+               log.Printf("show %d", cnt)
+		c.Numbers = make([]string, cnt)
+		for i := 0; i < cnt; i++ {
+			c.Numbers[i] = fmt.Sprintf("n%dof%d", i+1, cnt)
+		}
+	}()
+}
+</script>

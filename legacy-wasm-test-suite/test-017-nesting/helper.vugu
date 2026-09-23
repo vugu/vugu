@@ -1,0 +1,8 @@
+<div class="helper">
+	<main:Final :ID="c.ID"></main:Final>
+</div>
+<script type="application/x-go">
+	type Helper struct {
+		ID int
+	}
+</script>

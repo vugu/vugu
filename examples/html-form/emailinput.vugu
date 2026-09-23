@@ -1,0 +1,7 @@
+<!-- a very simple email input component -->
+<div id="emailinput">
+    <label for="email">Email</label>
+    <!-- Note 'c' in this case is the email input component itself -->
+    <!-- we call the 'Change' method of the 'Emailinout' control when the value changes to retrieve the new value -->
+    <input id="email" type="email" value="Enter an email address" @change='c.Change(event)'></input>
+</div>

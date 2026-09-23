@@ -7,13 +7,3 @@
   </body>
 </html>
 
-<script type='application/x-go'>
-  type Root struct {} 
-
-  func (c *Root) Lang() string {
-    return "en"
-  }
-  func (c *Root) HeadClass() string {
-    return "head-class"
-  }
-</script>

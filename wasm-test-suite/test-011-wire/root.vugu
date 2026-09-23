@@ -6,11 +6,3 @@
     </ul>
 
 </div>
-
-<script type="application/x-go">
-
-type Root struct {
-    CounterRef
-}
-
-</script>

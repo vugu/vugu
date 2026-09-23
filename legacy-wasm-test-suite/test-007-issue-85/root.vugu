@@ -1,0 +1,8 @@
+<html>
+  <head></head>
+  <body>
+    <div id="content">
+      <main:Comp Key='value'></main:Comp>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,12 @@
+<!-- a simple set of radio buttons, used in this case to pick a language -->
+<div id="radiobuttons">
+    <!-- create the 4 radio buttons in the group, passing the properties we would nornmally set in JS as -->
+    <!-- fields in the underlying Go struct. The Language Radio Button can then read these fields to determine -->
+    <!-- if it is the selected default option. -->
+    <!-- In this case 'c' is the containing radio buttons not the language radio button itself -->
+    <main:Languageradiobutton :Group='c' Id="english" Value="English"></main:Languageradiobutton>
+    <main:Languageradiobutton :Group='c' Id="french" Value="Français"></main:Languageradiobutton>
+    <main:Languageradiobutton :Group='c' Id="italian" Value="Italiano"></main:Languageradiobutton>
+    <main:Languageradiobutton :Group='c' Id="german" Value="Deutsch"></main:Languageradiobutton>
+
+</div>

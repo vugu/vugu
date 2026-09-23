@@ -1,0 +1,5 @@
+<div id="top">
+    <vg-type vg-pkg="main" vg-struct="Thing" vg-field="Parent=c"></vg-type>
+    <div vg-if="len(c.ShowText)>0" id="show_text" vg-html="c.ShowText"></div>
+</div>
+

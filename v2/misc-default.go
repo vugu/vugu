@@ -1,0 +1,7 @@
+package vugu
+
+import "reflect"
+
+func rvIsZero(rv reflect.Value) bool {
+	return rv.IsZero()
+}

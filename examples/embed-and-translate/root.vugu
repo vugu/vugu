@@ -1,0 +1,23 @@
+<div>
+    <main role="main" class="container text-center">
+        <div class="mt-5">
+            <h1>Embeded files and Translation Example</h1>
+            <div>
+                <p>Select one of the radio boxes below to change the lanuage of the sentence. </p>
+                <!-- c.Msg() returns the message translated to the language set by the radio buttons -->
+                <p vg-content='c.Msg()'></p>
+                <!-- c.SelectedLanguage() returns the BCP 47 langauge (in its short form) --> 
+                <p>The current language is: <span vg-content='c.SelectedLanguage()'></span></p>
+            </div>
+            <div id="radioboxes">
+                <h3>Select a language:</h3>
+                <input type="radio" id="english" name="language" value="English" checked="checked" @change='c.Change(event)'>
+                <label for="english">English</label><br>
+                <input type="radio" id="french" name="language" value="Français" @change='c.Change(event)'>
+                <label for="french">Français</label><br>
+                <input type="radio" id="italian" name="language" value="Italiano" @change='c.Change(event)'>
+                <label for="italian">Italiano</label><br>
+            </div>
+        </div>
+    </main>
+</div>

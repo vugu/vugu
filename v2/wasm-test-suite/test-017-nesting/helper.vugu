@@ -1,0 +1,3 @@
+<div class="helper">
+	<vg-type vg-pkg="main" vg-struct="Final" vg-field="ID=c.ID"></vg-type>
+</div>

@@ -1,0 +1,24 @@
+<div>
+    <main role="main" class="container text-center">
+        <div class="mt-5">
+            <h1>Simple Form Example</h1>
+            <div id="parent-component">
+                <!-- "c" is the Parent control that containts the form -->
+                <!-- Note the inversion of control - we pass the Parent control, 'c' to the the Simpleform as its 'Parent' attribute -->
+                <!-- We need the Simpleform to be able to call into the Parent to set state in the parent in response to DOM events that the form handles -->
+                <main:Sampleform :Parent='c'></main:Sampleform>
+                <br>
+                <hr>
+                <!-- Note: there is a way to remove the repeated 'vg-if' statements. See the 'vg-template' example -->
+                <p vg-if='c.Submitted()'>
+                    The submit button has been pressed.
+                </p>
+                <p vg-if='c.Submitted()'>
+                    What follows is the JSON encoded form contents that would be sent to the web server for further processing.
+                </p>
+                <!-- We call c.EncodedFormData() to get the JSON encoded version of the form data -->
+                <code vg-if='c.Submitted()' vg-content='c.EncodedFormData()'></code>
+            </div>
+        </div>
+    </main>
+</div>

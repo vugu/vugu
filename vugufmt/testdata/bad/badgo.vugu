@@ -26,7 +26,7 @@ type bpi struct {
     BPI map[string]struct { Code string `json:"code"`; Symbol string  `json:"symbol"`; RateFloat float64 `json:"rate_float"` } `json:"bpi"`
 }
 
-func (data *RootData) HandleClick(event *vugu.DOMEvent) {
+func (data *RootData) HandleClick(event vugu.DOMEvent) {
 
     data.bpi = bpi{}
 

@@ -1,0 +1,12 @@
+<div id="top">
+    <vg-type vg-pkg="main" vg-struct="C1" vg-field="Parent=c" vg-if="c.ShowC1"></vg-type>
+    <vg-type vg-pkg="main" vg-struct="C2" vg-field="Parent=c" vg-if="c.ShowC2"></vg-type>
+    <button id="refresh" @click="return">Refresh</button>
+    <button id="togglec1" @click="c.ShowC1=!c.ShowC1">Toggle C1</button>
+    <button id="togglec2" @click="c.ShowC2=!c.ShowC2">Toggle C2</button>
+    <div id="c1_log" vg-html='c.C1Log'></div>
+    <div id="c2_log" vg-html='c.C2Log'></div>
+
+
+    <!-- <pre vg-content="logText"></pre> -->
+</div>

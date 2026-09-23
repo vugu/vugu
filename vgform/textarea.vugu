@@ -1,0 +1,5 @@
+<textarea
+    @change='c.handleChange(event)'
+    vg-attr='c.AttrMap'
+    .value='c.Value.StringValue()'
+    ></textarea>

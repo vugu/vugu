@@ -1,7 +1,6 @@
 package vugufmt
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -25,7 +24,7 @@ func TestGoImportsNoError(t *testing.T) {
 
 		assert.Nil(t, err, f)
 		// get a handle on the file
-		testFile, err := ioutil.ReadFile(absPath)
+		testFile, err := os.ReadFile(absPath)
 		testFileString := string(testFile)
 		assert.Nil(t, err, f)
 		// run goimports on it

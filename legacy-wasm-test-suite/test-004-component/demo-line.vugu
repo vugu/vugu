@@ -1,0 +1,15 @@
+<li class="demo-line"><strong vg-html="c.Num"></strong> a line is here</li>
+
+<style>
+.demo-line {
+    color: green;
+}
+</style>
+        
+<script type="application/x-go">
+
+type DemoLine struct {
+    Num int `vugu:"data"`
+}
+
+</script>
